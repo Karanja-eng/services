@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Define CSS custom properties for theming */
+:root {
+  /* Light theme variables */
+  --bg-primary: #f3f4f6; /* Equivalent to Tailwind's bg-gray-100 */
+  --bg-secondary: #ffffff; /* Equivalent to bg-white */
+  --text-primary: #1f2937; /* Equivalent to text-gray-800 */
+  --text-secondary: #4b5563; /* Equivalent to text-gray-600 */
+  --border-primary: #e5e7eb; /* Equivalent to border-gray-200 */
+  --accent-primary: #2563eb; /* Equivalent to blue-600 */
+  --accent-secondary: #0d9488; /* Equivalent to teal-600 */
+  --error-bg: #fef2f2; /* Equivalent to bg-red-50 */
+  --error-text: #b91c1c; /* Equivalent to text-red-700 */
+  --success-bg: #ecfdf5; /* Equivalent to bg-green-50 */
+  --success-text: #047857; /* Equivalent to text-green-600 */
+
+  /* Base transitions for theme switching */
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.dark {
+  /* Dark theme variables */
+  --bg-primary: #1f2937; /* Equivalent to bg-gray-800 */
+  --bg-secondary: #111827; /* Equivalent to bg-gray-900 */
+  --text-primary: #d1d5db; /* Equivalent to text-gray-300 */
+  --text-secondary: #9ca3af; /* Equivalent to text-gray-400 */
+  --border-primary: #374151; /* Equivalent to border-gray-700 */
+  --accent-primary: #3b82f6; /* Equivalent to blue-500 */
+  --accent-secondary: #2dd4bf; /* Equivalent to teal-500 */
+  --error-bg: #7f1d1d; /* Darker red for errors */
+  --error-text: #fecaca; /* Equivalent to text-red-300 */
+  --success-bg: #064e3b; /* Darker green for success */
+  --success-text: #6ee7b7; /* Equivalent to text-green-300 */
+}
+
+/* Apply variables to global elements */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: Inter, sans-serif; /* Ensure consistent typography */
+}
+
+/* Ensure all interactive elements have consistent focus states */
+a,
+button,
+input,
+select,
+textarea {
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent-primary)];
+}
+
+/* Custom components or non-Tailwind elements */
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.alert {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.alert.success {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+}
+
+/* Support system preferences for users without saved theme */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    --text-primary: #d1d5db;
+    --text-secondary: #9ca3af;
+    --border-primary: #374151;
+    --accent-primary: #3b82f6;
+    --accent-secondary: #2dd4bf;
+    --error-bg: #7f1d1d;
+    --error-text: #fecaca;
+    --success-bg: #064e3b;
+    --success-text: #6ee7b7;
+  }
+}
+
+/* Ensure high contrast for accessibility */
+:root {
+  /* Minimum contrast ratios for WCAG AA compliance */
+  --text-contrast: #000000; /* Fallback for high-contrast text */
+}
+
+.dark {
+  --text-contrast: #ffffff;
+}
+
+/* Custom styles for specific components */
+.sidebar {
+  background-color: var(--bg-secondary);
+  border-left: 1px solid var(--border-primary);
+}
+
+.header {
+  background-color: var(--bg-secondary);
+  border-bottom: 4px solid var(--accent-primary);
+}
+
+/* Smooth transitions for elements that might change */
+.bg-primary,
+.bg-secondary,
+.text-primary,
+.text-secondary,
+.border-primary {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}

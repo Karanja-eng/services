@@ -1,0 +1,125 @@
+# ========================
+# OS / Editor
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ========================
+# Dependencies
+# ========================
+node_modules/
+.pnp/
+.pnp.js
+
+# ========================
+# Build Output
+# ========================
+dist/
+build/
+
+# ========================
+# Environment Variables
+# ========================
+.env
+.env.local
+.env.*.local
+
+# ========================
+# Testing
+# ========================
+coverage/
+.nyc_output/
+
+# ========================
+# Logs
+# ========================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# ========================
+# Caches
+# ========================
+.cache/
+.parcel-cache/
+.next/
+.swr/
+.tmp/
+temp/
+tmp/
+
+# ========================
+# Tooling / Framework
+# ========================
+.eslintcache
+.stylelintcache
+.babel-cache/
+babel.config.json
+tsconfig.tsbuildinfo
+
+# ========================
+# Optional — if generating
+# ========================
+*.zip
+*.tar.gz
+*.tgz
+
+# Optional — design/media dumps
+*.psd
+*.tiff
+*.avi
+*.mov
+
+# ========================
+# Optional — Mac node watchers bug fix
+# ========================
+*.pid
+
+# ========================
+# Media / Large Assets
+# ========================
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.webp
+*.bmp
+*.tiff
+*.ico
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wav
+*.mp3
+
+# If you keep only small icons in repo
+# !src/assets/icons/
+
+# ========================
+# AI / ML Model Files
+# ========================
+*.pt
+*.pth
+*.pb
+*.tflite
+*.onnx
+
+# ========================
+# Dataset Dumps (Optional but recommended)
+# ========================
+*.csv
+*.tsv
+*.jsonl
+*.npz
+*.npy
+*.h5
+*.pickle
+*.pkl
+
+# If training data must be tracked, keep it in a separate private repo
