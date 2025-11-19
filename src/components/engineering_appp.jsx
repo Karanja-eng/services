@@ -11,6 +11,8 @@ import RightSidebar from "./components/RightSidebar";
 import ChatPage from "./components/ChatPage";
 import SurveyingApp from "./Surveying/surveying_app";
 import CadDrawer from "./Drawings/cad_drawing";
+import StructuralVisualizationComponent from "./Drawings/visualise_component";
+
 import StructuralEngineeeringSuite from "./ReinforcedConcrete/Beams/StructuralEngineeeringSuite";
 import Columnmain from "./ReinforcedConcrete/Columns/Columnmain";
 import StairDesignerApp from "./ReinforcedConcrete/Stairs/stair_main_app";
@@ -130,7 +132,12 @@ const EngineeringApp = () => {
               <Routes>
                 <Route path="/" element={<ChatPage />} />
                 <Route path="/surveying" element={<SurveyingApp />} />
+                <Route
+                  path="/visualise"
+                  element={<StructuralVisualizationComponent />}
+                />
                 <Route path="/drawing" element={<CadDrawer />} />
+
                 <Route
                   path="/structural/manual/beam"
                   element={<StructuralEngineeeringSuite />}

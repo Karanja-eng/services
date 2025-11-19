@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@react-pdf/renderer": "^4.3.0",
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.4.0",
     "@tensorflow/tfjs": "^4.22.0",
     "axios": "^1.7.9",
     "classnames": "^2.5.1",

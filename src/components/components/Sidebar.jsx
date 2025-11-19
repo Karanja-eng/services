@@ -370,6 +370,14 @@ const Sidebar = ({ isOpen, onClose, isDark }) => {
           <MessageSquare size={20} />
           <span className="font-medium">Drawing</span>
         </button>
+        <button
+          onClick={() => handleNavigation("/visualise")}
+          className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        >
+          {/* You can use a suitable icon here, e.g., MessageSquare or add a new one */}
+          <MessageSquare size={20} />
+          <span className="font-medium">3D</span>
+        </button>
       </div>
     </div>
   );

@@ -21,10 +21,19 @@ app.include_router(
 ####### Quantity Surveying  #############
 
 from calculations.takeoff.Qs import router as QuantitySurvey_backend_router
+from calculations.takeoff.ManholesBackend import router as ManholesRouter
+from calculations.takeoff.ExternalWorksBackend import router as ExternalWorksRouter
+from calculations.takeoff.RoofBackend import router as RoofWorksRouter
+
 
 app.include_router(
     QuantitySurvey_backend_router, prefix="/qs_router", tags=["qs_router"]
 )
+app.include_router(ManholesRouter, prefix="/manholes_router", tags=["manholes_router"])
+app.include_router(
+    ExternalWorksRouter, prefix="/exteral_works", tags=["manholes_router"]
+)
+app.include_router(RoofWorksRouter, prefix="/roof_router", tags=["roof_router"])
 
 
 ## ##############   Ai Models  ##############

@@ -1,21 +1,7 @@
 import React, { Suspense, useState, useRef, useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
-import {
-  DrawBeam,
-  DrawFlatSlab,
-  DrawColumn,
-  DrawWall,
-  DrawWallCorner,
-  DrawRetainingWall,
-  DrawBasementRetainingWall,
-  DrawPileCap,
-  DrawCombinedFooting,
-  DrawSimplySupportedRCStairs,
-  DrawColumnStarter,
-  DrawSteppedColumn,
-} from "./detailing_3d";
 import {
   Camera,
   Grid3x3,
@@ -46,6 +32,17 @@ import {
 } from "lucide-react";
 import * as THREE_CONST from "three";
 
+import {
+  DrawStairsMST1,
+  DrawStairsMST2,
+} from "../ReinforcedConcrete/Stairs/Stairs_Three"; // add at top of file with other imports
+
+const ELEMENT_COMPONENTS = {
+  stair_MST1: DrawStairsMST1,
+  stair_MST2: DrawStairsMST2,
+
+  // ...add more types as you create them
+};
 // ============================================================================
 // MATERIAL CONSTANTS AND COLORS
 // ============================================================================
@@ -205,8 +202,7 @@ function MeasurementGrid({
   color1 = "#444444",
   color2 = "#888888",
 }) {
-  if (!visible) return null;
-
+  // Hooks are called unconditionally
   const gridGeometry = React.useMemo(() => {
     const geometry = new THREE.BufferGeometry();
     const vertices = [];
@@ -236,6 +232,9 @@ function MeasurementGrid({
     [color1]
   );
 
+  // Conditionally render the element
+  if (!visible) return null;
+
   return <lineSegments geometry={gridGeometry} material={gridMaterial} />;
 }
 
@@ -243,152 +242,93 @@ function MeasurementGrid({
 // SAMPLE BEAM COMPONENT (Example)
 // ============================================================================
 
-function SampleBeam({ colors, showConcrete, showRebar }) {
-  const span = 5.0;
-  const width = 0.3;
-  const depth = 0.5;
-  const cover = 0.025;
-  const barDiameter = 0.02;
-
-  const concreteGeometry = React.useMemo(
-    () => new THREE.BoxGeometry(width, depth, span),
-    [width, depth, span]
-  );
-
-  const concreteMaterial = React.useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: colors.concrete,
-        transparent: true,
-        opacity: DEFAULT_OPACITY.concrete,
-      }),
-    [colors.concrete]
-  );
-
-  const barGeometry = React.useMemo(
-    () =>
-      new THREE.CylinderGeometry(barDiameter / 2, barDiameter / 2, span, 16),
-    [barDiameter, span]
-  );
-
-  const barMaterial = React.useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: colors.mainRebar,
-        metalness: 0.7,
-        roughness: 0.3,
-      }),
-    [colors.mainRebar]
-  );
-
-  return (
-    <group>
-      {showConcrete && (
-        <mesh geometry={concreteGeometry} material={concreteMaterial} />
-      )}
-      {showRebar && (
-        <>
-          {[-0.1, 0.1].map((x, i) => (
-            <mesh
-              key={`bottom-${i}`}
-              geometry={barGeometry}
-              material={barMaterial}
-              position={[x, -depth / 2 + cover + barDiameter / 2, 0]}
-              rotation={[Math.PI / 2, 0, 0]}
-            />
-          ))}
-        </>
-      )}
-    </group>
-  );
-}
-
-// ============================================================================
-// SAMPLE COLUMN COMPONENT (Example)
-// ============================================================================
-
-function SampleColumn({ colors, showConcrete, showRebar }) {
-  const width = 0.4;
-  const height = 3.0;
-  const cover = 0.03;
-  const barDiameter = 0.02;
-
-  const concreteGeometry = React.useMemo(
-    () => new THREE.BoxGeometry(width, width, height),
-    [width, height]
-  );
-
-  const concreteMaterial = React.useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: colors.concrete,
-        transparent: true,
-        opacity: DEFAULT_OPACITY.concrete,
-      }),
-    [colors.concrete]
-  );
-
-  const barGeometry = React.useMemo(
-    () =>
-      new THREE.CylinderGeometry(barDiameter / 2, barDiameter / 2, height, 16),
-    [barDiameter, height]
-  );
-
-  const barMaterial = React.useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: colors.mainRebar,
-        metalness: 0.7,
-        roughness: 0.3,
-      }),
-    [colors.mainRebar]
-  );
-
-  const offset = width / 2 - cover - barDiameter / 2;
-
-  return (
-    <group>
-      {showConcrete && (
-        <mesh
-          geometry={concreteGeometry}
-          material={concreteMaterial}
-          rotation={[Math.PI / 2, 0, 0]}
-        />
-      )}
-      {showRebar && (
-        <>
-          {[
-            [-offset, -offset],
-            [offset, -offset],
-            [offset, offset],
-            [-offset, offset],
-          ].map(([x, y], i) => (
-            <mesh
-              key={`bar-${i}`}
-              geometry={barGeometry}
-              material={barMaterial}
-              position={[x, y, 0]}
-            />
-          ))}
-        </>
-      )}
-    </group>
-  );
-}
-
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
-export default function StructuralVisualizationComponents({
-  theme = "dark",
-  initialMemberType = "beam",
+export default function StructuralVisualizationComponent({
+  theme = "light",
+  
+  elementType = null, // e.g., "stair_MST1", "beam_RC1", etc.
+  elementData = null, // all input + result data from UI
   onExport,
   onPrint,
   onMeasure,
-  componentData = null, // Data passed from calculators
-  onComponentChange = () => {}, // Callback when component changes
+  visible = true, // optional, controlled by parent popup
+  onClose = () => {}, // called by popup back button or internal close
+  stairProps = null, // the props object coming from UI (mapped from inputs)
 }) {
+  const isDark = theme === "dark";
+
+  const Element3DComponent = elementType
+    ? ELEMENT_COMPONENTS[elementType]
+    : null;
+
+  // Converts object keys into clean, readable labels
+  const formatLabel = (label) => {
+    if (!label) return "";
+
+    return label
+      .replace(/_/g, " ") // convert snake_case → snake case
+      .replace(/([A-Z])/g, " $1") // convert camelCase → camel Case
+      .replace(/\s+/g, " ") // remove extra spaces
+      .replace(/\b\w/g, (c) => c.toUpperCase()) // capitalize words
+      .trim();
+  };
+
+  // Formats values intelligently
+  const formatValue = (value) => {
+    if (value === null || value === undefined) return "-";
+
+    // Numbers → rounded nicely
+    if (typeof value === "number") {
+      return Number.isInteger(value) ? value : value.toFixed(3);
+    }
+
+    // Booleans → human readable
+    if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    }
+
+    // Arrays → comma-separated
+    if (Array.isArray(value)) {
+      return value.join(", ");
+    }
+
+    // Nested objects → compact JSON
+    if (typeof value === "object") {
+      try {
+        return JSON.stringify(value, null, 0);
+      } catch {
+        return "[Object]";
+      }
+    }
+
+    // Default → string
+    return value.toString();
+  };
+
+  // Classes for UI elements
+  const bgClass = isDark ? "bg-gray-900" : "bg-gray-100";
+  const cardBg = isDark ? "bg-gray-800" : "bg-white";
+  const textPrimary = isDark ? "text-white" : "text-gray-900";
+  const textSecondary = isDark ? "text-gray-300" : "text-gray-600";
+  const borderColor = isDark ? "border-gray-700" : "border-gray-300";
+  const hoverBg = isDark ? "hover:bg-gray-700" : "hover:bg-gray-200";
+  const activeBg = isDark ? "bg-gray-700" : "bg-gray-300";
+
+  // ===========================
+  // THREE.JS BACKGROUND
+  // ===========================
+  const [backgroundColor, setBackgroundColor] = useState(
+    isDark ? "#0a0a0a" : "#f5f5f5"
+  );
+
+  // Update Three.js background when theme changes
+  useEffect(() => {
+    setBackgroundColor(isDark ? "#0a0a0a" : "#f5f5f5");
+  }, [isDark]);
+
   // ========== STATE MANAGEMENT ==========
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [propertiesOpen, setPropertiesOpen] = useState(true);
@@ -411,43 +351,13 @@ export default function StructuralVisualizationComponents({
   const [wireframe, setWireframe] = useState(false);
   const [shadows, setShadows] = useState(true);
   const [antialiasing, setAntialiasing] = useState(true);
-  const [opacity, setOpacity] = useState(0.4);
 
   // Measurement mode
   const [measurementMode, setMeasurementMode] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(true);
 
-  // View settings
-  const [backgroundColor, setBackgroundColor] = useState(
-    theme === "dark" ? "#0a0a0a" : "#f5f5f5"
-  );
   const [ambientIntensity, setAmbientIntensity] = useState(0.5);
   const [directionalIntensity, setDirectionalIntensity] = useState(1.0);
-
-  // Component data state
-  const [currentComponentData, setCurrentComponentData] = useState(
-    componentData || {
-      dimensions: {},
-      reinforcement: {},
-    }
-  );
-
-  // Update component data when props change
-  useEffect(() => {
-    if (componentData) {
-      setCurrentComponentData(componentData);
-    }
-  }, [componentData]);
-
-  // ========== THEME ADAPTATION ==========
-  const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-gray-900" : "bg-gray-100";
-  const cardBg = isDark ? "bg-gray-800" : "bg-white";
-  const textPrimary = isDark ? "text-white" : "text-gray-900";
-  const textSecondary = isDark ? "text-gray-300" : "text-gray-600";
-  const borderColor = isDark ? "border-gray-700" : "border-gray-300";
-  const hoverBg = isDark ? "hover:bg-gray-700" : "hover:bg-gray-200";
-  const activeBg = isDark ? "bg-gray-700" : "bg-gray-300";
 
   // ========== HANDLERS ==========
   const handleResetView = () => {
@@ -482,6 +392,20 @@ export default function StructuralVisualizationComponents({
     }
   };
 
+  // Shared visualization props (affect all geometry components)
+  const sharedProps = {
+    colors,
+    showConcrete,
+    showRebar,
+    showAnnotations,
+    showDimensions,
+    showGrid,
+    showAxis,
+    wireframe,
+    shadows,
+    antialiasing,
+  };
+
   // ========== VIEW MODES ==========
   const viewModes = [
     { id: "perspective", name: "3D", icon: Box },
@@ -494,12 +418,27 @@ export default function StructuralVisualizationComponents({
 
   // ========== RENDER ==========
   return (
-    <div className={`w-full h-screen flex ${bgClass} ${textPrimary}`}>
+    <div className={`w-full h-screen flex ${bgClass} ${textPrimary} relative `}>
       {/* ==================== LEFT SIDEBAR ==================== */}
+      {/* Sidebar toggle button — only visible when sidebar is closed */}
+      {!sidebarOpen && (
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className={`absolute top-4 left-4 z-20 p-2 rounded-md ${
+            isDark
+              ? "bg-gray-800 hover:bg-gray-700 text-gray-200"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          } shadow-lg transition-all`}
+          title="Open Sidebar"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      )}
+
       <div
         className={`${cardBg} border-r ${borderColor} transition-all duration-300 flex flex-col ${
           sidebarOpen ? "w-80" : "w-0"
-        } overflow-hidden`}
+        } `}
       >
         {sidebarOpen && (
           <>
@@ -522,43 +461,6 @@ export default function StructuralVisualizationComponents({
             {/* Sidebar Content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Member Type Section */}
-              <section>
-                <h3 className="text-sm font-semibold mb-3 flex items-center">
-                  <Layers className="w-4 h-4 mr-2" />
-                  Member Type
-                </h3>
-                <div className="space-y-2">
-                  {[
-                    { id: "beam", label: "Beam" },
-                    { id: "flat-slab", label: "Flat Slab" },
-                    { id: "column", label: "Column" },
-                    { id: "stepped-column", label: "Stepped Column" },
-                    { id: "column-starter", label: "Column Starter" },
-                    { id: "wall", label: "Wall" },
-                    { id: "wall-corner", label: "Wall Corner" },
-                    { id: "retaining-wall", label: "Retaining Wall" },
-                    { id: "basement-wall", label: "Basement Wall" },
-                    { id: "pile-cap", label: "Pile Cap" },
-                    { id: "combined-footing", label: "Combined Footing" },
-                    { id: "stairs", label: "RC Stairs" },
-                  ].map(({ id, label }) => (
-                    <button
-                      key={id}
-                      onClick={() => {
-                        setMemberType(id);
-                        onComponentChange(id);
-                      }}
-                      className={`w-full px-3 py-2 rounded text-left text-sm ${
-                        memberType === id
-                          ? "bg-blue-600 text-white"
-                          : `${hoverBg} ${textSecondary}`
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </section>
 
               {/* Visibility Controls */}
               <section
@@ -903,7 +805,7 @@ export default function StructuralVisualizationComponents({
         {/* Canvas Container */}
         <div className="flex-1 relative" style={{ backgroundColor }}>
           <Canvas
-            camera={{ position: [8, 6, 8], fov: 50 }}
+            camera={{ position: [5, 3, 5], fov: 50 }}
             gl={{ antialias: antialiasing, preserveDrawingBuffer: true }}
             shadows={shadows}
           >
@@ -939,121 +841,22 @@ export default function StructuralVisualizationComponents({
               {/* Axis */}
               {showAxis && <AxisHelper size={2} showLabels={true} />}
 
-              {/* Render Component */}
-              {(() => {
-                const commonProps = {
-                  colors,
-                  showConcrete,
-                  showRebar,
-                  wireframe,
-                  opacity,
-                };
+              {/* ...#######################Render Sample Members ############    */}
 
-                const dimensions = currentComponentData?.dimensions || {};
-                const reinforcement = currentComponentData?.reinforcement || {};
+              {/* ...#######################Render Sample Members ############    */}
 
-                switch (memberType) {
-                  case "beam":
-                    return (
-                      <DrawBeam
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "flat-slab":
-                    return (
-                      <DrawFlatSlab
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "column":
-                    return (
-                      <DrawColumn
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "stepped-column":
-                    return (
-                      <DrawSteppedColumn
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "column-starter":
-                    return (
-                      <DrawColumnStarter
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "wall":
-                    return (
-                      <DrawWall
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "wall-corner":
-                    return (
-                      <DrawWallCorner
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "retaining-wall":
-                    return (
-                      <DrawRetainingWall
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "basement-wall":
-                    return (
-                      <DrawBasementRetainingWall
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "pile-cap":
-                    return (
-                      <DrawPileCap
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "combined-footing":
-                    return (
-                      <DrawCombinedFooting
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  case "stairs":
-                    return (
-                      <DrawSimplySupportedRCStairs
-                        {...commonProps}
-                        dimensions={dimensions}
-                        reinforcement={reinforcement}
-                      />
-                    );
-                  default:
-                    return null;
-                }
-              })()}
+              {Element3DComponent ? (
+                <Element3DComponent {...elementData} {...sharedProps} />
+              ) : (
+                <></>
+              )}
 
+              {/* ...#######################Render Sample Members ############    */}
+              {/* ...#######################Render Sample Members ############    */}
+
+              {/* .............................Render Sample Members .............................                                  */}
+
+              <PerspectiveCamera makeDefault position={[5, 3, 5]} />
               {/* Camera Controller */}
               <CameraController
                 viewMode={viewMode}
@@ -1079,7 +882,7 @@ export default function StructuralVisualizationComponents({
                     }`}
                     title="Top View (Plan)"
                   >
-                    TOP
+                    F
                   </button>
                 </div>
 
@@ -1105,7 +908,7 @@ export default function StructuralVisualizationComponents({
                   }`}
                   title="Front Elevation"
                 >
-                  F
+                  Top
                 </button>
 
                 <button
@@ -1300,7 +1103,6 @@ export default function StructuralVisualizationComponents({
       >
         {propertiesOpen && (
           <>
-            {/* Properties Header */}
             <div
               className={`p-4 border-b ${borderColor} flex items-center justify-between`}
             >
@@ -1316,7 +1118,6 @@ export default function StructuralVisualizationComponents({
               </button>
             </div>
 
-            {/* Properties Content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Object Information */}
               <section>
@@ -1340,240 +1141,91 @@ export default function StructuralVisualizationComponents({
                   </div>
                 </div>
               </section>
-
-              {/* Dimensions Section */}
-              <section
-                className={`p-3 rounded ${
-                  isDark ? "bg-gray-750" : "bg-gray-50"
-                }`}
-              >
-                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wide">
-                  Dimensions
-                </h3>
-                {memberType === "beam" && (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Span:</span>
-                      <span className="font-medium">5.00 m</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Width:</span>
-                      <span className="font-medium">300 mm</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Depth:</span>
-                      <span className="font-medium">500 mm</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Cover:</span>
-                      <span className="font-medium">25 mm</span>
-                    </div>
-                  </div>
-                )}
-                {memberType === "column" && (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Height:</span>
-                      <span className="font-medium">3.00 m</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Width:</span>
-                      <span className="font-medium">400 mm</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Depth:</span>
-                      <span className="font-medium">400 mm</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Cover:</span>
-                      <span className="font-medium">30 mm</span>
-                    </div>
-                  </div>
-                )}
-              </section>
-
-              {/* Reinforcement Details */}
-              <section>
-                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wide">
-                  Reinforcement
-                </h3>
-                {memberType === "beam" && (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Bottom:</span>
-                      <span className="font-medium">4T20</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Top:</span>
-                      <span className="font-medium">2T16</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Stirrups:</span>
-                      <span className="font-medium">T10 @ 150</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Steel Grade:</span>
-                      <span className="font-medium">B500B</span>
-                    </div>
-                  </div>
-                )}
-                {memberType === "column" && (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Longitudinal:</span>
-                      <span className="font-medium">8T20</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Links:</span>
-                      <span className="font-medium">T10 @ 200</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={textSecondary}>Steel Grade:</span>
-                      <span className="font-medium">B500B</span>
-                    </div>
-                  </div>
-                )}
-              </section>
-
-              {/* Material Properties */}
-              <section
-                className={`p-3 rounded ${
-                  isDark ? "bg-gray-750" : "bg-gray-50"
-                }`}
-              >
-                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wide">
-                  Materials
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className={textSecondary}>Concrete:</span>
-                    <span className="font-medium">C30/37</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={textSecondary}>fck:</span>
-                    <span className="font-medium">30 MPa</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={textSecondary}>Steel:</span>
-                    <span className="font-medium">B500B</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={textSecondary}>fyk:</span>
-                    <span className="font-medium">500 MPa</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Code Compliance */}
-              <section>
-                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wide">
-                  Code Compliance
-                </h3>
-                <div className="space-y-2">
-                  <div
-                    className={`flex items-center justify-between p-2 rounded ${
-                      isDark ? "bg-green-900 bg-opacity-20" : "bg-green-50"
-                    }`}
-                  >
-                    <span className="text-xs">Min. Cover</span>
-                    <span
-                      className={`text-xs font-medium ${
-                        isDark ? "text-green-400" : "text-green-600"
-                      }`}
-                    >
-                      ✓ Pass
-                    </span>
-                  </div>
-                  <div
-                    className={`flex items-center justify-between p-2 rounded ${
-                      isDark ? "bg-green-900 bg-opacity-20" : "bg-green-50"
-                    }`}
-                  >
-                    <span className="text-xs">Bar Spacing</span>
-                    <span
-                      className={`text-xs font-medium ${
-                        isDark ? "text-green-400" : "text-green-600"
-                      }`}
-                    >
-                      ✓ Pass
-                    </span>
-                  </div>
-                  <div
-                    className={`flex items-center justify-between p-2 rounded ${
-                      isDark ? "bg-green-900 bg-opacity-20" : "bg-green-50"
-                    }`}
-                  >
-                    <span className="text-xs">Link Spacing</span>
-                    <span
-                      className={`text-xs font-medium ${
-                        isDark ? "text-green-400" : "text-green-600"
-                      }`}
-                    >
-                      ✓ Pass
-                    </span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Quantities */}
-              <section
-                className={`p-3 rounded ${
-                  isDark ? "bg-gray-750" : "bg-gray-50"
-                }`}
-              >
-                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wide">
-                  Quantities
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className={textSecondary}>Concrete:</span>
-                    <span className="font-medium">0.75 m³</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={textSecondary}>Steel:</span>
-                    <span className="font-medium">45.2 kg</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={textSecondary}>Formwork:</span>
-                    <span className="font-medium">8.0 m²</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Notes Section */}
-              <section>
-                <h3 className="text-sm font-semibold mb-2 uppercase tracking-wide">
-                  Notes
-                </h3>
-                <textarea
-                  className={`w-full p-2 text-xs rounded border ${borderColor} ${
-                    isDark ? "bg-gray-700" : "bg-white"
-                  } resize-none`}
-                  rows="3"
-                  placeholder="Add notes or comments..."
-                />
-              </section>
             </div>
 
-            {/* Properties Footer */}
-            <div className={`p-3 border-t ${borderColor}`}>
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium transition-colors">
-                Apply Changes
-              </button>
-            </div>
+            {/* === UNIVERSAL PROPERTY VIEWER === */}
+            {elementData && (
+              <section className="space-y-4">
+                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wide">
+                  Inputs
+                </h3>
+                <div className="space-y-2 text-sm">
+                  {Object.entries(elementData)
+                    .filter(([key]) => key !== "results" && key !== "metadata")
+                    .map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className={textSecondary}>
+                          {formatLabel(key)}:
+                        </span>
+                        <span className="font-medium">
+                          {formatValue(value)}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+
+                {/* === RESULTS === */}
+                {elementData.results && (
+                  <>
+                    <h3 className="text-sm font-semibold mb-3 uppercase tracking-wide mt-4">
+                      Results
+                    </h3>
+                    {Object.entries(elementData.results).map(
+                      ([group, values]) =>
+                        typeof values === "object" ? (
+                          <details key={group} className="mb-2">
+                            <summary className="cursor-pointer font-semibold capitalize">
+                              {formatLabel(group)}
+                            </summary>
+                            <div className="pl-4 mt-2 space-y-1 text-sm">
+                              {Object.entries(values).map(
+                                ([subKey, subVal]) => (
+                                  <div
+                                    key={subKey}
+                                    className="flex justify-between"
+                                  >
+                                    <span className={textSecondary}>
+                                      {formatLabel(subKey)}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {formatValue(subVal)}
+                                    </span>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </details>
+                        ) : (
+                          <div key={group} className="flex justify-between">
+                            <span className={textSecondary}>
+                              {formatLabel(group)}:
+                            </span>
+                            <span className="font-medium">
+                              {formatValue(values)}
+                            </span>
+                          </div>
+                        )
+                    )}
+                  </>
+                )}
+              </section>
+            )}
           </>
+        )}
+
+        {!propertiesOpen && (
+          <button
+            onClick={() => setPropertiesOpen(true)}
+            className={`absolute right-0 top-1/2 -translate-y-1/2 ${cardBg} border ${borderColor} p-2 rounded-l-lg shadow-lg z-10 ${hoverBg}`}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
         )}
       </div>
 
+      {/* Notes Section */}
+
       {/* Properties Toggle (when closed) */}
-      {!propertiesOpen && (
-        <button
-          onClick={() => setPropertiesOpen(true)}
-          className={`absolute right-0 top-1/2 -translate-y-1/2 ${cardBg} border ${borderColor} p-2 rounded-l-lg shadow-lg z-10 ${hoverBg}`}
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-      )}
 
       {/* Keyboard Shortcuts Overlay (Optional) */}
       {/* Can be toggled with a help button */}

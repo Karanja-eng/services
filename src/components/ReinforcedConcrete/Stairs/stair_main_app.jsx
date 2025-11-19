@@ -1,12 +1,15 @@
 import React, { useState, createContext } from "react";
 import { Moon, Sun, Calculator, BookOpen } from "lucide-react";
+import StructuralVisualizationComponent from "../../Drawings/visualise_component";
+import ThreeD_helper from '../../components/visualisation_helper'
+
 
 // Theme Context
 const ThemeContext = createContext();
 
 // Main App Component
 function StairDesignerApp() {
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
   const [activeCode, setActiveCode] = useState("eurocode");
 
   const toggleTheme = () => {
@@ -135,6 +138,15 @@ function EurocodeCalculator({ theme }) {
   const [cantileverType, setCantileverType] = useState("side_support");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  // add this state with the other useState calls in EurocodeCalculator
+
+  const [show3D, setShow3D] = useState(false);
+  const [stairPropsFor3D, setStairPropsFor3D] = useState(null);
+
+  const STAIR_TYPE_TO_ELEMENT = {
+    simply_supported: "stair_MST1",
+    cantilever: "stair_MST2",
+  };
 
   const [inputs, setInputs] = useState({
     span: 3.0,
@@ -150,6 +162,8 @@ function EurocodeCalculator({ theme }) {
     live_load: 3.0,
     finishes_load: 1.5,
   });
+
+  const euro_data_object = { inputs: inputs, results: results };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -424,7 +438,55 @@ function EurocodeCalculator({ theme }) {
         >
           {loading ? "Calculating..." : "Calculate Design"}
         </button>
+  {/* ################################################## */}
+
+        {/* Show 3D button - place immediately below the Calculate Design button */}
+        <button
+          onClick={() => {
+            // prepare and normalize inputs for the DrawStairsMST1 component
+            // convert mm → m where applicable (your inputs have some mm fields)
+            const stairProps = {
+              flightLength: inputs.span, // span is in meters already
+              flightWidth: inputs.width, // width in meters
+              waistThickness: (inputs.waist_thickness || 150) / 1000, // mm -> m
+              riserHeight: (inputs.riser_height || 175) / 1000, // mm -> m
+              goingDepth: (inputs.tread_length || 250) / 1000, // mm -> m
+              numSteps: inputs.num_risers || 14,
+              landingLength: 1.2, // you can pass a UI value later
+              landingThickness: (inputs.waist_thickness || 150) / 1000,
+              cover: (inputs.cover || 30) / 1000,
+              showConcrete: true,
+              showRebar: true,
+              opacity: 0.6,
+              wireframe: false,
+              // optional color overrides:
+              colors: {
+                concrete: "#c0c0c0",
+                waist: "#b0b0b0",
+                landing: "#a8a8a8",
+                mainBars: "#cc3333",
+                distributionBars: "#3366cc",
+                uBars: "#ff6600",
+              },
+              elementType: STAIR_TYPE_TO_ELEMENT[stairType],
+            };
+
+            setStairPropsFor3D(stairProps);
+            setShow3D(true);
+          }}
+          className="w-full mt-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg"
+        >
+          Show 3D
+        </button>
+
+
       </div>
+
+      
+      {/* ################################################# */}
+
+
+
 
       {/* Results Panel */}
       <div className={`${cardClass} rounded-2xl p-6 border shadow-xl`}>
@@ -472,6 +534,68 @@ function EurocodeCalculator({ theme }) {
           </div>
         )}
       </div>
+
+      
+      {/* ################################################ */}
+
+      {/* ------------- 3D Popup (full-screen) ------------- */}
+      {show3D && stairPropsFor3D && (
+        <div
+          className="fixed inset-0 z-50 flex items-stretch justify-center"
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShow3D(false)}
+          />
+
+          {/* content */}
+          <div className="relative m-6 w-[calc(100%-3rem)] h-[calc(100%-3rem)] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
+            {/* header with Back button */}
+            <div className="p-4 border-b flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShow3D(false)}
+                  className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200"
+                >
+                  ← Back
+                </button>
+                <h3 className="font-semibold">3D Stair Visualization</h3>
+              </div>
+
+              {/* optional quick toggles */}
+              <div className="flex items-center gap-2 pr-2">
+                {/* you can later add export/print controls here */}
+                <button
+                  onClick={() => {
+                    /* example: zoom to fit could be implemented in the viz component by exposing a ref */
+                  }}
+                  className="px-2 py-1 rounded-lg bg-gray-50 dark:bg-gray-800"
+                >
+                  Fit
+                </button>
+              </div>
+            </div>
+
+            {/* visualization container */}
+            <div className="w-full h-[calc(100%-64px)]">
+              {/* render the StructuralVisualizationComponent and pass stair props */}
+              <StructuralVisualizationComponent
+                theme={theme}
+                visible={show3D}
+                onClose={() => setShow3D(false)}
+                elementType={stairPropsFor3D.elementType} // or "beam_RC1", "column_RC2", "slab_FF1"
+                elementData={euro_data_object} // contains all inputs and results
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/*############################################# */}
     </div>
   );
 }
@@ -710,6 +834,8 @@ function BS8110Calculator({ theme }) {
         >
           {loading ? "Calculating..." : "Calculate Design"}
         </button>
+
+        <ThreeD_helper />
       </div>
 
       {/* Results Panel */}
