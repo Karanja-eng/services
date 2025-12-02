@@ -1,16 +1,43 @@
 # Ignore everything
 *
 
-# Allow only Python and JSX files
+# Allow source files
 !*.py
 !*.jsx
 !*.hpp
 !*.cpp
 
-
-# Allow directories (so .gitignore rules inside them work)
+# Allow directories
 !*/
 
-# Optional: keep the .gitignore file itself
+# Keep gitignore itself
 !.gitignore
 
+# Allow build output for deployment
+!/build/
+
+# Allow public assets
+!/public/
+!*.html
+!*.css
+!*.json
+!*.png
+!*.jpg
+!*.svg
+
+# Allow configs
+!package.json
+!package-lock.json
+!tailwind.config.js
+!postcss.config.js
+!babel.config.js
+!webpack.config.js
+!index.js
+!App.js
+
+
+# Allow GitHub workflows
+!.github/
+
+# Always ignore node_modules
+/node_modules/
