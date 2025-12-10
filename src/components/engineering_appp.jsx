@@ -5,7 +5,7 @@ import {
   Route,
   useNavigate,
 } from "react-router-dom";
-import { Menu, Settings, HammerIcon } from "lucide-react";
+import { Menu, Settings, HammerIcon, House } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
 import ChatPage from "./components/ChatPage";
@@ -16,25 +16,43 @@ import StructuralVisualizationComponent from "./Drawings/visualise_component";
 import StructuralEngineeeringSuite from "./ReinforcedConcrete/Beams/StructuralEngineeeringSuite";
 import Columnmain from "./ReinforcedConcrete/Columns/Columnmain";
 import StairDesignerApp from "./ReinforcedConcrete/Stairs/stair_main_app";
-import FoundationDesignApp from "./ReinforcedConcrete/Foundations/foundation_design_app";
+import FoundationMainApp from "./ReinforcedConcrete/Foundations/foundation_main_app";
 import WallDesignCalculator from "./ReinforcedConcrete/Walls/main_wall_app";
 import MainSlabApp from "./ReinforcedConcrete/Slabs/main_slab_app";
+
+
+import MainRetainingApp from "./ReinforcedConcrete/Rwall/main_app_component";
+
 import SteelDesignApp from "./SteelDesign/steel_design_app";
+import BoltedConnectionsModule from "./SteelDesign/bolted_connections_frontend";
+import WeldedConnectionsModule from "./SteelDesign/welded_joints_frontend";
+
+//////////////////////////TakingOff /////////////////////
 import QuantityTakeoff from "./takeoff2/QuantityTakeoff";
 import ApproximateQuantities from "./takeoff2/ApproximateQuantities";
 import BOQ from "./takeoff2/BOQ";
 import DocumentViewer from "./takeoff2/DocumentViewer";
 import IndividualMembers from "./takeoff2/IndividualMembers";
-import MainRetainingApp from "./ReinforcedConcrete/Rwall/main_app_component";
-import BoltedConnectionsModule from "./SteelDesign/bolted_connections_frontend";
-import WeldedConnectionsModule from "./SteelDesign/welded_joints_frontend";
+import DrainageComponenet from "./takeoff2/Manhole/MainTakeoff";
+import RoofComponent from "./takeoff2/RoofWorks/RoofMain";
+import ExternalWorksComponent from "./takeoff2/ExternalWorks/MainExternalWorks";
+import SepticTakeoffApp from "./takeoff2/septik_tank";
+import SwimmingPoolTakeoffApp from "./takeoff2/swimming_pool";
+import BasementTakeoffApp from "./takeoff2/Basement_Takeoff";
+import RCCSuperstructureApp from "./takeoff2/superstructure";
+import DoorWindowTakeoff from './takeoff2/Doors&Window'
+import InternalFinishesTakeoff from './takeoff2/internal_finishes'
+import FramedStructureComponent from './ReinforcedConcrete/FramedandTall/eurocode_structural_app'
+
+
+//////////////////////////TakingOff /////////////////////
 
 // Wrapper components for navigation
 const QuantityTakeoffWrapper = () => {
   const navigate = useNavigate();
   return (
     <QuantityTakeoff
-      onViewDiagram={() => {}}
+      onViewDiagram={() => { }}
       onGoToApproximate={() => navigate("/quantity/manual/approximate")}
       onGoToBOQ={() => navigate("/quantity/manual/boq")}
       onGoToDocuments={() => navigate("/quantity/manual/documents")}
@@ -46,7 +64,7 @@ const ApproximateQuantitiesWrapper = () => {
   const navigate = useNavigate();
   return (
     <ApproximateQuantities
-      onViewDiagram={() => {}}
+      onViewDiagram={() => { }}
       onGoToTakeoff={() => navigate("/quantity/manual/taking-off")}
       onGoToBOQ={() => navigate("/quantity/manual/boq")}
       onGoToDocuments={() => navigate("/quantity/manual/documents")}
@@ -58,7 +76,7 @@ const BOQWrapper = () => {
   const navigate = useNavigate();
   return (
     <BOQ
-      onViewDiagram={() => {}}
+      onViewDiagram={() => { }}
       onGoToTakeoff={() => navigate("/quantity/manual/taking-off")}
       onGoToApproximate={() => navigate("/quantity/manual/approximate")}
       onGoToDocuments={() => navigate("/quantity/manual/documents")}
@@ -70,7 +88,7 @@ const DocumentViewerWrapper = () => {
   const navigate = useNavigate();
   return (
     <DocumentViewer
-      onViewDiagram={() => {}}
+      onViewDiagram={() => { }}
       onGoToTakeoff={() => navigate("/quantity/manual/taking-off")}
       onGoToApproximate={() => navigate("/quantity/manual/approximate")}
       onGoToBOQ={() => navigate("/quantity/manual/boq")}
@@ -97,13 +115,13 @@ const EngineeringApp = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
-                className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               >
-                <Menu size={24} className="text-gray-700 dark:text-gray-300" />
+                <House size={24} className="text-gray-700 dark:text-gray-300" />
               </button>
               <div className="flex items-center gap-1">
                 <div className="w-10 h-10  rounded-lg flex items-center justify-center">
-                  <HammerIcon size={24} className="text-black" />
+                  <HammerIcon size={24} className="text-black dark:text-white" />
                 </div>
                 <h1 className="text-xl font-bold text-gray-800 dark:text-white">
                   Fundi
@@ -128,55 +146,59 @@ const EngineeringApp = () => {
               onClose={() => setLeftSidebarOpen(false)}
               isDark={isDark}
             />
-            <main className="flex-1 overflow-y-auto p-6">
+            <main
+              className={`flex-1 overflow-y-auto p-6 transition-all duration-300 ${leftSidebarOpen ? 'lg:ml-0' : ''
+                } ${rightSidebarOpen ? 'lg:mr-0' : ''
+                }`}
+            >
               <Routes>
-                <Route path="/" element={<ChatPage />} />
-                <Route path="/surveying" element={<SurveyingApp />} />
+                <Route path="/" element={<ChatPage isDark={isDark} />} />
+                <Route path="/surveying" element={<SurveyingApp isDark={isDark} />} />
                 <Route
                   path="/visualise"
-                  element={<StructuralVisualizationComponent />}
+                  element={<StructuralVisualizationComponent isDark={isDark} />}
                 />
-                <Route path="/drawing" element={<CadDrawer />} />
+                <Route path="/drawing" element={<CadDrawer isDark={isDark} />} />
 
                 <Route
                   path="/structural/manual/beam"
-                  element={<StructuralEngineeeringSuite />}
+                  element={<StructuralEngineeeringSuite isDark={isDark} />}
                 />
                 <Route
                   path="/structural/manual/column"
-                  element={<Columnmain />}
+                  element={<Columnmain isDark={isDark} />}
                 />
                 <Route
                   path="/structural/manual/stairs"
-                  element={<StairDesignerApp />}
+                  element={<StairDesignerApp isDark={isDark} />}
                 />
                 <Route
                   path="/structural/manual/retaining"
-                  element={<MainRetainingApp />}
+                  element={<MainRetainingApp isDark={isDark} />}
                 />
                 <Route
                   path="/structural/manual/foundation"
-                  element={<FoundationDesignApp />}
+                  element={<FoundationMainApp isDark={isDark} />}
                 />
                 <Route
                   path="/structural/manual/wall"
-                  element={<WallDesignCalculator />}
+                  element={<WallDesignCalculator isDark={isDark} />}
                 />
                 <Route
                   path="/structural/manual/slabs"
-                  element={<MainSlabApp />}
+                  element={<MainSlabApp isDark={isDark} />}
                 />
                 <Route
                   path="/structural/manual/steel"
-                  element={<SteelDesignApp />}
+                  element={<SteelDesignApp isDark={isDark} />}
                 />
                 <Route
                   path="/structural/automatic/bolt_connections"
-                  element={<BoltedConnectionsModule />}
+                  element={<BoltedConnectionsModule isDark={isDark} />}
                 />
                 <Route
                   path="/structural/automatic/weld_connections"
-                  element={<WeldedConnectionsModule />}
+                  element={<WeldedConnectionsModule isDark={isDark} />}
                 />
                 <Route
                   path="/quantity/manual/taking-off"
@@ -193,8 +215,53 @@ const EngineeringApp = () => {
                 />
                 <Route
                   path="/quantity/manual/individual-members"
-                  element={<IndividualMembers />}
+                  element={<IndividualMembers isDark={isDark} />}
                 />
+
+                {/* // Taking Off ///////////////*/}
+                <Route
+                  path="/quantity/manual/drainage-taking-off"
+                  element={<DrainageComponenet isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/roof-taking-off"
+                  element={<RoofComponent isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/external-taking-off"
+                  element={<ExternalWorksComponent isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/septic-taking-off"
+                  element={<SepticTakeoffApp isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/swimming-pool-taking-off"
+                  element={<SwimmingPoolTakeoffApp isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/basement-taking-off"
+                  element={<BasementTakeoffApp isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/rcc-superstructure"
+                  element={<RCCSuperstructureApp isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/door_window"
+                  element={<DoorWindowTakeoff isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/internal_finishes"
+                  element={<InternalFinishesTakeoff isDark={isDark} />}
+                />
+                <Route
+                  path="/structural/manual/eurocode_structural_app"
+                  element={<FramedStructureComponent isDark={isDark} />}
+                />
+
+                {/* // Taking Off ///////////////*/}
+
               </Routes>
             </main>
             {/* RightSidebar overlays on the right, not inline */}

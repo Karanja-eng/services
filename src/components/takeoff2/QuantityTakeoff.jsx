@@ -68,7 +68,7 @@ const QuantityTakeoff = ({
     if (!descriptions.length && !loading) return null;
 
     return (
-      <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-20 max-h-48 overflow-y-auto">
+      <div className="absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-md shadow-lg z-20 max-h-48 overflow-y-auto">
         {loading && (
           <div className="p-3 text-gray-500 text-sm">
             Searching descriptions...
@@ -200,9 +200,8 @@ const QuantityTakeoff = ({
 
     return (
       <tr
-        className={`${
-          isActive ? "bg-blue-50" : ""
-        } hover:bg-gray-50 transition-colors`}
+        className={`${isActive ? "bg-blue-50" : ""
+          } hover:bg-gray-50 transition-colors`}
       >
         <td className="p-2 border-r border-gray-200">
           <input
@@ -225,7 +224,7 @@ const QuantityTakeoff = ({
         </td>
 
         <td className="p-2 border-r border-gray-200">
-          <div className="p-2 bg-gray-100 rounded text-center font-semibold text-sm">
+          <div className="p-2 bg-gray-100 dark:bg-slate-700 rounded text-center font-semibold text-sm">
             {localRow.quantity.toFixed(2)}
           </div>
         </td>
@@ -372,7 +371,7 @@ const QuantityTakeoff = ({
   return (
     <div className="space-y-6">
       {/* Control Panel */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 p-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
@@ -444,7 +443,7 @@ const QuantityTakeoff = ({
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="bg-gray-50 dark:bg-slate-700">
                 <th className="border border-gray-300 p-3 text-left font-semibold w-20">
                   T
                 </th>

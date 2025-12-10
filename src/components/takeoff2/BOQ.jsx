@@ -108,17 +108,16 @@ const BOQ = ({
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `BOQ_${activeTab}_${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
+    link.download = `BOQ_${activeTab}_${new Date().toISOString().split("T")[0]
+      }.csv`;
     link.click();
     window.URL.revokeObjectURL(url);
   };
 
   const PreviewModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-6xl max-h-[90vh] overflow-auto w-full">
-        <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+      <div className="bg-white dark:bg-slate-800 rounded-lg max-w-6xl max-h-[90vh] overflow-auto w-full">
+        <div className="p-4 border-b dark:border-slate-700 flex justify-between items-center  top-0 bg-white dark:bg-slate-800 z-10">
           <h3 className="text-lg font-semibold">BOQ Preview</h3>
           <div className="flex gap-2">
             <button
@@ -165,7 +164,7 @@ const BOQ = ({
 
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-700">
             <th className="border border-gray-300 p-3 text-left font-semibold w-24">
               Item Code
             </th>
@@ -323,7 +322,7 @@ const BOQ = ({
           )}
         </tbody>
         <tfoot>
-          <tr className="bg-gray-100 font-bold">
+          <tr className="bg-gray-100 dark:bg-slate-700 font-bold">
             <td
               colSpan={isManual && !preview ? 6 : 5}
               className="border border-gray-300 p-3 text-right text-lg"
@@ -362,7 +361,7 @@ const BOQ = ({
               <div>Date: ________________</div>
             </div>
           </div>
-          <div className="mt-6 p-4 bg-gray-50 rounded border">
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-slate-800 rounded border dark:border-slate-700">
             <h4 className="font-semibold mb-2">Notes:</h4>
             <ul className="text-xs space-y-1">
               <li>• All rates are in Kenyan Shillings (KSh)</li>
@@ -378,7 +377,7 @@ const BOQ = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 p-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
@@ -454,21 +453,19 @@ const BOQ = ({
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setActiveTab("auto")}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === "auto"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "auto"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
           >
             Auto Generated ({autoBOQ.length})
           </button>
           <button
             onClick={() => setActiveTab("manual")}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === "manual"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "manual"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
           >
             Manual Entry ({manualBOQ.length})
           </button>

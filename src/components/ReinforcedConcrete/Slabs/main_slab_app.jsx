@@ -1,46 +1,38 @@
 import React, { useState } from "react";
-import { Moon, Sun, BookOpen, Euro, FileText, Settings } from "lucide-react";
+import { BookOpen, Euro, FileText, Settings } from "lucide-react";
 
 // Import the calculator components (in actual implementation, these would be separate files)
 // For demonstration, we'll use placeholders that would be replaced with actual imports:
 import SlabCalculator from "./slab_calculator_frontend";
 import EurocodeSlabCalculator from "./eurocode_slab_calculator";
 
-const MainSlabApp = () => {
-  const [theme, setTheme] = useState("light");
+const MainSlabApp = ({ isDark = false }) => {
   const [activeCode, setActiveCode] = useState("bs8110"); // 'bs8110' or 'eurocode'
   const [showSettings, setShowSettings] = useState(false);
 
-  const isDark = theme === "dark";
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  };
-
-  // Theme classes
-  const bgPrimary = isDark ? "bg-gray-900" : "bg-gray-50";
-  const bgSecondary = isDark ? "bg-gray-800" : "bg-white";
-  const bgTertiary = isDark ? "bg-gray-700" : "bg-gray-100";
-  const textPrimary = isDark ? "text-gray-100" : "text-gray-900";
-  const textSecondary = isDark ? "text-gray-300" : "text-gray-600";
-  const textTertiary = isDark ? "text-gray-400" : "text-gray-500";
-  const borderColor = isDark ? "border-gray-700" : "border-gray-200";
-  const hoverBg = isDark ? "hover:bg-gray-700" : "hover:bg-gray-100";
+  // Theme classes using slate/teal palette
+  const bgPrimary = isDark ? "bg-slate-900" : "bg-slate-50";
+  const bgSecondary = isDark ? "bg-slate-800" : "bg-white";
+  const bgTertiary = isDark ? "bg-slate-700" : "bg-slate-100";
+  const textPrimary = isDark ? "text-slate-100" : "text-slate-900";
+  const textSecondary = isDark ? "text-slate-300" : "text-slate-600";
+  const textTertiary = isDark ? "text-slate-400" : "text-slate-500";
+  const borderColor = isDark ? "border-slate-700" : "border-slate-200";
+  const hoverBg = isDark ? "hover:bg-slate-700" : "hover:bg-slate-100";
 
   return (
     <div className={`min-h-screen ${bgPrimary} transition-colors duration-300`}>
       {/* Top Navigation Bar */}
       <nav
-        className={`${bgSecondary} border-b ${borderColor} sticky top-0 z-50 shadow-lg`}
+        className={`${bgSecondary} border-b ${borderColor} shadow-lg`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Title */}
             <div className="flex items-center space-x-4">
               <div
-                className={`p-2 ${
-                  activeCode === "bs8110" ? "bg-blue-500" : "bg-green-500"
-                } rounded-lg transition-colors duration-300`}
+                className={`p-2 ${activeCode === "bs8110" ? "bg-teal-500" : "bg-blue-500"
+                  } rounded-lg transition-colors duration-300`}
               >
                 {activeCode === "bs8110" ? (
                   <BookOpen className="w-6 h-6 text-white" />
@@ -50,7 +42,7 @@ const MainSlabApp = () => {
               </div>
               <div>
                 <h1 className={`text-xl font-bold ${textPrimary}`}>
-                  Structural Design Suite
+                  Slab Design Suite
                 </h1>
                 <p className={`text-xs ${textTertiary}`}>
                   {activeCode === "bs8110"
@@ -64,41 +56,28 @@ const MainSlabApp = () => {
             <div className={`flex items-center ${bgTertiary} rounded-lg p-1`}>
               <button
                 onClick={() => setActiveCode("bs8110")}
-                className={`px-6 py-2 rounded-md font-medium transition-all duration-200 flex items-center gap-2 ${
-                  activeCode === "bs8110"
-                    ? "bg-blue-500 text-white shadow-lg"
-                    : `${textSecondary} ${hoverBg}`
-                }`}
+                className={`px-6 py-2 rounded-md font-medium transition-all duration-200 flex items-center gap-2 ${activeCode === "bs8110"
+                  ? "bg-teal-500 text-white shadow-lg"
+                  : `${textSecondary} ${hoverBg}`
+                  }`}
               >
                 <BookOpen className="w-4 h-4" />
                 BS 8110
               </button>
               <button
                 onClick={() => setActiveCode("eurocode")}
-                className={`px-6 py-2 rounded-md font-medium transition-all duration-200 flex items-center gap-2 ${
-                  activeCode === "eurocode"
-                    ? "bg-green-500 text-white shadow-lg"
-                    : `${textSecondary} ${hoverBg}`
-                }`}
+                className={`px-6 py-2 rounded-md font-medium transition-all duration-200 flex items-center gap-2 ${activeCode === "eurocode"
+                  ? "bg-blue-500 text-white shadow-lg"
+                  : `${textSecondary} ${hoverBg}`
+                  }`}
               >
                 <Euro className="w-4 h-4" />
                 Eurocode
               </button>
             </div>
 
-            {/* Right side - Theme toggle and Settings */}
+            {/* Right side - Settings only (theme controlled from main app) */}
             <div className="flex items-center space-x-2">
-              <button
-                onClick={toggleTheme}
-                className={`p-2 ${bgTertiary} rounded-lg ${hoverBg} transition-colors`}
-                aria-label="Toggle theme"
-              >
-                {isDark ? (
-                  <Sun className={`w-5 h-5 ${textPrimary}`} />
-                ) : (
-                  <Moon className={`w-5 h-5 ${textPrimary}`} />
-                )}
-              </button>
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className={`p-2 ${bgTertiary} rounded-lg ${hoverBg} transition-colors`}
@@ -170,14 +149,12 @@ const MainSlabApp = () => {
         >
           <div className="flex items-start gap-4">
             <div
-              className={`p-3 ${
-                activeCode === "bs8110" ? "bg-blue-500/20" : "bg-green-500/20"
-              } rounded-lg`}
+              className={`p-3 ${activeCode === "bs8110" ? "bg-teal-500/20" : "bg-blue-500/20"
+                } rounded-lg`}
             >
               <FileText
-                className={`w-6 h-6 ${
-                  activeCode === "bs8110" ? "text-blue-500" : "text-green-500"
-                }`}
+                className={`w-6 h-6 ${activeCode === "bs8110" ? "text-teal-500" : "text-blue-500"
+                  }`}
               />
             </div>
             <div className="flex-1">
@@ -193,47 +170,42 @@ const MainSlabApp = () => {
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    activeCode === "bs8110"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "bg-green-500/20 text-green-400"
-                  }`}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${activeCode === "bs8110"
+                    ? "bg-teal-500/20 text-teal-400"
+                    : "bg-blue-500/20 text-blue-400"
+                    }`}
                 >
                   ✓ One-way slabs
                 </span>
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    activeCode === "bs8110"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "bg-green-500/20 text-green-400"
-                  }`}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${activeCode === "bs8110"
+                    ? "bg-teal-500/20 text-teal-400"
+                    : "bg-blue-500/20 text-blue-400"
+                    }`}
                 >
                   ✓ Two-way slabs
                 </span>
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    activeCode === "bs8110"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "bg-green-500/20 text-green-400"
-                  }`}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${activeCode === "bs8110"
+                    ? "bg-teal-500/20 text-teal-400"
+                    : "bg-blue-500/20 text-blue-400"
+                    }`}
                 >
                   ✓ Ribbed slabs
                 </span>
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    activeCode === "bs8110"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "bg-green-500/20 text-green-400"
-                  }`}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${activeCode === "bs8110"
+                    ? "bg-teal-500/20 text-teal-400"
+                    : "bg-blue-500/20 text-blue-400"
+                    }`}
                 >
                   ✓ Waffle slabs
                 </span>
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    activeCode === "bs8110"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "bg-green-500/20 text-green-400"
-                  }`}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${activeCode === "bs8110"
+                    ? "bg-teal-500/20 text-teal-400"
+                    : "bg-blue-500/20 text-blue-400"
+                    }`}
                 >
                   ✓ Multiple spans
                 </span>
@@ -245,9 +217,9 @@ const MainSlabApp = () => {
         {/* Calculator Component */}
         <div className="transition-all duration-300">
           {activeCode === "bs8110" ? (
-            <SlabCalculator theme={theme} />
+            <SlabCalculator isDark={isDark} />
           ) : (
-            <EurocodeSlabCalculator theme={theme} />
+            <EurocodeSlabCalculator isDark={isDark} />
           )}
         </div>
       </main>

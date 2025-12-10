@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Calculator, Map, Grid3x3, Layers, TrendingUp, Wrench, Plus, Trash2, Download, Upload } from 'lucide-react';
 
 // Main App Component
-export default function SurveyingApp() {
+export default function SurveyingApp({ isDark = false }) {
   const [activeTab, setActiveTab] = useState('levelling');
 
   const tabs = [
@@ -14,54 +14,55 @@ export default function SurveyingApp() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Grid3x3 className="w-8 h-8 text-teal-400" />
-            Civil Engineering Surveying Calculator
-          </h1>
-          <p className="text-slate-300 mt-2">Professional Field Surveying Tools</p>
-        </div>
-      </header>
-
-      {/* Navigation Tabs */}
-      <nav className="bg-white shadow-md border-b-2 border-slate-200">
-        <div className="container mx-auto px-4">
-          <div className="flex gap-2 overflow-x-auto">
-            {tabs.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 px-6 py-4 font-semibold transition-all border-b-4 ${
-                  activeTab === id
-                    ? 'border-teal-500 text-teal-700 bg-teal-50'
-                    : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-800'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                {label}
-              </button>
-            ))}
+    <div className={isDark ? "dark" : ""}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        {/* Header */}
+        <header className="bg-gradient-to-r from-slate-700 to-slate-800 dark:from-slate-800 dark:to-slate-900 text-white shadow-lg">
+          <div className="container mx-auto px-4 py-6">
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <Grid3x3 className="w-8 h-8 text-teal-400" />
+              Civil Engineering Surveying Calculator
+            </h1>
+            <p className="text-slate-300 dark:text-slate-400 mt-2">Professional Field Surveying Tools</p>
           </div>
-        </div>
-      </nav>
+        </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {activeTab === 'levelling' && <LevellingModule />}
-        {activeTab === 'traverse' && <TraverseModule />}
-        {activeTab === 'contouring' && <ContouringModule />}
-        {activeTab === 'tacheometric' && <TacheometricModule />}
-        {activeTab === 'sewer' && <SewerDesignModule />}
-      </main>
+        {/* Navigation Tabs */}
+        <nav className="bg-white dark:bg-slate-800 shadow-md border-b-2 border-slate-200 dark:border-slate-700">
+          <div className="container mx-auto px-4">
+            <div className="flex gap-2 overflow-x-auto">
+              {tabs.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`flex items-center gap-2 px-6 py-4 font-semibold transition-all border-b-4 ${activeTab === id
+                    ? 'border-teal-500 text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30'
+                    : 'border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-8">
+          {activeTab === 'levelling' && <LevellingModule isDark={isDark} />}
+          {activeTab === 'traverse' && <TraverseModule isDark={isDark} />}
+          {activeTab === 'contouring' && <ContouringModule isDark={isDark} />}
+          {activeTab === 'tacheometric' && <TacheometricModule isDark={isDark} />}
+          {activeTab === 'sewer' && <SewerDesignModule isDark={isDark} />}
+        </main>
+      </div>
     </div>
   );
 }
 
 // Levelling Module (Rise and Fall + Height of Collimation)
-function LevellingModule() {
+function LevellingModule({ isDark = false }) {
   const [method, setMethod] = useState('rise-fall');
   const [benchmarkRL, setBenchmarkRL] = useState(100.000);
   const [rows, setRows] = useState([
@@ -132,7 +133,7 @@ function LevellingModule() {
   const calculateHOC = () => {
     const calculated = [...rows];
     calculated[0].rl = benchmarkRL.toFixed(3);
-    
+
     let hoc = benchmarkRL + (parseFloat(calculated[0].bs) || 0);
     calculated[0].remarks = `RL of Benchmark, HOC = ${hoc.toFixed(3)}`;
 
@@ -180,22 +181,22 @@ function LevellingModule() {
   return (
     <div className="space-y-6">
       {/* Method Selection */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-slate-800 mb-4">Levelling Calculations</h2>
-        
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Levelling Calculations</h2>
+
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Method</label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Method</label>
             <select
               value={method}
               onChange={(e) => setMethod(e.target.value)}
-              className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:border-teal-500 focus:outline-none"
+              className="w-full px-4 py-2 border-2 border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg focus:border-teal-500 focus:outline-none"
             >
               <option value="rise-fall">Rise and Fall Method</option>
               <option value="hoc">Height of Collimation Method</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Benchmark RL (m)</label>
             <input
@@ -356,10 +357,10 @@ function TraverseModule() {
   const [startN, setStartN] = useState(1000);
 
   const addStation = () => {
-    setStations([...stations, { 
-      station: String.fromCharCode(65 + stations.length), 
-      bearing: '', distance: '', latitude: '', departure: '', 
-      corrLat: '', corrDep: '', easting: '', northing: '' 
+    setStations([...stations, {
+      station: String.fromCharCode(65 + stations.length),
+      bearing: '', distance: '', latitude: '', departure: '',
+      corrLat: '', corrDep: '', easting: '', northing: ''
     }]);
   };
 
@@ -377,14 +378,14 @@ function TraverseModule() {
     for (let i = 0; i < calculated.length; i++) {
       const bearing = parseFloat(calculated[i].bearing) || 0;
       const distance = parseFloat(calculated[i].distance) || 0;
-      
+
       const bearingRad = (bearing * Math.PI) / 180;
       const lat = distance * Math.cos(bearingRad);
       const dep = distance * Math.sin(bearingRad);
-      
+
       calculated[i].latitude = lat.toFixed(3);
       calculated[i].departure = dep.toFixed(3);
-      
+
       sumLat += lat;
       sumDep += dep;
       sumDist += distance;
@@ -401,19 +402,19 @@ function TraverseModule() {
       const distance = parseFloat(calculated[i].distance) || 0;
       const lat = parseFloat(calculated[i].latitude) || 0;
       const dep = parseFloat(calculated[i].departure) || 0;
-      
+
       const corrLat = corrLatPerUnit * distance;
       const corrDep = corrDepPerUnit * distance;
-      
+
       calculated[i].corrLat = corrLat.toFixed(3);
       calculated[i].corrDep = corrDep.toFixed(3);
-      
+
       const finalLat = lat + corrLat;
       const finalDep = dep + corrDep;
-      
+
       currentN += finalLat;
       currentE += finalDep;
-      
+
       calculated[i].northing = currentN.toFixed(3);
       calculated[i].easting = currentE.toFixed(3);
     }
@@ -425,7 +426,7 @@ function TraverseModule() {
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-slate-800 mb-4">Traverse Calculations (Bowditch Method)</h2>
-        
+
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Starting Easting (m)</label>
@@ -545,7 +546,7 @@ function ContouringModule() {
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-slate-800 mb-4">Contouring & Grid Survey</h2>
-        
+
         <div className="grid md:grid-cols-3 gap-6 mb-6">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Grid Size</label>
@@ -631,11 +632,11 @@ function TacheometricModule() {
   const calculateTacheometry = () => {
     const s = parseFloat(stadia.upper) - parseFloat(stadia.lower);
     const theta = (parseFloat(verticalAngle) * Math.PI) / 180;
-    
+
     const horizontalDistance = k * s * Math.cos(theta) * Math.cos(theta) + c * Math.cos(theta);
     const verticalDistance = k * s * Math.cos(theta) * Math.sin(theta) + c * Math.sin(theta);
     const slopeDistance = k * s + c;
-    
+
     setResult({
       staffIntercept: s.toFixed(4),
       horizontalDistance: horizontalDistance.toFixed(3),
@@ -648,7 +649,7 @@ function TacheometricModule() {
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-slate-800 mb-4">Tacheometric Calculations</h2>
-        
+
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
@@ -682,7 +683,7 @@ function TacheometricModule() {
               />
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Vertical Angle (degrees)</label>
@@ -759,10 +760,10 @@ function SewerDesignModule() {
   ]);
 
   const addManhole = () => {
-    setManholes([...manholes, { 
-      id: `MH${manholes.length + 1}`, 
-      groundLevel: '', invertLevel: '', depth: '', 
-      distance: '', gradient: '', remarks: '' 
+    setManholes([...manholes, {
+      id: `MH${manholes.length + 1}`,
+      groundLevel: '', invertLevel: '', depth: '',
+      distance: '', gradient: '', remarks: ''
     }]);
   };
 
@@ -774,20 +775,20 @@ function SewerDesignModule() {
 
   const calculateSewer = () => {
     const calculated = [...manholes];
-    
+
     for (let i = 0; i < calculated.length; i++) {
       const gl = parseFloat(calculated[i].groundLevel) || 0;
       const il = parseFloat(calculated[i].invertLevel) || 0;
-      
+
       if (gl && il) {
         calculated[i].depth = (gl - il).toFixed(3);
       }
-      
+
       if (i > 0 && calculated[i].distance) {
         const prevIL = parseFloat(calculated[i - 1].invertLevel) || 0;
         const currIL = parseFloat(calculated[i].invertLevel) || 0;
         const dist = parseFloat(calculated[i].distance) || 0;
-        
+
         if (dist > 0) {
           const gradient = ((prevIL - currIL) / dist) * 100;
           calculated[i].gradient = gradient.toFixed(4);
@@ -795,7 +796,7 @@ function SewerDesignModule() {
         }
       }
     }
-    
+
     setManholes(calculated);
   };
 
@@ -803,7 +804,7 @@ function SewerDesignModule() {
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-slate-800 mb-4">Sewer Design & Levelling</h2>
-        
+
         <div className="flex gap-3 mb-6">
           <button
             onClick={calculateSewer}

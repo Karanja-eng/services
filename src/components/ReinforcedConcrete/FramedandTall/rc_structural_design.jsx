@@ -103,11 +103,11 @@ const RCStructuralDesign = () => {
   const calculateTieForces = () => {
     const span = parseFloat(tieData.span) || 0;
     const load = parseFloat(tieData.loadPerMeter) || 0;
-    
+
     let tieForce = 0;
     let spacing = 0;
 
-    switch(tieData.tieType) {
+    switch (tieData.tieType) {
       case 'internal':
         // Internal tie: Ft = 0.5(gk + qk)L or 1.0Ls whichever is greater
         tieForce = Math.max(0.5 * load * span, 1.0 * span);
@@ -139,7 +139,7 @@ const RCStructuralDesign = () => {
 
     const fy = parseInt(tieData.steelGrade);
     const requiredArea = (tieForce * 1000) / (0.87 * fy);
-    
+
     return {
       tieForce: tieForce.toFixed(2),
       requiredArea: requiredArea.toFixed(2),
@@ -179,7 +179,7 @@ const RCStructuralDesign = () => {
     let driftLimit = 0;
     let characteristics = [];
 
-    switch(type) {
+    switch (type) {
       case 'rigid_frame':
         suitability = height <= 25 ? 'Suitable' : 'Consider bracing';
         driftLimit = height / 500;
@@ -241,7 +241,7 @@ const RCStructuralDesign = () => {
     let analysis = '';
     let loadPerBent = 0;
 
-    switch(category) {
+    switch (category) {
       case 'cat1':
         distribution = 'Equal distribution to identical parallel bents';
         loadPerBent = load / bents;
@@ -272,7 +272,7 @@ const RCStructuralDesign = () => {
   const handleCalculate = () => {
     let calculationResults = {};
 
-    switch(activeModule) {
+    switch (activeModule) {
       case 'loads':
         calculationResults = calculateLoadCombinations();
         break;
@@ -302,7 +302,7 @@ const RCStructuralDesign = () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, canvasRef.current.clientWidth / canvasRef.current.clientHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
-    
+
     renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
     renderer.setClearColor(theme === 'dark' ? 0x1f2937 : 0xf3f4f6);
 
@@ -371,7 +371,7 @@ const RCStructuralDesign = () => {
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} transition-colors duration-200`}>
       {/* Header */}
-      <header className={`${cardBg} border-b ${borderColor} px-6 py-4 sticky top-0 z-50`}>
+      <header className={`${cardBg} border-b ${borderColor} px-6 py-4  top-0 z-50`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
@@ -379,7 +379,7 @@ const RCStructuralDesign = () => {
             </button>
             <Building2 size={32} className="text-blue-600" />
             <div>
-              <h1 className="text-2xl font-bold">RC Structural Design System</h1>
+              <h1 className="text-2xl font-bold">BS Structural Design System</h1>
               <p className="text-sm opacity-70">BS Code Compliant Analysis & Design</p>
             </div>
           </div>
@@ -397,11 +397,10 @@ const RCStructuralDesign = () => {
               <button
                 key={module.id}
                 onClick={() => setActiveModule(module.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  activeModule === module.id 
-                    ? 'bg-blue-600 text-white' 
-                    : `${inputBg} hover:bg-blue-100 hover:text-blue-600`
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeModule === module.id
+                  ? 'bg-blue-600 text-white'
+                  : `${inputBg} hover:bg-blue-100 hover:text-blue-600`
+                  }`}
               >
                 <module.icon size={20} />
                 <span className="text-sm font-medium">{module.label}</span>
@@ -426,7 +425,7 @@ const RCStructuralDesign = () => {
                     <input
                       type="number"
                       value={systemData.coreSize}
-                      onChange={(e) => setSystemData({...systemData, coreSize: e.target.value})}
+                      onChange={(e) => setSystemData({ ...systemData, coreSize: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter core size"
                     />
@@ -453,7 +452,7 @@ const RCStructuralDesign = () => {
                     <label className="block text-sm font-medium mb-2">Model Category</label>
                     <select
                       value={modelData.category}
-                      onChange={(e) => setModelData({...modelData, category: e.target.value})}
+                      onChange={(e) => setModelData({ ...modelData, category: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     >
                       <option value="cat1">Category 1: Symmetric Floor, Identical Parallel Bents</option>
@@ -466,7 +465,7 @@ const RCStructuralDesign = () => {
                     <input
                       type="number"
                       value={modelData.bents}
-                      onChange={(e) => setModelData({...modelData, bents: e.target.value})}
+                      onChange={(e) => setModelData({ ...modelData, bents: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter number of bents"
                     />
@@ -476,7 +475,7 @@ const RCStructuralDesign = () => {
                     <input
                       type="number"
                       value={modelData.load}
-                      onChange={(e) => setModelData({...modelData, load: e.target.value})}
+                      onChange={(e) => setModelData({ ...modelData, load: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter applied load"
                     />
@@ -485,7 +484,7 @@ const RCStructuralDesign = () => {
                     <label className="block text-sm font-medium mb-2">Symmetry</label>
                     <select
                       value={modelData.symmetry}
-                      onChange={(e) => setModelData({...modelData, symmetry: e.target.value})}
+                      onChange={(e) => setModelData({ ...modelData, symmetry: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     >
                       <option value="symmetric">Symmetric</option>
@@ -531,7 +530,7 @@ const RCStructuralDesign = () => {
                   <FileText size={24} className="text-green-600" />
                   Calculation Results
                 </h2>
-                
+
                 {activeModule === 'loads' && (
                   <div className="space-y-4">
                     <div>
@@ -677,7 +676,7 @@ const RCStructuralDesign = () => {
 
                 <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
                   <p className="text-sm">
-                    <strong>Note:</strong> All calculations are based on BS 8110 and Eurocode standards. 
+                    <strong>Note:</strong> All calculations are based on BS 8110 and Eurocode standards.
                     Results should be verified by a qualified structural engineer before implementation.
                   </p>
                 </div>
@@ -809,265 +808,9 @@ const RCStructuralDesign = () => {
         </main>
       </div>
 
-      {/* Footer */}
-      <footer className={`${cardBg} border-t ${borderColor} px-6 py-4 mt-8`}>
-        <div className="max-w-6xl mx-auto text-center text-sm opacity-70">
-          <p>RC Structural Design System v1.0 | BS 8110 & Eurocode Compliant | Field Trial Ready</p>
-          <p className="mt-1">Developed for Structural Engineers | Always verify calculations with qualified personnel</p>
-        </div>
-      </footer>
+
     </div>
   );
 };
 
 export default RCStructuralDesign;
-                    <label className="block text-sm font-medium mb-2">Dead Load (kN/m²)</label>
-                    <input
-                      type="number"
-                      value={loadData.deadLoad}
-                      onChange={(e) => setLoadData({...loadData, deadLoad: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter dead load"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Imposed Load (kN/m²)</label>
-                    <input
-                      type="number"
-                      value={loadData.imposedLoad}
-                      onChange={(e) => setLoadData({...loadData, imposedLoad: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter imposed load"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Wind Load (kN/m²)</label>
-                    <input
-                      type="number"
-                      value={loadData.windLoad}
-                      onChange={(e) => setLoadData({...loadData, windLoad: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter wind load"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Limit State</label>
-                    <select
-                      value={loadData.combination}
-                      onChange={(e) => setLoadData({...loadData, combination: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                    >
-                      <option value="uls">Ultimate Limit State</option>
-                      <option value="sls">Serviceability Limit State</option>
-                    </select>
-                  </div>
-                </div>
-                <button
-                  onClick={handleCalculate}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                >
-                  Calculate Load Combinations
-                </button>
-              </div>
-            )}
-
-            {/* Tie Design Module */}
-            {activeModule === 'ties' && (
-              <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Layers size={24} className="text-blue-600" />
-                  Tie Design (BS 8110 Section 3.12)
-                </h2>
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Tie Type</label>
-                    <select
-                      value={tieData.tieType}
-                      onChange={(e) => setTieData({...tieData, tieType: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                    >
-                      <option value="internal">Internal Horizontal Tie</option>
-                      <option value="peripheral">Peripheral Tie</option>
-                      <option value="column">Tie to Column/Wall</option>
-                      <option value="corner">Corner Column Tie</option>
-                      <option value="vertical">Vertical Tie</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Span (m)</label>
-                    <input
-                      type="number"
-                      value={tieData.span}
-                      onChange={(e) => setTieData({...tieData, span: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter span"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Load (kN/m)</label>
-                    <input
-                      type="number"
-                      value={tieData.loadPerMeter}
-                      onChange={(e) => setTieData({...tieData, loadPerMeter: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter load per meter"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Steel Grade (MPa)</label>
-                    <select
-                      value={tieData.steelGrade}
-                      onChange={(e) => setTieData({...tieData, steelGrade: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                    >
-                      <option value="500">500</option>
-                      <option value="460">460</option>
-                      <option value="250">250</option>
-                    </select>
-                  </div>
-                </div>
-                <button
-                  onClick={handleCalculate}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                >
-                  Design Ties
-                </button>
-              </div>
-            )}
-
-            {/* Frame Analysis Module */}
-            {activeModule === 'frame' && (
-              <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Frame size={24} className="text-blue-600" />
-                  Frame Analysis (Portal & Cantilever Method)
-                </h2>
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Analysis Method</label>
-                    <select
-                      value={frameData.method}
-                      onChange={(e) => setFrameData({...frameData, method: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                    >
-                      <option value="portal">Portal Frame Method</option>
-                      <option value="cantilever">Cantilever Method</option>
-                      <option value="simple">Simple Method (BS 8110)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Number of Floors</label>
-                    <input
-                      type="number"
-                      value={frameData.floors}
-                      onChange={(e) => setFrameData({...frameData, floors: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter floors"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Number of Bays</label>
-                    <input
-                      type="number"
-                      value={frameData.bays}
-                      onChange={(e) => setFrameData({...frameData, bays: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter bays"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Story Height (m)</label>
-                    <input
-                      type="number"
-                      value={frameData.storyHeight}
-                      onChange={(e) => setFrameData({...frameData, storyHeight: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter height"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Bay Width (m)</label>
-                    <input
-                      type="number"
-                      value={frameData.bayWidth}
-                      onChange={(e) => setFrameData({...frameData, bayWidth: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter width"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Lateral Load (kN)</label>
-                    <input
-                      type="number"
-                      value={frameData.lateralLoad}
-                      onChange={(e) => setFrameData({...frameData, lateralLoad: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter lateral load"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={handleCalculate}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                >
-                  Analyze Frame
-                </button>
-              </div>
-            )}
-
-            {/* Structural Systems Module */}
-            {activeModule === 'systems' && (
-              <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Building2 size={24} className="text-blue-600" />
-                  Tall Building Structural Systems
-                </h2>
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-2">Structural System Type</label>
-                    <select
-                      value={systemData.type}
-                      onChange={(e) => setSystemData({...systemData, type: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                    >
-                      <option value="rigid_frame">Rigid Jointed Frame</option>
-                      <option value="braced_frame">Braced Frame</option>
-                      <option value="shear_wall">Shear Wall</option>
-                      <option value="coupled_wall">Coupled Shear Walls</option>
-                      <option value="wall_frame">Wall-Frame Structure</option>
-                      <option value="framed_tube">Framed Tube</option>
-                      <option value="tube_in_tube">Tube-in-Tube</option>
-                      <option value="outrigger">Outrigger Braced</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Building Height (m)</label>
-                    <input
-                      type="number"
-                      value={systemData.height}
-                      onChange={(e) => setSystemData({...systemData, height: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter height"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Building Width (m)</label>
-                    <input
-                      type="number"
-                      value={systemData.width}
-                      onChange={(e) => setSystemData({...systemData, width: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter width"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Building Depth (m)</label>
-                    <input
-                      type="number"
-                      value={systemData.depth}
-                      onChange={(e) => setSystemData({...systemData, depth: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter depth"
-                    />
-                  </div>
-                  <div>

@@ -65,7 +65,7 @@ const DocumentViewer = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 p-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-800">Document Viewer</h2>
@@ -154,8 +154,8 @@ const DocumentViewer = ({
         {/* Document Preview Modal */}
         {activeDocument && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
-              <div className="p-4 border-b sticky top-0 bg-white">
+            <div className="bg-white dark:bg-slate-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
+              <div className="p-4 border-b dark:border-slate-700  top-0 bg-white dark:bg-slate-800">
                 <div className="flex justify-between items-center">
                   <div>
                     <div

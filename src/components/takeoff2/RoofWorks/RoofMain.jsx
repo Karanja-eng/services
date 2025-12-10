@@ -425,7 +425,7 @@ function RoofStructure({ config }) {
 }
 
 // Main App Component
-export default function RoofCADApp() {
+export default function RoofComponent({ isDark = false }) {
   const [activeTab, setActiveTab] = useState("3d");
   const [roofConfig, setRoofConfig] = useState({
     roofType: "gable",
@@ -453,7 +453,7 @@ export default function RoofCADApp() {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-80 bg-white shadow-lg overflow-y-auto">
+      <div className="w-80 bg-white dark:bg-slate-800 shadow-lg overflow-y-auto">
         <div className="p-4 bg-blue-600 text-white">
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Settings className="w-6 h-6" />
@@ -466,31 +466,28 @@ export default function RoofCADApp() {
         <div className="flex border-b">
           <button
             onClick={() => setActiveTab("3d")}
-            className={`flex-1 py-3 px-4 font-medium ${
-              activeTab === "3d"
+            className={`flex-1 py-3 px-4 font-medium ${activeTab === "3d"
                 ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
                 : "text-gray-600 hover:bg-gray-50"
-            }`}
+              }`}
           >
             3D View
           </button>
           <button
             onClick={() => setActiveTab("takeoff")}
-            className={`flex-1 py-3 px-4 font-medium ${
-              activeTab === "takeoff"
+            className={`flex-1 py-3 px-4 font-medium ${activeTab === "takeoff"
                 ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
                 : "text-gray-600 hover:bg-gray-50"
-            }`}
+              }`}
           >
             Take-off
           </button>
           <button
             onClick={() => setActiveTab("boq")}
-            className={`flex-1 py-3 px-4 font-medium ${
-              activeTab === "boq"
+            className={`flex-1 py-3 px-4 font-medium ${activeTab === "boq"
                 ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
                 : "text-gray-600 hover:bg-gray-50"
-            }`}
+              }`}
           >
             BOQ
           </button>
@@ -499,7 +496,7 @@ export default function RoofCADApp() {
         {/* Configuration Panel */}
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
               Roof Type
             </label>
             <select
@@ -516,7 +513,7 @@ export default function RoofCADApp() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Length (m)
               </label>
               <input
@@ -531,7 +528,7 @@ export default function RoofCADApp() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Width (m)
               </label>
               <input
@@ -548,7 +545,7 @@ export default function RoofCADApp() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Wall Thickness (m)
               </label>
               <input
@@ -563,7 +560,7 @@ export default function RoofCADApp() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Overhang (m)
               </label>
               <input
@@ -579,7 +576,7 @@ export default function RoofCADApp() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
               Pitch Angle (°): {roofConfig.pitchAngle}°
             </label>
             <input
@@ -596,7 +593,7 @@ export default function RoofCADApp() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Truss Spacing (m)
               </label>
               <input
@@ -611,7 +608,7 @@ export default function RoofCADApp() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Rafter Spacing (m)
               </label>
               <input
@@ -627,7 +624,7 @@ export default function RoofCADApp() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
               Material
             </label>
             <select
@@ -641,7 +638,7 @@ export default function RoofCADApp() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
               Roof Covering
             </label>
             <select
@@ -678,9 +675,9 @@ export default function RoofCADApp() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white shadow-sm p-4 flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-800 shadow-sm p-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-800">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">
               {activeTab === "3d" && "3D Roof Visualization"}
               {activeTab === "takeoff" && "Quantity Take-off"}
               {activeTab === "boq" && "Bill of Quantities"}
@@ -730,7 +727,7 @@ export default function RoofCADApp() {
           )}
 
           {activeTab === "takeoff" && (
-            <div className="bg-white rounded-lg shadow p-6 h-full overflow-auto">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 h-full overflow-auto">
               <h3 className="text-lg font-bold mb-4">
                 DIMENSION PAPER - ROOF STRUCTURE
               </h3>
@@ -933,10 +930,10 @@ export default function RoofCADApp() {
                       {roofConfig.covering === "tiles"
                         ? "Clay tiles"
                         : roofConfig.covering === "acSheets"
-                        ? "A.C. corrugated sheets"
-                        : roofConfig.covering === "giSheets"
-                        ? "G.I. corrugated sheets"
-                        : roofConfig.covering}
+                          ? "A.C. corrugated sheets"
+                          : roofConfig.covering === "giSheets"
+                            ? "G.I. corrugated sheets"
+                            : roofConfig.covering}
                       <br />
                       to manufacturer's specification
                     </td>
@@ -1054,7 +1051,7 @@ export default function RoofCADApp() {
           )}
 
           {activeTab === "boq" && (
-            <div className="bg-white rounded-lg shadow p-6 h-full overflow-auto">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 h-full overflow-auto">
               <div className="mb-6">
                 <h3 className="text-xl font-bold">BILL OF QUANTITIES</h3>
                 <p className="text-sm text-gray-600 mt-1">
@@ -1350,10 +1347,10 @@ export default function RoofCADApp() {
                         {roofConfig.covering === "tiles"
                           ? "Clay roof tiles, machine made, red, laid to half bond"
                           : roofConfig.covering === "acSheets"
-                          ? "A.C. corrugated sheets, 26 gauge, fixed with J-bolts"
-                          : roofConfig.covering === "giSheets"
-                          ? "G.I. corrugated sheets, 28 gauge, galvanised, fixed with J-bolts"
-                          : "Roof covering as specified"}
+                            ? "A.C. corrugated sheets, 26 gauge, fixed with J-bolts"
+                            : roofConfig.covering === "giSheets"
+                              ? "G.I. corrugated sheets, 28 gauge, galvanised, fixed with J-bolts"
+                              : "Roof covering as specified"}
                       </td>
                       <td className="p-2 text-center">m²</td>
                       <td className="p-2 text-right">
@@ -1372,8 +1369,8 @@ export default function RoofCADApp() {
                         {roofConfig.covering === "tiles"
                           ? "2,500.00"
                           : roofConfig.covering === "acSheets"
-                          ? "1,200.00"
-                          : "1,500.00"}
+                            ? "1,200.00"
+                            : "1,500.00"}
                       </td>
                       <td className="p-2 text-right">
                         {(
@@ -1388,8 +1385,8 @@ export default function RoofCADApp() {
                           (roofConfig.covering === "tiles"
                             ? 2500
                             : roofConfig.covering === "acSheets"
-                            ? 1200
-                            : 1500)
+                              ? 1200
+                              : 1500)
                         ).toFixed(2)}
                       </td>
                     </tr>
@@ -1591,8 +1588,8 @@ export default function RoofCADApp() {
                         (roofConfig.covering === "tiles"
                           ? 2500
                           : roofConfig.covering === "acSheets"
-                          ? 1200
-                          : 1500);
+                            ? 1200
+                            : 1500);
                       const ridgeCap =
                         (roofConfig.buildingLength +
                           2 * roofConfig.wallThickness +
@@ -1705,8 +1702,8 @@ export default function RoofCADApp() {
                         (roofConfig.covering === "tiles"
                           ? 2500
                           : roofConfig.covering === "acSheets"
-                          ? 1200
-                          : 1500);
+                            ? 1200
+                            : 1500);
                       const ridgeCap =
                         (roofConfig.buildingLength +
                           2 * roofConfig.wallThickness +

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Sun,
-  Moon,
   Menu,
   X,
   Home,
@@ -13,69 +11,39 @@ import {
   Upload,
   Save,
 } from "lucide-react";
+import ExternalWorks3DVisualizer from "./3DExternalWorksVisualizer";
+import ExternalWorksInputForm from "./ExternalWorksInputForm";
+import EnglishMethodTakeoffSheet from "./EnglishMethodTakeoffSheet";
 
 // Main Application Component
-export default function ExternalWorksApp() {
+export default function ExternalWorksComponent({ isDark = false }) {
   const [currentView, setCurrentView] = useState("home");
-  const [theme, setTheme] = useState("light");
-  const [colorScheme, setColorScheme] = useState("gray");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [projectData, setProjectData] = useState(null);
   const [calculations, setCalculations] = useState(null);
 
-  // Theme configurations
-  const themes = {
-    light: {
-      gray: {
-        bg: "#f5f5f5",
-        card: "#ffffff",
-        text: "#1a1a1a",
-        textSecondary: "#666666",
-        border: "#e0e0e0",
-        accent: "#4CAF50",
-        accentHover: "#45a049",
-        sidebar: "#f8f9fa",
-        hover: "#e8e8e8",
-      },
-      white: {
-        bg: "#ffffff",
-        card: "#fafafa",
-        text: "#1a1a1a",
-        textSecondary: "#666666",
-        border: "#e0e0e0",
-        accent: "#2196F3",
-        accentHover: "#1976D2",
-        sidebar: "#ffffff",
-        hover: "#f5f5f5",
-      },
-    },
-    dark: {
-      gray: {
-        bg: "#1a1a1a",
-        card: "#2d2d2d",
-        text: "#ffffff",
-        textSecondary: "#b0b0b0",
-        border: "#404040",
-        accent: "#4CAF50",
-        accentHover: "#66BB6A",
-        sidebar: "#252525",
-        hover: "#353535",
-      },
-      white: {
-        bg: "#0d1117",
-        card: "#161b22",
-        text: "#f0f6fc",
-        textSecondary: "#8b949e",
-        border: "#30363d",
-        accent: "#58a6ff",
-        accentHover: "#79c0ff",
-        sidebar: "#0d1117",
-        hover: "#21262d",
-      },
-    },
+  // Simplified theme using slate/teal palette
+  const currentTheme = isDark ? {
+    bg: "#0f172a",
+    card: "#1e293b",
+    text: "#f1f5f9",
+    textSecondary: "#94a3b8",
+    border: "#334155",
+    accent: "#14b8a6",
+    accentHover: "#0d9488",
+    sidebar: "#1e293b",
+    hover: "#334155",
+  } : {
+    bg: "#f8fafc",
+    card: "#ffffff",
+    text: "#0f172a",
+    textSecondary: "#64748b",
+    border: "#e2e8f0",
+    accent: "#14b8a6",
+    accentHover: "#0d9488",
+    sidebar: "#ffffff",
+    hover: "#f1f5f9",
   };
-
-  const currentTheme = themes[theme][colorScheme];
 
   // Sample project state
   const [formData, setFormData] = useState({
@@ -240,7 +208,7 @@ export default function ExternalWorksApp() {
   // Save project
   const saveProject = () => {
     const dataStr = JSON.stringify(
-      { formData, view3DConfig, theme, colorScheme },
+      { formData, view3DConfig },
       null,
       2
     );
@@ -265,8 +233,6 @@ export default function ExternalWorksApp() {
           const data = JSON.parse(e.target.result);
           if (data.formData) setFormData(data.formData);
           if (data.view3DConfig) setView3DConfig(data.view3DConfig);
-          if (data.theme) setTheme(data.theme);
-          if (data.colorScheme) setColorScheme(data.colorScheme);
           alert("Project loaded successfully!");
         } catch (error) {
           alert("Error loading project file");
@@ -289,7 +255,7 @@ export default function ExternalWorksApp() {
         );
       case "3d":
         return (
-          <Visualizer3DView
+          <ExternalWorks3DVisualizer
             theme={currentTheme}
             config={view3DConfig}
             setConfig={setView3DConfig}
@@ -297,7 +263,7 @@ export default function ExternalWorksApp() {
         );
       case "input":
         return (
-          <InputFormView
+          <ExternalWorksInputForm
             theme={currentTheme}
             formData={formData}
             setFormData={setFormData}
@@ -305,7 +271,7 @@ export default function ExternalWorksApp() {
         );
       case "takeoff":
         return (
-          <TakeoffSheetView
+          <EnglishMethodTakeoffSheet
             theme={currentTheme}
             formData={formData}
             totals={totals}
@@ -513,47 +479,6 @@ export default function ExternalWorksApp() {
               {navItems.find((item) => item.id === currentView)?.label ||
                 "Dashboard"}
             </h1>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            {/* Color Scheme Selector */}
-            <select
-              value={colorScheme}
-              onChange={(e) => setColorScheme(e.target.value)}
-              style={{
-                padding: "8px 12px",
-                background: currentTheme.bg,
-                color: currentTheme.text,
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px",
-              }}
-            >
-              <option value="gray">Gray</option>
-              <option value="white">White</option>
-            </select>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              style={{
-                background: currentTheme.bg,
-                border: `1px solid ${currentTheme.border}`,
-                padding: "8px 12px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                color: currentTheme.text,
-                fontSize: "14px",
-                fontWeight: "500",
-              }}
-            >
-              {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-              {theme === "light" ? "Dark" : "Light"}
-            </button>
           </div>
         </header>
 
@@ -778,105 +703,9 @@ function DashboardView({ theme, totals, projectInfo }) {
   );
 }
 
-// 3D Visualizer View (Placeholder)
-function Visualizer3DView({ theme, config, setConfig }) {
-  return (
-    <div
-      style={{
-        background: theme.card,
-        borderRadius: "12px",
-        padding: "32px",
-        border: `1px solid ${theme.border}`,
-        minHeight: "600px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div style={{ textAlign: "center" }}>
-        <Box
-          size={64}
-          color={theme.textSecondary}
-          style={{ margin: "0 auto 16px" }}
-        />
-        <h3
-          style={{ margin: "0 0 8px 0", fontSize: "20px", fontWeight: "600" }}
-        >
-          3D Visualizer
-        </h3>
-        <p style={{ margin: 0, color: theme.textSecondary }}>
-          The 3D visualization component will render here.
-          <br />
-          Use the previously created "3D External Works Visualizer" artifact.
-        </p>
-      </div>
-    </div>
-  );
-}
 
-// Input Form View (Placeholder)
-function InputFormView({ theme, formData, setFormData }) {
-  return (
-    <div
-      style={{
-        background: theme.card,
-        borderRadius: "12px",
-        padding: "32px",
-        border: `1px solid ${theme.border}`,
-      }}
-    >
-      <div style={{ textAlign: "center", padding: "64px 32px" }}>
-        <FileText
-          size={64}
-          color={theme.textSecondary}
-          style={{ margin: "0 auto 16px" }}
-        />
-        <h3
-          style={{ margin: "0 0 8px 0", fontSize: "20px", fontWeight: "600" }}
-        >
-          Input Form
-        </h3>
-        <p style={{ margin: 0, color: theme.textSecondary }}>
-          The comprehensive input form component will render here.
-          <br />
-          Use the previously created "External Works Input Form" artifact.
-        </p>
-      </div>
-    </div>
-  );
-}
 
-// Takeoff Sheet View (Placeholder)
-function TakeoffSheetView({ theme, formData, totals }) {
-  return (
-    <div
-      style={{
-        background: theme.card,
-        borderRadius: "12px",
-        padding: "32px",
-        border: `1px solid ${theme.border}`,
-      }}
-    >
-      <div style={{ textAlign: "center", padding: "64px 32px" }}>
-        <Calculator
-          size={64}
-          color={theme.textSecondary}
-          style={{ margin: "0 auto 16px" }}
-        />
-        <h3
-          style={{ margin: "0 0 8px 0", fontSize: "20px", fontWeight: "600" }}
-        >
-          Takeoff Sheet
-        </h3>
-        <p style={{ margin: 0, color: theme.textSecondary }}>
-          The English Method takeoff sheet will render here.
-          <br />
-          Use the previously created "English Method Takeoff Sheet" artifact.
-        </p>
-      </div>
-    </div>
-  );
-}
+
 
 // Settings View
 function SettingsView({ theme }) {
@@ -912,7 +741,7 @@ function SettingsView({ theme }) {
           </label>
           <input
             type="text"
-            defaultValue="http://localhost:8000"
+            defaultValue="http://localhost:8001"
             style={{
               width: "100%",
               padding: "12px",

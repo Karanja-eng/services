@@ -610,9 +610,9 @@ const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
         const concreteVol =
           (Math.PI * Math.pow(diameter / 2 + wallThickness, 2) * baseThickness +
             Math.PI *
-              wallThickness *
-              (diameter + wallThickness) *
-              formData.depth) *
+            wallThickness *
+            (diameter + wallThickness) *
+            formData.depth) *
           formData.number_manholes;
 
         results = {
@@ -731,13 +731,13 @@ const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
         const baseConc = formData.length * formData.width * 0.15;
         const wallConc =
           2 *
-            (formData.length *
-              (formData.wall_thickness / 1000) *
-              formData.depth) +
+          (formData.length *
+            (formData.wall_thickness / 1000) *
+            formData.depth) +
           2 *
-            (formData.width *
-              (formData.wall_thickness / 1000) *
-              formData.depth);
+          (formData.width *
+            (formData.wall_thickness / 1000) *
+            formData.depth);
         const coverConc = formData.length * formData.width * 0.1;
         const totalSepticConc = baseConc + wallConc + coverConc;
 
@@ -815,13 +815,13 @@ const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
           formData.length * formData.width * (formData.floor_thickness / 1000);
         const basementWallConc =
           2 *
-            (formData.length *
-              (formData.wall_thickness / 1000) *
-              formData.depth) +
+          (formData.length *
+            (formData.wall_thickness / 1000) *
+            formData.depth) +
           2 *
-            (formData.width *
-              (formData.wall_thickness / 1000) *
-              formData.depth);
+          (formData.width *
+            (formData.wall_thickness / 1000) *
+            formData.depth);
         const totalBasementConc = basementFloorConc + basementWallConc;
 
         results = {
@@ -830,9 +830,9 @@ const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
           reinforcement_weight: (totalBasementConc * 100).toFixed(2),
           waterproof_area: formData.waterproofing
             ? (
-                formData.length * formData.width +
-                2 * (formData.length + formData.width) * formData.depth
-              ).toFixed(2)
+              formData.length * formData.width +
+              2 * (formData.length + formData.width) * formData.depth
+            ).toFixed(2)
             : 0,
           items: [
             {
@@ -876,18 +876,18 @@ const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
             (formData.height + 0.5);
           tankConc =
             Math.PI *
-              Math.pow(tankDiameter / 2 + formData.wall_thickness / 1000, 2) *
-              (formData.base_thickness / 1000) +
+            Math.pow(tankDiameter / 2 + formData.wall_thickness / 1000, 2) *
+            (formData.base_thickness / 1000) +
             Math.PI *
-              (formData.wall_thickness / 1000) *
-              (tankDiameter + formData.wall_thickness / 1000) *
-              formData.height;
+            (formData.wall_thickness / 1000) *
+            (tankDiameter + formData.wall_thickness / 1000) *
+            formData.height;
         } else {
           const sideLength = Math.sqrt(formData.capacity / formData.height);
           tankExcavVol = Math.pow(sideLength + 1, 2) * (formData.height + 0.5);
           tankConc =
             Math.pow(sideLength + 2 * (formData.wall_thickness / 1000), 2) *
-              (formData.base_thickness / 1000) +
+            (formData.base_thickness / 1000) +
             4 * sideLength * (formData.wall_thickness / 1000) * formData.height;
         }
 
@@ -1007,10 +1007,10 @@ const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
     const results = calculationResults[calculator.id];
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-full bg-gray-100`}>
+            <div className={`p-3 rounded-full bg-gray-100 dark:bg-slate-700`}>
               {calculator.icon &&
                 React.createElement(calculator.icon, {
                   className: "w-6 h-6 text-gray-700",
@@ -1118,7 +1118,7 @@ const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
         {results && (
           <div className="mt-4">
             <h4 className="font-semibold">Results</h4>
-            <pre className="text-sm bg-gray-50 p-3 rounded mt-2 overflow-auto">
+            <pre className="text-sm bg-gray-50 dark:bg-slate-800 p-3 rounded mt-2 overflow-auto">
               {JSON.stringify(results, null, 2)}
             </pre>
           </div>
@@ -1138,7 +1138,7 @@ const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
           <button
             key={calc.id}
             onClick={() => setActiveCalculator(calc.id)}
-            className="text-left p-4 bg-white rounded shadow hover:shadow-md"
+            className="text-left p-4 bg-white dark:bg-slate-800 rounded shadow hover:shadow-md"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded bg-gray-100">

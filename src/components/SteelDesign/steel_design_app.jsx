@@ -51,7 +51,7 @@ const steelGrades = {
   'S450': { fy: 450, fu: 550, E: 210000 }
 };
 
-const SteelDesignApp = () => {
+const SteelDesignApp = ({ isDark = false }) => {
   const [activeModule, setActiveModule] = useState('beam');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [results, setResults] = useState(null);
@@ -90,7 +90,7 @@ const SteelDesignApp = () => {
   const calculateBeamDesign = () => {
     const section = steelSections[beamData.sectionType].find(s => s.designation === beamData.section);
     const material = steelGrades[beamData.grade];
-    
+
     if (!section || !material) return;
 
     const L = beamData.span * 1000; // Convert to mm
@@ -115,7 +115,7 @@ const SteelDesignApp = () => {
     const b_t_flange = (section.width / 2) / section.tf;
     const d_t_web = (section.depth - 2 * section.tf) / section.tw;
     const epsilon = Math.sqrt(275 / py);
-    
+
     let classification = 'Plastic';
     if (b_t_flange > 9 * epsilon || d_t_web > 80 * epsilon) {
       classification = 'Compact';
@@ -177,7 +177,7 @@ const SteelDesignApp = () => {
   const calculateColumnDesign = () => {
     const section = steelSections[columnData.sectionType].find(s => s.designation === columnData.section);
     const material = steelGrades[columnData.grade];
-    
+
     if (!section || !material) return;
 
     const L = columnData.height * 1000; // mm
@@ -237,7 +237,7 @@ const SteelDesignApp = () => {
     // Simplified moment distribution for continuous beam
     const spans = frameData.spans;
     const n = spans.length;
-    
+
     // Calculate fixed end moments
     const FEM = spans.map(span => ({
       left: -(span.load * span.length * span.length) / 12,
@@ -249,13 +249,13 @@ const SteelDesignApp = () => {
       const L = span.length;
       const w = span.load;
       const points = [];
-      
+
       for (let x = 0; x <= L; x += L / 20) {
         const M = (w * L * x / 2) - (w * x * x / 2);
         const V = (w * L / 2) - (w * x);
         points.push({ x, M: M.toFixed(2), V: V.toFixed(2) });
       }
-      
+
       return { span: i + 1, points };
     });
 
@@ -270,12 +270,12 @@ const SteelDesignApp = () => {
 
   const renderBeamModule = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Beam Design (BS 5950)</h2>
-      
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Beam Design (BS 5950)</h2>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Section Type</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">Section Type</label>
             <select
               value={beamData.sectionType}
               onChange={(e) => setBeamData({ ...beamData, sectionType: e.target.value, section: steelSections[e.target.value][0].designation })}
@@ -373,7 +373,7 @@ const SteelDesignApp = () => {
   const renderColumnModule = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Column Design (BS 5950)</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
@@ -492,10 +492,10 @@ const SteelDesignApp = () => {
 
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
             <p className="text-sm text-blue-800">
-              <strong>Effective Length Factors:</strong><br/>
-              • Fixed-Fixed: 0.5<br/>
-              • Fixed-Pinned: 0.7<br/>
-              • Pinned-Pinned: 1.0<br/>
+              <strong>Effective Length Factors:</strong><br />
+              • Fixed-Fixed: 0.5<br />
+              • Fixed-Pinned: 0.7<br />
+              • Pinned-Pinned: 1.0<br />
               • Fixed-Free: 2.0
             </p>
           </div>
@@ -507,7 +507,7 @@ const SteelDesignApp = () => {
   const renderFrameModule = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Frame Analysis</h2>
-      
+
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Analysis Method</label>
@@ -555,7 +555,7 @@ const SteelDesignApp = () => {
               </div>
             </div>
           ))}
-          
+
           <div className="flex gap-2">
             <button
               onClick={() => setFrameData({ ...frameData, spans: [...frameData.spans, { length: 6, load: 50 }] })}
@@ -590,7 +590,7 @@ const SteelDesignApp = () => {
 
     if (results.type === 'beam') {
       return (
-        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200">
+        <div className="mt-8 bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 border-2 border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-3 mb-6">
             <FileText className="text-blue-600" size={28} />
             <h3 className="text-2xl font-bold text-gray-800">Design Results - Beam</h3>
@@ -641,8 +641,8 @@ const SteelDesignApp = () => {
               <div className="space-y-2">
                 <div>
                   <p className="font-semibold">Bending: {results.bendingRatio}%</p>
-                  <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                    <div 
+                  <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-3 mt-1">
+                    <div
                       className={`h-3 rounded-full ${parseFloat(results.bendingRatio) > 100 ? 'bg-red-600' : parseFloat(results.bendingRatio) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                       style={{ width: `${Math.min(parseFloat(results.bendingRatio), 100)}%` }}
                     ></div>
@@ -651,7 +651,7 @@ const SteelDesignApp = () => {
                 <div>
                   <p className="font-semibold">Shear: {results.shearRatio}%</p>
                   <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                    <div 
+                    <div
                       className={`h-3 rounded-full ${parseFloat(results.shearRatio) > 100 ? 'bg-red-600' : parseFloat(results.shearRatio) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                       style={{ width: `${Math.min(parseFloat(results.shearRatio), 100)}%` }}
                     ></div>
@@ -660,7 +660,7 @@ const SteelDesignApp = () => {
                 <div>
                   <p className="font-semibold">Deflection: {results.deflectionRatio}%</p>
                   <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                    <div 
+                    <div
                       className={`h-3 rounded-full ${parseFloat(results.deflectionRatio) > 100 ? 'bg-red-600' : parseFloat(results.deflectionRatio) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                       style={{ width: `${Math.min(parseFloat(results.deflectionRatio), 100)}%` }}
                     ></div>
@@ -670,8 +670,8 @@ const SteelDesignApp = () => {
             </div>
           </div>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-300">
-            <p className="text-sm text-gray-700">
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-slate-600">
+            <p className="text-sm text-gray-700 dark:text-slate-300">
               <strong>Reference:</strong> Design to BS 5950-1:2000 - Structural use of steelwork in building - Code of practice for design - Rolled and welded sections
             </p>
           </div>
@@ -732,7 +732,7 @@ const SteelDesignApp = () => {
                 <div>
                   <p className="font-semibold">Axial Ratio: {results.axialRatio}%</p>
                   <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                    <div 
+                    <div
                       className={`h-3 rounded-full ${parseFloat(results.axialRatio) > 100 ? 'bg-red-600' : parseFloat(results.axialRatio) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                       style={{ width: `${Math.min(parseFloat(results.axialRatio), 100)}%` }}
                     ></div>
@@ -741,7 +741,7 @@ const SteelDesignApp = () => {
                 <div>
                   <p className="font-semibold">Moment Ratio: {results.momentRatio}%</p>
                   <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                    <div 
+                    <div
                       className={`h-3 rounded-full ${parseFloat(results.momentRatio) > 100 ? 'bg-red-600' : parseFloat(results.momentRatio) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                       style={{ width: `${Math.min(parseFloat(results.momentRatio), 100)}%` }}
                     ></div>
@@ -750,7 +750,7 @@ const SteelDesignApp = () => {
                 <div>
                   <p className="font-semibold">Total Interaction: {results.interaction}%</p>
                   <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                    <div 
+                    <div
                       className={`h-3 rounded-full ${parseFloat(results.interaction) > 100 ? 'bg-red-600' : parseFloat(results.interaction) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                       style={{ width: `${Math.min(parseFloat(results.interaction), 100)}%` }}
                     ></div>
@@ -779,21 +779,21 @@ const SteelDesignApp = () => {
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-              <p className="text-sm text-gray-600">Maximum Moment</p>
+              <p className="text-sm text-gray-600 dark:text-slate-400">Maximum Moment</p>
               <p className="text-2xl font-bold text-blue-700">{results.maxMoment} kNm</p>
             </div>
             <div className="p-4 bg-green-50 rounded-lg border-2 border-green-300">
-              <p className="text-sm text-gray-600">Maximum Shear</p>
+              <p className="text-sm text-gray-600 dark:text-slate-400">Maximum Shear</p>
               <p className="text-2xl font-bold text-green-700">{results.maxShear} kN</p>
             </div>
           </div>
 
           {results.diagrams.map((diagram, i) => (
             <div key={i} className="mb-8">
-              <h4 className="font-bold text-lg text-gray-800 mb-4">Span {diagram.span}</h4>
-              
+              <h4 className="font-bold text-lg text-gray-800 dark:text-slate-100 mb-4">Span {diagram.span}</h4>
+
               <div className="mb-6">
-                <h5 className="font-semibold text-gray-700 mb-2">Bending Moment Diagram (BMD)</h5>
+                <h5 className="font-semibold text-gray-700 dark:text-slate-300 mb-2">Bending Moment Diagram (BMD)</h5>
                 <div className="h-48 bg-gradient-to-b from-blue-50 to-white border-2 border-blue-200 rounded-lg p-4 relative">
                   <svg className="w-full h-full">
                     {diagram.points.map((p, idx) => {
@@ -885,44 +885,41 @@ const SteelDesignApp = () => {
       <div className="flex">
         {/* Sidebar */}
         {sidebarOpen && (
-          <aside className="w-64 bg-white shadow-xl min-h-screen border-r-2 border-gray-200">
+          <aside className="w-64 bg-white dark:bg-slate-800 shadow-xl min-h-screen border-r-2 border-gray-200 dark:border-slate-700">
             <nav className="p-4 space-y-2">
               <button
                 onClick={() => { setActiveModule('beam'); setResults(null); }}
-                className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${
-                  activeModule === 'beam'
-                    ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${activeModule === 'beam'
+                  ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Beam Design
               </button>
-              
+
               <button
                 onClick={() => { setActiveModule('column'); setResults(null); }}
-                className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${
-                  activeModule === 'column'
-                    ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${activeModule === 'column'
+                  ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Column Design
               </button>
-              
+
               <button
                 onClick={() => { setActiveModule('frame'); setResults(null); }}
-                className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${
-                  activeModule === 'frame'
-                    ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${activeModule === 'frame'
+                  ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Frame Analysis
               </button>
 
               <div className="pt-4 mt-4 border-t-2 border-gray-200">
                 <button
-                  className="w-full text-left px-4 py-3 rounded-lg font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all flex items-center gap-2"
+                  className="w-full text-left px-4 py-3 rounded-lg font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-all flex items-center gap-2"
                 >
                   <Save size={18} />
                   Save Project
@@ -950,7 +947,7 @@ const SteelDesignApp = () => {
             {activeModule === 'beam' && renderBeamModule()}
             {activeModule === 'column' && renderColumnModule()}
             {activeModule === 'frame' && renderFrameModule()}
-            
+
             {renderResults()}
           </div>
         </main>
@@ -962,7 +959,7 @@ const SteelDesignApp = () => {
           <p className="text-sm">
             Professional Steel Design Software | BS 5950:2000 Compliant
           </p>
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
             For structural engineering use only. Verify all calculations independently.
           </p>
         </div>
@@ -972,4 +969,3 @@ const SteelDesignApp = () => {
 };
 
 export default SteelDesignApp;
-                

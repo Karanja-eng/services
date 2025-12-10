@@ -130,7 +130,7 @@ const BoltedConnectionsModule = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Bolt Diameter (mm)
           </label>
           <select
@@ -154,7 +154,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Bolt Grade
           </label>
           <select
@@ -171,7 +171,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Number of Bolts
           </label>
           <input
@@ -189,7 +189,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Shear Plane
           </label>
           <select
@@ -205,7 +205,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Thread Condition
           </label>
           <select
@@ -226,7 +226,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Applied Shear (kN)
           </label>
           <input
@@ -244,7 +244,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Applied Tension (kN)
           </label>
           <input
@@ -262,7 +262,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Plate Thickness (mm)
           </label>
           <input
@@ -280,7 +280,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Plate Grade
           </label>
           <select
@@ -297,7 +297,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Edge Distance (mm)
           </label>
           <input
@@ -329,7 +329,7 @@ const BoltedConnectionsModule = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Bolt Diameter (mm)
           </label>
           <select
@@ -351,7 +351,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             HSFG Bolt Grade
           </label>
           <select
@@ -367,7 +367,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Number of Bolts
           </label>
           <input
@@ -382,7 +382,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Shear Plane
           </label>
           <select
@@ -398,7 +398,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Applied Shear (kN)
           </label>
           <input
@@ -416,7 +416,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Plate Thickness (mm)
           </label>
           <input
@@ -434,7 +434,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Surface Condition
           </label>
           <select
@@ -473,7 +473,7 @@ const BoltedConnectionsModule = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Bolt Diameter (mm)
           </label>
           <select
@@ -494,7 +494,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Bolt Grade
           </label>
           <select
@@ -510,7 +510,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Bolts in X-Direction
           </label>
           <input
@@ -529,7 +529,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Bolts in Y-Direction
           </label>
           <input
@@ -548,7 +548,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Spacing X (mm)
           </label>
           <input
@@ -566,7 +566,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Spacing Y (mm)
           </label>
           <input
@@ -584,7 +584,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Applied Force (kN)
           </label>
           <input
@@ -602,7 +602,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Eccentricity X (mm)
           </label>
           <input
@@ -620,7 +620,7 @@ const BoltedConnectionsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Eccentricity Y (mm)
           </label>
           <input
@@ -662,20 +662,19 @@ const BoltedConnectionsModule = () => {
     if (results.type === "ordinary") {
       const data = results.data;
       return (
-        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200">
+        <div className="mt-8 bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 border-2 border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-3 mb-6">
             <Wrench className="text-blue-600" size={28} />
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
               Ordinary Bolts Results
             </h3>
           </div>
 
           <div
-            className={`p-4 rounded-lg mb-6 ${
-              data.passed
-                ? "bg-green-50 border-2 border-green-500"
-                : "bg-red-50 border-2 border-red-500"
-            }`}
+            className={`p-4 rounded-lg mb-6 ${data.passed
+              ? "bg-green-50 border-2 border-green-500"
+              : "bg-red-50 border-2 border-red-500"
+              }`}
           >
             <div className="flex items-center gap-2">
               {data.passed ? (
@@ -684,9 +683,8 @@ const BoltedConnectionsModule = () => {
                 <AlertCircle className="text-red-600" size={24} />
               )}
               <span
-                className={`text-lg font-bold ${
-                  data.passed ? "text-green-700" : "text-red-700"
-                }`}
+                className={`text-lg font-bold ${data.passed ? "text-green-700" : "text-red-700"
+                  }`}
               >
                 {data.passed ? "CONNECTION ADEQUATE" : "CONNECTION INADEQUATE"}
               </span>
@@ -771,7 +769,7 @@ const BoltedConnectionsModule = () => {
             </div>
 
             <div className="col-span-2 space-y-3">
-              <h4 className="font-bold text-lg text-gray-700 border-b-2 border-gray-200 pb-2">
+              <h4 className="font-bold text-lg text-gray-700 dark:text-slate-300 border-b-2 border-gray-200 dark:border-slate-700 pb-2">
                 Utilization Ratios
               </h4>
 
@@ -779,15 +777,14 @@ const BoltedConnectionsModule = () => {
                 <p className="font-semibold mb-1">
                   Shear: {data.shear_utilization}%
                 </p>
-                <div className="w-full bg-gray-200 rounded-full h-4">
+                <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-4">
                   <div
-                    className={`h-4 rounded-full ${
-                      data.shear_utilization > 100
-                        ? "bg-red-600"
-                        : data.shear_utilization > 90
+                    className={`h-4 rounded-full ${data.shear_utilization > 100
+                      ? "bg-red-600"
+                      : data.shear_utilization > 90
                         ? "bg-yellow-600"
                         : "bg-green-600"
-                    }`}
+                      }`}
                     style={{
                       width: `${Math.min(data.shear_utilization, 100)}%`,
                     }}
@@ -799,15 +796,14 @@ const BoltedConnectionsModule = () => {
                 <p className="font-semibold mb-1">
                   Tension: {data.tension_utilization}%
                 </p>
-                <div className="w-full bg-gray-200 rounded-full h-4">
+                <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-4">
                   <div
-                    className={`h-4 rounded-full ${
-                      data.tension_utilization > 100
-                        ? "bg-red-600"
-                        : data.tension_utilization > 90
+                    className={`h-4 rounded-full ${data.tension_utilization > 100
+                      ? "bg-red-600"
+                      : data.tension_utilization > 90
                         ? "bg-yellow-600"
                         : "bg-green-600"
-                    }`}
+                      }`}
                     style={{
                       width: `${Math.min(data.tension_utilization, 100)}%`,
                     }}
@@ -819,15 +815,14 @@ const BoltedConnectionsModule = () => {
                 <p className="font-semibold mb-1">
                   Interaction: {data.interaction_ratio}%
                 </p>
-                <div className="w-full bg-gray-200 rounded-full h-4">
+                <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-4">
                   <div
-                    className={`h-4 rounded-full ${
-                      data.interaction_ratio > 100
-                        ? "bg-red-600"
-                        : data.interaction_ratio > 90
+                    className={`h-4 rounded-full ${data.interaction_ratio > 100
+                      ? "bg-red-600"
+                      : data.interaction_ratio > 90
                         ? "bg-yellow-600"
                         : "bg-green-600"
-                    }`}
+                      }`}
                     style={{
                       width: `${Math.min(data.interaction_ratio, 100)}%`,
                     }}
@@ -850,20 +845,19 @@ const BoltedConnectionsModule = () => {
     if (results.type === "hsfg") {
       const data = results.data;
       return (
-        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200">
+        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-3 mb-6">
             <Wrench className="text-blue-600" size={28} />
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
               HSFG Bolts Results
             </h3>
           </div>
 
           <div
-            className={`p-4 rounded-lg mb-6 ${
-              data.passed
-                ? "bg-green-50 border-2 border-green-500"
-                : "bg-red-50 border-2 border-red-500"
-            }`}
+            className={`p-4 rounded-lg mb-6 ${data.passed
+              ? "bg-green-50 border-2 border-green-500"
+              : "bg-red-50 border-2 border-red-500"
+              }`}
           >
             <div className="flex items-center gap-2">
               {data.passed ? (
@@ -872,9 +866,8 @@ const BoltedConnectionsModule = () => {
                 <AlertCircle className="text-red-600" size={24} />
               )}
               <span
-                className={`text-lg font-bold ${
-                  data.passed ? "text-green-700" : "text-red-700"
-                }`}
+                className={`text-lg font-bold ${data.passed ? "text-green-700" : "text-red-700"
+                  }`}
               >
                 {data.passed ? "CONNECTION ADEQUATE" : "CONNECTION INADEQUATE"}
               </span>
@@ -913,18 +906,17 @@ const BoltedConnectionsModule = () => {
             </div>
 
             <div className="col-span-2">
-              <h4 className="font-bold text-lg text-gray-700 border-b-2 border-gray-200 pb-2 mb-3">
+              <h4 className="font-bold text-lg text-gray-700 dark:text-slate-300 border-b-2 border-gray-200 dark:border-slate-700 pb-2 mb-3">
                 Utilization Ratio
               </h4>
-              <div className="w-full bg-gray-200 rounded-full h-6">
+              <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-6">
                 <div
-                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold ${
-                    data.utilization_ratio > 100
-                      ? "bg-red-600"
-                      : data.utilization_ratio > 90
+                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold ${data.utilization_ratio > 100
+                    ? "bg-red-600"
+                    : data.utilization_ratio > 90
                       ? "bg-yellow-600"
                       : "bg-green-600"
-                  }`}
+                    }`}
                   style={{ width: `${Math.min(data.utilization_ratio, 100)}%` }}
                 >
                   {data.utilization_ratio}%
@@ -946,20 +938,19 @@ const BoltedConnectionsModule = () => {
     if (results.type === "group") {
       const data = results.data;
       return (
-        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200">
+        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-3 mb-6">
             <Wrench className="text-blue-600" size={28} />
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
               Bolt Group Analysis
             </h3>
           </div>
 
           <div
-            className={`p-4 rounded-lg mb-6 ${
-              data.passed
-                ? "bg-green-50 border-2 border-green-500"
-                : "bg-red-50 border-2 border-red-500"
-            }`}
+            className={`p-4 rounded-lg mb-6 ${data.passed
+              ? "bg-green-50 border-2 border-green-500"
+              : "bg-red-50 border-2 border-red-500"
+              }`}
           >
             <div className="flex items-center gap-2">
               {data.passed ? (
@@ -968,9 +959,8 @@ const BoltedConnectionsModule = () => {
                 <AlertCircle className="text-red-600" size={24} />
               )}
               <span
-                className={`text-lg font-bold ${
-                  data.passed ? "text-green-700" : "text-red-700"
-                }`}
+                className={`text-lg font-bold ${data.passed ? "text-green-700" : "text-red-700"
+                  }`}
               >
                 {data.passed ? "BOLT GROUP ADEQUATE" : "BOLT GROUP INADEQUATE"}
               </span>
@@ -1012,21 +1002,20 @@ const BoltedConnectionsModule = () => {
               <h4 className="font-bold text-lg text-gray-700 border-b-2 border-gray-200 pb-2 mb-3">
                 Critical Bolt Utilization
               </h4>
-              <div className="w-full bg-gray-200 rounded-full h-6">
+              <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-6">
                 <div
-                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold ${
-                    data.utilization_ratio > 100
-                      ? "bg-red-600"
-                      : data.utilization_ratio > 90
+                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold ${data.utilization_ratio > 100
+                    ? "bg-red-600"
+                    : data.utilization_ratio > 90
                       ? "bg-yellow-600"
                       : "bg-green-600"
-                  }`}
+                    }`}
                   style={{ width: `${Math.min(data.utilization_ratio, 100)}%` }}
                 >
                   {data.utilization_ratio}%
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 dark:text-slate-400 mt-2">
                 Critical bolt at position: ({data.critical_bolt_position[0]},{" "}
                 {data.critical_bolt_position[1]}) mm
               </p>
@@ -1043,7 +1032,7 @@ const BoltedConnectionsModule = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Wrench className="text-blue-600" size={32} />
-        <h2 className="text-3xl font-bold text-gray-800">
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-slate-100">
           Bolted Connections Design
         </h2>
       </div>
@@ -1069,11 +1058,10 @@ const BoltedConnectionsModule = () => {
               setActiveBoltType(type);
               setResults(null);
             }}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeBoltType === type
-                ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeBoltType === type
+              ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg"
+              : "bg-gray-100 dark:bg-slate-700 text-gray-700 hover:bg-gray-200 dark:bg-slate-600"
+              }`}
           >
             {type === "ordinary" && "Ordinary Bolts"}
             {type === "hsfg" && "HSFG Bolts"}
@@ -1083,7 +1071,7 @@ const BoltedConnectionsModule = () => {
       </div>
 
       {/* Forms */}
-      <div className="bg-white rounded-lg shadow-lg p-6 border-2 border-gray-200">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 border-2 border-gray-200 dark:border-slate-700">
         {activeBoltType === "ordinary" && renderOrdinaryBoltsForm()}
         {activeBoltType === "hsfg" && renderHsfgBoltsForm()}
         {activeBoltType === "group" && renderBoltGroupForm()}

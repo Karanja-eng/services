@@ -379,7 +379,7 @@ const ApproximateQuantities = ({
 
   if (!takeoffData || takeoffData.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-8">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 p-8">
         <div className="text-center py-12">
           <Calculator className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -463,7 +463,7 @@ const ApproximateQuantities = ({
           return (
             <div
               key={item.id}
-              className="mb-8 p-4 border rounded-lg bg-gray-50"
+              className="mb-8 p-4 border dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800"
             >
               <div className="mb-4">
                 <h3 className="font-semibold text-gray-800">

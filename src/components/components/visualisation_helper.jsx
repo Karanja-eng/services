@@ -1,7 +1,7 @@
 import { useState } from "react";
-import StructuralVisualizationComponent from "../../Drawings/visualise_component";
+import StructuralVisualizationComponent from "../Drawings/visualise_component";
 
-export function ThreeD_helper() {
+export default function ThreeD_helper() {
   const [show3D, setShow3D] = useState(false);
   const [stairPropsFor3D, setStairPropsFor3D] = useState(null);
 

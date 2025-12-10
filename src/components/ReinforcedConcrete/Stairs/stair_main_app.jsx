@@ -1,96 +1,72 @@
 import React, { useState, createContext } from "react";
-import { Moon, Sun, Calculator, BookOpen } from "lucide-react";
+import { Calculator, BookOpen } from "lucide-react";
 import StructuralVisualizationComponent from "../../Drawings/visualise_component";
-import ThreeD_helper from '../../components/visualisation_helper'
+// import ThreeD_helper from '../../components/visualisation_helper';
 
 
 // Theme Context
 const ThemeContext = createContext();
 
 // Main App Component
-function StairDesignerApp() {
-  const [theme, setTheme] = useState("light");
+function StairDesignerApp({ isDark = false }) {
   const [activeCode, setActiveCode] = useState("eurocode");
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "light"));
-  };
+  // Convert isDark boolean to theme string for backward compatibility with child components
+  const theme = isDark ? "dark" : "light";
 
   return (
     <ThemeContext.Provider value={{ theme }}>
       <div
-        className={`min-h-screen transition-colors duration-300 ${
-          theme === "dark"
-            ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
-            : "bg-gradient-to-br from-gray-50 via-white to-gray-100"
-        }`}
+        className={`min-h-screen transition-colors duration-300 ${isDark
+          ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+          : "bg-gradient-to-br from-slate-50 via-white to-blue-50"
+          }`}
       >
-        {/* Header with Theme Toggle */}
+        {/* Header */}
         <div
-          className={`border-b ${
-            theme === "dark"
-              ? "bg-gray-800/50 border-gray-700"
-              : "bg-white/80 border-gray-200"
-          } backdrop-blur-lg sticky top-0 z-50 shadow-lg`}
+          className={`border-b ${isDark
+            ? "bg-slate-800/50 border-slate-700"
+            : "bg-white/80 border-slate-200"
+            } backdrop-blur-lg shadow-lg`}
         >
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div
-                  className={`p-2 rounded-xl ${
-                    theme === "dark" ? "bg-blue-600" : "bg-blue-500"
-                  } shadow-lg`}
+                  className={`p-2 rounded-xl ${isDark ? "bg-teal-600" : "bg-teal-500"
+                    } shadow-lg`}
                 >
                   <Calculator className="w-8 h-8 text-white" />
                 </div>
                 <div>
                   <h1
-                    className={`text-2xl font-bold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
+                    className={`text-2xl font-bold ${isDark ? "text-white" : "text-slate-900"
+                      }`}
                   >
-                    Stairs
+                    Stair Design
                   </h1>
                   <p
-                    className={`text-sm ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
+                    className={`text-sm ${isDark ? "text-slate-400" : "text-slate-600"
+                      }`}
                   >
-                    choose between Eurocode and BS 8110 design codes
+                    Professional stair design to Eurocode & BS 8110
                   </p>
                 </div>
               </div>
-
-              <button
-                onClick={toggleTheme}
-                className={`p-3 rounded-xl transition-all ${
-                  theme === "dark"
-                    ? "bg-gray-700 hover:bg-gray-600 text-yellow-400"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                } shadow-lg hover:shadow-xl`}
-                title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              >
-                {theme === "dark" ? (
-                  <Sun className="w-6 h-6" />
-                ) : (
-                  <Moon className="w-6 h-6" />
-                )}
-              </button>
             </div>
 
             {/* Code Selection */}
             <div className="mt-4 flex gap-4">
               <button
                 onClick={() => setActiveCode("eurocode")}
-                className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${
-                  activeCode === "eurocode"
-                    ? theme === "dark"
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
-                      : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                    : theme === "dark"
-                    ? "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
+                className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${activeCode === "eurocode"
+                  ? isDark
+                    ? "bg-teal-600 text-white shadow-lg shadow-teal-600/30"
+                    : "bg-teal-500 text-white shadow-lg shadow-teal-500/30"
+                  : isDark
+                    ? "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
+                    : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                  }`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <BookOpen className="w-5 h-5" />
@@ -100,15 +76,14 @@ function StairDesignerApp() {
 
               <button
                 onClick={() => setActiveCode("bs8110")}
-                className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${
-                  activeCode === "bs8110"
-                    ? theme === "dark"
-                      ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
-                      : "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
-                    : theme === "dark"
-                    ? "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
+                className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${activeCode === "bs8110"
+                  ? isDark
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                  : isDark
+                    ? "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
+                    : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                  }`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <BookOpen className="w-5 h-5" />
@@ -122,9 +97,9 @@ function StairDesignerApp() {
         {/* Main Content */}
         <div className="container mx-auto px-4 py-6">
           {activeCode === "eurocode" ? (
-            <EurocodeCalculator theme={theme} />
+            <EurocodeCalculator theme={theme} isDark={isDark} />
           ) : (
-            <BS8110Calculator theme={theme} />
+            <BS8110Calculator theme={theme} isDark={isDark} />
           )}
         </div>
       </div>
@@ -133,7 +108,7 @@ function StairDesignerApp() {
 }
 
 // Eurocode Calculator Component
-function EurocodeCalculator({ theme }) {
+function EurocodeCalculator({ theme, isDark }) {
   const [stairType, setStairType] = useState("simply_supported");
   const [cantileverType, setCantileverType] = useState("side_support");
   const [results, setResults] = useState(null);
@@ -233,25 +208,23 @@ function EurocodeCalculator({ theme }) {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setStairType("simply_supported")}
-              className={`p-3 rounded-lg font-medium transition-all ${
-                stairType === "simply_supported"
-                  ? "bg-blue-500 text-white"
-                  : theme === "dark"
-                  ? "bg-gray-700 text-gray-300"
-                  : "bg-gray-200 text-gray-700"
-              }`}
+              className={`p-3 rounded-lg font-medium transition-all ${stairType === "simply_supported"
+                ? "bg-teal-500 text-white"
+                : isDark
+                  ? "bg-slate-700 text-slate-300"
+                  : "bg-slate-200 text-slate-700"
+                }`}
             >
               Simply Supported
             </button>
             <button
               onClick={() => setStairType("cantilever")}
-              className={`p-3 rounded-lg font-medium transition-all ${
-                stairType === "cantilever"
-                  ? "bg-blue-500 text-white"
-                  : theme === "dark"
-                  ? "bg-gray-700 text-gray-300"
-                  : "bg-gray-200 text-gray-700"
-              }`}
+              className={`p-3 rounded-lg font-medium transition-all ${stairType === "cantilever"
+                ? "bg-teal-500 text-white"
+                : isDark
+                  ? "bg-slate-700 text-slate-300"
+                  : "bg-slate-200 text-slate-700"
+                }`}
             >
               Cantilever
             </button>
@@ -267,13 +240,12 @@ function EurocodeCalculator({ theme }) {
             <div className="space-y-2">
               <button
                 onClick={() => setCantileverType("side_support")}
-                className={`w-full p-3 rounded-lg text-left transition-all ${
-                  cantileverType === "side_support"
-                    ? "bg-green-500 text-white"
-                    : theme === "dark"
+                className={`w-full p-3 rounded-lg text-left transition-all ${cantileverType === "side_support"
+                  ? "bg-green-500 text-white"
+                  : theme === "dark"
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-200 text-gray-700"
-                }`}
+                  }`}
               >
                 <div className="font-medium">Side Wall/Beam Support</div>
                 <div className="text-sm opacity-80">
@@ -282,13 +254,12 @@ function EurocodeCalculator({ theme }) {
               </button>
               <button
                 onClick={() => setCantileverType("central_beam")}
-                className={`w-full p-3 rounded-lg text-left transition-all ${
-                  cantileverType === "central_beam"
-                    ? "bg-green-500 text-white"
-                    : theme === "dark"
+                className={`w-full p-3 rounded-lg text-left transition-all ${cantileverType === "central_beam"
+                  ? "bg-green-500 text-white"
+                  : theme === "dark"
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-200 text-gray-700"
-                }`}
+                  }`}
               >
                 <div className="font-medium">Central Spine Beam</div>
                 <div className="text-sm opacity-80">
@@ -314,7 +285,7 @@ function EurocodeCalculator({ theme }) {
                   value={inputs.span}
                   onChange={handleInputChange}
                   step="0.1"
-                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
                 />
               </div>
               <div>
@@ -327,7 +298,7 @@ function EurocodeCalculator({ theme }) {
                   value={inputs.width}
                   onChange={handleInputChange}
                   step="0.1"
-                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
                 />
               </div>
               <div>
@@ -339,7 +310,7 @@ function EurocodeCalculator({ theme }) {
                   name="waist_thickness"
                   value={inputs.waist_thickness}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
                 />
               </div>
               <div>
@@ -351,7 +322,7 @@ function EurocodeCalculator({ theme }) {
                   name="riser_height"
                   value={inputs.riser_height}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
                 />
               </div>
             </div>
@@ -411,7 +382,7 @@ function EurocodeCalculator({ theme }) {
                   value={inputs.live_load}
                   onChange={handleInputChange}
                   step="0.5"
-                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
                 />
               </div>
               <div>
@@ -424,7 +395,7 @@ function EurocodeCalculator({ theme }) {
                   value={inputs.finishes_load}
                   onChange={handleInputChange}
                   step="0.5"
-                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={`w-full px-3 py-2 rounded-lg border ${inputClass} focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
                 />
               </div>
             </div>
@@ -434,11 +405,20 @@ function EurocodeCalculator({ theme }) {
         <button
           onClick={calculateDesign}
           disabled={loading}
-          className="w-full mt-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg disabled:opacity-50"
+          className="w-full mt-6 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg disabled:opacity-50"
         >
           {loading ? "Calculating..." : "Calculate Design"}
         </button>
-  {/* ################################################## */}
+
+
+        {/* ################################################## */}
+        {/* ################################################## */}
+
+        {/* #####   prop Support     ############################################# */}
+
+        {/* ################################################## */}
+
+
 
         {/* Show 3D button - place immediately below the Calculate Design button */}
         <button
@@ -482,7 +462,7 @@ function EurocodeCalculator({ theme }) {
 
       </div>
 
-      
+
       {/* ################################################# */}
 
 
@@ -519,11 +499,10 @@ function EurocodeCalculator({ theme }) {
             />
 
             <div
-              className={`rounded-xl p-4 ${
-                results.checks?.all_checks_passed
-                  ? "bg-green-500/20 border-2 border-green-500"
-                  : "bg-red-500/20 border-2 border-red-500"
-              }`}
+              className={`rounded-xl p-4 ${results.checks?.all_checks_passed
+                ? "bg-green-500/20 border-2 border-green-500"
+                : "bg-red-500/20 border-2 border-red-500"
+                }`}
             >
               <p className={`text-center font-bold ${textClass}`}>
                 {results.checks?.all_checks_passed
@@ -535,7 +514,7 @@ function EurocodeCalculator({ theme }) {
         )}
       </div>
 
-      
+
       {/* ################################################ */}
 
       {/* ------------- 3D Popup (full-screen) ------------- */}
@@ -601,7 +580,7 @@ function EurocodeCalculator({ theme }) {
 }
 
 // BS 8110 Calculator Component
-function BS8110Calculator({ theme }) {
+function BS8110Calculator({ theme, isDark }) {
   const [stairType, setStairType] = useState("supported");
   const [cantileverType, setCantileverType] = useState("side_support");
   const [results, setResults] = useState(null);
@@ -690,25 +669,23 @@ function BS8110Calculator({ theme }) {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setStairType("supported")}
-              className={`p-3 rounded-lg font-medium transition-all ${
-                stairType === "supported"
-                  ? "bg-purple-500 text-white"
-                  : theme === "dark"
-                  ? "bg-gray-700 text-gray-300"
-                  : "bg-gray-200 text-gray-700"
-              }`}
+              className={`p-3 rounded-lg font-medium transition-all ${stairType === "supported"
+                ? "bg-blue-500 text-white"
+                : isDark
+                  ? "bg-slate-700 text-slate-300"
+                  : "bg-slate-200 text-slate-700"
+                }`}
             >
               Simply Supported
             </button>
             <button
               onClick={() => setStairType("cantilever")}
-              className={`p-3 rounded-lg font-medium transition-all ${
-                stairType === "cantilever"
-                  ? "bg-purple-500 text-white"
-                  : theme === "dark"
-                  ? "bg-gray-700 text-gray-300"
-                  : "bg-gray-200 text-gray-700"
-              }`}
+              className={`p-3 rounded-lg font-medium transition-all ${stairType === "cantilever"
+                ? "bg-blue-500 text-white"
+                : isDark
+                  ? "bg-slate-700 text-slate-300"
+                  : "bg-slate-200 text-slate-700"
+                }`}
             >
               Cantilever
             </button>
@@ -724,13 +701,12 @@ function BS8110Calculator({ theme }) {
             <div className="space-y-2">
               <button
                 onClick={() => setCantileverType("side_support")}
-                className={`w-full p-3 rounded-lg text-left transition-all ${
-                  cantileverType === "side_support"
-                    ? "bg-green-500 text-white"
-                    : theme === "dark"
+                className={`w-full p-3 rounded-lg text-left transition-all ${cantileverType === "side_support"
+                  ? "bg-green-500 text-white"
+                  : theme === "dark"
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-200 text-gray-700"
-                }`}
+                  }`}
               >
                 <div className="font-medium">Side Wall/Beam Support</div>
                 <div className="text-sm opacity-80">
@@ -739,13 +715,12 @@ function BS8110Calculator({ theme }) {
               </button>
               <button
                 onClick={() => setCantileverType("central_beam")}
-                className={`w-full p-3 rounded-lg text-left transition-all ${
-                  cantileverType === "central_beam"
-                    ? "bg-green-500 text-white"
-                    : theme === "dark"
+                className={`w-full p-3 rounded-lg text-left transition-all ${cantileverType === "central_beam"
+                  ? "bg-green-500 text-white"
+                  : theme === "dark"
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-200 text-gray-700"
-                }`}
+                  }`}
               >
                 <div className="font-medium">Central Spine Beam</div>
                 <div className="text-sm opacity-80">
@@ -834,8 +809,8 @@ function BS8110Calculator({ theme }) {
         >
           {loading ? "Calculating..." : "Calculate Design"}
         </button>
-
-        <ThreeD_helper />
+        {/* 
+        <ThreeD_helper /> */}
       </div>
 
       {/* Results Panel */}
@@ -869,11 +844,10 @@ function BS8110Calculator({ theme }) {
             />
 
             <div
-              className={`rounded-xl p-4 ${
-                results.checks?.all_checks_passed
-                  ? "bg-green-500/20 border-2 border-green-500"
-                  : "bg-red-500/20 border-2 border-red-500"
-              }`}
+              className={`rounded-xl p-4 ${results.checks?.all_checks_passed
+                ? "bg-green-500/20 border-2 border-green-500"
+                : "bg-red-500/20 border-2 border-red-500"
+                }`}
             >
               <p className={`text-center font-bold ${textClass}`}>
                 <strong>Design Status: </strong>

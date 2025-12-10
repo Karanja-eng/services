@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Calculator, FileText, Settings, Download, Save, CheckCircle } from 'lucide-react';
 
-const FoundationDesignApp = () => {
+const BSCodesFoundation = ({ isDark = false }) => {
   const [foundationType, setFoundationType] = useState('pad');
   const [columnShape, setColumnShape] = useState('square');
   const [columnPosition, setColumnPosition] = useState('centre');
   const [activeTab, setActiveTab] = useState('input');
-  
+
   // Input States
   const [inputs, setInputs] = useState({
     // Loads
@@ -17,28 +17,28 @@ const FoundationDesignApp = () => {
     momentY: '',
     shearX: '',
     shearY: '',
-    
+
     // Column Dimensions
     columnWidth: '',
     columnDepth: '',
     columnDiameter: '',
-    
+
     // Material Properties
     concreteFck: '30',
     steelFyk: '500',
     soilBearing: '',
-    
+
     // Foundation Dimensions (for checking/iteration)
     foundationLength: '',
     foundationWidth: '',
     foundationDepth: '',
-    
+
     // Pile Foundation
     pileCount: '',
     pileDiameter: '',
     pileCapacity: '',
     pileSpacing: '',
-    
+
     // Cover and other
     cover: '50',
     density: '24'
@@ -48,12 +48,12 @@ const FoundationDesignApp = () => {
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
-    setInputs({...inputs, [e.target.name]: e.target.value});
+    setInputs({ ...inputs, [e.target.name]: e.target.value });
   };
 
   const calculateFoundation = async () => {
     setLoading(true);
-    
+
     // Simulate API call - replace with actual FastAPI endpoint
     setTimeout(() => {
       const mockResults = {
@@ -87,7 +87,7 @@ const FoundationDesignApp = () => {
           'BS EN 1997-1:2004 - Geotechnical design'
         ]
       };
-      
+
       setResults(mockResults);
       setLoading(false);
       setActiveTab('results');
@@ -98,18 +98,17 @@ const FoundationDesignApp = () => {
     return (
       <div className="space-y-6">
         {/* Foundation Type Selection */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Foundation Type</h3>
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Foundation Type</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {['pad', 'strip', 'pile', 'pilecap'].map(type => (
               <button
                 key={type}
                 onClick={() => setFoundationType(type)}
-                className={`p-3 rounded border-2 transition-all ${
-                  foundationType === type 
-                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                className={`p-3 rounded border-2 transition-all ${foundationType === type
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                  : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-slate-300'
+                  }`}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)} {type === 'pilecap' ? 'Cap' : 'Foundation'}
               </button>
@@ -119,15 +118,15 @@ const FoundationDesignApp = () => {
 
         {/* Column Configuration */}
         {foundationType === 'pad' && (
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Column Configuration</h3>
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Column Configuration</h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Column Shape</label>
-                <select 
-                  value={columnShape} 
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Column Shape</label>
+                <select
+                  value={columnShape}
                   onChange={(e) => setColumnShape(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="square">Square</option>
                   <option value="rectangular">Rectangular</option>
@@ -135,11 +134,11 @@ const FoundationDesignApp = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Column Position</label>
-                <select 
-                  value={columnPosition} 
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Column Position</label>
+                <select
+                  value={columnPosition}
                   onChange={(e) => setColumnPosition(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="centre">Centre</option>
                   <option value="edge">Edge (Eccentric)</option>
@@ -151,8 +150,8 @@ const FoundationDesignApp = () => {
         )}
 
         {/* Loads Input */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Design Loads (kN, kNm)</h3>
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Design Loads (kN, kNm)</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <InputField label="Dead Load (Gk)" name="deadLoad" value={inputs.deadLoad} onChange={handleInputChange} unit="kN" />
             <InputField label="Live Load (Qk)" name="liveLoad" value={inputs.liveLoad} onChange={handleInputChange} unit="kN" />
@@ -164,8 +163,8 @@ const FoundationDesignApp = () => {
         </div>
 
         {/* Column Dimensions */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Column Dimensions (mm)</h3>
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Column Dimensions (mm)</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {columnShape !== 'circular' ? (
               <>
@@ -179,8 +178,8 @@ const FoundationDesignApp = () => {
         </div>
 
         {/* Material Properties */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Material Properties (BS EN 1992-1-1)</h3>
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Material Properties (BS EN 1992-1-1)</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <InputField label="Concrete fck" name="concreteFck" value={inputs.concreteFck} onChange={handleInputChange} unit="MPa" />
             <InputField label="Steel fyk" name="steelFyk" value={inputs.steelFyk} onChange={handleInputChange} unit="MPa" />
@@ -190,8 +189,8 @@ const FoundationDesignApp = () => {
         </div>
 
         {/* Foundation Dimensions */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Foundation Dimensions (mm)</h3>
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Foundation Dimensions (mm)</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <InputField label="Length (L)" name="foundationLength" value={inputs.foundationLength} onChange={handleInputChange} unit="mm" />
             <InputField label="Width (B)" name="foundationWidth" value={inputs.foundationWidth} onChange={handleInputChange} unit="mm" />
@@ -201,8 +200,8 @@ const FoundationDesignApp = () => {
 
         {/* Pile Foundation Inputs */}
         {(foundationType === 'pile' || foundationType === 'pilecap') && (
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Pile Configuration (BS 8004)</h3>
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Pile Configuration (BS 8004)</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <InputField label="Number of Piles" name="pileCount" value={inputs.pileCount} onChange={handleInputChange} />
               <InputField label="Pile Diameter" name="pileDiameter" value={inputs.pileDiameter} onChange={handleInputChange} unit="mm" />
@@ -217,7 +216,7 @@ const FoundationDesignApp = () => {
             <Save className="w-5 h-5" />
             Save Project
           </button>
-          <button 
+          <button
             onClick={calculateFoundation}
             disabled={loading}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:bg-gray-400"
@@ -236,16 +235,14 @@ const FoundationDesignApp = () => {
     return (
       <div className="space-y-6">
         {/* Design Summary */}
-        <div className={`p-6 rounded-lg border-2 ${
-          results.designSummary.status === 'PASS' 
-            ? 'bg-green-50 border-green-500' 
-            : 'bg-red-50 border-red-500'
-        }`}>
+        <div className={`p-6 rounded-lg border-2 ${results.designSummary.status === 'PASS'
+          ? 'bg-green-50 border-green-500'
+          : 'bg-red-50 border-red-500'
+          }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CheckCircle className={`w-8 h-8 ${
-                results.designSummary.status === 'PASS' ? 'text-green-600' : 'text-red-600'
-              }`} />
+              <CheckCircle className={`w-8 h-8 ${results.designSummary.status === 'PASS' ? 'text-green-600' : 'text-red-600'
+                }`} />
               <div>
                 <h3 className="text-xl font-bold text-gray-800">Design {results.designSummary.status}</h3>
                 <p className="text-gray-600">Utilization Ratio: {(results.designSummary.utilizationRatio * 100).toFixed(1)}%</p>
@@ -259,25 +256,25 @@ const FoundationDesignApp = () => {
         </div>
 
         {/* Load Analysis Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-gray-50 dark:bg-slate-900 px-6 py-3 border-b border-gray-200 dark:border-slate-700">
             <h3 className="text-lg font-semibold text-gray-800">Load Analysis (BS EN 1990)</h3>
           </div>
           <table className="w-full">
-            <thead className="bg-gray-100">
+            <thead className="bg-gray-100 dark:bg-slate-700">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Parameter</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-slate-200">Parameter</th>
                 <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Value</th>
                 <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Unit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               <tr>
-                <td className="px-6 py-3 text-gray-700">Total Vertical Load (SLS)</td>
+                <td className="px-6 py-3 text-gray-700 dark:text-slate-300">Total Vertical Load (SLS)</td>
                 <td className="px-6 py-3 text-right font-medium">{results.loadAnalysis.totalVerticalLoad}</td>
                 <td className="px-6 py-3 text-right text-gray-600">kN</td>
               </tr>
-              <tr className="bg-gray-50">
+              <tr className="bg-gray-50 dark:bg-slate-800">
                 <td className="px-6 py-3 text-gray-700">Design Load (ULS: 1.35Gk + 1.5Qk)</td>
                 <td className="px-6 py-3 text-right font-medium">{results.loadAnalysis.designLoad}</td>
                 <td className="px-6 py-3 text-right text-gray-600">kN</td>
@@ -297,12 +294,12 @@ const FoundationDesignApp = () => {
         </div>
 
         {/* Design Checks Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-gray-50 dark:bg-slate-900 px-6 py-3 border-b border-gray-200 dark:border-slate-700">
             <h3 className="text-lg font-semibold text-gray-800">Design Checks (BS EN 1992-1-1)</h3>
           </div>
           <table className="w-full">
-            <thead className="bg-gray-100">
+            <thead className="bg-gray-100 dark:bg-slate-700">
               <tr>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Check Description</th>
                 <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Applied</th>
@@ -318,18 +315,16 @@ const FoundationDesignApp = () => {
                   <td className="px-6 py-3 text-right font-medium">{check.value}</td>
                   <td className="px-6 py-3 text-right font-medium">{check.limit}</td>
                   <td className="px-6 py-3 text-center">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      check.ratio < 0.9 ? 'bg-green-100 text-green-800' :
+                    <span className={`px-3 py-1 rounded-full text-sm ${check.ratio < 0.9 ? 'bg-green-100 text-green-800' :
                       check.ratio < 1.0 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
+                        'bg-red-100 text-red-800'
+                      }`}>
                       {(check.ratio * 100).toFixed(0)}%
                     </span>
                   </td>
                   <td className="px-6 py-3 text-center">
-                    <span className={`px-3 py-1 rounded text-sm font-medium ${
-                      check.status === 'PASS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`px-3 py-1 rounded text-sm font-medium ${check.status === 'PASS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
                       {check.status}
                     </span>
                   </td>
@@ -340,8 +335,8 @@ const FoundationDesignApp = () => {
         </div>
 
         {/* Reinforcement Details */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-gray-50 dark:bg-slate-900 px-6 py-3 border-b border-gray-200 dark:border-slate-700">
             <h3 className="text-lg font-semibold text-gray-800">Reinforcement Details (BS 8666)</h3>
           </div>
           <div className="p-6">
@@ -367,7 +362,7 @@ const FoundationDesignApp = () => {
         </div>
 
         {/* BS References */}
-        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <div className="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
           <h4 className="font-semibold text-gray-800 mb-3">Design Standards Referenced</h4>
           <ul className="space-y-2">
             {results.bsReferences.map((ref, idx) => (
@@ -394,9 +389,9 @@ const FoundationDesignApp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-slate-900">
       {/* Header */}
-      <header className="bg-gray-800 text-white shadow-lg">
+      <header className="bg-gray-800 dark:bg-slate-800 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -412,15 +407,15 @@ const FoundationDesignApp = () => {
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-1">
-            <TabButton 
-              active={activeTab === 'input'} 
+            <TabButton
+              active={activeTab === 'input'}
               onClick={() => setActiveTab('input')}
               icon={<Calculator className="w-5 h-5" />}
             >
               Design Input
             </TabButton>
-            <TabButton 
-              active={activeTab === 'results'} 
+            <TabButton
+              active={activeTab === 'results'}
               onClick={() => setActiveTab('results')}
               icon={<FileText className="w-5 h-5" />}
               disabled={!results}
@@ -437,20 +432,14 @@ const FoundationDesignApp = () => {
         {activeTab === 'results' && renderResults()}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-800 text-gray-300 mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-center text-sm">
-          <p>© 2025 Foundation Design System | Compliant with BS EN 1992-1-1, BS 8004, BS EN 1997-1</p>
-          <p className="mt-2 text-gray-400">For professional use by qualified structural engineers</p>
-        </div>
-      </footer>
+
     </div>
   );
 };
 
 const InputField = ({ label, name, value, onChange, unit, type = "number" }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
+    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
       {label}
     </label>
     <div className="relative">
@@ -460,10 +449,10 @@ const InputField = ({ label, name, value, onChange, unit, type = "number" }) => 
         value={value}
         onChange={onChange}
         step="0.01"
-        className="w-full p-2 pr-12 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="w-full p-2 pr-12 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
       {unit && (
-        <span className="absolute right-3 top-2 text-sm text-gray-500">{unit}</span>
+        <span className="absolute right-3 top-2 text-sm text-gray-500 dark:text-slate-400">{unit}</span>
       )}
     </div>
   </div>
@@ -473,15 +462,14 @@ const TabButton = ({ active, onClick, children, icon, disabled }) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${
-      active 
-        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-        : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+    className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${active
+      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
   >
     {icon}
     {children}
   </button>
 );
 
-export default FoundationDesignApp;
+export default BSCodesFoundation;

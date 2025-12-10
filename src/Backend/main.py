@@ -24,6 +24,10 @@ from calculations.takeoff.Qs import router as QuantitySurvey_backend_router
 from calculations.takeoff.ManholesBackend import router as ManholesRouter
 from calculations.takeoff.ExternalWorksBackend import router as ExternalWorksRouter
 from calculations.takeoff.RoofBackend import router as RoofWorksRouter
+from calculations.takeoff.septic_tank import router as septicRouter
+from calculations.takeoff.swiming_pool import router as swimming_pool_router
+from calculations.takeoff.Basement import router as basement_router
+from calculations.takeoff.Door_window import router as Door_window_router
 
 
 app.include_router(
@@ -34,18 +38,21 @@ app.include_router(
     ExternalWorksRouter, prefix="/exteral_works", tags=["manholes_router"]
 )
 app.include_router(RoofWorksRouter, prefix="/roof_router", tags=["roof_router"])
-
+app.include_router(septicRouter, prefix="/septicRouter", tags=["septic_Router"])
+app.include_router(swimming_pool_router, prefix="/swimming_pool_router", tags=["swimming_pool_router"])
+app.include_router(basement_router, prefix="/basement_router", tags=["basement_router"])
+app.include_router(Door_window_router, prefix="/Door_window_router", tags=["Door_windowrouter"])
 
 ## ##############   Ai Models  ##############
 
 ##Ai models
-from calculations.Atomationmodels.yolomodel import router as yolo_model_router
-from calculations.Atomationmodels.opencvmodel import router as open_cv_model_router
-from calculations.Atomationmodels.phi_vision import router as phi_model_router
+# from calculations.Atomationmodels.yolomodel import router as yolo_model_router
+# from calculations.Atomationmodels.opencvmodel import router as open_cv_model_router
+# from calculations.Atomationmodels.phi_vision import router as phi_model_router
 
-app.include_router(yolo_model_router, prefix="/yolo", tags=["Yolo_model"])
-app.include_router(open_cv_model_router, prefix="/opencv", tags=["OpenCv_model"])
-app.include_router(phi_model_router, prefix="/phi_model", tags=["phi_model_router"])
+# app.include_router(yolo_model_router, prefix="/yolo", tags=["Yolo_model"])
+# app.include_router(open_cv_model_router, prefix="/opencv", tags=["OpenCv_model"])
+# app.include_router(phi_model_router, prefix="/phi_model", tags=["phi_model_router"])
 
 ################## Steel ###########################
 

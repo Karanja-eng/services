@@ -125,7 +125,7 @@ const WeldedJointsModule = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Throat Size (mm)
           </label>
           <input
@@ -143,7 +143,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Weld Length (mm)
           </label>
           <input
@@ -161,7 +161,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Longitudinal Force (kN)
           </label>
           <input
@@ -179,7 +179,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Transverse Force (kN)
           </label>
           <input
@@ -197,7 +197,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Weld Position
           </label>
           <select
@@ -214,7 +214,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Electrode Grade
           </label>
           <select
@@ -231,7 +231,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Parent Steel Grade
           </label>
           <select
@@ -266,7 +266,7 @@ const WeldedJointsModule = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Weld Type
           </label>
           <select
@@ -284,7 +284,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Throat Size (mm)
           </label>
           <input
@@ -302,7 +302,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Weld Length (mm)
           </label>
           <input
@@ -320,7 +320,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Applied Force (kN)
           </label>
           <input
@@ -338,7 +338,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Stress Type
           </label>
           <select
@@ -355,7 +355,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Electrode Grade
           </label>
           <select
@@ -372,7 +372,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Parent Steel Grade
           </label>
           <select
@@ -403,7 +403,7 @@ const WeldedJointsModule = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Throat Size (mm)
           </label>
           <input
@@ -421,7 +421,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Weld Length (mm) - Each Side
           </label>
           <input
@@ -439,7 +439,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Applied Load (kN)
           </label>
           <input
@@ -457,7 +457,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Eccentricity (mm)
           </label>
           <input
@@ -475,7 +475,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Electrode Grade
           </label>
           <select
@@ -492,7 +492,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Parent Steel Grade
           </label>
           <select
@@ -523,7 +523,7 @@ const WeldedJointsModule = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Throat Size (mm)
           </label>
           <input
@@ -541,7 +541,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Weld Length (mm)
           </label>
           <input
@@ -559,7 +559,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Vertical Load (kN)
           </label>
           <input
@@ -577,7 +577,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Horizontal Load (kN)
           </label>
           <input
@@ -595,7 +595,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Applied Moment (kNm)
           </label>
           <input
@@ -610,7 +610,7 @@ const WeldedJointsModule = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
             Electrode Grade
           </label>
           <select
@@ -643,20 +643,19 @@ const WeldedJointsModule = () => {
     if (results.type === "fillet" || results.type === "butt") {
       const data = results.data;
       return (
-        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200">
+        <div className="mt-8 bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 border-2 border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-3 mb-6">
             <Zap className="text-blue-600" size={28} />
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
               Design Results - {data.weld_type}
             </h3>
           </div>
 
           <div
-            className={`p-4 rounded-lg mb-6 ${
-              data.passed
-                ? "bg-green-50 border-2 border-green-500"
-                : "bg-red-50 border-2 border-red-500"
-            }`}
+            className={`p-4 rounded-lg mb-6 ${data.passed
+              ? "bg-green-50 border-2 border-green-500"
+              : "bg-red-50 border-2 border-red-500"
+              }`}
           >
             <div className="flex items-center gap-2">
               {data.passed ? (
@@ -665,9 +664,8 @@ const WeldedJointsModule = () => {
                 <AlertCircle className="text-red-600" size={24} />
               )}
               <span
-                className={`text-lg font-bold ${
-                  data.passed ? "text-green-700" : "text-red-700"
-                }`}
+                className={`text-lg font-bold ${data.passed ? "text-green-700" : "text-red-700"
+                  }`}
               >
                 {data.passed ? "WELD ADEQUATE" : "WELD INADEQUATE"}
               </span>
@@ -724,18 +722,17 @@ const WeldedJointsModule = () => {
             </div>
 
             <div className="col-span-2">
-              <h4 className="font-bold text-lg text-gray-700 border-b-2 border-gray-200 pb-2 mb-3">
+              <h4 className="font-bold text-lg text-gray-700 dark:text-slate-300 border-b-2 border-gray-200 dark:border-slate-700 pb-2 mb-3">
                 Utilization Ratio
               </h4>
-              <div className="w-full bg-gray-200 rounded-full h-6">
+              <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-6">
                 <div
-                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
-                    data.utilization_ratio > 100
-                      ? "bg-red-600"
-                      : data.utilization_ratio > 90
+                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold text-sm ${data.utilization_ratio > 100
+                    ? "bg-red-600"
+                    : data.utilization_ratio > 90
                       ? "bg-yellow-600"
                       : "bg-green-600"
-                  }`}
+                    }`}
                   style={{ width: `${Math.min(data.utilization_ratio, 100)}%` }}
                 >
                   {data.utilization_ratio}%
@@ -757,20 +754,19 @@ const WeldedJointsModule = () => {
     if (results.type === "lap") {
       const data = results.data;
       return (
-        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200">
+        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-3 mb-6">
             <Zap className="text-blue-600" size={28} />
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
               Lap Joint Results
             </h3>
           </div>
 
           <div
-            className={`p-4 rounded-lg mb-6 ${
-              data.passed
-                ? "bg-green-50 border-2 border-green-500"
-                : "bg-red-50 border-2 border-red-500"
-            }`}
+            className={`p-4 rounded-lg mb-6 ${data.passed
+              ? "bg-green-50 border-2 border-green-500"
+              : "bg-red-50 border-2 border-red-500"
+              }`}
           >
             <div className="flex items-center gap-2">
               {data.passed ? (
@@ -779,9 +775,8 @@ const WeldedJointsModule = () => {
                 <AlertCircle className="text-red-600" size={24} />
               )}
               <span
-                className={`text-lg font-bold ${
-                  data.passed ? "text-green-700" : "text-red-700"
-                }`}
+                className={`text-lg font-bold ${data.passed ? "text-green-700" : "text-red-700"
+                  }`}
               >
                 {data.passed ? "JOINT ADEQUATE" : "JOINT INADEQUATE"}
               </span>
@@ -824,11 +819,10 @@ const WeldedJointsModule = () => {
             </div>
 
             <div className="col-span-2">
-              <div className="w-full bg-gray-200 rounded-full h-6">
+              <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-6">
                 <div
-                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
-                    data.utilization_ratio > 100 ? "bg-red-600" : "bg-green-600"
-                  }`}
+                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold text-sm ${data.utilization_ratio > 100 ? "bg-red-600" : "bg-green-600"
+                    }`}
                   style={{ width: `${Math.min(data.utilization_ratio, 100)}%` }}
                 >
                   {data.utilization_ratio}%
@@ -843,20 +837,19 @@ const WeldedJointsModule = () => {
     if (results.type === "tee") {
       const data = results.data;
       return (
-        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200">
+        <div className="mt-8 bg-white rounded-lg shadow-xl p-6 border-2 border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-3 mb-6">
             <Zap className="text-blue-600" size={28} />
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
               T-Joint Results
             </h3>
           </div>
 
           <div
-            className={`p-4 rounded-lg mb-6 ${
-              data.passed
-                ? "bg-green-50 border-2 border-green-500"
-                : "bg-red-50 border-2 border-red-500"
-            }`}
+            className={`p-4 rounded-lg mb-6 ${data.passed
+              ? "bg-green-50 border-2 border-green-500"
+              : "bg-red-50 border-2 border-red-500"
+              }`}
           >
             <div className="flex items-center gap-2">
               {data.passed ? (
@@ -865,9 +858,8 @@ const WeldedJointsModule = () => {
                 <AlertCircle className="text-red-600" size={24} />
               )}
               <span
-                className={`text-lg font-bold ${
-                  data.passed ? "text-green-700" : "text-red-700"
-                }`}
+                className={`text-lg font-bold ${data.passed ? "text-green-700" : "text-red-700"
+                  }`}
               >
                 {data.passed ? "JOINT ADEQUATE" : "JOINT INADEQUATE"}
               </span>
@@ -906,11 +898,10 @@ const WeldedJointsModule = () => {
             </div>
 
             <div className="col-span-2">
-              <div className="w-full bg-gray-200 rounded-full h-6">
+              <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-6">
                 <div
-                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
-                    data.utilization_ratio > 100 ? "bg-red-600" : "bg-green-600"
-                  }`}
+                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold text-sm ${data.utilization_ratio > 100 ? "bg-red-600" : "bg-green-600"
+                    }`}
                   style={{ width: `${Math.min(data.utilization_ratio, 100)}%` }}
                 >
                   {data.utilization_ratio}%
@@ -929,7 +920,7 @@ const WeldedJointsModule = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Zap className="text-blue-600" size={32} />
-        <h2 className="text-3xl font-bold text-gray-800">
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-slate-100">
           Welded Joints Design
         </h2>
       </div>
@@ -937,7 +928,7 @@ const WeldedJointsModule = () => {
       <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg border-2 border-blue-200">
         <div className="flex items-start gap-2">
           <Info className="text-blue-600 mt-1" size={20} />
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-700 dark:text-slate-300">
             <strong>BS 5950-1:2000 Section 6.9:</strong> Design of welded
             connections including fillet welds, butt welds, lap joints, and
             T-joints. All calculations follow British Standard specifications.
@@ -954,11 +945,10 @@ const WeldedJointsModule = () => {
               setActiveWeldType(type);
               setResults(null);
             }}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeWeldType === type
-                ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeWeldType === type
+              ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg"
+              : "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:bg-slate-600"
+              }`}
           >
             {type === "fillet" && "Fillet Weld"}
             {type === "butt" && "Butt Weld"}
@@ -969,7 +959,7 @@ const WeldedJointsModule = () => {
       </div>
 
       {/* Forms */}
-      <div className="bg-white rounded-lg shadow-lg p-6 border-2 border-gray-200">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 border-2 border-gray-200 dark:border-slate-700">
         {activeWeldType === "fillet" && renderFilletWeldForm()}
         {activeWeldType === "butt" && renderButtWeldForm()}
         {activeWeldType === "lap" && renderLapJointForm()}

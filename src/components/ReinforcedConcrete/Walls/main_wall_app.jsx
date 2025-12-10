@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Moon, Sun, BookOpen, Euro } from "lucide-react";
+import { BookOpen, Euro } from "lucide-react";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
 import EurocodeWallCalculator from "./eurocode_wall_calc";
-// Import the BS Codes Calculator (from first artifact)
+
+// BS Codes Wall Calculator Component
 const WallDesignCalculator = ({ isDark }) => {
   const [wallType, setWallType] = useState("shear");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
 
   const [inputs, setInputs] = useState({
     height: 3.5,
@@ -30,7 +31,6 @@ const WallDesignCalculator = ({ isDark }) => {
 
   const calculateDesign = async () => {
     setLoading(true);
-    setError(null);
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const mockResult = {
@@ -73,11 +73,11 @@ const WallDesignCalculator = ({ isDark }) => {
     setLoading(false);
   };
 
-  const bgCard = isDark ? "bg-gray-800" : "bg-white";
-  const textPrimary = isDark ? "text-gray-100" : "text-gray-800";
-  const textSecondary = isDark ? "text-gray-300" : "text-gray-600";
-  const bgInput = isDark ? "bg-gray-700" : "bg-white";
-  const border = isDark ? "border-gray-700" : "border-gray-300";
+  const bgCard = isDark ? "bg-slate-800" : "bg-white";
+  const textPrimary = isDark ? "text-slate-100" : "text-slate-900";
+  const textSecondary = isDark ? "text-slate-300" : "text-slate-600";
+  const bgInput = isDark ? "bg-slate-700" : "bg-white";
+  const border = isDark ? "border-slate-700" : "border-slate-300";
 
   return (
     <div className="space-y-6">
@@ -92,13 +92,12 @@ const WallDesignCalculator = ({ isDark }) => {
                 <button
                   key={type}
                   onClick={() => setWallType(type)}
-                  className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${
-                    wallType === type
-                      ? "bg-gradient-to-r from-teal-500 to-cyan-600 text-white"
+                  className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${wallType === type
+                      ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg"
                       : isDark
-                      ? "bg-gray-700 text-gray-200"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
+                        ? "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
                 >
                   {type.charAt(0).toUpperCase() + type.slice(1)} Wall
                 </button>
@@ -128,7 +127,7 @@ const WallDesignCalculator = ({ isDark }) => {
                     value={inputs[field.name]}
                     onChange={handleInputChange}
                     step={field.step}
-                    className={`w-full px-3 py-2 ${bgInput} border ${border} rounded-md ${textPrimary}`}
+                    className={`w-full px-3 py-2 ${bgInput} border ${border} rounded-md ${textPrimary} focus:ring-2 focus:ring-teal-500`}
                   />
                 </div>
               ))}
@@ -138,19 +137,27 @@ const WallDesignCalculator = ({ isDark }) => {
           <button
             onClick={calculateDesign}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white px-6 py-4 rounded-lg font-semibold"
+            className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all disabled:opacity-50"
           >
             {loading ? "Calculating..." : "Calculate Design"}
           </button>
         </div>
 
         <div className="lg:col-span-2">
-          {result && (
+          {loading ? (
+            <div className={`${bgCard} rounded-lg shadow-md p-12`}>
+              <LoadingSpinner size="lg" message="Calculating wall design..." />
+            </div>
+          ) : result ? (
             <div className={`${bgCard} rounded-lg shadow-md p-6`}>
               <h3 className={`text-xl font-semibold ${textPrimary} mb-4`}>
                 Design {result.designStatus}
               </h3>
               <p className={textSecondary}>BS Codes calculation complete</p>
+            </div>
+          ) : (
+            <div className={`${bgCard} rounded-lg shadow-md p-12 text-center`}>
+              <p className={textSecondary}>Enter parameters and calculate design</p>
             </div>
           )}
         </div>
@@ -159,52 +166,27 @@ const WallDesignCalculator = ({ isDark }) => {
   );
 };
 
-// Import Eurocode Calculator (from second artifact - simplified for reference)
-
 // Main App Component
-const MainWallDesignApp = () => {
-  const [isDark, setIsDark] = useState(false);
-  const [activeStandard, setActiveStandard] = useState("bs"); // 'bs' or 'eurocode'
+const MainWallDesignApp = ({ isDark = false }) => {
+  const [activeStandard, setActiveStandard] = useState("bs");
 
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
-
-  const bgMain = isDark ? "bg-gray-900" : "bg-gray-50";
-  const bgCard = isDark ? "bg-gray-800" : "bg-white";
-  const textPrimary = isDark ? "text-gray-100" : "text-gray-800";
-  const textSecondary = isDark ? "text-gray-300" : "text-gray-600";
+  const bgMain = isDark ? "bg-slate-900" : "bg-slate-50";
+  const bgCard = isDark ? "bg-slate-800" : "bg-white";
+  const textPrimary = isDark ? "text-slate-100" : "text-slate-900";
+  const textSecondary = isDark ? "text-slate-300" : "text-slate-600";
 
   return (
     <div className={`min-h-screen ${bgMain} transition-colors duration-300`}>
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header with Theme Toggle */}
+        {/* Header */}
         <div className={`${bgCard} rounded-lg shadow-lg p-6 mb-6`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className={`text-3xl font-bold ${textPrimary} mb-2`}>
-                RC Wall Design Calculator
-              </h1>
-              <p className={textSecondary}>
-                Professional structural engineering tool for reinforced concrete
-                walls
-              </p>
-            </div>
-            <button
-              onClick={toggleTheme}
-              className={`p-3 rounded-lg transition-all ${
-                isDark
-                  ? "bg-gray-700 hover:bg-gray-600 text-yellow-400"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
-              aria-label="Toggle theme"
-            >
-              {isDark ? (
-                <Sun className="w-6 h-6" />
-              ) : (
-                <Moon className="w-6 h-6" />
-              )}
-            </button>
+          <div>
+            <h1 className={`text-3xl font-bold ${textPrimary} mb-2`}>
+              RC Wall Design Calculator
+            </h1>
+            <p className={textSecondary}>
+              Professional structural engineering tool for reinforced concrete walls
+            </p>
           </div>
         </div>
 
@@ -213,13 +195,12 @@ const MainWallDesignApp = () => {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setActiveStandard("bs")}
-              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${
-                activeStandard === "bs"
-                  ? "bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-md"
+              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${activeStandard === "bs"
+                  ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md"
                   : isDark
-                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+                    ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
             >
               <BookOpen className="w-5 h-5" />
               <div className="text-left">
@@ -232,13 +213,12 @@ const MainWallDesignApp = () => {
 
             <button
               onClick={() => setActiveStandard("eurocode")}
-              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${
-                activeStandard === "eurocode"
-                  ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-md"
+              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${activeStandard === "eurocode"
+                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
                   : isDark
-                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+                    ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
             >
               <Euro className="w-5 h-5" />
               <div className="text-left">
@@ -251,15 +231,14 @@ const MainWallDesignApp = () => {
 
         {/* Active Standard Information Banner */}
         <div
-          className={`${
-            activeStandard === "bs"
+          className={`${activeStandard === "bs"
               ? isDark
                 ? "bg-teal-900/30 border-teal-700"
                 : "bg-teal-50 border-teal-500"
               : isDark
-              ? "bg-blue-900/30 border-blue-700"
-              : "bg-blue-50 border-blue-500"
-          } border-l-4 rounded-lg p-4 mb-6`}
+                ? "bg-blue-900/30 border-blue-700"
+                : "bg-blue-50 border-blue-500"
+            } border-l-4 rounded-lg p-4 mb-6`}
         >
           <div className="flex items-start gap-3">
             {activeStandard === "bs" ? (
@@ -289,30 +268,6 @@ const MainWallDesignApp = () => {
           ) : (
             <EurocodeWallCalculator isDark={isDark} />
           )}
-        </div>
-
-        {/* Footer */}
-        <div className={`mt-8 ${bgCard} rounded-lg shadow-md p-6`}>
-          <div className="text-center">
-            <p className={`text-sm ${textSecondary} mb-2`}>
-              Professional Structural Engineering Software
-            </p>
-            <div className="flex items-center justify-center gap-4 text-xs">
-              <span className={textSecondary}>
-                {activeStandard === "bs"
-                  ? "BS EN 1992-1-1"
-                  : "EN 1992-1-1:2004"}
-              </span>
-              <span className={textSecondary}>•</span>
-              <span className={textSecondary}>
-                {activeStandard === "bs" ? "BS 8110-1:1997" : "EN 1990:2002"}
-              </span>
-              <span className={textSecondary}>•</span>
-              <span className={textSecondary}>
-                {activeStandard === "bs" ? "BS 8500-1:2015" : "EN 206:2013"}
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

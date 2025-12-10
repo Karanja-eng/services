@@ -34,6 +34,7 @@
 !webpack.config.js
 !index.js
 !App.js
+!descriptions.js
 
 
 # Allow GitHub workflows

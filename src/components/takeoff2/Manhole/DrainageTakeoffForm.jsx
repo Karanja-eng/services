@@ -126,7 +126,7 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
       console.error("Calculation error:", error);
       alert(
         "Error calculating takeoff: " +
-          (error.response?.data?.detail || error.message)
+        (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -134,7 +134,7 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <div className="w-full max-w-7xl mx-auto p-6 bg-white dark:bg-slate-800 rounded-lg shadow-lg">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">
         Drainage Takeoff Calculator
       </h1>
@@ -145,11 +145,10 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 font-medium capitalize ${
-              activeTab === tab
+            className={`px-6 py-3 font-medium capitalize ${activeTab === tab
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             {tab}
           </button>
@@ -305,7 +304,7 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
             Manhole Details
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-slate-700 rounded">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Manhole ID
@@ -749,18 +748,17 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
         <button
           onClick={handleCalculate}
           disabled={loading}
-          className={`px-8 py-3 rounded font-semibold transition ${
-            loading
+          className={`px-8 py-3 rounded font-semibold transition ${loading
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-green-600 text-white hover:bg-green-700"
-          }`}
+            }`}
         >
           {loading ? "Calculating..." : "Calculate Takeoff"}
         </button>
       </div>
 
       {/* Summary */}
-      <div className="mt-6 p-4 bg-gray-50 rounded">
+      <div className="mt-6 p-4 bg-gray-50 dark:bg-slate-800 rounded">
         <h3 className="font-semibold text-gray-700 mb-2">Project Summary</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>

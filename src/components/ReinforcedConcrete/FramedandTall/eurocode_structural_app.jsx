@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight, Code2, BookOpen, Toggle } from 'lucide-react';
+import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight, Code2, BookOpen, ToggleRight } from 'lucide-react';
 import * as THREE from 'three';
+import RCStructuralDesign from './rc_structural_design'
 
 // ============================================================================
 // EUROCODE STRUCTURAL DESIGN COMPONENT
 // ============================================================================
 
-const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
+const EurocodeComponent = ({ theme, onThemeChange }) => {
   const [activeModule, setActiveModule] = useState('actions');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -172,9 +173,9 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
         quasi_permanent: quasi_permanent.toFixed(2)
       },
       design_value: design_value.toFixed(2),
-      governing: design_value === eq610a ? 'Eq 6.10a' : 
-                 design_value === eq610b ? 'Eq 6.10b' : 
-                 design_value === eq610c ? 'Eq 6.10c' : 'Eq 6.10a (alternative)'
+      governing: design_value === eq610a ? 'Eq 6.10a' :
+        design_value === eq610b ? 'Eq 6.10b' :
+          design_value === eq610c ? 'Eq 6.10c' : 'Eq 6.10a (alternative)'
     };
   };
 
@@ -187,7 +188,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
 
     const concrete = EurocodeTables.concreteClasses[materialData.concreteClass];
     const steel = EurocodeTables.steelClasses[materialData.steelClass];
-    
+
     const fck = concrete.fck;
     const fcd = fck / 1.5; // alphacc * fck / gammaC (alphacc = 1.0)
     const fyk = steel.fyk;
@@ -198,7 +199,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
     // Calculate neutral axis depth (EN 1992-1-1 6.1)
     const lambda = 0.8; // For fck ≤ 50 MPa
     const eta = 1.0;
-    
+
     // Mu = 0.167 * fcd * b * d² (balanced section limit)
     const Mu_bal = 0.167 * fcd * b * d * d;
 
@@ -232,7 +233,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
     // Bar selection
     const barAreas = { 8: 50.3, 10: 78.5, 12: 113, 16: 201, 20: 314, 25: 491, 32: 804 };
     let selectedBars = { diameter: 16, number: 3 };
-    
+
     for (let dia of [12, 16, 20, 25, 32]) {
       for (let num = 2; num <= 8; num++) {
         if (barAreas[dia] * num >= As_req) {
@@ -277,9 +278,9 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
     const k = Math.min(1 + Math.sqrt(200 / d), 2.0);
     const CRd_c = 0.18 / 1.5; // 0.12 for γc = 1.5
     const vmin = 0.035 * Math.pow(k, 1.5) * Math.sqrt(fck);
-    
+
     const VRd_c = Math.max(
-      CRd_c * k * Math.pow(100 * rho1 * fck, 1/3) * b * d,
+      CRd_c * k * Math.pow(100 * rho1 * fck, 1 / 3) * b * d,
       vmin * b * d
     );
 
@@ -297,13 +298,13 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
       const theta = Math.PI / 4; // 45 degrees (simplified)
       const z = 0.9 * d;
       const fywd = 500 / 1.15;
-      
+
       Asw_s = Ved / (z * fywd * (1 / Math.tan(theta)));
-      
+
       // Using H8 links (2 legs)
       const Asw = 2 * 50.3; // mm²
       linkSpacing = Math.min(Asw / Asw_s, 0.75 * d, 300);
-      
+
       shearReinforcement = `Ø8 @ ${linkSpacing.toFixed(0)}mm`;
     }
 
@@ -379,7 +380,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
     const ag = parseFloat(seismicData.ag) / 100; // % of g to g
     const g = 9.81;
     const ag_val = ag * g;
-    
+
     const soilFactors = {
       'A': { S: 1.0, TB: 0.15, TC: 0.4, TD: 2.0 },
       'B': { S: 1.2, TB: 0.15, TC: 0.5, TD: 2.0 },
@@ -412,7 +413,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
     const TD = soil.TD;
 
     if (T1 <= TB) {
-      Sd_T = ag_val * soil.S * (1 + T1/TB * (eta * 2.5 - 1));
+      Sd_T = ag_val * soil.S * (1 + T1 / TB * (eta * 2.5 - 1));
     } else if (T1 <= TC) {
       Sd_T = ag_val * soil.S * eta * 2.5;
     } else if (T1 <= TD) {
@@ -422,7 +423,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
     }
 
     // Design spectrum ordinate
-    Sd_design = Sd_T / q;
+    const Sd_design = Sd_T / q;
 
     // Base shear (EN 1998-1 4.3.3.2.2)
     const lambda = 0.85; // Correction factor
@@ -491,7 +492,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
   const handleCalculate = () => {
     let calculationResults = {};
 
-    switch(activeModule) {
+    switch (activeModule) {
       case 'actions':
         calculationResults = calculateActionsCombinations();
         break;
@@ -535,7 +536,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} transition-colors duration-200`}>
       {/* Header */}
-      <header className={`${cardBg} border-b ${borderColor} px-6 py-4 sticky top-0 z-50`}>
+      <header className={`${cardBg} border-b ${borderColor} px-6 py-4  top-0 z-50`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
@@ -558,11 +559,10 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
               <button
                 key={module.id}
                 onClick={() => setActiveModule(module.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm ${
-                  activeModule === module.id 
-                    ? 'bg-blue-600 text-white' 
-                    : `${inputBg} hover:bg-blue-100 hover:text-blue-600`
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm ${activeModule === module.id
+                  ? 'bg-blue-600 text-white'
+                  : `${inputBg} hover:bg-blue-100 hover:text-blue-600`
+                  }`}
               >
                 <module.icon size={20} />
                 <span className="font-medium">{module.label}</span>
@@ -574,7 +574,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
         {/* Main Content */}
         <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto space-y-6">
-            
+
             {/* Actions Module (EN 1990) */}
             {activeModule === 'actions' && (
               <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
@@ -588,7 +588,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={actionsData.permanentAction}
-                      onChange={(e) => setActionsData({...actionsData, permanentAction: e.target.value})}
+                      onChange={(e) => setActionsData({ ...actionsData, permanentAction: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter Gk"
                     />
@@ -598,7 +598,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={actionsData.variableAction}
-                      onChange={(e) => setActionsData({...actionsData, variableAction: e.target.value})}
+                      onChange={(e) => setActionsData({ ...actionsData, variableAction: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter Qk"
                     />
@@ -608,7 +608,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={actionsData.windAction}
-                      onChange={(e) => setActionsData({...actionsData, windAction: e.target.value})}
+                      onChange={(e) => setActionsData({ ...actionsData, windAction: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter Wk"
                     />
@@ -619,7 +619,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                       type="number"
                       step="0.1"
                       value={actionsData.psi0}
-                      onChange={(e) => setActionsData({...actionsData, psi0: e.target.value})}
+                      onChange={(e) => setActionsData({ ...actionsData, psi0: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     />
                   </div>
@@ -645,7 +645,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <label className="block text-sm font-medium mb-2">Concrete Class</label>
                     <select
                       value={materialData.concreteClass}
-                      onChange={(e) => setMaterialData({...materialData, concreteClass: e.target.value})}
+                      onChange={(e) => setMaterialData({ ...materialData, concreteClass: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     >
                       {Object.keys(EurocodeTables.concreteClasses).map(cls => (
@@ -657,7 +657,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <label className="block text-sm font-medium mb-2">Steel Class</label>
                     <select
                       value={materialData.steelClass}
-                      onChange={(e) => setMaterialData({...materialData, steelClass: e.target.value})}
+                      onChange={(e) => setMaterialData({ ...materialData, steelClass: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     >
                       {Object.keys(EurocodeTables.steelClasses).map(cls => (
@@ -670,7 +670,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={sectionData.width}
-                      onChange={(e) => setSectionData({...sectionData, width: e.target.value})}
+                      onChange={(e) => setSectionData({ ...sectionData, width: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="300"
                     />
@@ -680,7 +680,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={sectionData.height}
-                      onChange={(e) => setSectionData({...sectionData, height: e.target.value})}
+                      onChange={(e) => setSectionData({ ...sectionData, height: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="500"
                     />
@@ -690,7 +690,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={sectionData.cover}
-                      onChange={(e) => setSectionData({...sectionData, cover: e.target.value})}
+                      onChange={(e) => setSectionData({ ...sectionData, cover: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="30"
                     />
@@ -700,7 +700,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={sectionData.Med}
-                      onChange={(e) => setSectionData({...sectionData, Med: e.target.value})}
+                      onChange={(e) => setSectionData({ ...sectionData, Med: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter MEd"
                     />
@@ -728,7 +728,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={sectionData.width}
-                      onChange={(e) => setSectionData({...sectionData, width: e.target.value})}
+                      onChange={(e) => setSectionData({ ...sectionData, width: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="300"
                     />
@@ -738,7 +738,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={sectionData.height}
-                      onChange={(e) => setSectionData({...sectionData, height: e.target.value})}
+                      onChange={(e) => setSectionData({ ...sectionData, height: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="450"
                     />
@@ -748,7 +748,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={sectionData.Ved}
-                      onChange={(e) => setSectionData({...sectionData, Ved: e.target.value})}
+                      onChange={(e) => setSectionData({ ...sectionData, Ved: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter VEd"
                     />
@@ -776,7 +776,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={windData.vb0}
-                      onChange={(e) => setWindData({...windData, vb0: e.target.value})}
+                      onChange={(e) => setWindData({ ...windData, vb0: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     />
                   </div>
@@ -784,7 +784,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <label className="block text-sm font-medium mb-2">Terrain Category</label>
                     <select
                       value={windData.terrain}
-                      onChange={(e) => setWindData({...windData, terrain: e.target.value})}
+                      onChange={(e) => setWindData({ ...windData, terrain: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     >
                       <option value="0">0 - Sea/Coastal</option>
@@ -799,7 +799,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={windData.height}
-                      onChange={(e) => setWindData({...windData, height: e.target.value})}
+                      onChange={(e) => setWindData({ ...windData, height: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter height"
                     />
@@ -809,7 +809,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={windData.width}
-                      onChange={(e) => setWindData({...windData, width: e.target.value})}
+                      onChange={(e) => setWindData({ ...windData, width: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter width"
                     />
@@ -837,7 +837,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={seismicData.ag}
-                      onChange={(e) => setSeismicData({...seismicData, ag: e.target.value})}
+                      onChange={(e) => setSeismicData({ ...seismicData, ag: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="e.g., 15 for 0.15g"
                     />
@@ -846,7 +846,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <label className="block text-sm font-medium mb-2">Soil Type</label>
                     <select
                       value={seismicData.soilType}
-                      onChange={(e) => setSeismicData({...seismicData, soilType: e.target.value})}
+                      onChange={(e) => setSeismicData({ ...seismicData, soilType: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     >
                       <option value="A">A - Rock</option>
@@ -860,7 +860,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <label className="block text-sm font-medium mb-2">Ductility Class</label>
                     <select
                       value={seismicData.ductilityClass}
-                      onChange={(e) => setSeismicData({...seismicData, ductilityClass: e.target.value})}
+                      onChange={(e) => setSeismicData({ ...seismicData, ductilityClass: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     >
                       <option value="DCL">DCL - Low</option>
@@ -873,7 +873,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={seismicData.buildingHeight}
-                      onChange={(e) => setSeismicData({...seismicData, buildingHeight: e.target.value})}
+                      onChange={(e) => setSeismicData({ ...seismicData, buildingHeight: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter height"
                     />
@@ -883,7 +883,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={seismicData.mass}
-                      onChange={(e) => setSeismicData({...seismicData, mass: e.target.value})}
+                      onChange={(e) => setSeismicData({ ...seismicData, mass: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter mass"
                     />
@@ -910,7 +910,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <label className="block text-sm font-medium mb-2">Check Type</label>
                     <select
                       value={slsData.checkType}
-                      onChange={(e) => setSlsData({...slsData, checkType: e.target.value})}
+                      onChange={(e) => setSlsData({ ...slsData, checkType: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                     >
                       <option value="deflection">Deflection Control</option>
@@ -922,7 +922,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={slsData.span}
-                      onChange={(e) => setSlsData({...slsData, span: e.target.value})}
+                      onChange={(e) => setSlsData({ ...slsData, span: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter span"
                     />
@@ -932,7 +932,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                     <input
                       type="number"
                       value={slsData.loadQP}
-                      onChange={(e) => setSlsData({...slsData, loadQP: e.target.value})}
+                      onChange={(e) => setSlsData({ ...slsData, loadQP: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       placeholder="Enter load"
                     />
@@ -942,7 +942,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                       <label className="block text-sm font-medium mb-2">Allowable Deflection</label>
                       <select
                         value={slsData.allowableDeflection}
-                        onChange={(e) => setSlsData({...slsData, allowableDeflection: e.target.value})}
+                        onChange={(e) => setSlsData({ ...slsData, allowableDeflection: e.target.value })}
                         className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       >
                         <option value="L/250">L/250</option>
@@ -959,7 +959,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                         type="number"
                         step="0.1"
                         value={slsData.crackWidth}
-                        onChange={(e) => setSlsData({...slsData, crackWidth: e.target.value})}
+                        onChange={(e) => setSlsData({ ...slsData, crackWidth: e.target.value })}
                         className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
                       />
                     </div>
@@ -981,7 +981,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
                   <FileText size={24} className="text-green-600" />
                   Calculation Results
                 </h2>
-                
+
                 <div className="space-y-4">
                   {Object.entries(results).map(([key, value]) => (
                     <div key={key} className={`p-4 ${inputBg} rounded-lg`}>
@@ -1011,7 +1011,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
 
                 <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
                   <p className="text-sm">
-                    <strong>Note:</strong> All calculations comply with Eurocodes. 
+                    <strong>Note:</strong> All calculations comply with Eurocodes.
                     Results must be verified by a qualified structural engineer.
                   </p>
                 </div>
@@ -1120,12 +1120,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
       </div>
 
       {/* Footer */}
-      <footer className={`${cardBg} border-t ${borderColor} px-6 py-4 mt-8`}>
-        <div className="max-w-6xl mx-auto text-center text-sm opacity-70">
-          <p>Eurocode Structural Design System v1.0 | EN 1990, 1991, 1992, 1998 Compliant</p>
-          <p className="mt-1">Professional structural engineering calculations | Verify with qualified personnel</p>
-        </div>
-      </footer>
+
     </div>
   );
 };
@@ -1134,7 +1129,7 @@ const EurocodeStructuralDesign = ({ theme, onThemeChange }) => {
 // MAIN APP SWITCHER COMPONENT
 // ============================================================================
 
-const StructuralDesignMainApp = () => {
+const FramedStructureComponent = () => {
   const [theme, setTheme] = useState('light');
   const [activeCode, setActiveCode] = useState('eurocode');
 
@@ -1150,8 +1145,8 @@ const StructuralDesignMainApp = () => {
   return (
     <div className={`min-h-screen ${bgColor} ${textColor}`}>
       {/* Main Header */}
-      <header className={`${cardBg} border-b ${borderColor} px-6 py-4 sticky top-0 z-50`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className={`${cardBg} border-b ${borderColor} px-6 py-4  top-0 z-50`}>
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Building2 size={36} className="text-blue-600" />
             <div>
@@ -1173,19 +1168,18 @@ const StructuralDesignMainApp = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">Select Design Code</h2>
             <div className="flex items-center gap-2">
-              <Toggle size={20} className="text-blue-600" />
+              <ToggleRight size={20} className="text-blue-600" />
               <span className="text-sm font-medium">Code Standard</span>
             </div>
           </div>
-          
+
           <div className="grid md:grid-cols-2 gap-4">
             <button
               onClick={() => setActiveCode('bs')}
-              className={`p-6 rounded-lg border-2 transition-all ${
-                activeCode === 'bs'
-                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-900'
-                  : `border-gray-300 dark:border-gray-600 ${cardBg} hover:border-blue-400`
-              }`}
+              className={`p-6 rounded-lg border-2 transition-all ${activeCode === 'bs'
+                ? 'border-blue-600 bg-blue-50 dark:bg-blue-900'
+                : `border-gray-300 dark:border-gray-600 ${cardBg} hover:border-blue-400`
+                }`}
             >
               <div className="flex items-center gap-4">
                 <BookOpen size={48} className="text-blue-600" />
@@ -1199,11 +1193,10 @@ const StructuralDesignMainApp = () => {
 
             <button
               onClick={() => setActiveCode('eurocode')}
-              className={`p-6 rounded-lg border-2 transition-all ${
-                activeCode === 'eurocode'
-                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-900'
-                  : `border-gray-300 dark:border-gray-600 ${cardBg} hover:border-blue-400`
-              }`}
+              className={`p-6 rounded-lg border-2 transition-all ${activeCode === 'eurocode'
+                ? 'border-blue-600 bg-blue-50 dark:bg-blue-900'
+                : `border-gray-300 dark:border-gray-600 ${cardBg} hover:border-blue-400`
+                }`}
             >
               <div className="flex items-center gap-4">
                 <Code2 size={48} className="text-blue-600" />
@@ -1221,22 +1214,13 @@ const StructuralDesignMainApp = () => {
       {/* Active Component Display */}
       <div className="max-w-7xl mx-auto px-6 pb-6">
         {activeCode === 'eurocode' ? (
-          <EurocodeStructuralDesign theme={theme} onThemeChange={toggleTheme} />
+          <EurocodeComponent theme={theme} onThemeChange={toggleTheme} />
         ) : (
-          <div className={`${cardBg} rounded-lg p-8 border ${borderColor} text-center`}>
-            <Building2 size={64} className="text-blue-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">BS Codes Component</h2>
-            <p className="text-sm opacity-70 mb-4">
-              The BS Codes calculator component will be rendered here
-            </p>
-            <p className="text-xs opacity-50">
-              Import the RCStructuralDesign component from the first artifact to display the BS codes calculator
-            </p>
-          </div>
+          <RCStructuralDesign theme={theme} onThemeChange={toggleTheme} />
         )}
       </div>
     </div>
   );
 };
 
-export default StructuralDesignMainApp;
+export default FramedStructureComponent;

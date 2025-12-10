@@ -21,7 +21,7 @@ const CodeToggleApp = () => {
   return (
     <div className={`min-h-screen ${bgPrimary} transition-colors duration-300`}>
       {/* Header */}
-      <header className={`${isDark ? 'bg-gradient-to-r from-gray-800 to-gray-900' : 'bg-gradient-to-r from-gray-700 to-gray-800'} text-white shadow-2xl sticky top-0 z-50`}>
+      <header className={`${isDark ? 'bg-gradient-to-r from-gray-800 to-gray-900' : 'bg-gradient-to-r from-gray-700 to-gray-800'} text-white shadow-2xl  top-0 z-50`}>
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -46,11 +46,10 @@ const CodeToggleApp = () => {
               <div className="flex bg-white/10 rounded-lg p-1">
                 <button
                   onClick={() => setCodeStandard('bs')}
-                  className={`px-4 py-2 rounded-md font-semibold transition-all ${
-                    codeStandard === 'bs'
+                  className={`px-4 py-2 rounded-md font-semibold transition-all ${codeStandard === 'bs'
                       ? 'bg-white text-gray-800 shadow-lg'
                       : 'text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <FileText size={18} />
@@ -59,11 +58,10 @@ const CodeToggleApp = () => {
                 </button>
                 <button
                   onClick={() => setCodeStandard('eurocode')}
-                  className={`px-4 py-2 rounded-md font-semibold transition-all ${
-                    codeStandard === 'eurocode'
+                  className={`px-4 py-2 rounded-md font-semibold transition-all ${codeStandard === 'eurocode'
                       ? 'bg-white text-gray-800 shadow-lg'
                       : 'text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <FileText size={18} />
@@ -87,7 +85,7 @@ const CodeToggleApp = () => {
                 {codeStandard === 'bs' ? 'BS 5950:2000 - British Standard' : 'EN 1993-1-1:2005 - Eurocode 3'}
               </h2>
               <p className={textSecondary}>
-                {codeStandard === 'bs' 
+                {codeStandard === 'bs'
                   ? 'Structural use of steelwork in building - Code of practice for design - Rolled and welded sections'
                   : 'Design of steel structures - General rules and rules for buildings'}
               </p>
@@ -108,29 +106,27 @@ const CodeToggleApp = () => {
           <div className="flex gap-3 mb-6">
             <button
               onClick={() => setActiveModule('beam')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                activeModule === 'beam'
+              className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeModule === 'beam'
                   ? isDark
                     ? 'bg-blue-600 text-white shadow-lg'
                     : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
                   : isDark
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
             >
               Beam Design
             </button>
             <button
               onClick={() => setActiveModule('column')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                activeModule === 'column'
+              className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeModule === 'column'
                   ? isDark
                     ? 'bg-blue-600 text-white shadow-lg'
                     : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
                   : isDark
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
             >
               Column Design
             </button>

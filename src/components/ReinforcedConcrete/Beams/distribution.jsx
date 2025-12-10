@@ -29,7 +29,7 @@ import {
 
 const API_BASE_URL = "http://localhost:8001";
 
-const MomentDistributionCalculator = () => {
+const MomentDistributionCalculator = ({ isDark = false }) => {
   const [joints, setJoints] = useState([
     {
       joint_id: "A",
@@ -179,7 +179,7 @@ const MomentDistributionCalculator = () => {
 
       const length = Math.sqrt(
         Math.pow(endJoint.x_coordinate - startJoint.x_coordinate, 2) +
-          Math.pow(endJoint.y_coordinate - startJoint.y_coordinate, 2)
+        Math.pow(endJoint.y_coordinate - startJoint.y_coordinate, 2)
       );
 
       setMembers([
@@ -334,8 +334,8 @@ const MomentDistributionCalculator = () => {
     const offsetY = height - 100 + minY * scale;
 
     return (
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+        <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-slate-100">
           <GitBranch className="h-5 w-5 mr-2 text-blue-600" />
           Frame Configuration - Moment Distribution Method
         </h3>
@@ -493,9 +493,8 @@ const MomentDistributionCalculator = () => {
                 {joint.is_support && (
                   <g>
                     <polygon
-                      points={`${x - 12},${y + 15} ${x + 12},${y + 15} ${x},${
-                        y + 8
-                      }`}
+                      points={`${x - 12},${y + 15} ${x + 12},${y + 15} ${x},${y + 8
+                        }`}
                       fill="#DC2626"
                       stroke="#B91C1C"
                       strokeWidth={1}
@@ -583,8 +582,8 @@ const MomentDistributionCalculator = () => {
     if (!results || !results.iteration_history) return null;
 
     return (
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+        <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-slate-100">
           <Zap className="h-5 w-5 mr-2 text-yellow-600" />
           Hardy Cross Iteration History
         </h3>
@@ -615,11 +614,10 @@ const MomentDistributionCalculator = () => {
                 </h4>
                 {iteration.max_unbalance && (
                   <span
-                    className={`text-sm px-2 py-1 rounded ${
-                      iteration.max_unbalance < results.convergence_tolerance
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
+                    className={`text-sm px-2 py-1 rounded ${iteration.max_unbalance < results.convergence_tolerance
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                      }`}
                   >
                     Max Unbalance: {iteration.max_unbalance.toFixed(6)} kN⋅m
                   </span>
@@ -630,7 +628,7 @@ const MomentDistributionCalculator = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse border border-gray-300">
                   <thead>
-                    <tr className="bg-gray-50">
+                    <tr className="bg-gray-50 dark:bg-slate-800">
                       <th className="border border-gray-300 px-2 py-1">
                         Joint
                       </th>
@@ -677,7 +675,7 @@ const MomentDistributionCalculator = () => {
               {/* Show distribution details for this iteration */}
               {iteration.changes &&
                 Object.keys(iteration.changes).length > 0 && (
-                  <div className="mt-3 p-3 bg-gray-50 rounded">
+                  <div className="mt-3 p-3 bg-gray-50 dark:bg-slate-800 rounded">
                     <div className="text-sm font-medium text-gray-700 mb-2">
                       Distribution Details:
                     </div>
@@ -724,8 +722,8 @@ const MomentDistributionCalculator = () => {
           const deflectionData = results.deflection_data[memberId] || [];
 
           return (
-            <div key={memberId} className="bg-white p-6 rounded-lg shadow-lg">
-              <h3 className="text-lg font-semibold mb-4">
+            <div key={memberId} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-slate-100">
                 Member {memberId} - Force Diagrams
               </h3>
 
@@ -870,7 +868,7 @@ const MomentDistributionCalculator = () => {
     if (!results || !results.distribution_factors) return null;
 
     return (
-      <div className="bg-white p-6 rounded-lg shadow-lg">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
         <h3 className="text-lg font-semibold mb-4">
           Distribution Factors & Stiffness
         </h3>
@@ -1013,8 +1011,8 @@ const MomentDistributionCalculator = () => {
 
   const DesignConfigPanel = () => {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-6">
           BS 8110 Design Configuration
         </h2>
 
@@ -1238,7 +1236,7 @@ const MomentDistributionCalculator = () => {
     return (
       <div className="space-y-6">
         {/* Design Summary */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Award className="h-6 w-6 mr-2 text-green-600" />
             BS 8110 Design Results - Moment Distribution Method
@@ -1260,27 +1258,24 @@ const MomentDistributionCalculator = () => {
               </div>
             </div>
             <div
-              className={`p-4 rounded-lg ${
-                designResults.summary.all_designs_ok
-                  ? "bg-green-50"
-                  : "bg-red-50"
-              }`}
+              className={`p-4 rounded-lg ${designResults.summary.all_designs_ok
+                ? "bg-green-50"
+                : "bg-red-50"
+                }`}
             >
               <div
-                className={`text-sm ${
-                  designResults.summary.all_designs_ok
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
+                className={`text-sm ${designResults.summary.all_designs_ok
+                  ? "text-green-600"
+                  : "text-red-600"
+                  }`}
               >
                 Design Status
               </div>
               <div
-                className={`text-lg font-semibold ${
-                  designResults.summary.all_designs_ok
-                    ? "text-green-700"
-                    : "text-red-700"
-                }`}
+                className={`text-lg font-semibold ${designResults.summary.all_designs_ok
+                  ? "text-green-700"
+                  : "text-red-700"
+                  }`}
               >
                 {designResults.summary.all_designs_ok
                   ? "✓ All OK"
@@ -1292,7 +1287,7 @@ const MomentDistributionCalculator = () => {
 
         {/* Individual Member Results */}
         {designResults.member_designs.map((memberDesign, index) => (
-          <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
+          <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <Wrench className="h-5 w-5 mr-2 text-blue-600" />
               Member {memberDesign.member_id || `Member ${index + 1}`} Design
@@ -1344,11 +1339,10 @@ const MomentDistributionCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Moment Capacity</span>
                     <span
-                      className={`text-sm font-medium ${
-                        memberDesign.design_checks.moment_capacity_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                      className={`text-sm font-medium ${memberDesign.design_checks.moment_capacity_ok
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {memberDesign.design_checks.moment_capacity_ok
                         ? "✓ OK"
@@ -1364,11 +1358,10 @@ const MomentDistributionCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Shear Capacity</span>
                     <span
-                      className={`text-sm font-medium ${
-                        memberDesign.design_checks.shear_capacity_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                      className={`text-sm font-medium ${memberDesign.design_checks.shear_capacity_ok
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {memberDesign.design_checks.shear_capacity_ok
                         ? "✓ OK"
@@ -1384,11 +1377,10 @@ const MomentDistributionCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Deflection</span>
                     <span
-                      className={`text-sm font-medium ${
-                        memberDesign.design_checks.deflection_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                      className={`text-sm font-medium ${memberDesign.design_checks.deflection_ok
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {memberDesign.design_checks.deflection_ok
                         ? "✓ OK"
@@ -1399,15 +1391,14 @@ const MomentDistributionCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Steel Limits</span>
                     <span
-                      className={`text-sm font-medium ${
-                        memberDesign.design_checks.minimum_steel_ok &&
+                      className={`text-sm font-medium ${memberDesign.design_checks.minimum_steel_ok &&
                         memberDesign.design_checks.maximum_steel_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {memberDesign.design_checks.minimum_steel_ok &&
-                      memberDesign.design_checks.maximum_steel_ok
+                        memberDesign.design_checks.maximum_steel_ok
                         ? "✓ OK"
                         : "✗ FAIL"}
                     </span>
@@ -1485,9 +1476,9 @@ const MomentDistributionCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-slate-900">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
@@ -1504,7 +1495,7 @@ const MomentDistributionCalculator = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => loadExample("Two-Span Continuous Beam")}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+                className="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded hover:bg-gray-200 dark:hover:bg-slate-600 text-sm"
               >
                 <BookOpen className="h-4 w-4 inline mr-1" />
                 Two Span
@@ -1524,25 +1515,23 @@ const MomentDistributionCalculator = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Navigation Tabs */}
         <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-200 rounded-lg p-1">
+          <div className="flex space-x-1 bg-gray-200 dark:bg-slate-700 rounded-lg p-1">
             <button
               onClick={() => setActiveTab("input")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "input"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "input"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               <Settings className="h-4 w-4 inline mr-2" />
               Frame Configuration
             </button>
             <button
               onClick={() => setActiveTab("results")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "results"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "results"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
               disabled={!results}
             >
               <Zap className="h-4 w-4 inline mr-2" />
@@ -1550,22 +1539,20 @@ const MomentDistributionCalculator = () => {
             </button>
             <button
               onClick={() => setActiveTab("design-config")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "design-config"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design-config"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               <Wrench className="h-4 w-4 inline mr-2" />
               Design Config
             </button>
             <button
               onClick={() => setActiveTab("design")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "design"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
               disabled={!designResults}
             >
               <Award className="h-4 w-4 inline mr-2" />
@@ -1596,7 +1583,7 @@ const MomentDistributionCalculator = () => {
         {activeTab === "input" && (
           <div className="space-y-6">
             {/* Joints Configuration */}
-            <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Joints Configuration</h2>
                 <button
@@ -1711,7 +1698,7 @@ const MomentDistributionCalculator = () => {
             </div>
 
             {/* Members Configuration */}
-            <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Members Configuration</h2>
                 <button
@@ -1952,26 +1939,26 @@ const MomentDistributionCalculator = () => {
                             {(load.load_type === "Partial UDL" ||
                               load.load_type === "Triangular" ||
                               load.load_type === "Trapezoidal") && (
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Length (m)
-                                </label>
-                                <input
-                                  type="number"
-                                  value={load.length}
-                                  onChange={(e) =>
-                                    updateLoad(
-                                      memberIndex,
-                                      loadIndex,
-                                      "length",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                                  step="0.1"
-                                />
-                              </div>
-                            )}
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Length (m)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={load.length}
+                                    onChange={(e) =>
+                                      updateLoad(
+                                        memberIndex,
+                                        loadIndex,
+                                        "length",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                    step="0.1"
+                                  />
+                                </div>
+                              )}
                           </div>
 
                           {load.load_type === "Trapezoidal" && (
@@ -2010,7 +1997,7 @@ const MomentDistributionCalculator = () => {
             </div>
 
             {/* Analysis Settings */}
-            <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Analysis Settings</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>

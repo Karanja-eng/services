@@ -15,7 +15,7 @@ import base64
 import json
 
 # Import calculation module
-from .RoofBackend import (
+from .RoofCalcuationLogic import (
     RoofCalculator,
     RoofDimensions,
     MemberSizes,
@@ -600,9 +600,3 @@ async def process_image(request: ImageProcessRequest):
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Roof CAD Pro API", "version": "1.0.0"}
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)

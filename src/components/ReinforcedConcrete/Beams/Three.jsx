@@ -32,7 +32,7 @@ import {
 
 const API_BASE_URL = "http://localhost:8001";
 
-const EnhancedThreeMomentCalculator = () => {
+const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
   const [spans, setSpans] = useState([
     { length: 6.0, E: 200e9, I: 8.33e-6, loads: [] },
   ]);
@@ -257,8 +257,8 @@ const EnhancedThreeMomentCalculator = () => {
     let currentPos = 0;
 
     return (
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-4">Beam Configuration</h3>
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-slate-100">Beam Configuration</h3>
         <svg width="900" height="200" viewBox="0 0 900 200">
           {/* Draw spans */}
           {spans.map((span, index) => {
@@ -483,7 +483,7 @@ const EnhancedThreeMomentCalculator = () => {
     return (
       <div className="space-y-6">
         {/* Shear Force Diagram */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
           <h3 className="text-lg font-semibold mb-4 text-blue-600">
             Shear Force Diagram (SFD)
           </h3>
@@ -526,7 +526,7 @@ const EnhancedThreeMomentCalculator = () => {
         </div>
 
         {/* Combined Bending Moment Diagram */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
           <h3 className="text-lg font-semibold mb-4 text-red-600">
             Bending Moment Diagram (BMD) - Combined View
           </h3>
@@ -618,7 +618,7 @@ const EnhancedThreeMomentCalculator = () => {
 
         {/* Separate BMD Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-green-600">
               BMD - Due to Vertical Loads Only
             </h3>
@@ -646,7 +646,7 @@ const EnhancedThreeMomentCalculator = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-purple-600">
               BMD - Due to Support Moments
             </h3>
@@ -680,15 +680,15 @@ const EnhancedThreeMomentCalculator = () => {
 
   const DesignConfigPanel = () => {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-lg">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
             BS 8110 Beam Design Configuration
           </h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={() => loadDesignExample("Simple Rectangular Beam")}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+              className="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded hover:bg-gray-200 dark:hover:bg-slate-600 text-sm"
             >
               Rectangle Example
             </button>
@@ -1064,7 +1064,7 @@ const EnhancedThreeMomentCalculator = () => {
 
         {/* Cross-section visualization would go here */}
         <div className="mt-6">
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
             <h4 className="text-sm font-semibold text-gray-700 mb-2">
               Cross-Section Preview
             </h4>
@@ -1085,7 +1085,7 @@ const EnhancedThreeMomentCalculator = () => {
     return (
       <div className="space-y-6">
         {/* Design Summary */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Award className="h-6 w-6 mr-2 text-green-600" />
             BS 8110 Design Results Summary
@@ -1105,27 +1105,24 @@ const EnhancedThreeMomentCalculator = () => {
               </div>
             </div>
             <div
-              className={`p-4 rounded-lg ${
-                designResults.summary.all_designs_ok
-                  ? "bg-green-50"
-                  : "bg-red-50"
-              }`}
+              className={`p-4 rounded-lg ${designResults.summary.all_designs_ok
+                ? "bg-green-50"
+                : "bg-red-50"
+                }`}
             >
               <div
-                className={`text-sm ${
-                  designResults.summary.all_designs_ok
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
+                className={`text-sm ${designResults.summary.all_designs_ok
+                  ? "text-green-600"
+                  : "text-red-600"
+                  }`}
               >
                 Design Status
               </div>
               <div
-                className={`text-lg font-semibold ${
-                  designResults.summary.all_designs_ok
-                    ? "text-green-700"
-                    : "text-red-700"
-                }`}
+                className={`text-lg font-semibold ${designResults.summary.all_designs_ok
+                  ? "text-green-700"
+                  : "text-red-700"
+                  }`}
               >
                 {designResults.summary.all_designs_ok
                   ? "✓ All OK"
@@ -1137,7 +1134,7 @@ const EnhancedThreeMomentCalculator = () => {
 
         {/* Individual Span Results */}
         {designResults.span_designs.map((spanDesign, index) => (
-          <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
+          <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <Wrench className="h-5 w-5 mr-2 text-blue-600" />
               Span {index + 1} Design Details
@@ -1187,11 +1184,10 @@ const EnhancedThreeMomentCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Moment Capacity</span>
                     <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.moment_capacity_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                      className={`text-sm font-medium ${spanDesign.design_checks.moment_capacity_ok
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {spanDesign.design_checks.moment_capacity_ok
                         ? "✓ OK"
@@ -1207,11 +1203,10 @@ const EnhancedThreeMomentCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Shear Capacity</span>
                     <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.shear_capacity_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                      className={`text-sm font-medium ${spanDesign.design_checks.shear_capacity_ok
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {spanDesign.design_checks.shear_capacity_ok
                         ? "✓ OK"
@@ -1227,11 +1222,10 @@ const EnhancedThreeMomentCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Deflection</span>
                     <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.deflection_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                      className={`text-sm font-medium ${spanDesign.design_checks.deflection_ok
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {spanDesign.design_checks.deflection_ok
                         ? "✓ OK"
@@ -1242,11 +1236,10 @@ const EnhancedThreeMomentCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Minimum Steel</span>
                     <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.minimum_steel_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                      className={`text-sm font-medium ${spanDesign.design_checks.minimum_steel_ok
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {spanDesign.design_checks.minimum_steel_ok
                         ? "✓ OK"
@@ -1257,11 +1250,10 @@ const EnhancedThreeMomentCalculator = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Maximum Steel</span>
                     <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.maximum_steel_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                      className={`text-sm font-medium ${spanDesign.design_checks.maximum_steel_ok
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
                     >
                       {spanDesign.design_checks.maximum_steel_ok
                         ? "✓ OK"
@@ -1387,7 +1379,7 @@ const EnhancedThreeMomentCalculator = () => {
                       £
                       {(
                         spanDesign.cost_estimate.total_cost_per_meter *
-                          spans[index]?.length || 0
+                        spans[index]?.length || 0
                       ).toFixed(2)}
                     </div>
                   </div>
@@ -1529,9 +1521,9 @@ const EnhancedThreeMomentCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-slate-900">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
@@ -1569,25 +1561,23 @@ const EnhancedThreeMomentCalculator = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Navigation Tabs */}
         <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-200 rounded-lg p-1">
+          <div className="flex space-x-1 bg-gray-200 dark:bg-slate-700 rounded-lg p-1">
             <button
               onClick={() => setActiveTab("input")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "input"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "input"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               <Settings className="h-4 w-4 inline mr-2" />
               Input Configuration
             </button>
             <button
               onClick={() => setActiveTab("results")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "results"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "results"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
               disabled={!results}
             >
               <Calculator className="h-4 w-4 inline mr-2" />
@@ -1595,22 +1585,20 @@ const EnhancedThreeMomentCalculator = () => {
             </button>
             <button
               onClick={() => setActiveTab("design-config")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "design-config"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design-config"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               <Wrench className="h-4 w-4 inline mr-2" />
               Design Configuration
             </button>
             <button
               onClick={() => setActiveTab("design")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "design"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
               disabled={!designResults}
             >
               <Award className="h-4 w-4 inline mr-2" />
@@ -1641,7 +1629,7 @@ const EnhancedThreeMomentCalculator = () => {
         {activeTab === "input" && (
           <div className="space-y-6">
             {/* Beam Configuration - Same as before */}
-            <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Beam Configuration</h2>
                 <button
@@ -1826,26 +1814,26 @@ const EnhancedThreeMomentCalculator = () => {
                               "Partial Uniformly Distributed Load" ||
                               load.load_type === "Triangular Load" ||
                               load.load_type === "Trapezoidal Load") && (
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Length (m)
-                                </label>
-                                <input
-                                  type="number"
-                                  value={load.length}
-                                  onChange={(e) =>
-                                    updateLoad(
-                                      spanIndex,
-                                      loadIndex,
-                                      "length",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                                  step="0.1"
-                                />
-                              </div>
-                            )}
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Length (m)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={load.length}
+                                    onChange={(e) =>
+                                      updateLoad(
+                                        spanIndex,
+                                        loadIndex,
+                                        "length",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                    step="0.1"
+                                  />
+                                </div>
+                              )}
                           </div>
                         </div>
                       ))}
@@ -1862,7 +1850,7 @@ const EnhancedThreeMomentCalculator = () => {
             </div>
 
             {/* Support Configuration - Same as before */}
-            <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">
                 Support Configuration
               </h2>

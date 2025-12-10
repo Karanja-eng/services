@@ -6,11 +6,11 @@ export default function ExternalWorksInputForm() {
     projectName: '',
     projectLocation: '',
     drawingNumber: '',
-    
+
     // Site Dimensions
     siteLength: 50,
     siteWidth: 40,
-    
+
     // Demolition & Site Clearance (Class D)
     houseLength: 12,
     houseWidth: 10,
@@ -21,76 +21,76 @@ export default function ExternalWorksInputForm() {
     treesLarge: 0, // >2m girth
     stumps: 0, // <1m
     vegetableSoilDepth: 0.15,
-    
+
     // Road Configuration
     roadLength: 32,
     roadWidth: 9,
     roadType: 'bitumen', // bitumen or cabro
-    
+
     // Driveway Configuration
     drivewayLength: 20,
     drivewayWidth: 9,
     drivewayType: 'bitumen',
-    
+
     // Parking Configuration
     parkingLength: 25,
     parkingWidth: 9,
     parkingType: 'cabro',
-    
+
     // Bellmouth Configuration
     bellmouthRadius1: 3.5,
     bellmouthRadius2: 2.5,
-    
+
     // Pavement Layers Thickness (m)
     bitumenThickness: 0.05,
     bitumenMacadamBaseThickness: 0.15,
     murramFillingDepth: 0.20,
     hardcoreThickness: 0.20,
     sandBedThickness: 0.15,
-    
+
     // Excavation
     excavationDepthAfterVeg: 0.50,
     backingAllowance: 0.10,
-    
+
     // Kerbs and Channels
     kerbType: 'pcc', // pcc or precast
     kerbStraightLength: 0,
     kerbCurvedLength: 0,
     channelStraightLength: 0,
     channelCurvedLength: 0,
-    
+
     // Edgings (alternative to kerbs)
     invertBlockLength: 0,
     pccSlabLength: 0,
     pccSlabWidth: 0.5,
     pccSlabThickness: 0.05,
-    
+
     // Concrete Backing
     concreteBackingThickness: 0.10,
-    
+
     // Landscaping (Class E)
     grassSeedingArea: 0,
     importedTopsoilThickness: 0.15,
     mahoganyTrees: 0, // 1m high
     ornamentalTrees: 0, // 10m c/c
     euphorbiaPedgeLength: 0, // 0.5m high
-    
+
     // Fencing & Gates (Class X)
     timberPostWireFenceLength: 0, // 2100mm high
     fenceType1Length: 0, // 2-2.5m height
     fenceType2Length: 0, // 1.5-2m height
     metalGates: 0, // >5m span
     normalGates: 0,
-    
+
     // Drainage
     invertBlockCount: 0,
     invertBlockSize: 0.35,
     drainageChannelLength: 0,
-    
+
     // Additional Site Features
     footpathLength: 0,
     footpathWidth: 1.5,
-    
+
     // Unit Rates (for estimation)
     includeRates: false,
   });
@@ -105,27 +105,27 @@ export default function ExternalWorksInputForm() {
   };
 
   const calculateTotals = () => {
-    const clearArea = (formData.siteLength * formData.siteWidth) - 
-                      (formData.houseLength * formData.houseWidth);
-    
+    const clearArea = (formData.siteLength * formData.siteWidth) -
+      (formData.houseLength * formData.houseWidth);
+
     const vegSoilVolume = clearArea * formData.vegetableSoilDepth;
-    
+
     const roadArea = formData.roadLength * formData.roadWidth;
     const drivewayArea = formData.drivewayLength * formData.drivewayWidth;
     const parkingArea = formData.parkingLength * formData.parkingWidth;
-    
-    const bellmouthArea = (3/14) * Math.PI * 
-                          (Math.pow(formData.bellmouthRadius1, 2) + 
-                           Math.pow(formData.bellmouthRadius2, 2));
-    
+
+    const bellmouthArea = (3 / 14) * Math.PI *
+      (Math.pow(formData.bellmouthRadius1, 2) +
+        Math.pow(formData.bellmouthRadius2, 2));
+
     const totalPavedArea = roadArea + drivewayArea + parkingArea + bellmouthArea;
-    
+
     const excavationVolume = totalPavedArea * formData.excavationDepthAfterVeg;
-    
+
     const murramVolume = totalPavedArea * formData.murramFillingDepth;
     const hardcoreVolume = totalPavedArea * formData.hardcoreThickness;
     const bitumenVolume = totalPavedArea * formData.bitumenThickness;
-    
+
     return {
       clearArea,
       vegSoilVolume,
@@ -224,7 +224,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       case 'demolition':
         return (
           <div className="form-section">
@@ -266,7 +266,7 @@ export default function ExternalWorksInputForm() {
                 />
               </div>
               <div className="form-group">
-                <label>Trees Large (>2m girth)</label>
+                <label>Trees Large (less tha 2m girth)</label>
                 <input
                   type="number"
                   value={formData.treesLarge}
@@ -274,7 +274,7 @@ export default function ExternalWorksInputForm() {
                 />
               </div>
               <div className="form-group">
-                <label>Stumps (<1m)</label>
+                <label>Stumps (greater than 1m)</label>
                 <input
                   type="number"
                   value={formData.stumps}
@@ -310,7 +310,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       case 'road':
         return (
           <div className="form-section">
@@ -366,7 +366,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       case 'parking':
         return (
           <div className="form-section">
@@ -433,7 +433,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       case 'layers':
         return (
           <div className="form-section">
@@ -514,7 +514,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       case 'kerbs':
         return (
           <div className="form-section">
@@ -569,7 +569,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       case 'drainage':
         return (
           <div className="form-section">
@@ -631,7 +631,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       case 'landscape':
         return (
           <div className="form-section">
@@ -683,7 +683,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       case 'fencing':
         return (
           <div className="form-section">
@@ -735,7 +735,7 @@ export default function ExternalWorksInputForm() {
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }

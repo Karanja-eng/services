@@ -1,5 +1,7 @@
 import React, { useRef } from "react";
-import { descriptions } from "./descriptions";
+import descriptions from "../descriptions";
+
+
 
 const TakeoffSheet = ({ calculationResults, projectData }) => {
   const tableRef = useRef();
@@ -32,13 +34,21 @@ const TakeoffSheet = ({ calculationResults, projectData }) => {
   const generateExportContent = () => {
     let content = `BILL OF QUANTITIES - DRAINAGE WORKS\n`;
     content += `Project: ${projectData.project_name}\n`;
-    content += `Date: ${new Date().toLocaleDateString()}\n`;
-    content += `${"=".repeat(80)}\n\n`;
+    content += `Date: ${new Date().toLocaleDateString()}\n\n`;
 
-    calculationResults.boq_items.forEach((item) => {
-      content += `${item.code}\t${item.description}\n`;
-      content += `\tQuantity: ${item.quantity} ${item.unit}\n\n`;
+    content += `ITEM NO.\tDESCRIPTION\tUNIT\tQUANTITY\tRATE\tAMOUNT\n`;
+    content += `------------------------------------------------------------------------------------------------------------------\n`;
+
+    let totalAmount = 0;
+    calculationResults.boq_items.forEach((item, index) => {
+      // Use the description from the descriptions object, falling back to item.name if not found
+      const itemDescription = descriptions[item.name] || item.name;
+      content += `${index + 1}\t${itemDescription}\t${item.unit}\t${item.quantity}\t${item.rate}\t${item.amount}\n`;
+      totalAmount += item.amount;
     });
+
+    content += `------------------------------------------------------------------------------------------------------------------\n`;
+    content += `TOTAL AMOUNT:\t\t\t\t\t${totalAmount.toFixed(2)}\n`; // Format total amount to 2 decimal places
 
     return content;
   };
@@ -68,7 +78,7 @@ const TakeoffSheet = ({ calculationResults, projectData }) => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <div className="w-full max-w-7xl mx-auto p-6 bg-white dark:bg-slate-800 rounded-lg shadow-lg">
       {/* Header */}
       <div className="mb-6 pb-4 border-b-2 border-gray-800">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -121,7 +131,7 @@ const TakeoffSheet = ({ calculationResults, projectData }) => {
       <div ref={tableRef} className="overflow-x-auto">
         <table className="w-full border-collapse border-2 border-gray-800 text-sm">
           <thead>
-            <tr className="bg-gray-200">
+            <tr className="bg-gray-200 dark:bg-slate-700">
               <th className="border border-gray-700 px-3 py-2 text-left w-20">
                 Item No.
               </th>
@@ -151,7 +161,7 @@ const TakeoffSheet = ({ calculationResults, projectData }) => {
                 return (
                   <React.Fragment key={sectionCode}>
                     {/* Section Header */}
-                    <tr className="bg-gray-100">
+                    <tr className="bg-gray-100 dark:bg-slate-700">
                       <td
                         colSpan="6"
                         className="border border-gray-700 px-3 py-2 font-bold"
@@ -191,7 +201,7 @@ const TakeoffSheet = ({ calculationResults, projectData }) => {
             )}
 
             {/* Summary Row */}
-            <tr className="bg-gray-200 font-bold">
+            <tr className="bg-gray-200 dark:bg-slate-700 font-bold">
               <td
                 colSpan="3"
                 className="border border-gray-700 px-3 py-2 text-right"
@@ -254,14 +264,14 @@ const TakeoffSheet = ({ calculationResults, projectData }) => {
       </div>
 
       {/* Totals Summary */}
-      <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-300 print:hidden">
+      <div className="mt-8 p-6 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-slate-600 print:hidden">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Quantities Summary
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           {calculationResults.totals?.manholes && (
             <>
-              <div className="p-3 bg-white rounded border border-gray-200">
+              <div className="p-3 bg-white dark:bg-slate-800 rounded border border-gray-200 dark:border-slate-700">
                 <p className="text-gray-600 text-xs">Excavation (Pits)</p>
                 <p className="text-lg font-bold text-gray-900">
                   {(
