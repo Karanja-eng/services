@@ -18,32 +18,33 @@ import EnglishMethodTakeoffSheet from "./EnglishMethodTakeoffSheet";
 // Main Application Component
 export default function ExternalWorksComponent({ isDark = false }) {
   const [currentView, setCurrentView] = useState("home");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [projectData, setProjectData] = useState(null);
   const [calculations, setCalculations] = useState(null);
 
   // Simplified theme using slate/teal palette
-  const currentTheme = isDark ? {
-    bg: "#0f172a",
-    card: "#1e293b",
-    text: "#f1f5f9",
-    textSecondary: "#94a3b8",
-    border: "#334155",
-    accent: "#14b8a6",
-    accentHover: "#0d9488",
-    sidebar: "#1e293b",
-    hover: "#334155",
-  } : {
-    bg: "#f8fafc",
-    card: "#ffffff",
-    text: "#0f172a",
-    textSecondary: "#64748b",
-    border: "#e2e8f0",
-    accent: "#14b8a6",
-    accentHover: "#0d9488",
-    sidebar: "#ffffff",
-    hover: "#f1f5f9",
-  };
+  const currentTheme = isDark
+    ? {
+        bg: "#0f172a",
+        card: "#1e293b",
+        text: "#f1f5f9",
+        textSecondary: "#94a3b8",
+        border: "#334155",
+        accent: "#14b8a6",
+        accentHover: "#0d9488",
+        sidebar: "#1e293b",
+        hover: "#334155",
+      }
+    : {
+        bg: "#f8fafc",
+        card: "#ffffff",
+        text: "#0f172a",
+        textSecondary: "#64748b",
+        border: "#e2e8f0",
+        accent: "#14b8a6",
+        accentHover: "#0d9488",
+        sidebar: "#ffffff",
+        hover: "#f1f5f9",
+      };
 
   // Sample project state
   const [formData, setFormData] = useState({
@@ -207,11 +208,7 @@ export default function ExternalWorksComponent({ isDark = false }) {
 
   // Save project
   const saveProject = () => {
-    const dataStr = JSON.stringify(
-      { formData, view3DConfig },
-      null,
-      2
-    );
+    const dataStr = JSON.stringify({ formData, view3DConfig }, null, 2);
     const dataBlob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement("a");
@@ -303,142 +300,7 @@ export default function ExternalWorksComponent({ isDark = false }) {
         transition: "all 0.3s ease",
       }}
     >
-      {/* Sidebar */}
-      <div
-        style={{
-          width: sidebarOpen ? "260px" : "0",
-          background: currentTheme.sidebar,
-          borderRight: `1px solid ${currentTheme.border}`,
-          transition: "width 0.3s ease",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {/* Logo Section */}
-        <div
-          style={{
-            padding: "20px",
-            borderBottom: `1px solid ${currentTheme.border}`,
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <Box size={32} color={currentTheme.accent} />
-          <div>
-            <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "600" }}>
-              External Works
-            </h2>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "12px",
-                color: currentTheme.textSecondary,
-              }}
-            >
-              Takeoff System
-            </p>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav style={{ flex: 1, padding: "20px 0", overflowY: "auto" }}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentView(item.id)}
-                style={{
-                  width: "100%",
-                  padding: "12px 20px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  border: "none",
-                  background: isActive ? currentTheme.accent : "transparent",
-                  color: isActive ? "#ffffff" : currentTheme.text,
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: isActive ? "600" : "400",
-                  transition: "all 0.2s ease",
-                  textAlign: "left",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive)
-                    e.currentTarget.style.background = currentTheme.hover;
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive)
-                    e.currentTarget.style.background = "transparent";
-                }}
-              >
-                <Icon size={20} />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Project Actions */}
-        <div
-          style={{
-            padding: "20px",
-            borderTop: `1px solid ${currentTheme.border}`,
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          <button
-            onClick={saveProject}
-            style={{
-              padding: "10px",
-              background: currentTheme.accent,
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
-          >
-            <Save size={16} />
-            Save Project
-          </button>
-          <label
-            style={{
-              padding: "10px",
-              background: "transparent",
-              color: currentTheme.text,
-              border: `1px solid ${currentTheme.border}`,
-              borderRadius: "6px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
-          >
-            <Upload size={16} />
-            Load Project
-            <input
-              type="file"
-              accept=".json"
-              onChange={loadProject}
-              style={{ display: "none" }}
-            />
-          </label>
-        </div>
-      </div>
+      {/* Sidebar removed — navigation handled in header */}
 
       {/* Main Content */}
       <div
@@ -454,31 +316,114 @@ export default function ExternalWorksComponent({ isDark = false }) {
           style={{
             background: currentTheme.card,
             borderBottom: `1px solid ${currentTheme.border}`,
-            padding: "16px 24px",
+            padding: "12px 20px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            gap: "12px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flex: 1,
+            }}
+          >
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentView(item.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    border: isActive
+                      ? `1px solid ${currentTheme.accent}`
+                      : `1px solid transparent`,
+                    background: isActive ? currentTheme.accent : "transparent",
+                    color: isActive ? "#ffffff" : currentTheme.text,
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: isActive ? 600 : 500,
+                  }}
+                >
+                  <Icon size={16} />
+                  <span style={{ display: "inline-block" }}>{item.label}</span>
+                </button>
+              );
+            })}
+
+            <h1
               style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "8px",
-                display: "flex",
-                alignItems: "center",
-                color: currentTheme.text,
+                margin: 0,
+                fontSize: "18px",
+                fontWeight: "600",
+                marginLeft: "8px",
               }}
             >
-              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <h1 style={{ margin: 0, fontSize: "20px", fontWeight: "600" }}>
               {navItems.find((item) => item.id === currentView)?.label ||
                 "Dashboard"}
             </h1>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              alignItems: "center",
+              marginLeft: "12px",
+            }}
+          >
+            <button
+              onClick={saveProject}
+              style={{
+                padding: "8px 12px",
+                background: currentTheme.accent,
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "14px",
+                fontWeight: 600,
+              }}
+            >
+              <Save size={14} />
+              Save
+            </button>
+
+            <label
+              style={{
+                padding: "8px 12px",
+                border: `1px solid ${currentTheme.border}`,
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                color: currentTheme.text,
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
+            >
+              <Upload size={14} />
+              Load
+              <input
+                type="file"
+                accept=".json"
+                onChange={loadProject}
+                style={{ display: "none" }}
+              />
+            </label>
           </div>
         </header>
 
@@ -702,10 +647,6 @@ function DashboardView({ theme, totals, projectInfo }) {
     </div>
   );
 }
-
-
-
-
 
 // Settings View
 function SettingsView({ theme }) {

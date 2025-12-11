@@ -1,8 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 import uvicorn
 
-app = FastAPI()
+# Database imports
+from Databases import init_db, check_db_connection, get_db
+
+app = FastAPI(
+    title="Engineering Services API",
+    description="Comprehensive engineering calculations with database persistence",
+    version="2.0.0"
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -10,6 +19,85 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Database initialization on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on application startup"""
+    print("\n" + "="*60)
+    print("🚀 Starting Engineering Services API")
+    print("="*60)
+    
+    # Check database connection
+    success, message = check_db_connection()
+    if success:
+        print(f"✅ {message}")
+        try:
+            init_db()
+            print("✅ Database initialized successfully")
+        except Exception as e:
+            print(f"⚠️  Database initialization warning: {str(e)}")
+            print("   Application will continue without database persistence")
+    else:
+        print(f"⚠️  {message}")
+        print("   Application will continue without database persistence")
+    
+    print("="*60 + "\n")
+
+
+# Health check endpoints
+@app.get("/", tags=["Health"])
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "Engineering Services API",
+        "version": "2.0.0",
+        "status": "running",
+        "features": [
+            "Surveying calculations",
+            "Quantity surveying",
+            "Steel design",
+            "RC design (beams, columns, foundations, slabs, walls, stairs, retaining)",
+            "Database persistence"
+        ]
+    }
+
+
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """Health check endpoint"""
+    db_success, db_message = check_db_connection()
+    return {
+        "status": "healthy",
+        "database": {
+            "connected": db_success,
+            "message": db_message
+        }
+    }
+
+
+@app.get("/db-status", tags=["Health"])
+async def database_status(db: Session = Depends(get_db)):
+    """Detailed database status"""
+    try:
+        # Try to execute a simple query
+        db.execute("SELECT 1")
+        return {
+            "status": "connected",
+            "message": "Database is operational",
+            "connection_pool": {
+                "size": db.bind.pool.size(),
+                "checked_in": db.bind.pool.checkedin(),
+                "checked_out": db.bind.pool.checkedout(),
+                "overflow": db.bind.pool.overflow()
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 #######  Surveying #####
 
 from calculations.surveying.surveying_backend import router as surveying_backend_router

@@ -44,6 +44,7 @@ import DoorWindowTakeoff from "./takeoff2/Doors&Window";
 import InternalFinishesTakeoff from "./takeoff2/internal_finishes";
 import SuperstructureTakeoffApp from "./takeoff2/Superstructure_takeoff";
 import UnderGroundTankComponent from "./takeoff2/underground_tank";
+import SubstructureTakeoffApp from "./takeoff2/substructure_works";
 
 //////////////////////////TakingOff /////////////////////
 
@@ -271,6 +272,10 @@ const EngineeringApp = () => {
                 <Route
                   path="/quantity/manual/Underground_tank"
                   element={<UnderGroundTankComponent isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/substructure_works"
+                  element={<SubstructureTakeoffApp isDark={isDark} />}
                 />
                 <Route
                   path="/structural/manual/eurocode_structural_app"
