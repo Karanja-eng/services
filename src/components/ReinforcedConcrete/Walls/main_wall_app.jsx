@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BookOpen, Euro } from "lucide-react";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import EurocodeWallCalculator from "./eurocode_wall_calc";
+import Wall3DVisualization from "../../components/wall_3d_helper";
 
 // BS Codes Wall Calculator Component
 const WallDesignCalculator = ({ isDark }) => {
@@ -92,12 +93,13 @@ const WallDesignCalculator = ({ isDark }) => {
                 <button
                   key={type}
                   onClick={() => setWallType(type)}
-                  className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${wallType === type
+                  className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${
+                    wallType === type
                       ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg"
                       : isDark
-                        ? "bg-slate-700 text-slate-200 hover:bg-slate-600"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
+                      ? "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
                 >
                   {type.charAt(0).toUpperCase() + type.slice(1)} Wall
                 </button>
@@ -154,10 +156,20 @@ const WallDesignCalculator = ({ isDark }) => {
                 Design {result.designStatus}
               </h3>
               <p className={textSecondary}>BS Codes calculation complete</p>
+
+              {/* 3D Visualization Component */}
+              <Wall3DVisualization
+                inputs={inputs}
+                results={result}
+                theme={isDark ? "dark" : "light"}
+                wallType={wallType}
+              />
             </div>
           ) : (
             <div className={`${bgCard} rounded-lg shadow-md p-12 text-center`}>
-              <p className={textSecondary}>Enter parameters and calculate design</p>
+              <p className={textSecondary}>
+                Enter parameters and calculate design
+              </p>
             </div>
           )}
         </div>
@@ -185,7 +197,8 @@ const MainWallDesignApp = ({ isDark = false }) => {
               RC Wall Design Calculator
             </h1>
             <p className={textSecondary}>
-              Professional structural engineering tool for reinforced concrete walls
+              Professional structural engineering tool for reinforced concrete
+              walls
             </p>
           </div>
         </div>
@@ -195,12 +208,13 @@ const MainWallDesignApp = ({ isDark = false }) => {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setActiveStandard("bs")}
-              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${activeStandard === "bs"
+              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${
+                activeStandard === "bs"
                   ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md"
                   : isDark
-                    ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
+                  ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
             >
               <BookOpen className="w-5 h-5" />
               <div className="text-left">
@@ -213,12 +227,13 @@ const MainWallDesignApp = ({ isDark = false }) => {
 
             <button
               onClick={() => setActiveStandard("eurocode")}
-              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${activeStandard === "eurocode"
+              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${
+                activeStandard === "eurocode"
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
                   : isDark
-                    ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
+                  ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
             >
               <Euro className="w-5 h-5" />
               <div className="text-left">
@@ -231,14 +246,15 @@ const MainWallDesignApp = ({ isDark = false }) => {
 
         {/* Active Standard Information Banner */}
         <div
-          className={`${activeStandard === "bs"
+          className={`${
+            activeStandard === "bs"
               ? isDark
                 ? "bg-teal-900/30 border-teal-700"
                 : "bg-teal-50 border-teal-500"
               : isDark
-                ? "bg-blue-900/30 border-blue-700"
-                : "bg-blue-50 border-blue-500"
-            } border-l-4 rounded-lg p-4 mb-6`}
+              ? "bg-blue-900/30 border-blue-700"
+              : "bg-blue-50 border-blue-500"
+          } border-l-4 rounded-lg p-4 mb-6`}
         >
           <div className="flex items-start gap-3">
             {activeStandard === "bs" ? (

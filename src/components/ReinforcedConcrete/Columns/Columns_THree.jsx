@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { useMemo } from 'react';
+import * as THREE from "three";
+import { useMemo } from "react";
 
 // ============================================================================
 // MC1: COLUMNS - BOTTOM DETAIL (Foundation to First Floor)
@@ -14,33 +14,32 @@ import { useMemo } from 'react';
  * - 450mm minimum horizontal leg in foundation
  */
 export function DrawColumnMC1({
-  columnWidth = 0.400,
-  columnDepth = 0.400,
+  columnWidth = 0.4,
+  columnDepth = 0.4,
   firstLiftHeight = 3.0,
-  foundationThickness = 0.600,
+  foundationThickness = 0.6,
   cover = 0.035,
   barCount = 8,
-  barDiameter = 0.020,
-  linkDiameter = 0.010,
-  linkSpacing = 0.200,
+  barDiameter = 0.02,
+  linkDiameter = 0.01,
+  linkSpacing = 0.2,
   kickerHeight = 0.075,
   colors = {
-    concrete: '#a8a8a8',
-    foundation: '#999999',
-    mainRebar: '#cc3333',
-    links: '#3366cc',
-    starterBars: '#ff6600',
+    concrete: "#a8a8a8",
+    foundation: "#999999",
+    mainRebar: "#cc3333",
+    links: "#3366cc",
+    starterBars: "#ff6600",
   },
   showConcrete = true,
   showRebar = true,
   showLabels = true,
   wireframe = false,
-  opacity = 0.4
+  opacity = 0.4,
 }) {
-
   const compressionLap = barDiameter * 35; // Simplified for C30/37
-  const starterLength = compressionLap + 0.150; // Add 150mm tolerance
-  const horizontalLeg = 0.450; // Minimum 450mm
+  const starterLength = compressionLap + 0.15; // Add 150mm tolerance
+  const horizontalLeg = 0.45; // Minimum 450mm
 
   const columnGeometry = useMemo(
     () => new THREE.BoxGeometry(columnWidth, columnDepth, firstLiftHeight),
@@ -48,7 +47,12 @@ export function DrawColumnMC1({
   );
 
   const foundationGeometry = useMemo(
-    () => new THREE.BoxGeometry(columnWidth * 2, columnDepth * 2, foundationThickness),
+    () =>
+      new THREE.BoxGeometry(
+        columnWidth * 2,
+        columnDepth * 2,
+        foundationThickness
+      ),
     [columnWidth, columnDepth, foundationThickness]
   );
 
@@ -58,52 +62,57 @@ export function DrawColumnMC1({
   );
 
   const concreteMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.concrete,
-      transparent: true,
-      opacity: opacity,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.concrete,
+        transparent: true,
+        opacity: opacity,
+        wireframe: wireframe,
+      }),
     [colors.concrete, opacity, wireframe]
   );
 
   const foundationMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.foundation,
-      transparent: true,
-      opacity: opacity * 0.8,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.foundation,
+        transparent: true,
+        opacity: opacity * 0.8,
+        wireframe: wireframe,
+      }),
     [colors.foundation, opacity, wireframe]
   );
 
   const barMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.mainRebar,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.mainRebar,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.mainRebar, wireframe]
   );
 
   const starterMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.starterBars,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.starterBars,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.starterBars, wireframe]
   );
 
   const linkMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.links,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.links,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.links, wireframe]
   );
 
@@ -112,7 +121,7 @@ export function DrawColumnMC1({
     const positions = [];
     const offset = columnWidth / 2 - cover - linkDiameter - barDiameter / 2;
     const offsetD = columnDepth / 2 - cover - linkDiameter - barDiameter / 2;
-    
+
     if (barCount === 4) {
       positions.push(
         [-offset, -offsetD],
@@ -122,7 +131,7 @@ export function DrawColumnMC1({
       );
     } else {
       const barsPerSide = Math.floor(barCount / 4);
-      
+
       // Bottom edge
       for (let i = 0; i < barsPerSide; i++) {
         const x = -offset + (i / (barsPerSide - 1 || 1)) * (2 * offset);
@@ -144,7 +153,7 @@ export function DrawColumnMC1({
         positions.push([-offset, y]);
       }
     }
-    
+
     return positions.slice(0, barCount);
   }, [barCount, columnWidth, columnDepth, cover, linkDiameter, barDiameter]);
 
@@ -179,29 +188,39 @@ export function DrawColumnMC1({
     const bendRadius = barDiameter * 2;
 
     // Horizontal leg in foundation
-    path.add(new THREE.LineCurve3(
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(horizontalLeg, 0, 0)
-    ));
+    path.add(
+      new THREE.LineCurve3(
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(horizontalLeg, 0, 0)
+      )
+    );
 
     // 90 degree bend
     const arc = new THREE.ArcCurve(
-      horizontalLeg, bendRadius,
+      horizontalLeg,
       bendRadius,
-      -Math.PI / 2, 0,
+      bendRadius,
+      -Math.PI / 2,
+      0,
       false
     );
     const arcPoints = arc.getPoints(12);
-    const arc3D = arcPoints.map(p => new THREE.Vector3(p.x, 0, p.y));
+    const arc3D = arcPoints.map((p) => new THREE.Vector3(p.x, 0, p.y));
     for (let i = 0; i < arc3D.length - 1; i++) {
       path.add(new THREE.LineCurve3(arc3D[i], arc3D[i + 1]));
     }
 
     // Vertical leg
-    path.add(new THREE.LineCurve3(
-      new THREE.Vector3(horizontalLeg + bendRadius, 0, bendRadius),
-      new THREE.Vector3(horizontalLeg + bendRadius, 0, bendRadius + starterLength)
-    ));
+    path.add(
+      new THREE.LineCurve3(
+        new THREE.Vector3(horizontalLeg + bendRadius, 0, bendRadius),
+        new THREE.Vector3(
+          horizontalLeg + bendRadius,
+          0,
+          bendRadius + starterLength
+        )
+      )
+    );
 
     return path;
   };
@@ -243,7 +262,7 @@ export function DrawColumnMC1({
             {barPositions.map(([x, y], i) => {
               const angle = Math.atan2(y, x);
               const starterPath = createStarterPath(x, y);
-              
+
               const starterGeometry = new THREE.TubeGeometry(
                 starterPath,
                 64,
@@ -287,9 +306,11 @@ export function DrawColumnMC1({
 
           {/* Links in Column */}
           <group name="column-links">
-            {Array.from({ length: Math.floor(firstLiftHeight / linkSpacing) + 1 }).map((_, i) => {
+            {Array.from({
+              length: Math.floor(firstLiftHeight / linkSpacing) + 1,
+            }).map((_, i) => {
               const z = kickerHeight + i * linkSpacing + 0.05;
-              
+
               const linkGeometry = new THREE.TubeGeometry(
                 linkPath,
                 64,
@@ -315,10 +336,10 @@ export function DrawColumnMC1({
               const lapLinkSpacing = Math.min(
                 12 * barDiameter,
                 0.6 * Math.min(columnWidth, columnDepth),
-                0.240
+                0.24
               );
               const z = kickerHeight + i * lapLinkSpacing;
-              
+
               const linkGeometry = new THREE.TubeGeometry(
                 linkPath,
                 64,
@@ -366,31 +387,30 @@ export function DrawColumnMC1({
  * - Main bars rest on kicker
  */
 export function DrawColumnMC2({
-  columnWidth = 0.400,
-  columnDepth = 0.400,
+  columnWidth = 0.4,
+  columnDepth = 0.4,
   liftHeight = 3.0,
   slabThickness = 0.225,
   cover = 0.035,
   barCount = 8,
-  barDiameter = 0.020,
-  linkDiameter = 0.010,
-  linkSpacing = 0.200,
+  barDiameter = 0.02,
+  linkDiameter = 0.01,
+  linkSpacing = 0.2,
   kickerHeight = 0.075,
   hasCrank = false,
-  crankOffset = 0.050,
+  crankOffset = 0.05,
   colors = {
-    concrete: '#a8a8a8',
-    slab: '#999999',
-    mainRebar: '#cc3333',
-    links: '#3366cc',
+    concrete: "#a8a8a8",
+    slab: "#999999",
+    mainRebar: "#cc3333",
+    links: "#3366cc",
   },
   showConcrete = true,
   showRebar = true,
   showLabels = true,
   wireframe = false,
-  opacity = 0.4
+  opacity = 0.4,
 }) {
-
   const compressionLap = barDiameter * 35;
   const crankLength = hasCrank ? 10 * crankOffset : 0;
   const projectionAboveSlab = compressionLap + kickerHeight;
@@ -401,7 +421,8 @@ export function DrawColumnMC2({
   );
 
   const slabGeometry = useMemo(
-    () => new THREE.BoxGeometry(columnWidth * 3, columnDepth * 3, slabThickness),
+    () =>
+      new THREE.BoxGeometry(columnWidth * 3, columnDepth * 3, slabThickness),
     [columnWidth, columnDepth, slabThickness]
   );
 
@@ -411,42 +432,46 @@ export function DrawColumnMC2({
   );
 
   const concreteMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.concrete,
-      transparent: true,
-      opacity: opacity,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.concrete,
+        transparent: true,
+        opacity: opacity,
+        wireframe: wireframe,
+      }),
     [colors.concrete, opacity, wireframe]
   );
 
   const slabMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.slab,
-      transparent: true,
-      opacity: opacity * 0.7,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.slab,
+        transparent: true,
+        opacity: opacity * 0.7,
+        wireframe: wireframe,
+      }),
     [colors.slab, opacity, wireframe]
   );
 
   const barMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.mainRebar,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.mainRebar,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.mainRebar, wireframe]
   );
 
   const linkMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.links,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.links,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.links, wireframe]
   );
 
@@ -455,7 +480,7 @@ export function DrawColumnMC2({
     const positions = [];
     const offset = columnWidth / 2 - cover - linkDiameter - barDiameter / 2;
     const offsetD = columnDepth / 2 - cover - linkDiameter - barDiameter / 2;
-    
+
     if (barCount === 4) {
       positions.push(
         [-offset, -offsetD],
@@ -465,7 +490,7 @@ export function DrawColumnMC2({
       );
     } else {
       const barsPerSide = Math.floor(barCount / 4);
-      
+
       for (let i = 0; i < barsPerSide; i++) {
         const x = -offset + (i / (barsPerSide - 1 || 1)) * (2 * offset);
         positions.push([x, -offsetD]);
@@ -483,7 +508,7 @@ export function DrawColumnMC2({
         positions.push([-offset, y]);
       }
     }
-    
+
     return positions.slice(0, barCount);
   }, [barCount, columnWidth, columnDepth, cover, linkDiameter, barDiameter]);
 
@@ -517,10 +542,12 @@ export function DrawColumnMC2({
     if (!hasCrank) {
       // Straight bar
       const path = new THREE.CurvePath();
-      path.add(new THREE.LineCurve3(
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, liftHeight)
-      ));
+      path.add(
+        new THREE.LineCurve3(
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(0, 0, liftHeight)
+        )
+      );
       return path;
     }
 
@@ -528,22 +555,28 @@ export function DrawColumnMC2({
     const angle = Math.atan(crankOffset / crankLength);
 
     // Vertical section before crank
-    path.add(new THREE.LineCurve3(
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, kickerHeight)
-    ));
+    path.add(
+      new THREE.LineCurve3(
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, kickerHeight)
+      )
+    );
 
     // Crank section (inclined)
-    path.add(new THREE.LineCurve3(
-      new THREE.Vector3(0, 0, kickerHeight),
-      new THREE.Vector3(crankOffset, 0, kickerHeight + crankLength)
-    ));
+    path.add(
+      new THREE.LineCurve3(
+        new THREE.Vector3(0, 0, kickerHeight),
+        new THREE.Vector3(crankOffset, 0, kickerHeight + crankLength)
+      )
+    );
 
     // Vertical section after crank
-    path.add(new THREE.LineCurve3(
-      new THREE.Vector3(crankOffset, 0, kickerHeight + crankLength),
-      new THREE.Vector3(crankOffset, 0, liftHeight)
-    ));
+    path.add(
+      new THREE.LineCurve3(
+        new THREE.Vector3(crankOffset, 0, kickerHeight + crankLength),
+        new THREE.Vector3(crankOffset, 0, liftHeight)
+      )
+    );
 
     return path;
   };
@@ -593,7 +626,7 @@ export function DrawColumnMC2({
                   false
                 );
 
-return (
+                return (
                   <mesh
                     key={`main-bar-${i}`}
                     geometry={barGeometry}
@@ -623,9 +656,11 @@ return (
 
           {/* Links in Column */}
           <group name="column-links">
-            {Array.from({ length: Math.floor(liftHeight / linkSpacing) + 1 }).map((_, i) => {
+            {Array.from({
+              length: Math.floor(liftHeight / linkSpacing) + 1,
+            }).map((_, i) => {
               const z = kickerHeight + i * linkSpacing + 0.05;
-              
+
               const linkGeometry = new THREE.TubeGeometry(
                 linkPath,
                 64,
@@ -651,10 +686,10 @@ return (
               const lapLinkSpacing = Math.min(
                 12 * barDiameter,
                 0.6 * Math.min(columnWidth, columnDepth),
-                0.240
+                0.24
               );
               const z = kickerHeight + i * lapLinkSpacing;
-              
+
               const linkGeometry = new THREE.TubeGeometry(
                 linkPath,
                 64,
@@ -675,9 +710,11 @@ return (
           </group>
 
           {/* Link at crank knuckle (if crank > 1 in 12) */}
-          {hasCrank && (crankOffset / crankLength > 1 / 12) && (
+          {hasCrank && crankOffset / crankLength > 1 / 12 && (
             <mesh
-              geometry={new THREE.TubeGeometry(linkPath, 64, linkDiameter / 2, 8, true)}
+              geometry={
+                new THREE.TubeGeometry(linkPath, 64, linkDiameter / 2, 8, true)
+              }
               material={linkMaterial}
               position={[crankOffset / 2, 0, kickerHeight + crankLength / 2]}
             />
@@ -699,7 +736,11 @@ return (
                   key={`projection-${i}`}
                   geometry={barGeometry}
                   material={barMaterial}
-                  position={[x + xOffset, y, liftHeight + kickerHeight + projectionAboveSlab / 2]}
+                  position={[
+                    x + xOffset,
+                    y,
+                    liftHeight + kickerHeight + projectionAboveSlab / 2,
+                  ]}
                 />
               );
             })}
@@ -731,115 +772,138 @@ return (
  * - Fixing dimension = compression lap + 75mm
  */
 export function DrawColumnMC3({
-  lowerColumnWidth = 0.400,
-  lowerColumnDepth = 0.400,
-  upperColumnWidth = 0.350,
-  upperColumnDepth = 0.350,
+  lowerColumnWidth = 0.4,
+  lowerColumnDepth = 0.4,
+  upperColumnWidth = 0.35,
+  upperColumnDepth = 0.35,
   lowerLiftHeight = 3.0,
   upperLiftHeight = 3.0,
   slabThickness = 0.225,
-  offsetX = 0.050,
-  offsetY = 0.050,
+  offsetX = 0.05,
+  offsetY = 0.05,
   cover = 0.035,
   barCount = 8,
-  barDiameter = 0.020,
-  linkDiameter = 0.010,
-  linkSpacing = 0.200,
+  barDiameter = 0.02,
+  linkDiameter = 0.01,
+  linkSpacing = 0.2,
   kickerHeight = 0.075,
   colors = {
-    concrete: '#a8a8a8',
-    slab: '#999999',
-    mainRebar: '#cc3333',
-    links: '#3366cc',
-    spliceBars: '#ff6600',
+    concrete: "#a8a8a8",
+    slab: "#999999",
+    mainRebar: "#cc3333",
+    links: "#3366cc",
+    spliceBars: "#ff6600",
   },
   showConcrete = true,
   showRebar = true,
   showLabels = true,
   wireframe = false,
-  opacity = 0.4
+  opacity = 0.4,
 }) {
-
   const compressionLap = barDiameter * 35;
   const spliceBarsFixing = compressionLap + 0.075;
 
   const lowerColumnGeometry = useMemo(
-    () => new THREE.BoxGeometry(lowerColumnWidth, lowerColumnDepth, lowerLiftHeight),
+    () =>
+      new THREE.BoxGeometry(
+        lowerColumnWidth,
+        lowerColumnDepth,
+        lowerLiftHeight
+      ),
     [lowerColumnWidth, lowerColumnDepth, lowerLiftHeight]
   );
 
   const upperColumnGeometry = useMemo(
-    () => new THREE.BoxGeometry(upperColumnWidth, upperColumnDepth, upperLiftHeight),
+    () =>
+      new THREE.BoxGeometry(
+        upperColumnWidth,
+        upperColumnDepth,
+        upperLiftHeight
+      ),
     [upperColumnWidth, upperColumnDepth, upperLiftHeight]
   );
 
   const slabGeometry = useMemo(
-    () => new THREE.BoxGeometry(
-      Math.max(lowerColumnWidth, upperColumnWidth) * 3,
-      Math.max(lowerColumnDepth, upperColumnDepth) * 3,
-      slabThickness
-    ),
-    [lowerColumnWidth, lowerColumnDepth, upperColumnWidth, upperColumnDepth, slabThickness]
+    () =>
+      new THREE.BoxGeometry(
+        Math.max(lowerColumnWidth, upperColumnWidth) * 3,
+        Math.max(lowerColumnDepth, upperColumnDepth) * 3,
+        slabThickness
+      ),
+    [
+      lowerColumnWidth,
+      lowerColumnDepth,
+      upperColumnWidth,
+      upperColumnDepth,
+      slabThickness,
+    ]
   );
 
   const concreteMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.concrete,
-      transparent: true,
-      opacity: opacity,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.concrete,
+        transparent: true,
+        opacity: opacity,
+        wireframe: wireframe,
+      }),
     [colors.concrete, opacity, wireframe]
   );
 
   const slabMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.slab,
-      transparent: true,
-      opacity: opacity * 0.7,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.slab,
+        transparent: true,
+        opacity: opacity * 0.7,
+        wireframe: wireframe,
+      }),
     [colors.slab, opacity, wireframe]
   );
 
   const barMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.mainRebar,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.mainRebar,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.mainRebar, wireframe]
   );
 
   const spliceMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.spliceBars,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.spliceBars,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.spliceBars, wireframe]
   );
 
   const linkMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.links,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.links,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.links, wireframe]
   );
 
   // Bar positions for lower column
   const lowerBarPositions = useMemo(() => {
     const positions = [];
-    const offset = lowerColumnWidth / 2 - cover - linkDiameter - barDiameter / 2;
-    const offsetD = lowerColumnDepth / 2 - cover - linkDiameter - barDiameter / 2;
-    
+    const offset =
+      lowerColumnWidth / 2 - cover - linkDiameter - barDiameter / 2;
+    const offsetD =
+      lowerColumnDepth / 2 - cover - linkDiameter - barDiameter / 2;
+
     const barsPerSide = Math.floor(barCount / 4);
-    
+
     for (let i = 0; i < barsPerSide; i++) {
       const x = -offset + (i / (barsPerSide - 1 || 1)) * (2 * offset);
       positions.push([x, -offsetD]);
@@ -856,18 +920,27 @@ export function DrawColumnMC3({
       const y = offsetD - (i / (barsPerSide - 1 || 1)) * (2 * offsetD);
       positions.push([-offset, y]);
     }
-    
+
     return positions.slice(0, barCount);
-  }, [barCount, lowerColumnWidth, lowerColumnDepth, cover, linkDiameter, barDiameter]);
+  }, [
+    barCount,
+    lowerColumnWidth,
+    lowerColumnDepth,
+    cover,
+    linkDiameter,
+    barDiameter,
+  ]);
 
   // Bar positions for upper column
   const upperBarPositions = useMemo(() => {
     const positions = [];
-    const offset = upperColumnWidth / 2 - cover - linkDiameter - barDiameter / 2;
-    const offsetD = upperColumnDepth / 2 - cover - linkDiameter - barDiameter / 2;
-    
+    const offset =
+      upperColumnWidth / 2 - cover - linkDiameter - barDiameter / 2;
+    const offsetD =
+      upperColumnDepth / 2 - cover - linkDiameter - barDiameter / 2;
+
     const barsPerSide = Math.floor(barCount / 4);
-    
+
     for (let i = 0; i < barsPerSide; i++) {
       const x = -offset + (i / (barsPerSide - 1 || 1)) * (2 * offset);
       positions.push([x, -offsetD]);
@@ -884,9 +957,16 @@ export function DrawColumnMC3({
       const y = offsetD - (i / (barsPerSide - 1 || 1)) * (2 * offsetD);
       positions.push([-offset, y]);
     }
-    
+
     return positions.slice(0, barCount);
-  }, [barCount, upperColumnWidth, upperColumnDepth, cover, linkDiameter, barDiameter]);
+  }, [
+    barCount,
+    upperColumnWidth,
+    upperColumnDepth,
+    cover,
+    linkDiameter,
+    barDiameter,
+  ]);
 
   // Create link paths
   const createLinkPath = (width, depth) => {
@@ -930,7 +1010,11 @@ export function DrawColumnMC3({
         <mesh
           geometry={slabGeometry}
           material={slabMaterial}
-          position={[offsetX / 2, offsetY / 2, lowerLiftHeight + slabThickness / 2]}
+          position={[
+            offsetX / 2,
+            offsetY / 2,
+            lowerLiftHeight + slabThickness / 2,
+          ]}
         />
       )}
 
@@ -942,7 +1026,10 @@ export function DrawColumnMC3({
           position={[
             offsetX,
             offsetY,
-            lowerLiftHeight + slabThickness + kickerHeight + upperLiftHeight / 2
+            lowerLiftHeight +
+              slabThickness +
+              kickerHeight +
+              upperLiftHeight / 2,
           ]}
         />
       )}
@@ -990,7 +1077,10 @@ export function DrawColumnMC3({
                   position={[
                     offsetX + x,
                     offsetY + y,
-                    lowerLiftHeight + slabThickness + kickerHeight - spliceBarsFixing / 2
+                    lowerLiftHeight +
+                      slabThickness +
+                      kickerHeight -
+                      spliceBarsFixing / 2,
                   ]}
                 />
               );
@@ -1015,7 +1105,10 @@ export function DrawColumnMC3({
                   position={[
                     offsetX + x,
                     offsetY + y,
-                    lowerLiftHeight + slabThickness + kickerHeight + upperLiftHeight / 2
+                    lowerLiftHeight +
+                      slabThickness +
+                      kickerHeight +
+                      upperLiftHeight / 2,
                   ]}
                 />
               );
@@ -1024,9 +1117,11 @@ export function DrawColumnMC3({
 
           {/* Lower Column Links */}
           <group name="lower-links">
-            {Array.from({ length: Math.floor(lowerLiftHeight / linkSpacing) + 1 }).map((_, i) => {
+            {Array.from({
+              length: Math.floor(lowerLiftHeight / linkSpacing) + 1,
+            }).map((_, i) => {
               const z = i * linkSpacing + 0.05;
-              
+
               const linkGeometry = new THREE.TubeGeometry(
                 lowerLinkPath,
                 64,
@@ -1048,9 +1143,16 @@ export function DrawColumnMC3({
 
           {/* Upper Column Links */}
           <group name="upper-links">
-            {Array.from({ length: Math.floor(upperLiftHeight / linkSpacing) + 1 }).map((_, i) => {
-              const z = lowerLiftHeight + slabThickness + kickerHeight + i * linkSpacing + 0.05;
-              
+            {Array.from({
+              length: Math.floor(upperLiftHeight / linkSpacing) + 1,
+            }).map((_, i) => {
+              const z =
+                lowerLiftHeight +
+                slabThickness +
+                kickerHeight +
+                i * linkSpacing +
+                0.05;
+
               const linkGeometry = new THREE.TubeGeometry(
                 upperLinkPath,
                 64,
@@ -1074,7 +1176,7 @@ export function DrawColumnMC3({
           <group name="locating-links">
             {Array.from({ length: 3 }).map((_, i) => {
               const z = lowerLiftHeight + slabThickness / 2 + (i - 1) * 0.075;
-              
+
               const linkGeometry = new THREE.TubeGeometry(
                 upperLinkPath,
                 64,
@@ -1121,46 +1223,46 @@ export function DrawColumnMC3({
  * - Lap link spacing requirements
  */
 export function DrawColumnMC4({
-  columnWidth = 0.400,
-  columnDepth = 0.400,
+  columnWidth = 0.4,
+  columnDepth = 0.4,
   columnHeight = 3.0,
-  slabThickness = 0.250,
+  slabThickness = 0.25,
   roofLevel = true,
   cover = 0.035,
   barCount = 8,
-  barDiameter = 0.020,
-  linkDiameter = 0.010,
-  linkSpacing = 0.200,
-  detailType = 'A', // 'A' or 'B'
+  barDiameter = 0.02,
+  linkDiameter = 0.01,
+  linkSpacing = 0.2,
+  detailType = "A", // 'A' or 'B'
   isEdgeColumn = false,
   colors = {
-    concrete: '#a8a8a8',
-    slab: '#999999',
-    mainRebar: '#cc3333',
-    links: '#3366cc',
+    concrete: "#a8a8a8",
+    slab: "#999999",
+    mainRebar: "#cc3333",
+    links: "#3366cc",
   },
   showConcrete = true,
   showRebar = true,
   showLabels = true,
   wireframe = false,
-  opacity = 0.4
+  opacity = 0.4,
 }) {
-
   const tensionLap = barDiameter * 42; // Simplified
-  const tensionLapEdge = isEdgeColumn && barDiameter >= 0.025 ? tensionLap * 1.4 : tensionLap;
-  
+  const tensionLapEdge =
+    isEdgeColumn && barDiameter >= 0.025 ? tensionLap * 1.4 : tensionLap;
+
   // Minimum slab depths for Detail A
-  const minSlabDepthFor20mm = 0.200;
-  const minSlabDepthFor25mm = 0.250;
-  const minSlabDepthFor32mm = 0.300;
-  
+  const minSlabDepthFor20mm = 0.2;
+  const minSlabDepthFor25mm = 0.25;
+  const minSlabDepthFor32mm = 0.3;
+
   // Determine if Detail A is applicable
-  const canUseDetailA = 
-    (barDiameter <= 0.020 && slabThickness >= minSlabDepthFor20mm) ||
+  const canUseDetailA =
+    (barDiameter <= 0.02 && slabThickness >= minSlabDepthFor20mm) ||
     (barDiameter <= 0.025 && slabThickness >= minSlabDepthFor25mm) ||
     (barDiameter <= 0.032 && slabThickness >= minSlabDepthFor32mm);
 
-  const actualDetailType = canUseDetailA ? detailType : 'B';
+  const actualDetailType = canUseDetailA ? detailType : "B";
 
   const columnGeometry = useMemo(
     () => new THREE.BoxGeometry(columnWidth, columnDepth, columnHeight),
@@ -1168,47 +1270,52 @@ export function DrawColumnMC4({
   );
 
   const slabGeometry = useMemo(
-    () => new THREE.BoxGeometry(columnWidth * 3, columnDepth * 3, slabThickness),
+    () =>
+      new THREE.BoxGeometry(columnWidth * 3, columnDepth * 3, slabThickness),
     [columnWidth, columnDepth, slabThickness]
   );
 
   const concreteMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.concrete,
-      transparent: true,
-      opacity: opacity,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.concrete,
+        transparent: true,
+        opacity: opacity,
+        wireframe: wireframe,
+      }),
     [colors.concrete, opacity, wireframe]
   );
 
   const slabMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.slab,
-      transparent: true,
-      opacity: opacity * 0.7,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.slab,
+        transparent: true,
+        opacity: opacity * 0.7,
+        wireframe: wireframe,
+      }),
     [colors.slab, opacity, wireframe]
   );
 
   const barMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.mainRebar,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.mainRebar,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.mainRebar, wireframe]
   );
 
   const linkMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.links,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: colors.links,
+        metalness: 0.7,
+        roughness: 0.3,
+        wireframe: wireframe,
+      }),
     [colors.links, wireframe]
   );
 
@@ -1217,9 +1324,9 @@ export function DrawColumnMC4({
     const positions = [];
     const offset = columnWidth / 2 - cover - linkDiameter - barDiameter / 2;
     const offsetD = columnDepth / 2 - cover - linkDiameter - barDiameter / 2;
-    
+
     const barsPerSide = Math.floor(barCount / 4);
-    
+
     for (let i = 0; i < barsPerSide; i++) {
       const x = -offset + (i / (barsPerSide - 1 || 1)) * (2 * offset);
       positions.push([x, -offsetD]);
@@ -1236,7 +1343,7 @@ export function DrawColumnMC4({
       const y = offsetD - (i / (barsPerSide - 1 || 1)) * (2 * offsetD);
       positions.push([-offset, y]);
     }
-    
+
     return positions.slice(0, barCount);
   }, [barCount, columnWidth, columnDepth, cover, linkDiameter, barDiameter]);
 
@@ -1272,29 +1379,39 @@ export function DrawColumnMC4({
     const horizontalLength = slabThickness - cover * 2 - barDiameter;
 
     // Vertical section
-    path.add(new THREE.LineCurve3(
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, columnHeight - cover - bendRadius)
-    ));
+    path.add(
+      new THREE.LineCurve3(
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, columnHeight - cover - bendRadius)
+      )
+    );
 
     // 90 degree bend
     const arc = new THREE.ArcCurve(
-      bendRadius, columnHeight - cover - bendRadius,
       bendRadius,
-      Math.PI, Math.PI / 2,
+      columnHeight - cover - bendRadius,
+      bendRadius,
+      Math.PI,
+      Math.PI / 2,
       true
     );
     const arcPoints = arc.getPoints(12);
-    const arc3D = arcPoints.map(p => new THREE.Vector3(p.x, 0, p.y));
+    const arc3D = arcPoints.map((p) => new THREE.Vector3(p.x, 0, p.y));
     for (let i = 0; i < arc3D.length - 1; i++) {
       path.add(new THREE.LineCurve3(arc3D[i], arc3D[i + 1]));
     }
 
     // Horizontal section into slab
-    path.add(new THREE.LineCurve3(
-      new THREE.Vector3(bendRadius, 0, columnHeight - cover),
-      new THREE.Vector3(bendRadius + horizontalLength, 0, columnHeight - cover)
-    ));
+    path.add(
+      new THREE.LineCurve3(
+        new THREE.Vector3(bendRadius, 0, columnHeight - cover),
+        new THREE.Vector3(
+          bendRadius + horizontalLength,
+          0,
+          columnHeight - cover
+        )
+      )
+    );
 
     return path;
   };
@@ -1325,7 +1442,7 @@ export function DrawColumnMC4({
           {/* Main Column Bars */}
           <group name="main-bars">
             {barPositions.map(([x, y], i) => {
-              if (actualDetailType === 'A') {
+              if (actualDetailType === "A") {
                 // Detail A: Bars turned into slab
                 const lBarPath = createLBarTermination();
                 const barGeometry = new THREE.TubeGeometry(
@@ -1349,7 +1466,8 @@ export function DrawColumnMC4({
                 );
               } else {
                 // Detail B: Bars project above slab
-                const totalLength = columnHeight + slabThickness + tensionLapEdge;
+                const totalLength =
+                  columnHeight + slabThickness + tensionLapEdge;
                 const barGeometry = new THREE.CylinderGeometry(
                   barDiameter / 2,
                   barDiameter / 2,
@@ -1371,9 +1489,11 @@ export function DrawColumnMC4({
 
           {/* Column Links */}
           <group name="column-links">
-            {Array.from({ length: Math.floor(columnHeight / linkSpacing) + 1 }).map((_, i) => {
+            {Array.from({
+              length: Math.floor(columnHeight / linkSpacing) + 1,
+            }).map((_, i) => {
               const z = i * linkSpacing + 0.05;
-              
+
               const linkGeometry = new THREE.TubeGeometry(
                 linkPath,
                 64,
@@ -1399,10 +1519,10 @@ export function DrawColumnMC4({
               const lapLinkSpacing = Math.min(
                 12 * barDiameter,
                 0.6 * Math.min(columnWidth, columnDepth),
-                0.240
+                0.24
               );
               const z = columnHeight - (2 - i) * lapLinkSpacing;
-              
+
               const linkGeometry = new THREE.TubeGeometry(
                 linkPath,
                 64,
@@ -1423,11 +1543,13 @@ export function DrawColumnMC4({
           </group>
 
           {/* Links extending into slab for Detail B */}
-          {actualDetailType === 'B' && (
+          {actualDetailType === "B" && (
             <group name="slab-links">
-              {Array.from({ length: Math.floor(tensionLapEdge / linkSpacing) }).map((_, i) => {
+              {Array.from({
+                length: Math.floor(tensionLapEdge / linkSpacing),
+              }).map((_, i) => {
                 const z = columnHeight + i * linkSpacing;
-                
+
                 const linkGeometry = new THREE.TubeGeometry(
                   linkPath,
                   64,
@@ -1474,28 +1596,27 @@ export function DrawColumnMC4({
  * - Kicker height 75mm
  */
 export function DrawColumnMC5({
-  columnWidth = 0.400,
-  columnDepth = 0.400,
+  columnWidth = 0.4,
+  columnDepth = 0.4,
   columnHeight = 3.0,
-  slabThickness = 0.250,
+  slabThickness = 0.25,
   cover = 0.035,
   barCount = 8,
-  barDiameter = 0.020,
-  linkDiameter = 0.010,
-  linkSpacing = 0.200,
+  barDiameter = 0.02,
+  linkDiameter = 0.01,
+  linkSpacing = 0.2,
   kickerHeight = 0.075,
   colors = {
-    concrete: '#a8a8a8',
-    slab: '#999999',
-    mainRebar: '#cc3333',
-    links: '#3366cc',
+    concrete: "#a8a8a8",
+    slab: "#999999",
+    mainRebar: "#cc3333",
+    links: "#3366cc",
   },
   showConcrete = true,
   showRebar = true,
   wireframe = false,
-  opacity = 0.4
+  opacity = 0.4,
 }) {
-
   // This is essentially MC4 Detail A with splice bar consideration
   // Reuse MC4 logic but indicate this is for single storey
   return (
@@ -1536,295 +1657,295 @@ export function DrawColumnMC5({
  * - Helical binders scheduled in 12m lengths
  * - Tension lap required between helical binders
  */
-export function DrawColumnMC6({
-  columnDiameter = 0.400,
-  liftHeight = 3.0,
-  cover = 0.035,
-  barCount = 8,
-  barDiameter = 0.020,
-  helixDiameter = 0.010,
-  helixPitch = 0.150,
-  kickerHeight = 0.075,
-  useHelicalBinders = true,
-  colors = {
-    concrete: '#a8a8a8',
-    mainRebar: '#cc3333',
-    helix: '#3366cc',
-  },
-  showConcrete = true,
-  showRebar = true,
-  showLabels = true,
-  wireframe = false,
-  opacity = 0.4
-}) {
+// export function DrawColumnMC6({
+//   columnDiameter = 0.400,
+//   liftHeight = 3.0,
+//   cover = 0.035,
+//   barCount = 8,
+//   barDiameter = 0.020,
+//   helixDiameter = 0.010,
+//   helixPitch = 0.150,
+//   kickerHeight = 0.075,
+//   useHelicalBinders = true,
+//   colors = {
+//     concrete: '#a8a8a8',
+//     mainRebar: '#cc3333',
+//     helix: '#3366cc',
+//   },
+//   showConcrete = true,
+//   showRebar = true,
+//   showLabels = true,
+//   wireframe = false,
+//   opacity = 0.4
+// }) {
 
-  const radius = columnDiameter / 2;
-  const barRadius = radius - cover - helixDiameter - barDiameter / 2;
+//   const radius = columnDiameter / 2;
+//   const barRadius = radius - cover - helixDiameter - barDiameter / 2;
 
-  const columnGeometry = useMemo(
-    () => new THREE.CylinderGeometry(radius, radius, liftHeight, 32),
-    [radius, liftHeight]
-  );
+//   const columnGeometry = useMemo(
+//     () => new THREE.CylinderGeometry(radius, radius, liftHeight, 32),
+//     [radius, liftHeight]
+//   );
 
-  const concreteMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.concrete,
-      transparent: true,
-      opacity: opacity,
-      wireframe: wireframe
-    }),
-    [colors.concrete, opacity, wireframe]
-  );
+//   const concreteMaterial = useMemo(
+//     () => new THREE.MeshStandardMaterial({
+//       color: colors.concrete,
+//       transparent: true,
+//       opacity: opacity,
+//       wireframe: wireframe
+//     }),
+//     [colors.concrete, opacity, wireframe]
+//   );
 
-  const barMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.mainRebar,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
-    [colors.mainRebar, wireframe]
-  );
+//   const barMaterial = useMemo(
+//     () => new THREE.MeshStandardMaterial({
+//       color: colors.mainRebar,
+//       metalness: 0.7,
+//       roughness: 0.3,
+//       wireframe: wireframe
+//     }),
+//     [colors.mainRebar, wireframe]
+//   );
 
-  const helixMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({
-      color: colors.helix,
-      metalness: 0.7,
-      roughness: 0.3,
-      wireframe: wireframe
-    }),
-    [colors.helix, wireframe]
-  );
+//   const helixMaterial = useMemo(
+//     () => new THREE.MeshStandardMaterial({
+//       color: colors.helix,
+//       metalness: 0.7,
+//       roughness: 0.3,
+//       wireframe: wireframe
+//     }),
+//     [colors.helix, wireframe]
+//   );
 
-  // Calculate bar positions around circumference
-  const barPositions = useMemo(() => {
-    const positions = [];
-    for (let i = 0; i < barCount; i++) {
-      const angle = (i / barCount) * Math.PI * 2;
-      const x = Math.cos(angle) * barRadius;
-      const y = Math.sin(angle) * barRadius;
-      positions.push([x, y, angle]);
-    }
-    return positions;
-  }, [barCount, barRadius]);
+//   // Calculate bar positions around circumference
+//   const barPositions = useMemo(() => {
+//     const positions = [];
+//     for (let i = 0; i < barCount; i++) {
+//       const angle = (i / barCount) * Math.PI * 2;
+//       const x = Math.cos(angle) * barRadius;
+//       const y = Math.sin(angle) * barRadius;
+//       positions.push([x, y, angle]);
+//     }
+//     return positions;
+//   }, [barCount, barRadius]);
 
-  // Create helical binder path
-  const createHelixPath = () => {
-    const path = new THREE.CurvePath();
-    const turns = liftHeight / helixPitch;
-    const segments = Math.floor(turns * 32);
-    
-    for (let i = 0; i < segments; i++) {
-      const t1 = i / segments;
-      const t2 = (i + 1) / segments;
-      
-      const z1 = t1 * liftHeight;
-      const z2 = t2 * liftHeight;
-      
-      const angle1 = t1 * turns * Math.PI * 2;
-      const angle2 = t2 * turns * Math.PI * 2;
-      
-      const helixRadius = radius - cover - helixDiameter / 2;
-      
-      const x1 = Math.cos(angle1) * helixRadius;
-      const y1 = Math.sin(angle1) * helixRadius;
-      const x2 = Math.cos(angle2) * helixRadius;
-      const y2 = Math.sin(angle2) * helixRadius;
-      
-      path.add(new THREE.LineCurve3(
-        new THREE.Vector3(x1, y1, z1),
-        new THREE.Vector3(x2, y2, z2)
-      ));
-    }
-    
-    return path;
-  };
+//   // Create helical binder path
+//   const createHelixPath = () => {
+//     const path = new THREE.CurvePath();
+//     const turns = liftHeight / helixPitch;
+//     const segments = Math.floor(turns * 32);
 
-  return (
-    <group name="MC6-Circular-Column">
-      {/* Concrete Column */}
-      {showConcrete && (
-        <mesh
-          geometry={columnGeometry}
-          material={concreteMaterial}
-          position={[0, 0, liftHeight / 2 + kickerHeight]}
-        />
-      )}
+//     for (let i = 0; i < segments; i++) {
+//       const t1 = i / segments;
+//       const t2 = (i + 1) / segments;
 
-      {/* Reinforcement */}
-      {showRebar && (
-        <group name="reinforcement">
-          {/* Main Longitudinal Bars */}
-          <group name="main-bars">
-            {barPositions.map(([x, y, angle], i) => {
-              const barGeometry = new THREE.CylinderGeometry(
-                barDiameter / 2,
-                barDiameter / 2,
-                liftHeight,
-                16
-              );
+//       const z1 = t1 * liftHeight;
+//       const z2 = t2 * liftHeight;
 
-              return (
-                <mesh
-                  key={`main-bar-${i}`}
-                  geometry={barGeometry}
-                  material={barMaterial}
-                  position={[x, y, liftHeight / 2 + kickerHeight]}
-                />
-              );
-            })}
-          </group>
+//       const angle1 = t1 * turns * Math.PI * 2;
+//       const angle2 = t2 * turns * Math.PI * 2;
 
-          {/* Helical Binders or Circular Links */}
-          {useHelicalBinders ? (
-            <group name="helical-binders">
-              <mesh
-                geometry={new THREE.TubeGeometry(
-                  createHelixPath(),
-                  256,
-                  helixDiameter / 2,
-                  8,
-                  false
-                )}
-                material={helixMaterial}
-                position={[0, 0, kickerHeight]}
-              />
-            </group>
-          ) : (
-            <group name="circular-links">
-              {Array.from({ length: Math.floor(liftHeight / helixPitch) + 1 }).map((_, i) => {
-                const z = kickerHeight + i * helixPitch;
-                const linkRadius = radius - cover - helixDiameter / 2;
-                
-                const linkGeometry = new THREE.TorusGeometry(
-                  linkRadius,
-                  helixDiameter / 2,
-                  16,
-                  32
-                );
+//       const helixRadius = radius - cover - helixDiameter / 2;
 
-                return (                return (
-                  <mesh
-                    key={`main-bar-${i}`}
-                    geometry={barGeometry}
-                    material={barMaterial}
-                    position={[x, y, 0]}
-                  />
-                );
-              } else {
-                const barGeometry = new THREE.CylinderGeometry(
-                  barDiameter / 2,
-                  barDiameter / 2,
-                  liftHeight,
-                  16
-                );
+//       const x1 = Math.cos(angle1) * helixRadius;
+//       const y1 = Math.sin(angle1) * helixRadius;
+//       const x2 = Math.cos(angle2) * helixRadius;
+//       const y2 = Math.sin(angle2) * helixRadius;
 
-                return (
-                  <mesh
-                    key={`main-bar-${i}`}
-                    geometry={barGeometry}
-                    material={barMaterial}
-                    position={[x, y, kickerHeight + liftHeight / 2]}
-                  />
-                );
-              }
-            })
-          </group>
+//       path.add(new THREE.LineCurve3(
+//         new THREE.Vector3(x1, y1, z1),
+//         new THREE.Vector3(x2, y2, z2)
+//       ));
+//     }
 
-          {/* Links in Column */}
-          <group name="column-links">
-            {Array.from({ length: Math.floor(liftHeight / linkSpacing) + 1 }).map((_, i) => {
-              const z = kickerHeight + i * linkSpacing + 0.05;
-              
-              const linkGeometry = new THREE.TubeGeometry(
-                linkPath,
-                64,
-                linkDiameter / 2,
-                8,
-                true
-              );
+//     return path;
+//   };
 
-              return (
-                <mesh
-                  key={`link-${i}`}
-                  geometry={linkGeometry}
-                  material={linkMaterial}
-                  position={[0, 0, z]}
-                />
-              );
-            })}
-          </group>
+//   return (
+//     <group name="MC6-Circular-Column">
+//       {/* Concrete Column */}
+//       {showConcrete && (
+//         <mesh
+//           geometry={columnGeometry}
+//           material={concreteMaterial}
+//           position={[0, 0, liftHeight / 2 + kickerHeight]}
+//         />
+//       )}
 
-          {/* Lap Zone Links (at least 3, closer spacing) */}
-          <group name="lap-links">
-            {Array.from({ length: 3 }).map((_, i) => {
-              const lapLinkSpacing = Math.min(
-                12 * barDiameter,
-                0.6 * Math.min(columnWidth, columnDepth),
-                0.240
-              );
-              const z = kickerHeight + i * lapLinkSpacing;
-              
-              const linkGeometry = new THREE.TubeGeometry(
-                linkPath,
-                64,
-                linkDiameter / 2,
-                8,
-                true
-              );
+//       {/* Reinforcement */}
+//       {showRebar && (
+//         <group name="reinforcement">
+//           {/* Main Longitudinal Bars */}
+//           <group name="main-bars">
+//             {barPositions.map(([x, y, angle], i) => {
+//               const barGeometry = new THREE.CylinderGeometry(
+//                 barDiameter / 2,
+//                 barDiameter / 2,
+//                 liftHeight,
+//                 16
+//               );
 
-              return (
-                <mesh
-                  key={`lap-link-${i}`}
-                  geometry={linkGeometry}
-                  material={linkMaterial}
-                  position={[0, 0, z]}
-                />
-              );
-            })}
-          </group>
+//               return (
+//                 <mesh
+//                   key={`main-bar-${i}`}
+//                   geometry={barGeometry}
+//                   material={barMaterial}
+//                   position={[x, y, liftHeight / 2 + kickerHeight]}
+//                 />
+//               );
+//             })}
+//           </group>
 
-          {/* Link at crank knuckle (if crank > 1 in 12) */}
-          {hasCrank && (crankOffset / crankLength > 1 / 12) && (
-            <mesh
-              geometry={new THREE.TubeGeometry(linkPath, 64, linkDiameter / 2, 8, true)}
-              material={linkMaterial}
-              position={[crankOffset / 2, 0, kickerHeight + crankLength / 2]}
-            />
-          )}
+//           {/* Helical Binders or Circular Links */}
+//           {useHelicalBinders ? (
+//             <group name="helical-binders">
+//               <mesh
+//                 geometry={new THREE.TubeGeometry(
+//                   createHelixPath(),
+//                   256,
+//                   helixDiameter / 2,
+//                   8,
+//                   false
+//                 )}
+//                 material={helixMaterial}
+//                 position={[0, 0, kickerHeight]}
+//               />
+//             </group>
+//           ) : (
+//             <group name="circular-links">
+//               {Array.from({ length: Math.floor(liftHeight / helixPitch) + 1 }).map((_, i) => {
+//                 const z = kickerHeight + i * helixPitch;
+//                 const linkRadius = radius - cover - helixDiameter / 2;
 
-          {/* Bars projecting above slab (for next lift) */}
-          <group name="projection-bars">
-            {barPositions.map(([x, y], i) => {
-              const xOffset = hasCrank ? crankOffset : 0;
-              const barGeometry = new THREE.CylinderGeometry(
-                barDiameter / 2,
-                barDiameter / 2,
-                projectionAboveSlab,
-                16
-              );
+//                 const linkGeometry = new THREE.TorusGeometry(
+//                   linkRadius,
+//                   helixDiameter / 2,
+//                   16,
+//                   32
+//                 );
 
-              return (
-                <mesh
-                  key={`projection-${i}`}
-                  geometry={barGeometry}
-                  material={barMaterial}
-                  position={[x + xOffset, y, liftHeight + kickerHeight + projectionAboveSlab / 2]}
-                />
-              );
-            })}
-          </group>
-        </group>
-      )}
+//                 return (
+//                   <mesh
+//                     key={`main-bar-${i}`}
+//                     geometry={barGeometry}
+//                     material={barMaterial}
+//                     position={[x, y, 0]}
+//                   />
+//                 );
+//               } else {
+//                 const barGeometry = new THREE.CylinderGeometry(
+//                   barDiameter / 2,
+//                   barDiameter / 2,
+//                   liftHeight,
+//                   16
+//                 );
 
-      {/* Labels */}
-      {showLabels && (
-        <group name="labels">
-          {/* Crank length: 10 x offset */}
-          {/* Link at knuckle if crank > 1:12 */}
-          {/* 50mm to start link run */}
-        </group>
-      )}
-    </group>
-  )
-};
+//                 return (
+//                   <mesh
+//                     key={`main-bar-${i}`}
+//                     geometry={barGeometry}
+//                     material={barMaterial}
+//                     position={[x, y, kickerHeight + liftHeight / 2]}
+//                   />
+//                 );
+//               }
+//             })
+//           </group>
+//           );
+//           {/* Links in Column */}
+//           <group name="column-links">
+//             {Array.from({ length: Math.floor(liftHeight / linkSpacing) + 1 }).map((_, i) => {
+//               const z = kickerHeight + i * linkSpacing + 0.05;
+
+//               const linkGeometry = new THREE.TubeGeometry(
+//                 linkPath,
+//                 64,
+//                 linkDiameter / 2,
+//                 8,
+//                 true
+//               );
+
+//               return (
+//                 <mesh
+//                   key={`link-${i}`}
+//                   geometry={linkGeometry}
+//                   material={linkMaterial}
+//                   position={[0, 0, z]}
+//                 />
+//               );
+//             })}
+//           </group>
+
+//           {/* Lap Zone Links (at least 3, closer spacing) */}
+//           <group name="lap-links">
+//             {Array.from({ length: 3 }).map((_, i) => {
+//               const lapLinkSpacing = Math.min(
+//                 12 * barDiameter,
+//                 0.6 * Math.min(columnWidth, columnDepth),
+//                 0.240
+//               );
+//               const z = kickerHeight + i * lapLinkSpacing;
+
+//               const linkGeometry = new THREE.TubeGeometry(
+//                 linkPath,
+//                 64,
+//                 linkDiameter / 2,
+//                 8,
+//                 true
+//               );
+
+//               return (
+//                 <mesh
+//                   key={`lap-link-${i}`}
+//                   geometry={linkGeometry}
+//                   material={linkMaterial}
+//                   position={[0, 0, z]}
+//                 />
+//               );
+//             })}
+//           </group>
+
+//           {/* Link at crank knuckle (if crank > 1 in 12) */}
+//           {hasCrank && (crankOffset / crankLength > 1 / 12) && (
+//             <mesh
+//               geometry={new THREE.TubeGeometry(linkPath, 64, linkDiameter / 2, 8, true)}
+//               material={linkMaterial}
+//               position={[crankOffset / 2, 0, kickerHeight + crankLength / 2]}
+//             />
+//           )}
+
+//           {/* Bars projecting above slab (for next lift) */}
+//           <group name="projection-bars">
+//             {barPositions.map(([x, y], i) => {
+//               const xOffset = hasCrank ? crankOffset : 0;
+//               const barGeometry = new THREE.CylinderGeometry(
+//                 barDiameter / 2,
+//                 barDiameter / 2,
+//                 projectionAboveSlab,
+//                 16
+//               );
+
+//               return (
+//                 <mesh
+//                   key={`projection-${i}`}
+//                   geometry={barGeometry}
+//                   material={barMaterial}
+//                   position={[x + xOffset, y, liftHeight + kickerHeight + projectionAboveSlab / 2]}
+//                 />
+//               );
+//             })}
+//           </group>
+//         </group>
+//       )}
+
+//       {/* Labels */}
+//       {showLabels && (
+//         <group name="labels">
+//           {/* Crank length: 10 x offset */}
+//           {/* Link at knuckle if crank > 1:12 */}
+//           {/* 50mm to start link run */}
+//         </group>
+//       )}
+//     </group>
+//   )
+// };

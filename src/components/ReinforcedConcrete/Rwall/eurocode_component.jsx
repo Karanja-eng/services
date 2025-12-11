@@ -12,6 +12,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import RetainingWall3DVisualization from "../../components/retaining_wall_3d_helper";
 
 const API_BASE_URL = "http://localhost:8001/retaining_eurocode";
 
@@ -730,6 +731,14 @@ const EurocodeDesigner = ({ isDark }) => {
                       </div>
                     </div>
                   )}
+
+                  {/* 3D Visualization Component */}
+                  <RetainingWall3DVisualization
+                    inputs={inputs}
+                    results={results}
+                    theme={isDark ? "dark" : "light"}
+                    wallType="cantilever"
+                  />
                 </div>
               </>
             ) : (

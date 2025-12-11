@@ -4,7 +4,7 @@ Professional structural analysis for continuous beams and frames
 Integrated with Three-Moment Theorem and BS 8110 Design
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, validator
 from typing import List, Dict, Optional, Union, Tuple
@@ -708,19 +708,13 @@ class MomentDistributionSolver:
         return delta
 
 
-app = FastAPI(
-    title="Structural Engineering Suite",
-    description="Complete Three-Moment Theorem Analysis with BS 8110 Reinforced Concrete Design",
-    version="2.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
+router = APIRouter()
 # # API Integration Functions
 # def add_moment_distribution_endpoints(app: FastAPI):
 #     """Add moment distribution endpoints to FastAPI app"""
 
 
-@app.post("/analyze_moment_distribution", response_model=MomentDistributionResponse)
+@router.post("/moment_distribution/analyze", response_model=MomentDistributionResponse)
 async def analyze_moment_distribution(frame: FrameMD):
     """Analyze frame using Moment Distribution Method"""
     try:
@@ -730,7 +724,7 @@ async def analyze_moment_distribution(frame: FrameMD):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.get("/moment_distribution_examples")
+@router.get("/moment_distribution/examples")
 async def get_moment_distribution_examples():
     """Get example frame configurations"""
     examples = [
@@ -924,7 +918,7 @@ async def get_moment_distribution_examples():
     return examples
 
 
-@app.post("/integrate_md_analysis_design")
+@router.post("/integrated/moment_distribution_design")
 async def integrate_md_analysis_design(data: dict):
     """Integrate Moment Distribution analysis with BS 8110 beam design"""
     try:
@@ -1026,10 +1020,15 @@ async def integrate_md_analysis_design(data: dict):
         raise HTTPException(status_code=400, detail=f"MD Integration failed: {str(e)}")
 
 
+def add_moment_distribution_endpoints(app: FastAPI):
+    """Register moment-distribution endpoints on the provided FastAPI app."""
+    app.include_router(router, prefix="/moment_distribution")
+
+
 # # Export for main app integration
-# __all__ = [
-#     "MomentDistributionSolver",
-#     "FrameMD",
-#     "MomentDistributionResponse",
-#     "add_moment_distribution_endpoints",
-# ]
+__all__ = [
+    "MomentDistributionSolver",
+    "FrameMD",
+    "MomentDistributionResponse",
+    "add_moment_distribution_endpoints",
+]

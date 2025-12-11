@@ -28,6 +28,9 @@ from calculations.takeoff.septic_tank import router as septicRouter
 from calculations.takeoff.swiming_pool import router as swimming_pool_router
 from calculations.takeoff.Basement import router as basement_router
 from calculations.takeoff.Door_window import router as Door_window_router
+from calculations.takeoff.underground_tank_router import (
+    router as underground_tank_router,
+)
 
 
 app.include_router(
@@ -39,9 +42,18 @@ app.include_router(
 )
 app.include_router(RoofWorksRouter, prefix="/roof_router", tags=["roof_router"])
 app.include_router(septicRouter, prefix="/septicRouter", tags=["septic_Router"])
-app.include_router(swimming_pool_router, prefix="/swimming_pool_router", tags=["swimming_pool_router"])
+app.include_router(
+    swimming_pool_router, prefix="/swimming_pool_router", tags=["swimming_pool_router"]
+)
 app.include_router(basement_router, prefix="/basement_router", tags=["basement_router"])
-app.include_router(Door_window_router, prefix="/Door_window_router", tags=["Door_windowrouter"])
+app.include_router(
+    Door_window_router, prefix="/Door_window_router", tags=["Door_windowrouter"]
+)
+app.include_router(
+    underground_tank_router,
+    prefix="/underground_tank_router",
+    tags=["underground_tank_router"],
+)
 
 ## ##############   Ai Models  ##############
 
@@ -112,9 +124,12 @@ from calculations.Walls.wall_calc_backend import router as walls_bsdesign_router
 
 ##beam
 # app.include_router(beam_design_router, prefix="/beam", tags=["Beam_designs"])
-app.include_router(
-    beam_analysis_router, prefix="/beam_analysis", tags=["Beam_analysis"]
-)
+# Expose beam analysis routes exactly as declared in `calculations.Beams.main_beam_api`
+# This module's router defines paths like `/three_analysis/...` and
+# `/moment_distribution/...`, so include it without adding an extra prefix.
+app.include_router(beam_analysis_router)
+# Also expose the same routes under /beam_analysis for frontend compatibility
+app.include_router(beam_analysis_router, prefix="/beam_analysis")
 # app.include_router(
 #     three_mom_analysis_router, prefix="/three_analysis", tags=["three_analysis"]
 # )

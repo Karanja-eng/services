@@ -29,6 +29,7 @@ import {
   FileText,
   Award,
 } from "lucide-react";
+import Beam3DVisualization from "../../components/beam_3d_helper";
 
 const API_BASE_URL = "http://localhost:8001";
 
@@ -258,7 +259,9 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
 
     return (
       <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-slate-100">Beam Configuration</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-slate-100">
+          Beam Configuration
+        </h3>
         <svg width="900" height="200" viewBox="0 0 900 200">
           {/* Draw spans */}
           {spans.map((span, index) => {
@@ -1105,24 +1108,27 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
               </div>
             </div>
             <div
-              className={`p-4 rounded-lg ${designResults.summary.all_designs_ok
-                ? "bg-green-50"
-                : "bg-red-50"
-                }`}
+              className={`p-4 rounded-lg ${
+                designResults.summary.all_designs_ok
+                  ? "bg-green-50"
+                  : "bg-red-50"
+              }`}
             >
               <div
-                className={`text-sm ${designResults.summary.all_designs_ok
-                  ? "text-green-600"
-                  : "text-red-600"
-                  }`}
+                className={`text-sm ${
+                  designResults.summary.all_designs_ok
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
               >
                 Design Status
               </div>
               <div
-                className={`text-lg font-semibold ${designResults.summary.all_designs_ok
-                  ? "text-green-700"
-                  : "text-red-700"
-                  }`}
+                className={`text-lg font-semibold ${
+                  designResults.summary.all_designs_ok
+                    ? "text-green-700"
+                    : "text-red-700"
+                }`}
               >
                 {designResults.summary.all_designs_ok
                   ? "✓ All OK"
@@ -1134,7 +1140,10 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
 
         {/* Individual Span Results */}
         {designResults.span_designs.map((spanDesign, index) => (
-          <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+          <div
+            key={index}
+            className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg"
+          >
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <Wrench className="h-5 w-5 mr-2 text-blue-600" />
               Span {index + 1} Design Details
@@ -1184,10 +1193,11 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Moment Capacity</span>
                     <span
-                      className={`text-sm font-medium ${spanDesign.design_checks.moment_capacity_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-medium ${
+                        spanDesign.design_checks.moment_capacity_ok
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {spanDesign.design_checks.moment_capacity_ok
                         ? "✓ OK"
@@ -1203,10 +1213,11 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Shear Capacity</span>
                     <span
-                      className={`text-sm font-medium ${spanDesign.design_checks.shear_capacity_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-medium ${
+                        spanDesign.design_checks.shear_capacity_ok
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {spanDesign.design_checks.shear_capacity_ok
                         ? "✓ OK"
@@ -1222,10 +1233,11 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Deflection</span>
                     <span
-                      className={`text-sm font-medium ${spanDesign.design_checks.deflection_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-medium ${
+                        spanDesign.design_checks.deflection_ok
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {spanDesign.design_checks.deflection_ok
                         ? "✓ OK"
@@ -1236,10 +1248,11 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Minimum Steel</span>
                     <span
-                      className={`text-sm font-medium ${spanDesign.design_checks.minimum_steel_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-medium ${
+                        spanDesign.design_checks.minimum_steel_ok
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {spanDesign.design_checks.minimum_steel_ok
                         ? "✓ OK"
@@ -1250,10 +1263,11 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Maximum Steel</span>
                     <span
-                      className={`text-sm font-medium ${spanDesign.design_checks.maximum_steel_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-medium ${
+                        spanDesign.design_checks.maximum_steel_ok
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {spanDesign.design_checks.maximum_steel_ok
                         ? "✓ OK"
@@ -1379,7 +1393,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                       £
                       {(
                         spanDesign.cost_estimate.total_cost_per_meter *
-                        spans[index]?.length || 0
+                          spans[index]?.length || 0
                       ).toFixed(2)}
                     </div>
                   </div>
@@ -1564,20 +1578,22 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
           <div className="flex space-x-1 bg-gray-200 dark:bg-slate-700 rounded-lg p-1">
             <button
               onClick={() => setActiveTab("input")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "input"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+                activeTab === "input"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
             >
               <Settings className="h-4 w-4 inline mr-2" />
               Input Configuration
             </button>
             <button
               onClick={() => setActiveTab("results")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "results"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+                activeTab === "results"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
               disabled={!results}
             >
               <Calculator className="h-4 w-4 inline mr-2" />
@@ -1585,20 +1601,22 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
             </button>
             <button
               onClick={() => setActiveTab("design-config")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design-config"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+                activeTab === "design-config"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
             >
               <Wrench className="h-4 w-4 inline mr-2" />
               Design Configuration
             </button>
             <button
               onClick={() => setActiveTab("design")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+                activeTab === "design"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
               disabled={!designResults}
             >
               <Award className="h-4 w-4 inline mr-2" />
@@ -1814,26 +1832,26 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                               "Partial Uniformly Distributed Load" ||
                               load.load_type === "Triangular Load" ||
                               load.load_type === "Trapezoidal Load") && (
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    Length (m)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={load.length}
-                                    onChange={(e) =>
-                                      updateLoad(
-                                        spanIndex,
-                                        loadIndex,
-                                        "length",
-                                        e.target.value
-                                      )
-                                    }
-                                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                                    step="0.1"
-                                  />
-                                </div>
-                              )}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Length (m)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={load.length}
+                                  onChange={(e) =>
+                                    updateLoad(
+                                      spanIndex,
+                                      loadIndex,
+                                      "length",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                  step="0.1"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1935,6 +1953,25 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
             />
             <DiagramsPanel results={results} />
             <ResultsTable results={results} />
+
+            {/* 3D Visualization Component */}
+            <Beam3DVisualization
+              inputs={{
+                spans: spans,
+                supports: supports,
+                loads: spans.flatMap((span, idx) =>
+                  span.loads.map((load) => ({
+                    ...load,
+                    span_index: idx,
+                  }))
+                ),
+              }}
+              results={results}
+              theme={isDark ? "dark" : "light"}
+              beamType={
+                supports.length === 2 ? "simply_supported" : "continuous"
+              }
+            />
           </div>
         )}
 

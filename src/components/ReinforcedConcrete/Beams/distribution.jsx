@@ -26,6 +26,7 @@ import {
   Zap,
   GitBranch,
 } from "lucide-react";
+import Beam3DVisualization from "../../components/beam_3d_helper";
 
 const API_BASE_URL = "http://localhost:8001";
 
@@ -179,7 +180,7 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
 
       const length = Math.sqrt(
         Math.pow(endJoint.x_coordinate - startJoint.x_coordinate, 2) +
-        Math.pow(endJoint.y_coordinate - startJoint.y_coordinate, 2)
+          Math.pow(endJoint.y_coordinate - startJoint.y_coordinate, 2)
       );
 
       setMembers([
@@ -493,8 +494,9 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                 {joint.is_support && (
                   <g>
                     <polygon
-                      points={`${x - 12},${y + 15} ${x + 12},${y + 15} ${x},${y + 8
-                        }`}
+                      points={`${x - 12},${y + 15} ${x + 12},${y + 15} ${x},${
+                        y + 8
+                      }`}
                       fill="#DC2626"
                       stroke="#B91C1C"
                       strokeWidth={1}
@@ -614,10 +616,11 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                 </h4>
                 {iteration.max_unbalance && (
                   <span
-                    className={`text-sm px-2 py-1 rounded ${iteration.max_unbalance < results.convergence_tolerance
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
-                      }`}
+                    className={`text-sm px-2 py-1 rounded ${
+                      iteration.max_unbalance < results.convergence_tolerance
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
                   >
                     Max Unbalance: {iteration.max_unbalance.toFixed(6)} kN⋅m
                   </span>
@@ -722,7 +725,10 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
           const deflectionData = results.deflection_data[memberId] || [];
 
           return (
-            <div key={memberId} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+            <div
+              key={memberId}
+              className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg"
+            >
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-slate-100">
                 Member {memberId} - Force Diagrams
               </h3>
@@ -1258,24 +1264,27 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
               </div>
             </div>
             <div
-              className={`p-4 rounded-lg ${designResults.summary.all_designs_ok
-                ? "bg-green-50"
-                : "bg-red-50"
-                }`}
+              className={`p-4 rounded-lg ${
+                designResults.summary.all_designs_ok
+                  ? "bg-green-50"
+                  : "bg-red-50"
+              }`}
             >
               <div
-                className={`text-sm ${designResults.summary.all_designs_ok
-                  ? "text-green-600"
-                  : "text-red-600"
-                  }`}
+                className={`text-sm ${
+                  designResults.summary.all_designs_ok
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
               >
                 Design Status
               </div>
               <div
-                className={`text-lg font-semibold ${designResults.summary.all_designs_ok
-                  ? "text-green-700"
-                  : "text-red-700"
-                  }`}
+                className={`text-lg font-semibold ${
+                  designResults.summary.all_designs_ok
+                    ? "text-green-700"
+                    : "text-red-700"
+                }`}
               >
                 {designResults.summary.all_designs_ok
                   ? "✓ All OK"
@@ -1287,7 +1296,10 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
 
         {/* Individual Member Results */}
         {designResults.member_designs.map((memberDesign, index) => (
-          <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+          <div
+            key={index}
+            className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg"
+          >
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <Wrench className="h-5 w-5 mr-2 text-blue-600" />
               Member {memberDesign.member_id || `Member ${index + 1}`} Design
@@ -1339,10 +1351,11 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Moment Capacity</span>
                     <span
-                      className={`text-sm font-medium ${memberDesign.design_checks.moment_capacity_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-medium ${
+                        memberDesign.design_checks.moment_capacity_ok
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {memberDesign.design_checks.moment_capacity_ok
                         ? "✓ OK"
@@ -1358,10 +1371,11 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Shear Capacity</span>
                     <span
-                      className={`text-sm font-medium ${memberDesign.design_checks.shear_capacity_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-medium ${
+                        memberDesign.design_checks.shear_capacity_ok
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {memberDesign.design_checks.shear_capacity_ok
                         ? "✓ OK"
@@ -1377,10 +1391,11 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Deflection</span>
                     <span
-                      className={`text-sm font-medium ${memberDesign.design_checks.deflection_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-medium ${
+                        memberDesign.design_checks.deflection_ok
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {memberDesign.design_checks.deflection_ok
                         ? "✓ OK"
@@ -1391,14 +1406,15 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Steel Limits</span>
                     <span
-                      className={`text-sm font-medium ${memberDesign.design_checks.minimum_steel_ok &&
+                      className={`text-sm font-medium ${
+                        memberDesign.design_checks.minimum_steel_ok &&
                         memberDesign.design_checks.maximum_steel_ok
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {memberDesign.design_checks.minimum_steel_ok &&
-                        memberDesign.design_checks.maximum_steel_ok
+                      memberDesign.design_checks.maximum_steel_ok
                         ? "✓ OK"
                         : "✗ FAIL"}
                     </span>
@@ -1518,20 +1534,22 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
           <div className="flex space-x-1 bg-gray-200 dark:bg-slate-700 rounded-lg p-1">
             <button
               onClick={() => setActiveTab("input")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "input"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+                activeTab === "input"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
             >
               <Settings className="h-4 w-4 inline mr-2" />
               Frame Configuration
             </button>
             <button
               onClick={() => setActiveTab("results")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "results"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+                activeTab === "results"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
               disabled={!results}
             >
               <Zap className="h-4 w-4 inline mr-2" />
@@ -1539,20 +1557,22 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
             </button>
             <button
               onClick={() => setActiveTab("design-config")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design-config"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+                activeTab === "design-config"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
             >
               <Wrench className="h-4 w-4 inline mr-2" />
               Design Config
             </button>
             <button
               onClick={() => setActiveTab("design")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+                activeTab === "design"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
               disabled={!designResults}
             >
               <Award className="h-4 w-4 inline mr-2" />
@@ -1939,26 +1959,26 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                             {(load.load_type === "Partial UDL" ||
                               load.load_type === "Triangular" ||
                               load.load_type === "Trapezoidal") && (
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    Length (m)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={load.length}
-                                    onChange={(e) =>
-                                      updateLoad(
-                                        memberIndex,
-                                        loadIndex,
-                                        "length",
-                                        e.target.value
-                                      )
-                                    }
-                                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                                    step="0.1"
-                                  />
-                                </div>
-                              )}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Length (m)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={load.length}
+                                  onChange={(e) =>
+                                    updateLoad(
+                                      memberIndex,
+                                      loadIndex,
+                                      "length",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                  step="0.1"
+                                />
+                              </div>
+                            )}
                           </div>
 
                           {load.load_type === "Trapezoidal" && (
@@ -2071,6 +2091,17 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
             <IterationHistoryPanel results={results} />
             <DistributionFactorsPanel results={results} />
             <MemberDiagramsPanel results={results} />
+
+            {/* 3D Visualization Component */}
+            <Beam3DVisualization
+              inputs={{
+                joints: joints,
+                members: members,
+              }}
+              results={results}
+              theme={isDark ? "dark" : "light"}
+              beamType="continuous"
+            />
           </div>
         )}
 
@@ -2106,17 +2137,6 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
         {activeTab === "design" && designResults && (
           <DesignResultsPanel designResults={designResults} />
         )}
-
-        {/* Footer */}
-        <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>
-            Moment Distribution Method (Hardy Cross) with BS 8110 Reinforced
-            Concrete Design
-          </p>
-          <p className="mt-1">
-            © 2024 - Advanced Structural Analysis & Design Suite
-          </p>
-        </div>
       </div>
     </div>
   );

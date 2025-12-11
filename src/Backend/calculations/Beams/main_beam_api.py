@@ -44,6 +44,34 @@ from .moment_distribution_backend import (
 # Create the main FastAPI application
 router = APIRouter()
 
+# Create top-level FastAPI `app` and include routers from submodules below.
+app = FastAPI(
+    title="Professional Structural Engineering Suite",
+    version="3.0.0",
+    description="Complete structural analysis and design platform",
+)
+
+# Include this module's router on the root path (no prefix)
+app.include_router(router)
+
+# Note: this file defines the API endpoints directly (three-moment and
+# moment-distribution). Do not auto-include submodule routers here to avoid
+# duplicate route registration. Keep this module as the single API surface.
+
+# Enable CORS for local development (adjust origins if needed)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# No startup debug logging; endpoints below are defined on `router` which is
+# included on `app` above. The frontend should call the paths defined here.
+
+
 # ============================================================================
 # ROOT ENDPOINT
 # ============================================================================
@@ -96,7 +124,7 @@ async def root():
 # ============================================================================
 
 
-@router.post("/three_moment/analyze", response_model=BeamResponse)
+@router.post("/three_analysis/analyze", response_model=BeamResponse)
 async def analyze_three_moment(beam: BeamModel):
     """Analyze continuous beam using Three-Moment Theorem"""
     try:
@@ -110,7 +138,7 @@ async def analyze_three_moment(beam: BeamModel):
         )
 
 
-@router.get("/three_moment/examples")
+@router.get("/three_analysis/examples")
 async def get_three_moment_examples():
     """Get Three-Moment Theorem example configurations"""
     examples = [
@@ -127,7 +155,9 @@ async def get_three_moment_examples():
                     "length": 6.0,
                     "E": 200e9,
                     "I": 8.33e-6,
-                    "loads": [{"load_type": "UDL", "magnitude": 15.0}],
+                    "loads": [
+                        {"load_type": "Uniformly Distributed Load", "magnitude": 15.0}
+                    ],
                 }
             ],
             "convergence_tolerance": 0.001,
@@ -186,7 +216,9 @@ async def get_three_moment_examples():
                     "length": 8.0,
                     "E": 200e9,
                     "I": 1e-5,
-                    "loads": [{"load_type": "UDL", "magnitude": 25.0}],
+                    "loads": [
+                        {"load_type": "Uniformly Distributed Load", "magnitude": 25.0}
+                    ],
                 },
                 {
                     "member_id": "CD",
@@ -246,7 +278,7 @@ async def get_three_moment_examples():
                     "E": 200e9,
                     "I": 1e-5,
                     "loads": [
-                        {"load_type": "Point", "magnitude": 100.0, "position": 2.5}
+                        {"load_type": "Point Load", "magnitude": 100.0, "position": 2.5}
                     ],
                 },
                 {
@@ -257,7 +289,9 @@ async def get_three_moment_examples():
                     "length": 5.0,
                     "E": 200e9,
                     "I": 1e-5,
-                    "loads": [{"load_type": "UDL", "magnitude": 30.0}],
+                    "loads": [
+                        {"load_type": "Uniformly Distributed Load", "magnitude": 30.0}
+                    ],
                 },
                 {
                     "member_id": "CD",
@@ -282,6 +316,52 @@ async def get_three_moment_examples():
         },
     ]
     return examples
+
+
+@router.get("/three_analysis/beam_design_examples")
+async def get_three_beam_design_examples():
+    """Beam design examples for the Three-Moment frontend"""
+    return [
+        {
+            "name": "Simple Rectangular Beam",
+            "beam_type": "Rectangular",
+            "support_condition": "Simply Supported",
+            "imposed_load": 10.0,
+            "permanent_load": 5.0,
+            "materials": {"concrete_grade": "C30", "steel_grade": "Grade 460"},
+            "rectangular_geometry": {"width": 300, "depth": 500, "cover": 25},
+        },
+        {
+            "name": "Continuous T-Beam",
+            "beam_type": "T-Beam",
+            "support_condition": "Continuous",
+            "imposed_load": 12.0,
+            "permanent_load": 6.0,
+            "materials": {"concrete_grade": "C30", "steel_grade": "Grade 460"},
+            "t_beam_geometry": {
+                "web_width": 300,
+                "web_depth": 400,
+                "flange_width": 1000,
+                "flange_thickness": 150,
+                "cover": 25,
+            },
+        },
+        {
+            "name": "Cantilever L-Beam",
+            "beam_type": "L-Beam",
+            "support_condition": "Cantilever",
+            "imposed_load": 8.0,
+            "permanent_load": 4.0,
+            "materials": {"concrete_grade": "C30", "steel_grade": "Grade 460"},
+            "l_beam_geometry": {
+                "web_width": 250,
+                "web_depth": 350,
+                "flange_width": 600,
+                "flange_thickness": 120,
+                "cover": 30,
+            },
+        },
+    ]
 
 
 # ============================================================================
@@ -438,7 +518,7 @@ async def get_material_properties():
 # ============================================================================
 
 
-@router.post("/integrated/three_moment_design")
+@router.post("/three_analysis/integrate_analysis_design")
 async def integrate_three_moment_design(data: dict):
     """Integrate Three-Moment analysis with BS 8110 beam design"""
     try:
@@ -544,8 +624,18 @@ async def integrate_moment_distribution_design(data: dict):
         md_results = data.get("md_results")
         design_parameters = data.get("design_parameters")
 
-        if not md_results or not design_parameters:
-            raise ValueError("Both MD results and design parameters required")
+        # Provide clearer error messages for missing payload parts
+        if md_results is None:
+            raise ValueError("'md_results' missing from request payload")
+        if design_parameters is None:
+            raise ValueError("'design_parameters' missing from request payload")
+
+        if not isinstance(md_results, dict):
+            raise ValueError(
+                "'md_results' must be an object/dict mapping member_id -> moment arrays"
+            )
+        if not isinstance(design_parameters, dict):
+            raise ValueError("'design_parameters' must be an object/dict")
 
         designer = BS8110Designer()
         design_results = []
@@ -596,8 +686,16 @@ async def integrate_moment_distribution_design(data: dict):
 
             # Design the member
             member_design = designer.design_beam(design_request)
-            member_design.member_id = member_id
-            design_results.append(member_design)
+            # Convert result to a plain dict so we can attach metadata
+            if hasattr(member_design, "dict"):
+                design_dict_obj = member_design.dict()
+            elif isinstance(member_design, dict):
+                design_dict_obj = member_design
+            else:
+                design_dict_obj = {"result": member_design}
+
+            design_dict_obj["member_id"] = member_id
+            design_results.append(design_dict_obj)
 
         return {
             "success": True,
@@ -608,8 +706,8 @@ async def integrate_moment_distribution_design(data: dict):
                 "total_members": len(design_results),
                 "beam_type": design_parameters["beam_type"],
                 "all_designs_ok": all(
-                    result.design_checks.moment_capacity_ok
-                    and result.design_checks.shear_capacity_ok
+                    result.get("design_checks", {}).get("moment_capacity_ok", False)
+                    and result.get("design_checks", {}).get("shear_capacity_ok", False)
                     for result in design_results
                 ),
                 "convergence_info": {
@@ -805,7 +903,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         reload=True,
     )
 

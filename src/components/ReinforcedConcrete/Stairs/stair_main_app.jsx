@@ -1,8 +1,6 @@
 import React, { useState, createContext } from "react";
 import { Calculator, BookOpen } from "lucide-react";
-import StructuralVisualizationComponent from "../../Drawings/visualise_component";
-// import ThreeD_helper from '../../components/visualisation_helper';
-
+import Stair3DVisualization from "../../components/visualisation_helper";
 
 // Theme Context
 const ThemeContext = createContext();
@@ -17,37 +15,42 @@ function StairDesignerApp({ isDark = false }) {
   return (
     <ThemeContext.Provider value={{ theme }}>
       <div
-        className={`min-h-screen transition-colors duration-300 ${isDark
-          ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
-          : "bg-gradient-to-br from-slate-50 via-white to-blue-50"
-          }`}
+        className={`min-h-screen transition-colors duration-300 ${
+          isDark
+            ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+            : "bg-gradient-to-br from-slate-50 via-white to-blue-50"
+        }`}
       >
         {/* Header */}
         <div
-          className={`border-b ${isDark
-            ? "bg-slate-800/50 border-slate-700"
-            : "bg-white/80 border-slate-200"
-            } backdrop-blur-lg shadow-lg`}
+          className={`border-b ${
+            isDark
+              ? "bg-slate-800/50 border-slate-700"
+              : "bg-white/80 border-slate-200"
+          } backdrop-blur-lg shadow-lg`}
         >
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div
-                  className={`p-2 rounded-xl ${isDark ? "bg-teal-600" : "bg-teal-500"
-                    } shadow-lg`}
+                  className={`p-2 rounded-xl ${
+                    isDark ? "bg-teal-600" : "bg-teal-500"
+                  } shadow-lg`}
                 >
                   <Calculator className="w-8 h-8 text-white" />
                 </div>
                 <div>
                   <h1
-                    className={`text-2xl font-bold ${isDark ? "text-white" : "text-slate-900"
-                      }`}
+                    className={`text-2xl font-bold ${
+                      isDark ? "text-white" : "text-slate-900"
+                    }`}
                   >
                     Stair Design
                   </h1>
                   <p
-                    className={`text-sm ${isDark ? "text-slate-400" : "text-slate-600"
-                      }`}
+                    className={`text-sm ${
+                      isDark ? "text-slate-400" : "text-slate-600"
+                    }`}
                   >
                     Professional stair design to Eurocode & BS 8110
                   </p>
@@ -59,14 +62,15 @@ function StairDesignerApp({ isDark = false }) {
             <div className="mt-4 flex gap-4">
               <button
                 onClick={() => setActiveCode("eurocode")}
-                className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${activeCode === "eurocode"
-                  ? isDark
-                    ? "bg-teal-600 text-white shadow-lg shadow-teal-600/30"
-                    : "bg-teal-500 text-white shadow-lg shadow-teal-500/30"
-                  : isDark
+                className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${
+                  activeCode === "eurocode"
+                    ? isDark
+                      ? "bg-teal-600 text-white shadow-lg shadow-teal-600/30"
+                      : "bg-teal-500 text-white shadow-lg shadow-teal-500/30"
+                    : isDark
                     ? "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
                     : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  }`}
+                }`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <BookOpen className="w-5 h-5" />
@@ -76,14 +80,15 @@ function StairDesignerApp({ isDark = false }) {
 
               <button
                 onClick={() => setActiveCode("bs8110")}
-                className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${activeCode === "bs8110"
-                  ? isDark
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : isDark
+                className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${
+                  activeCode === "bs8110"
+                    ? isDark
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                      : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                    : isDark
                     ? "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
                     : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  }`}
+                }`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <BookOpen className="w-5 h-5" />
@@ -113,10 +118,6 @@ function EurocodeCalculator({ theme, isDark }) {
   const [cantileverType, setCantileverType] = useState("side_support");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  // add this state with the other useState calls in EurocodeCalculator
-
-  const [show3D, setShow3D] = useState(false);
-  const [stairPropsFor3D, setStairPropsFor3D] = useState(null);
 
   const STAIR_TYPE_TO_ELEMENT = {
     simply_supported: "stair_MST1",
@@ -208,23 +209,25 @@ function EurocodeCalculator({ theme, isDark }) {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setStairType("simply_supported")}
-              className={`p-3 rounded-lg font-medium transition-all ${stairType === "simply_supported"
-                ? "bg-teal-500 text-white"
-                : isDark
+              className={`p-3 rounded-lg font-medium transition-all ${
+                stairType === "simply_supported"
+                  ? "bg-teal-500 text-white"
+                  : isDark
                   ? "bg-slate-700 text-slate-300"
                   : "bg-slate-200 text-slate-700"
-                }`}
+              }`}
             >
               Simply Supported
             </button>
             <button
               onClick={() => setStairType("cantilever")}
-              className={`p-3 rounded-lg font-medium transition-all ${stairType === "cantilever"
-                ? "bg-teal-500 text-white"
-                : isDark
+              className={`p-3 rounded-lg font-medium transition-all ${
+                stairType === "cantilever"
+                  ? "bg-teal-500 text-white"
+                  : isDark
                   ? "bg-slate-700 text-slate-300"
                   : "bg-slate-200 text-slate-700"
-                }`}
+              }`}
             >
               Cantilever
             </button>
@@ -240,12 +243,13 @@ function EurocodeCalculator({ theme, isDark }) {
             <div className="space-y-2">
               <button
                 onClick={() => setCantileverType("side_support")}
-                className={`w-full p-3 rounded-lg text-left transition-all ${cantileverType === "side_support"
-                  ? "bg-green-500 text-white"
-                  : theme === "dark"
+                className={`w-full p-3 rounded-lg text-left transition-all ${
+                  cantileverType === "side_support"
+                    ? "bg-green-500 text-white"
+                    : theme === "dark"
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-200 text-gray-700"
-                  }`}
+                }`}
               >
                 <div className="font-medium">Side Wall/Beam Support</div>
                 <div className="text-sm opacity-80">
@@ -254,12 +258,13 @@ function EurocodeCalculator({ theme, isDark }) {
               </button>
               <button
                 onClick={() => setCantileverType("central_beam")}
-                className={`w-full p-3 rounded-lg text-left transition-all ${cantileverType === "central_beam"
-                  ? "bg-green-500 text-white"
-                  : theme === "dark"
+                className={`w-full p-3 rounded-lg text-left transition-all ${
+                  cantileverType === "central_beam"
+                    ? "bg-green-500 text-white"
+                    : theme === "dark"
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-200 text-gray-700"
-                  }`}
+                }`}
               >
                 <div className="font-medium">Central Spine Beam</div>
                 <div className="text-sm opacity-80">
@@ -410,7 +415,6 @@ function EurocodeCalculator({ theme, isDark }) {
           {loading ? "Calculating..." : "Calculate Design"}
         </button>
 
-
         {/* ################################################## */}
         {/* ################################################## */}
 
@@ -418,55 +422,20 @@ function EurocodeCalculator({ theme, isDark }) {
 
         {/* ################################################## */}
 
-
-
-        {/* Show 3D button - place immediately below the Calculate Design button */}
-        <button
-          onClick={() => {
-            // prepare and normalize inputs for the DrawStairsMST1 component
-            // convert mm → m where applicable (your inputs have some mm fields)
-            const stairProps = {
-              flightLength: inputs.span, // span is in meters already
-              flightWidth: inputs.width, // width in meters
-              waistThickness: (inputs.waist_thickness || 150) / 1000, // mm -> m
-              riserHeight: (inputs.riser_height || 175) / 1000, // mm -> m
-              goingDepth: (inputs.tread_length || 250) / 1000, // mm -> m
-              numSteps: inputs.num_risers || 14,
-              landingLength: 1.2, // you can pass a UI value later
-              landingThickness: (inputs.waist_thickness || 150) / 1000,
-              cover: (inputs.cover || 30) / 1000,
-              showConcrete: true,
-              showRebar: true,
-              opacity: 0.6,
-              wireframe: false,
-              // optional color overrides:
-              colors: {
-                concrete: "#c0c0c0",
-                waist: "#b0b0b0",
-                landing: "#a8a8a8",
-                mainBars: "#cc3333",
-                distributionBars: "#3366cc",
-                uBars: "#ff6600",
-              },
-              elementType: STAIR_TYPE_TO_ELEMENT[stairType],
-            };
-
-            setStairPropsFor3D(stairProps);
-            setShow3D(true);
-          }}
-          className="w-full mt-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg"
-        >
-          Show 3D
-        </button>
-
-
+        {/* 3D Visualization - Eurocode */}
+        <Stair3DVisualization
+          inputs={inputs}
+          stairType={stairType}
+          dataObject={euro_data_object}
+          codeStandard="eurocode"
+          STAIR_TYPE_TO_ELEMENT={STAIR_TYPE_TO_ELEMENT}
+          theme={theme}
+        />
       </div>
-
 
       {/* ################################################# */}
 
-
-
+      {/* #####   prop Support     ############################################# */}
 
       {/* Results Panel */}
       <div className={`${cardClass} rounded-2xl p-6 border shadow-xl`}>
@@ -499,10 +468,11 @@ function EurocodeCalculator({ theme, isDark }) {
             />
 
             <div
-              className={`rounded-xl p-4 ${results.checks?.all_checks_passed
-                ? "bg-green-500/20 border-2 border-green-500"
-                : "bg-red-500/20 border-2 border-red-500"
-                }`}
+              className={`rounded-xl p-4 ${
+                results.checks?.all_checks_passed
+                  ? "bg-green-500/20 border-2 border-green-500"
+                  : "bg-red-500/20 border-2 border-red-500"
+              }`}
             >
               <p className={`text-center font-bold ${textClass}`}>
                 {results.checks?.all_checks_passed
@@ -514,67 +484,11 @@ function EurocodeCalculator({ theme, isDark }) {
         )}
       </div>
 
-
       {/* ################################################ */}
 
-      {/* ------------- 3D Popup (full-screen) ------------- */}
-      {show3D && stairPropsFor3D && (
-        <div
-          className="fixed inset-0 z-50 flex items-stretch justify-center"
-          role="dialog"
-          aria-modal="true"
-        >
-          {/* backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setShow3D(false)}
-          />
-
-          {/* content */}
-          <div className="relative m-6 w-[calc(100%-3rem)] h-[calc(100%-3rem)] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
-            {/* header with Back button */}
-            <div className="p-4 border-b flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShow3D(false)}
-                  className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200"
-                >
-                  ← Back
-                </button>
-                <h3 className="font-semibold">3D Stair Visualization</h3>
-              </div>
-
-              {/* optional quick toggles */}
-              <div className="flex items-center gap-2 pr-2">
-                {/* you can later add export/print controls here */}
-                <button
-                  onClick={() => {
-                    /* example: zoom to fit could be implemented in the viz component by exposing a ref */
-                  }}
-                  className="px-2 py-1 rounded-lg bg-gray-50 dark:bg-gray-800"
-                >
-                  Fit
-                </button>
-              </div>
-            </div>
-
-            {/* visualization container */}
-            <div className="w-full h-[calc(100%-64px)]">
-              {/* render the StructuralVisualizationComponent and pass stair props */}
-              <StructuralVisualizationComponent
-                theme={theme}
-                visible={show3D}
-                onClose={() => setShow3D(false)}
-                elementType={stairPropsFor3D.elementType} // or "beam_RC1", "column_RC2", "slab_FF1"
-                elementData={euro_data_object} // contains all inputs and results
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-
       {/*############################################# */}
+      {/*############################################# */}
+      {/*##############   3D POPUP SCREEN ################## */}
     </div>
   );
 }
@@ -585,6 +499,11 @@ function BS8110Calculator({ theme, isDark }) {
   const [cantileverType, setCantileverType] = useState("side_support");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const STAIR_TYPE_TO_ELEMENT = {
+    supported: "stair_MST1",
+    cantilever: "stair_MST2",
+  };
 
   const [inputs, setInputs] = useState({
     span: 3.0,
@@ -653,6 +572,8 @@ function BS8110Calculator({ theme, isDark }) {
   const textClass = theme === "dark" ? "text-white" : "text-gray-900";
   const mutedClass = theme === "dark" ? "text-gray-400" : "text-gray-600";
 
+  const bs_data_object = { inputs: inputs, results: results };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Similar structure to Eurocode but with BS 8110 specific fields */}
@@ -669,23 +590,25 @@ function BS8110Calculator({ theme, isDark }) {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setStairType("supported")}
-              className={`p-3 rounded-lg font-medium transition-all ${stairType === "supported"
-                ? "bg-blue-500 text-white"
-                : isDark
+              className={`p-3 rounded-lg font-medium transition-all ${
+                stairType === "supported"
+                  ? "bg-blue-500 text-white"
+                  : isDark
                   ? "bg-slate-700 text-slate-300"
                   : "bg-slate-200 text-slate-700"
-                }`}
+              }`}
             >
               Simply Supported
             </button>
             <button
               onClick={() => setStairType("cantilever")}
-              className={`p-3 rounded-lg font-medium transition-all ${stairType === "cantilever"
-                ? "bg-blue-500 text-white"
-                : isDark
+              className={`p-3 rounded-lg font-medium transition-all ${
+                stairType === "cantilever"
+                  ? "bg-blue-500 text-white"
+                  : isDark
                   ? "bg-slate-700 text-slate-300"
                   : "bg-slate-200 text-slate-700"
-                }`}
+              }`}
             >
               Cantilever
             </button>
@@ -701,12 +624,13 @@ function BS8110Calculator({ theme, isDark }) {
             <div className="space-y-2">
               <button
                 onClick={() => setCantileverType("side_support")}
-                className={`w-full p-3 rounded-lg text-left transition-all ${cantileverType === "side_support"
-                  ? "bg-green-500 text-white"
-                  : theme === "dark"
+                className={`w-full p-3 rounded-lg text-left transition-all ${
+                  cantileverType === "side_support"
+                    ? "bg-green-500 text-white"
+                    : theme === "dark"
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-200 text-gray-700"
-                  }`}
+                }`}
               >
                 <div className="font-medium">Side Wall/Beam Support</div>
                 <div className="text-sm opacity-80">
@@ -715,12 +639,13 @@ function BS8110Calculator({ theme, isDark }) {
               </button>
               <button
                 onClick={() => setCantileverType("central_beam")}
-                className={`w-full p-3 rounded-lg text-left transition-all ${cantileverType === "central_beam"
-                  ? "bg-green-500 text-white"
-                  : theme === "dark"
+                className={`w-full p-3 rounded-lg text-left transition-all ${
+                  cantileverType === "central_beam"
+                    ? "bg-green-500 text-white"
+                    : theme === "dark"
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-200 text-gray-700"
-                  }`}
+                }`}
               >
                 <div className="font-medium">Central Spine Beam</div>
                 <div className="text-sm opacity-80">
@@ -809,8 +734,16 @@ function BS8110Calculator({ theme, isDark }) {
         >
           {loading ? "Calculating..." : "Calculate Design"}
         </button>
-        {/* 
-        <ThreeD_helper /> */}
+
+        {/* 3D Visualization - BS 8110 */}
+        <Stair3DVisualization
+          inputs={inputs}
+          stairType={stairType}
+          dataObject={bs_data_object}
+          codeStandard="bs8110"
+          STAIR_TYPE_TO_ELEMENT={STAIR_TYPE_TO_ELEMENT}
+          theme={theme}
+        />
       </div>
 
       {/* Results Panel */}
@@ -844,10 +777,11 @@ function BS8110Calculator({ theme, isDark }) {
             />
 
             <div
-              className={`rounded-xl p-4 ${results.checks?.all_checks_passed
-                ? "bg-green-500/20 border-2 border-green-500"
-                : "bg-red-500/20 border-2 border-red-500"
-                }`}
+              className={`rounded-xl p-4 ${
+                results.checks?.all_checks_passed
+                  ? "bg-green-500/20 border-2 border-green-500"
+                  : "bg-red-500/20 border-2 border-red-500"
+              }`}
             >
               <p className={`text-center font-bold ${textClass}`}>
                 <strong>Design Status: </strong>

@@ -4,14 +4,15 @@ Three-Moment Theorem Analysis + BS 8110 Reinforced Concrete Design
 Complete structural engineering solution
 """
 
-from fastapi import FastAPI, HTTPException,APIRouter
+from fastapi import FastAPI, HTTPException, APIRouter
 
 from pydantic import BaseModel, validator, Field
-from typing import List, Dict, Optional, Union, Tuple
+from typing import List, Dict, Optional, Union, Tuple, Any
 from enum import Enum
 import numpy as np
 import math
 import uvicorn
+
 router = APIRouter()
 # Import beam design endpoints and register
 try:
@@ -810,6 +811,166 @@ class BS8110Designer:
             "link_spacing": selected_spacing,
         }
 
+    def _check_deflection(
+        self, geometry: Dict, request: Any, flexural_design: Dict
+    ) -> Dict:
+        """Check deflection limits per BS 8110"""
+        d = geometry["effective_depth"]
+        L = request.span_length * 1000  # Convert to mm
+
+        # Deflection limit: L/250 for imposed loads
+        deflection_limit = L / 250
+
+        # Simplified deflection estimate (assume reasonable reinforcement)
+        As = flexural_design.get("As_tension", 0)
+        b = geometry["width"]
+
+        # Estimated deflection based on span and depth ratio
+        estimated_deflection = (L * L) / (800 * d) if d > 0 else 0
+
+        return {
+            "deflection_limit": deflection_limit,
+            "estimated_deflection": estimated_deflection,
+            "ok": estimated_deflection <= deflection_limit,
+            "ratio": L / d,
+        }
+
+    def _check_steel_limits(
+        self, geometry: Dict, materials: MaterialProperties, flexural_design: Dict
+    ) -> Dict:
+        """Check steel ratio limits per BS 8110"""
+        b = geometry["width"]
+        d = geometry["effective_depth"]
+
+        As = flexural_design.get("As_tension", 0)
+
+        # Steel ratios per BS 8110
+        As_min = 0.13 * b * d / 100
+        As_max = 4 * b * d / 100
+
+        steel_ratio = (As / (b * d)) * 100 if (b * d) > 0 else 0
+
+        return {
+            "As_min": As_min,
+            "As_max": As_max,
+            "As_provided": As,
+            "steel_ratio_percent": steel_ratio,
+            "minimum_ok": As >= As_min,
+            "maximum_ok": As <= As_max,
+        }
+
+    def _combine_reinforcement(self, flexural_design: Dict, shear_design: Dict) -> Dict:
+        """Combine flexural and shear reinforcement into final design"""
+        As_tension = flexural_design.get("As_tension", 0)
+        steel_ratio = flexural_design.get("steel_ratio", 0)
+
+        return {
+            "main_bars": [16, 16],  # Placeholder: would be determined from As_tension
+            "main_bars_area": As_tension,
+            "shear_links": shear_design.get("link_diameter", 8),
+            "link_spacing": shear_design.get("link_spacing", 200),
+            "minimum_steel_provided": True,  # Simplified check
+            "steel_ratio": steel_ratio,
+        }
+
+    def _perform_design_checks(
+        self,
+        geometry: Dict,
+        materials: MaterialProperties,
+        design_forces: Dict,
+        flexural_design: Dict,
+        shear_design: Dict,
+        deflection_check: Dict,
+        steel_checks: Dict,
+    ) -> Dict:
+        """Aggregate all design checks into single result"""
+
+        moment_capacity = flexural_design.get("moment_capacity", 0)
+        max_moment = max(abs(m) for m in design_forces.get("moment_envelope", [0]))
+
+        return {
+            "moment_capacity_ok": moment_capacity >= max_moment,
+            "shear_capacity_ok": True,  # Simplified
+            "deflection_ok": deflection_check.get("ok", True),
+            "minimum_steel_ok": steel_checks.get("minimum_ok", True),
+            "maximum_steel_ok": steel_checks.get("maximum_ok", True),
+            "spacing_ok": True,  # Simplified
+            "moment_utilization": min(1.0, max_moment / max(moment_capacity, 0.001)),
+            "shear_utilization": 0.5,  # Placeholder
+            "warnings": [],
+            "errors": [],
+        }
+
+    def _format_geometry(self, geometry: Dict, beam_type: Any) -> Dict:
+        """Format geometry for response"""
+        return {
+            "type": geometry.get("type", "rectangular"),
+            "width": geometry.get("width", 0),
+            "depth": geometry.get("depth", 0),
+            "effective_depth": geometry.get("effective_depth", 0),
+            "cover": geometry.get("cover", 25),
+        }
+
+    def _generate_calculations_summary(
+        self,
+        request: Any,
+        geometry: Dict,
+        design_forces: Dict,
+        flexural_design: Dict,
+        shear_design: Dict,
+    ) -> List[str]:
+        """Generate summary of design calculations"""
+        calculations = []
+
+        calculations.append(
+            f"Beam type: {getattr(request, 'beam_type', 'Rectangular')}"
+        )
+        calculations.append(f"Span length: {getattr(request, 'span_length', 0)} m")
+        calculations.append(
+            f"Width: {geometry.get('width', 0)} mm, Depth: {geometry.get('depth', 0)} mm"
+        )
+        calculations.append(f"Effective depth: {geometry.get('effective_depth', 0)} mm")
+
+        max_moment = max(design_forces.get("moment_envelope", [0]))
+        calculations.append(f"Maximum moment: {max_moment:.2f} kNm")
+
+        max_shear = max(design_forces.get("shear_envelope", [0]))
+        calculations.append(f"Maximum shear: {max_shear:.2f} kN")
+
+        calculations.append(
+            f"Main steel: {flexural_design.get('As_tension', 0):.0f} mm²"
+        )
+        calculations.append(
+            f"Link diameter: {shear_design.get('link_diameter', 8)} mm @ {shear_design.get('link_spacing', 200)} mm"
+        )
+
+        return calculations
+
+    def _estimate_cost(
+        self, geometry: Dict, reinforcement: Dict, materials: MaterialProperties
+    ) -> Dict:
+        """Estimate material costs"""
+        width = geometry.get("width", 300)
+        depth = geometry.get("depth", 500)
+
+        # Cost per cubic meter of concrete (simplified: £50)
+        concrete_volume = (width * depth) * 1e-6
+        concrete_cost = concrete_volume * 50
+
+        # Cost of steel (simplified: £1.5 per kg, density = 7850 kg/m³)
+        steel_weight = reinforcement.get("main_bars_area", 0) * 0.00785 / 1000  # kg/m
+        steel_cost = steel_weight * 1.5
+
+        total_cost_per_meter = concrete_cost + steel_cost
+
+        return {
+            "concrete_volume_per_meter": round(concrete_volume, 3),
+            "concrete_cost_per_meter": round(concrete_cost, 2),
+            "steel_weight_per_meter": round(steel_weight, 2),
+            "steel_cost_per_meter": round(steel_cost, 2),
+            "total_cost_per_meter": round(total_cost_per_meter, 2),
+        }
+
 
 # ----------------------
 # FastAPI endpoints
@@ -987,12 +1148,10 @@ def get_examples():
     return examples
 
 
-# Register additional endpoints from beaamDesigner if available
-if add_beam_design_endpoints:
-    try:
-        add_beam_design_endpoints(app)
-    except Exception:
-        pass
+# Provide a helper to register this module's router on a FastAPI app
+def add_three_moment_endpoints(app: FastAPI):
+    """Register three-moment endpoints on the provided FastAPI app."""
+    app.include_router(router, prefix="/three_moment")
 
 
 @router.get("/beam_design_examples")

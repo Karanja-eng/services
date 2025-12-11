@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Calculator, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import Slab3DVisualization from "../../components/slab_3d_helper";
 
 const SlabCalculator = () => {
   const [slabType, setSlabType] = useState("one-way");
@@ -604,6 +605,14 @@ const SlabCalculator = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* 3D Visualization Component */}
+                <Slab3DVisualization
+                  inputs={formData}
+                  results={results}
+                  theme="light"
+                  slabType={slabType}
+                />
               </div>
             ) : (
               <div className="text-center py-12 text-gray-600 dark:text-gray-400">

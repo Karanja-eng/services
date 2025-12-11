@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Euro,
 } from "lucide-react";
+import Slab3DVisualization from "../../components/slab_3d_helper";
 
 const EurocodeSlabCalculator = ({ theme = "light" }) => {
   const [slabType, setSlabType] = useState("one-way");
@@ -927,6 +928,14 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     {results.eurocode}
                   </p>
                 </div>
+
+                {/* 3D Visualization Component */}
+                <Slab3DVisualization
+                  inputs={formData}
+                  results={results}
+                  theme={theme}
+                  slabType={slabType}
+                />
               </div>
             ) : (
               <div className={`text-center py-12 ${textSecondary}`}>

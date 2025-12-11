@@ -7,6 +7,7 @@ import {
   FileText,
   Euro,
 } from "lucide-react";
+import Wall3DVisualization from "../../components/wall_3d_helper";
 
 const API_BASE_URL = "http://localhost:8001/eurocode_walls/";
 
@@ -650,6 +651,14 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
                     </div>
                   </div>
                 </div>
+
+                {/* 3D Visualization Component */}
+                <Wall3DVisualization
+                  inputs={inputs}
+                  results={result}
+                  theme={isDark ? "dark" : "light"}
+                  wallType={wallType}
+                />
               </>
             )}
 

@@ -5,7 +5,7 @@ import {
   Route,
   useNavigate,
 } from "react-router-dom";
-import { Menu, Settings, HammerIcon, House } from "lucide-react";
+import { Settings, HammerIcon, House } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
 import ChatPage from "./components/ChatPage";
@@ -19,9 +19,9 @@ import StairDesignerApp from "./ReinforcedConcrete/Stairs/stair_main_app";
 import FoundationMainApp from "./ReinforcedConcrete/Foundations/foundation_main_app";
 import WallDesignCalculator from "./ReinforcedConcrete/Walls/main_wall_app";
 import MainSlabApp from "./ReinforcedConcrete/Slabs/main_slab_app";
-
-
 import MainRetainingApp from "./ReinforcedConcrete/Rwall/main_app_component";
+
+import FramedStructureComponent from "./ReinforcedConcrete/FramedandTall/eurocode_structural_app";
 
 import SteelDesignApp from "./SteelDesign/steel_design_app";
 import BoltedConnectionsModule from "./SteelDesign/bolted_connections_frontend";
@@ -40,10 +40,10 @@ import SepticTakeoffApp from "./takeoff2/septik_tank";
 import SwimmingPoolTakeoffApp from "./takeoff2/swimming_pool";
 import BasementTakeoffApp from "./takeoff2/Basement_Takeoff";
 import RCCSuperstructureApp from "./takeoff2/superstructure";
-import DoorWindowTakeoff from './takeoff2/Doors&Window'
-import InternalFinishesTakeoff from './takeoff2/internal_finishes'
-import FramedStructureComponent from './ReinforcedConcrete/FramedandTall/eurocode_structural_app'
-
+import DoorWindowTakeoff from "./takeoff2/Doors&Window";
+import InternalFinishesTakeoff from "./takeoff2/internal_finishes";
+import SuperstructureTakeoffApp from "./takeoff2/Superstructure_takeoff";
+import UnderGroundTankComponent from "./takeoff2/underground_tank";
 
 //////////////////////////TakingOff /////////////////////
 
@@ -52,7 +52,7 @@ const QuantityTakeoffWrapper = () => {
   const navigate = useNavigate();
   return (
     <QuantityTakeoff
-      onViewDiagram={() => { }}
+      onViewDiagram={() => {}}
       onGoToApproximate={() => navigate("/quantity/manual/approximate")}
       onGoToBOQ={() => navigate("/quantity/manual/boq")}
       onGoToDocuments={() => navigate("/quantity/manual/documents")}
@@ -64,7 +64,7 @@ const ApproximateQuantitiesWrapper = () => {
   const navigate = useNavigate();
   return (
     <ApproximateQuantities
-      onViewDiagram={() => { }}
+      onViewDiagram={() => {}}
       onGoToTakeoff={() => navigate("/quantity/manual/taking-off")}
       onGoToBOQ={() => navigate("/quantity/manual/boq")}
       onGoToDocuments={() => navigate("/quantity/manual/documents")}
@@ -76,7 +76,7 @@ const BOQWrapper = () => {
   const navigate = useNavigate();
   return (
     <BOQ
-      onViewDiagram={() => { }}
+      onViewDiagram={() => {}}
       onGoToTakeoff={() => navigate("/quantity/manual/taking-off")}
       onGoToApproximate={() => navigate("/quantity/manual/approximate")}
       onGoToDocuments={() => navigate("/quantity/manual/documents")}
@@ -88,7 +88,7 @@ const DocumentViewerWrapper = () => {
   const navigate = useNavigate();
   return (
     <DocumentViewer
-      onViewDiagram={() => { }}
+      onViewDiagram={() => {}}
       onGoToTakeoff={() => navigate("/quantity/manual/taking-off")}
       onGoToApproximate={() => navigate("/quantity/manual/approximate")}
       onGoToBOQ={() => navigate("/quantity/manual/boq")}
@@ -121,7 +121,10 @@ const EngineeringApp = () => {
               </button>
               <div className="flex items-center gap-1">
                 <div className="w-10 h-10  rounded-lg flex items-center justify-center">
-                  <HammerIcon size={24} className="text-black dark:text-white" />
+                  <HammerIcon
+                    size={24}
+                    className="text-black dark:text-white"
+                  />
                 </div>
                 <h1 className="text-xl font-bold text-gray-800 dark:text-white">
                   Fundi
@@ -147,18 +150,24 @@ const EngineeringApp = () => {
               isDark={isDark}
             />
             <main
-              className={`flex-1 overflow-y-auto p-6 transition-all duration-300 ${leftSidebarOpen ? 'lg:ml-0' : ''
-                } ${rightSidebarOpen ? 'lg:mr-0' : ''
-                }`}
+              className={`flex-1 overflow-y-auto p-6 transition-all duration-300 ${
+                leftSidebarOpen ? "lg:ml-0" : ""
+              } ${rightSidebarOpen ? "lg:mr-0" : ""}`}
             >
               <Routes>
                 <Route path="/" element={<ChatPage isDark={isDark} />} />
-                <Route path="/surveying" element={<SurveyingApp isDark={isDark} />} />
+                <Route
+                  path="/surveying"
+                  element={<SurveyingApp isDark={isDark} />}
+                />
                 <Route
                   path="/visualise"
                   element={<StructuralVisualizationComponent isDark={isDark} />}
                 />
-                <Route path="/drawing" element={<CadDrawer isDark={isDark} />} />
+                <Route
+                  path="/drawing"
+                  element={<CadDrawer isDark={isDark} />}
+                />
 
                 <Route
                   path="/structural/manual/beam"
@@ -256,12 +265,19 @@ const EngineeringApp = () => {
                   element={<InternalFinishesTakeoff isDark={isDark} />}
                 />
                 <Route
+                  path="/quantity/manual/superstructure-takeoff"
+                  element={<SuperstructureTakeoffApp isDark={isDark} />}
+                />
+                <Route
+                  path="/quantity/manual/Underground_tank"
+                  element={<UnderGroundTankComponent isDark={isDark} />}
+                />
+                <Route
                   path="/structural/manual/eurocode_structural_app"
                   element={<FramedStructureComponent isDark={isDark} />}
                 />
 
                 {/* // Taking Off ///////////////*/}
-
               </Routes>
             </main>
             {/* RightSidebar overlays on the right, not inline */}

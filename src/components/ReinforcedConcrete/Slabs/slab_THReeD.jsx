@@ -2325,13 +2325,3 @@ export function DrawSlabMS8({
  * />
  * ```
  */
-export {
-  DrawSlabMS1,
-  DrawSlabMS2,
-  DrawSlabMS3,
-  DrawSlabMS4,
-  DrawSlabMS5,
-  DrawSlabMS6,
-  DrawSlabMS7,
-  DrawSlabMS8,
-};

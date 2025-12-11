@@ -37,11 +37,74 @@ import {
   DrawStairsMST2,
 } from "../ReinforcedConcrete/Stairs/Stairs_Three"; // add at top of file with other imports
 
+// Beam / Column / Slab / Foundation / Wall / Retaining visualizers
+import {
+  DrawBeamMB1,
+  DrawBeamMB2,
+  DrawBeamMB3,
+} from "../ReinforcedConcrete/Beams/Beam_THree";
+import {
+  DrawColumnMC1,
+  DrawColumnMC2,
+  DrawColumnMC3,
+  DrawColumnMC4,
+  DrawColumnMC5,
+  //DrawColumnMC6,
+} from "../ReinforcedConcrete/Columns/Columns_THree";
+import {
+  DrawPadFootingMF1,
+  DrawPileCapMF2,
+  DrawMultiColumnBaseMF3,
+  DrawGroundSlabBeamMF4,
+} from "../ReinforcedConcrete/Foundations/Foundation_Three";
+import {
+  DrawWallMW1,
+  DrawWallMW2,
+  DrawWallMW3,
+  DrawWallMW4,
+} from "../ReinforcedConcrete/Walls/wall_Three";
+import {
+  DrawSlabMS1,
+  DrawSlabMS2,
+  DrawSlabMS3,
+} from "../ReinforcedConcrete/Slabs/slab_THReeD";
+import { DrawRetainingWallMRW1 } from "../ReinforcedConcrete/Rwall/Retaining_Three";
+
 const ELEMENT_COMPONENTS = {
   stair_MST1: DrawStairsMST1,
   stair_MST2: DrawStairsMST2,
+  // Beams
+  beam_MB1: DrawBeamMB1,
+  beam_MB2: DrawBeamMB2,
+  beam_MB3: DrawBeamMB3,
 
-  // ...add more types as you create them
+  // Columns
+  column_MC1: DrawColumnMC1,
+  column_MC2: DrawColumnMC2,
+  column_MC3: DrawColumnMC3,
+  column_MC4: DrawColumnMC4,
+  column_MC5: DrawColumnMC5,
+  //column_MC6: DrawColumnMC6,
+
+  // Foundations
+  foundation_MF1: DrawPadFootingMF1,
+  foundation_MF2: DrawPileCapMF2,
+  foundation_MF3: DrawMultiColumnBaseMF3,
+  foundation_MF4: DrawGroundSlabBeamMF4,
+
+  // Walls
+  wall_MW1: DrawWallMW1,
+  wall_MW2: DrawWallMW2,
+  wall_MW3: DrawWallMW3,
+  wall_MW4: DrawWallMW4,
+
+  // Slabs
+  slab_MS1: DrawSlabMS1,
+  slab_MS2: DrawSlabMS2,
+  slab_MS3: DrawSlabMS3,
+
+  // Retaining
+  retaining_MRW1: DrawRetainingWallMRW1,
 };
 // ============================================================================
 // MATERIAL CONSTANTS AND COLORS
@@ -255,7 +318,7 @@ export default function StructuralVisualizationComponent({
   onPrint,
   onMeasure,
   visible = true, // optional, controlled by parent popup
-  onClose = () => { }, // called by popup back button or internal close
+  onClose = () => {}, // called by popup back button or internal close
   stairProps = null, // the props object coming from UI (mapped from inputs)
 }) {
   const isDark = theme === "dark";
@@ -424,10 +487,11 @@ export default function StructuralVisualizationComponent({
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className={`absolute top-4 left-4 z-20 p-2 rounded-md ${isDark
+          className={`absolute top-4 left-4 z-20 p-2 rounded-md ${
+            isDark
               ? "bg-gray-800 hover:bg-gray-700 text-gray-200"
               : "bg-blue-600 hover:bg-blue-700 text-white"
-            } shadow-lg transition-all`}
+          } shadow-lg transition-all`}
           title="Open Sidebar"
         >
           <ChevronRight className="w-5 h-5" />
@@ -435,8 +499,9 @@ export default function StructuralVisualizationComponent({
       )}
 
       <div
-        className={`${cardBg} border-r ${borderColor} transition-all duration-300 flex flex-col ${sidebarOpen ? "w-80" : "w-0"
-          } `}
+        className={`${cardBg} border-r ${borderColor} transition-all duration-300 flex flex-col ${
+          sidebarOpen ? "w-80" : "w-0"
+        } `}
       >
         {sidebarOpen && (
           <>
@@ -462,8 +527,9 @@ export default function StructuralVisualizationComponent({
 
               {/* Visibility Controls */}
               <section
-                className={`p-3 rounded ${isDark ? "bg-gray-750" : "bg-gray-50"
-                  }`}
+                className={`p-3 rounded ${
+                  isDark ? "bg-gray-750" : "bg-gray-50"
+                }`}
               >
                 <h3 className="text-sm font-semibold mb-3 flex items-center">
                   <Eye className="w-4 h-4 mr-2" />
@@ -555,8 +621,9 @@ export default function StructuralVisualizationComponent({
 
               {/* Rendering Options */}
               <section
-                className={`p-3 rounded ${isDark ? "bg-gray-750" : "bg-gray-50"
-                  }`}
+                className={`p-3 rounded ${
+                  isDark ? "bg-gray-750" : "bg-gray-50"
+                }`}
               >
                 <h3 className="text-sm font-semibold mb-3 flex items-center">
                   <Settings className="w-4 h-4 mr-2" />
@@ -646,8 +713,9 @@ export default function StructuralVisualizationComponent({
 
               {/* Color Legend */}
               <section
-                className={`p-3 rounded ${isDark ? "bg-blue-900 bg-opacity-20" : "bg-blue-50"
-                  }`}
+                className={`p-3 rounded ${
+                  isDark ? "bg-blue-900 bg-opacity-20" : "bg-blue-50"
+                }`}
               >
                 <h3 className="text-sm font-semibold mb-2">Color Legend</h3>
                 <div className="space-y-1.5 text-xs">
@@ -729,8 +797,9 @@ export default function StructuralVisualizationComponent({
 
             <button
               onClick={toggleMeasurement}
-              className={`p-2 rounded ${measurementMode ? activeBg : hoverBg
-                } flex items-center space-x-1`}
+              className={`p-2 rounded ${
+                measurementMode ? activeBg : hoverBg
+              } flex items-center space-x-1`}
               title="Measurement Mode"
             >
               <Ruler className="w-4 h-4" />
@@ -753,10 +822,11 @@ export default function StructuralVisualizationComponent({
           {/* Center Section - Member Info */}
           <div className="flex items-center space-x-3">
             <div
-              className={`px-3 py-1 rounded ${isDark ? "bg-gray-700" : "bg-gray-200"
-                } text-sm font-medium`}
+              className={`px-3 py-1 rounded ${
+                isDark ? "bg-gray-700" : "bg-gray-200"
+              } text-sm font-medium`}
             >
-              {memberType.charAt(0).toUpperCase() + memberType.slice(1)}
+              {/* {memberType.charAt(0).toUpperCase() + memberType.slice(1)} */}
             </div>
             <div className={`text-sm ${textSecondary}`}>
               View: {viewModes.find((v) => v.id === viewMode)?.name}
@@ -868,10 +938,11 @@ export default function StructuralVisualizationComponent({
                 <div className="col-span-3 flex justify-center mb-1">
                   <button
                     onClick={() => setViewMode("top")}
-                    className={`px-3 py-1.5 rounded text-xs font-medium ${viewMode === "top"
+                    className={`px-3 py-1.5 rounded text-xs font-medium ${
+                      viewMode === "top"
                         ? "bg-blue-600 text-white"
                         : `${hoverBg} ${textSecondary}`
-                      }`}
+                    }`}
                     title="Top View (Plan)"
                   >
                     F
@@ -881,10 +952,11 @@ export default function StructuralVisualizationComponent({
                 {/* Middle Row */}
                 <button
                   onClick={() => setViewMode("left")}
-                  className={`px-3 py-1.5 rounded text-xs font-medium ${viewMode === "left"
+                  className={`px-3 py-1.5 rounded text-xs font-medium ${
+                    viewMode === "left"
                       ? "bg-blue-600 text-white"
                       : `${hoverBg} ${textSecondary}`
-                    }`}
+                  }`}
                   title="Left Elevation"
                 >
                   L
@@ -892,10 +964,11 @@ export default function StructuralVisualizationComponent({
 
                 <button
                   onClick={() => setViewMode("front")}
-                  className={`px-3 py-1.5 rounded text-xs font-medium ${viewMode === "front"
+                  className={`px-3 py-1.5 rounded text-xs font-medium ${
+                    viewMode === "front"
                       ? "bg-blue-600 text-white"
                       : `${hoverBg} ${textSecondary}`
-                    }`}
+                  }`}
                   title="Front Elevation"
                 >
                   Top
@@ -903,10 +976,11 @@ export default function StructuralVisualizationComponent({
 
                 <button
                   onClick={() => setViewMode("right")}
-                  className={`px-3 py-1.5 rounded text-xs font-medium ${viewMode === "right"
+                  className={`px-3 py-1.5 rounded text-xs font-medium ${
+                    viewMode === "right"
                       ? "bg-blue-600 text-white"
                       : `${hoverBg} ${textSecondary}`
-                    }`}
+                  }`}
                   title="Right Elevation"
                 >
                   R
@@ -916,10 +990,11 @@ export default function StructuralVisualizationComponent({
                 <div className="col-span-3 flex justify-center mt-1">
                   <button
                     onClick={() => setViewMode("back")}
-                    className={`px-3 py-1.5 rounded text-xs font-medium ${viewMode === "back"
+                    className={`px-3 py-1.5 rounded text-xs font-medium ${
+                      viewMode === "back"
                         ? "bg-blue-600 text-white"
                         : `${hoverBg} ${textSecondary}`
-                      }`}
+                    }`}
                     title="Back Elevation"
                   >
                     BACK
@@ -930,10 +1005,11 @@ export default function StructuralVisualizationComponent({
                 <div className="col-span-3 mt-2 pt-2 border-t border-gray-600">
                   <button
                     onClick={() => setViewMode("perspective")}
-                    className={`w-full px-3 py-1.5 rounded text-xs font-medium flex items-center justify-center space-x-1 ${viewMode === "perspective"
+                    className={`w-full px-3 py-1.5 rounded text-xs font-medium flex items-center justify-center space-x-1 ${
+                      viewMode === "perspective"
                         ? "bg-blue-600 text-white"
                         : `${hoverBg} ${textSecondary}`
-                      }`}
+                    }`}
                     title="3D Perspective"
                   >
                     <Box className="w-3 h-3" />
@@ -979,10 +1055,11 @@ export default function StructuralVisualizationComponent({
               </div>
               {measurementMode && (
                 <div
-                  className={`px-2 py-1 rounded ${isDark
+                  className={`px-2 py-1 rounded ${
+                    isDark
                       ? "bg-yellow-900 text-yellow-300"
                       : "bg-yellow-100 text-yellow-800"
-                    }`}
+                  }`}
                 >
                   Measurement Mode Active
                 </div>
@@ -1008,8 +1085,9 @@ export default function StructuralVisualizationComponent({
                 {showRebar && "Rebar"}
               </span>
               <span
-                className={`font-medium ${isDark ? "text-green-400" : "text-green-600"
-                  }`}
+                className={`font-medium ${
+                  isDark ? "text-green-400" : "text-green-600"
+                }`}
               >
                 Ready
               </span>
@@ -1032,8 +1110,9 @@ export default function StructuralVisualizationComponent({
             </button>
             <button
               onClick={() => setShowGrid(!showGrid)}
-              className={`${cardBg} border ${borderColor} p-2 rounded-lg shadow-lg ${showGrid ? activeBg : hoverBg
-                }`}
+              className={`${cardBg} border ${borderColor} p-2 rounded-lg shadow-lg ${
+                showGrid ? activeBg : hoverBg
+              }`}
               title="Toggle Grid"
             >
               <Grid3x3 className="w-5 h-5" />
@@ -1081,8 +1160,9 @@ export default function StructuralVisualizationComponent({
 
       {/* ==================== RIGHT PROPERTIES PANEL ==================== */}
       <div
-        className={`${cardBg} border-l ${borderColor} transition-all duration-300 flex flex-col ${propertiesOpen ? "w-72" : "w-0"
-          } overflow-hidden`}
+        className={`${cardBg} border-l ${borderColor} transition-all duration-300 flex flex-col ${
+          propertiesOpen ? "w-72" : "w-0"
+        } overflow-hidden`}
       >
         {propertiesOpen && (
           <>

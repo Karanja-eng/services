@@ -25,8 +25,9 @@ const Sidebar = ({ isOpen, onClose, isDark }) => {
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-100 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"
-        } overflow-y-auto`}
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-100 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } overflow-y-auto`}
     >
       <button
         onClick={onClose}
@@ -93,11 +94,13 @@ const Sidebar = ({ isOpen, onClose, isDark }) => {
                   <div className="ml-4 mt-1 space-y-1">
                     <button
                       onClick={() =>
-                        handleNavigation("/structural/manual/eurocode_structural_app")
+                        handleNavigation(
+                          "/structural/manual/eurocode_structural_app"
+                        )
                       }
                       className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
                     >
-                      Framed & Tall Structures
+                      Framed & Tall Buildings
                     </button>
                     <button
                       onClick={() =>
@@ -300,11 +303,53 @@ const Sidebar = ({ isOpen, onClose, isDark }) => {
                     </button>
                     <button
                       onClick={() =>
+                        handleNavigation("/quantity/manual/external-taking-off")
+                      }
+                      className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
+                    >
+                      ExternalWorks
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleNavigation("/quantity/manual/septic-taking-off")
+                      }
+                      className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
+                    >
+                      Septic Tank
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleNavigation(
+                          "/quantity/manual/swimming-pool-taking-off"
+                        )
+                      }
+                      className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
+                    >
+                      Swimming Pool
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleNavigation("/quantity/manual/basement-taking-off")
+                      }
+                      className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
+                    >
+                      Basement
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleNavigation("/quantity/manual/rcc-superstructure")
+                      }
+                      className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
+                    >
+                      RCC Superstructure
+                    </button>
+                    <button
+                      onClick={() =>
                         handleNavigation("/quantity/manual/door_window")
                       }
                       className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
                     >
-                      Doors & Windows
+                      Door & Window
                     </button>
                     <button
                       onClick={() =>
@@ -314,7 +359,24 @@ const Sidebar = ({ isOpen, onClose, isDark }) => {
                     >
                       Internal Finishes
                     </button>
-
+                    <button
+                      onClick={() =>
+                        handleNavigation(
+                          "/quantity/manual/superstructure-takeoff"
+                        )
+                      }
+                      className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
+                    >
+                      Superstructure Takeoff
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleNavigation("/quantity/manual/Underground_tank")
+                      }
+                      className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg"
+                    >
+                      Underground Tank
+                    </button>
                   </div>
                 )}
               </div>

@@ -10,6 +10,7 @@ import {
   Legend,
   Scatter,
 } from "recharts";
+import Column3DVisualization from "../../components/column_3d_helper";
 
 function ColumnSection({ b, h, cover, tieDia, barDia, numBars }) {
   if (!b || !h || !numBars) return null;
@@ -58,28 +59,28 @@ function ColumnSection({ b, h, cover, tieDia, barDia, numBars }) {
       const x =
         cover +
         (bars.filter((p) => p.y === cover).length * (b - 2 * cover)) /
-        (remaining + 1);
+          (remaining + 1);
       bars.push({ x, y: cover });
     }
     if (side === "bottom") {
       const x =
         cover +
         (bars.filter((p) => p.y === h - cover).length * (b - 2 * cover)) /
-        (remaining + 1);
+          (remaining + 1);
       bars.push({ x, y: h - cover });
     }
     if (side === "left") {
       const y =
         cover +
         (bars.filter((p) => p.x === cover).length * (h - 2 * cover)) /
-        (remaining + 1);
+          (remaining + 1);
       bars.push({ x: cover, y });
     }
     if (side === "right") {
       const y =
         cover +
         (bars.filter((p) => p.x === b - cover).length * (h - 2 * cover)) /
-        (remaining + 1);
+          (remaining + 1);
       bars.push({ x: b - cover, y });
     }
 
@@ -173,29 +174,29 @@ const ColumnApp = () => {
     const payload =
       mode === "uniaxial"
         ? {
-          mode,
-          b,
-          h,
-          N: N,
-          M: M,
-          cover,
-          tie_dia: tieDia,
-          max_agg: maxAgg,
-          bar_diameter: barDiameter,
-        }
+            mode,
+            b,
+            h,
+            N: N,
+            M: M,
+            cover,
+            tie_dia: tieDia,
+            max_agg: maxAgg,
+            bar_diameter: barDiameter,
+          }
         : {
-          mode,
-          b,
-          h,
-          N: N,
-          Mx: Mx,
-          My: My,
-          alpha,
-          cover,
-          tie_dia: tieDia,
-          max_agg: maxAgg,
-          bar_diameter: barDiameter,
-        };
+            mode,
+            b,
+            h,
+            N: N,
+            Mx: Mx,
+            My: My,
+            alpha,
+            cover,
+            tie_dia: tieDia,
+            max_agg: maxAgg,
+            bar_diameter: barDiameter,
+          };
 
     const res = await fetch(`${API}/design-column`, {
       method: "POST",
@@ -309,20 +310,20 @@ const ColumnApp = () => {
   const barSel = getBarSelection(result);
   const serverNumBars = barSel
     ? barSel.num_bars ??
-    barSel.numBars ??
-    barSel.num_bars ??
-    barSel.num_bars ??
-    null
+      barSel.numBars ??
+      barSel.num_bars ??
+      barSel.num_bars ??
+      null
     : null;
   const serverDia = barSel
     ? barSel.bar_dia ?? barSel.barDia ?? barSel.diameter ?? barSel.diam ?? null
     : null;
   const serverTotalArea = barSel
     ? barSel.total_area ??
-    barSel.totalArea ??
-    barSel.total_area ??
-    barSel.provided_area ??
-    null
+      barSel.totalArea ??
+      barSel.total_area ??
+      barSel.provided_area ??
+      null
     : null;
   const serverDistribution = barSel
     ? barSel.distribution ?? barSel.dist ?? null
@@ -546,10 +547,11 @@ const ColumnApp = () => {
             {result ? (
               <>
                 <div
-                  className={`p-4 rounded-lg mb-4 ${result.status === "success"
+                  className={`p-4 rounded-lg mb-4 ${
+                    result.status === "success"
                       ? "bg-green-50 text-green-800"
                       : "bg-red-50 text-red-800"
-                    }`}
+                  }`}
                 >
                   <p className="font-medium">Status: {result.status}</p>
                 </div>
@@ -641,6 +643,25 @@ const ColumnApp = () => {
                         )}
                       </button>
                     </div>
+
+                    {/* 3D Visualization Component */}
+                    <Column3DVisualization
+                      inputs={{
+                        b: b,
+                        h: h,
+                        N: N,
+                        M: mode === "uniaxial" ? M : undefined,
+                        Mx: mode === "biaxial" ? Mx : undefined,
+                        My: mode === "biaxial" ? My : undefined,
+                        cover: cover,
+                        tieDia: tieDia,
+                      }}
+                      results={result}
+                      theme="light"
+                      columnType={
+                        mode === "uniaxial" ? "rectangular" : "rectangular"
+                      }
+                    />
                   </div>
                 ) : (
                   <p className="text-red-600">{result.message}</p>
@@ -666,8 +687,6 @@ const ColumnApp = () => {
           </div>
         </div>
       )}
-
-
     </div>
   );
 };
@@ -707,10 +726,11 @@ const TabButton = ({ active, onClick, children, icon, disabled }) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${active
+    className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${
+      active
         ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
         : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+    } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
   >
     {icon}
     {children}
