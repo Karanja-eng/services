@@ -119,6 +119,7 @@ from calculations.takeoff.Door_window import router as Door_window_router
 from calculations.takeoff.underground_tank_router import (
     router as underground_tank_router,
 )
+from calculations.takeoff.stairs import router as stairs_router
 
 
 app.include_router(
@@ -142,6 +143,8 @@ app.include_router(
     prefix="/underground_tank_router",
     tags=["underground_tank_router"],
 )
+
+app.include_router(stairs_router, prefix="/stairs_router", tags=["stairs_router"])
 
 ## ##############   Ai Models  ##############
 

@@ -1,283 +1,229 @@
-import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import {
-  MessageSquare,
-  Paperclip,
-  Image,
-  FileText,
-  X,
-  HammerIcon,
+  Building2,
+  Calculator,
+  Ruler,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  DraftingCompass,
+  Box
 } from "lucide-react";
+import bgImage from "../Gemini_Generated_Image_nwcnzmnwcnzmnwcn (1).png";
+import { useNavigate } from "react-router-dom";
 
-const ChatPage = () => {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [attachments, setAttachments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const timerRef = useRef(null);
-  const fileInputRef = useRef(null);
+const ChatPage = ({ renderSearch, isDark }) => {
+  const navigate = useNavigate();
+  const [expandedSections, setExpandedSections] = useState({});
 
-  // Start and stop timer
-  const startTimer = () => {
-    const start = performance.now();
-    timerRef.current = setInterval(() => {
-      setElapsed(((performance.now() - start) / 1000).toFixed(1));
-    }, 100);
-  };
-  const stopTimer = () => {
-    clearInterval(timerRef.current);
-    timerRef.current = null;
-  };
-
-  // Animated dots for "thinking..."
-  const LoadingDots = () => {
-    const [dots, setDots] = useState("");
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setDots((prev) => (prev.length < 3 ? prev + "." : ""));
-      }, 400);
-      return () => clearInterval(interval);
-    }, []);
-    return <span>{dots}</span>;
-  };
-
-  const handleSend = async () => {
-    if (!input.trim() && attachments.length === 0) return;
-
-    const userMessage = {
-      text: input.trim(),
-      user: true,
-      attachments,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setAttachments([]);
-    setLoading(true);
-    setElapsed(0);
-    startTimer();
-
-    try {
-      const startTime = performance.now();
-     const formData = new FormData();
-formData.append("prompt", input);
-if (attachments.length > 0) {
-  formData.append("image", attachments[0].file); // only one image supported
-}
-
-const res = await axios.post("http://127.0.0.1:8000/generate", formData, {
-  headers: { "Content-Type": "multipart/form-data" },
-});
-      const endTime = performance.now();
-      const duration = ((endTime - startTime) / 1000).toFixed(2);
-
-      stopTimer();
-      setLoading(false);
-
-      const aiMessage = {
-        text: res.data.response,
-        user: false,
-        timestamp: new Date().toISOString(),
-        responseTime: duration,
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-    } catch (err) {
-      console.error("Backend error:", err);
-      stopTimer();
-      setLoading(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: "⚠️ Error connecting to AI backend.",
-          user: false,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-    }
-  };
-
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    const newAttachments = files.map((file) => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      url: URL.createObjectURL(file),
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
     }));
-    setAttachments((prev) => [...prev, ...newAttachments]);
-    e.target.value = null;
   };
 
-  const removeAttachment = (id) => {
-    setAttachments((prev) => prev.filter((a) => a.id !== id));
-  };
+  const navData = [
+    {
+      id: "structural",
+      title: "Structural Design",
+      icon: Building2,
+      color: "from-blue-500 to-blue-700",
+      bg: "bg-blue-50 dark:bg-blue-900/20",
+      description: "Analysis & Design",
+      children: [
+        {
+          id: "rconcrete",
+          title: "Reinforced Concrete",
+          type: "section",
+          items: [
+            { label: "Framed & Tall Buildings", path: "/structural/manual/eurocode_structural_app" },
+            { label: "Beams", path: "/structural/manual/beam" },
+            { label: "Columns", path: "/structural/manual/column" },
+            { label: "Stairs", path: "/structural/manual/stairs" },
+            { label: "Retaining Walls", path: "/structural/manual/retaining" },
+            { label: "Foundations", path: "/structural/manual/foundation" },
+            { label: "Walls", path: "/structural/manual/wall" },
+            { label: "Slabs", path: "/structural/manual/slabs" },
+          ]
+        },
+        {
+          id: "steel",
+          title: "Steel Design",
+          type: "section",
+          items: [
+            { label: "Member Design", path: "/structural/manual/steel" },
+            { label: "Weld Connections", path: "/structural/automatic/weld_connections" },
+            { label: "Bolt Connections", path: "/structural/automatic/bolt_connections" },
+          ]
+        }
+      ]
+    },
+    {
+      id: "quantity",
+      title: "Quantity Survey",
+      icon: Calculator,
+      color: "from-emerald-500 to-emerald-700",
+      bg: "bg-emerald-50 dark:bg-emerald-900/20",
+      description: "Taking off & BOQ",
+      children: [
+        {
+          id: "qs_manual",
+          title: "Manual Taking Off",
+          type: "section",
+          items: [
+            { label: "Taking Off", path: "/quantity/manual/taking-off" },
+            { label: "Approximate Quantities", path: "/quantity/manual/approximate" },
+            { label: "Bill of Quantities", path: "/quantity/manual/boq" },
+            { label: "Individual Members", path: "/quantity/manual/individual-members" },
+            { label: "Substructure Works", path: "/quantity/manual/substructure_works" },
+            { label: "Superstructure", path: "/quantity/manual/superstructure-takeoff" },
+            { label: "RCC Superstructure", path: "/quantity/manual/rcc-superstructure" },
+            { label: "Roof Works", path: "/quantity/manual/roof-taking-off" },
+            { label: "External Works", path: "/quantity/manual/external-taking-off" },
+            { label: "Drainage", path: "/quantity/manual/drainage-taking-off" },
+            { label: "Doors & Windows", path: "/quantity/manual/door_window" },
+            { label: "Internal Finishes", path: "/quantity/manual/internal_finishes" },
+            { label: "Underground Tank", path: "/quantity/manual/Underground_tank" },
+            { label: "Basement", path: "/quantity/manual/basement-taking-off" },
+            { label: "Stairs", path: "/quantity/manual/staircase_takeoff" },
+            { label: "Septic Tank", path: "/quantity/manual/septic-taking-off" },
+            { label: "Swimming Pool", path: "/quantity/manual/swimming-pool-taking-off" },
 
-  const getFileIcon = (fileType) => {
-    if (fileType.startsWith("image/")) return Image;
-    return FileText;
-  };
+          ]
+        }
+      ]
+    },
+    {
+      id: "surveying_tools",
+      title: "Surveying & CAD",
+      icon: Ruler,
+      color: "from-amber-500 to-amber-700",
+      bg: "bg-amber-50 dark:bg-amber-900/20",
+      description: "Map & Draw",
+      children: [
+        {
+          id: "surveying_main",
+          title: "Surveying Tools",
+          type: "section",
+          items: [
+            { label: "Main Surveying App", path: "/surveying" }
+          ]
+        },
+        {
+          id: "drawing_tools",
+          title: "Drawing & 3D",
+          type: "section",
+          items: [
+            { label: "2D CAD Drawer", path: "/drawing" },
+            { label: "3D Visualization", path: "/visualise" }
+          ]
+        }
+      ]
+    }
+  ];
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <MessageSquare size={64} className="mx-auto mb-4 text-gray-400" />
-              <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Karibu Fundi{" "}
-                <HammerIcon className="inline-block w-6 h-6 ml-2 text-black" />
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400">
-                Start a conversation with AI assistant
-              </p>
-            </div>
-          </div>
-        ) : (
-          messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.user ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-lg ${
-                  msg.user
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                } rounded-lg overflow-hidden`}
-              >
-                {msg.text && <div className="p-4">{msg.text}</div>}
-                {msg.responseTime && (
-                  <div className="px-4 pb-2 text-xs text-gray-500 dark:text-gray-400">
-                    ⏱ {msg.responseTime}s response
-                  </div>
-                )}
-                {msg.attachments?.length > 0 && (
-                  <div className="border-t border-white/20 dark:border-gray-600">
-                    {msg.attachments.map((file) => (
-                      <div
-                        key={file.id}
-                        className="p-3 flex items-center gap-3 hover:bg-black/5 dark:hover:bg-white/5"
-                      >
-                        {file.type.startsWith("image/") ? (
-                          <a
-                            href={file.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block w-full"
-                          >
-                            <img
-                              src={file.url}
-                              alt={file.name}
-                              className="max-w-[200px] max-h-[150px] rounded object-cover mx-auto"
-                            />
-                          </a>
-                        ) : (
-                          <a
-                            href={file.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm"
-                          >
-                            <FileText className="w-4 h-4" />
-                            <span className="underline">{file.name}</span>
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
-
-        {loading && (
-          <div className="flex items-center text-gray-500 dark:text-gray-400 mt-2 gap-2">
-            <div className="loader-dot" />
-            <p>
-              Thinking
-              <LoadingDots /> ⏱ {elapsed}s
-            </p>
-          </div>
-        )}
+    <div className="relative h-full w-full overflow-hidden flex flex-col items-center justify-center p-4 bg-transparent">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <img
+          src={bgImage}
+          alt="Civil Engineering Background"
+          className="w-full h-full object-cover"
+        />
+        <div className={`absolute inset-0 backdrop-blur-[1px] transition-colors duration-500 ${isDark ? 'bg-gradient-to-br from-gray-900/80 via-gray-900/80 to-blue-950/80' : 'bg-gradient-to-br from-blue-50/40 via-white/40 to-blue-100/40'}`} />
       </div>
 
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        {/* Attachments Preview */}
-        {attachments.length > 0 && (
-          <div className="mb-4 flex flex-wrap gap-2">
-            {attachments.map((file) => (
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-7xl flex flex-col items-center h-full pt-12 pb-12">
+        <div className="text-center mb-24 space-y-2 flex-shrink-0 w-full flex flex-col items-center">
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-md">
+            <span className="text-blue-600 dark:text-blue-400">Fundi</span> Let's Build
+          </h1>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-xl mx-auto drop-shadow-sm">
+            Professional tools for every stage.
+          </p>
+
+          {/* Render Search Here */}
+          <div className="w-full max-w-xl mt-4 z-50">
+            {renderSearch && renderSearch()}
+          </div>
+        </div>
+
+        <div className="flex-1 w-full overflow-hidden flex items-start justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full px-4 max-w-6xl">
+            {navData.map((feature) => (
               <div
-                key={file.id}
-                className="group relative flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-2 pr-8"
+                key={feature.id}
+                className="bg-white/40 dark:bg-black/30 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-xl overflow-hidden flex flex-col shadow-lg h-full max-h-[50vh]"
               >
-                {React.createElement(getFileIcon(file.type), {
-                  className: "w-4 h-4 text-gray-500 dark:text-gray-400",
-                })}
-                <span className="text-sm text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
-                  {file.name}
-                </span>
-                <button
-                  onClick={() => removeAttachment(file.id)}
-                  className="absolute right-2 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
-                >
-                  <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
-                </button>
+                {/* Header */}
+                <div className={`p-3 bg-gradient-to-r ${feature.color} text-white flex items-center gap-3 shrink-0`}>
+                  <div className="p-1.5 bg-white/20 rounded-lg">
+                    <feature.icon size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold">{feature.title}</h3>
+                    <p className="text-[10px] text-white/80">{feature.description}</p>
+                  </div>
+                </div>
+
+                {/* Body - SCROLLABLE */}
+                <div className="p-2 overflow-y-auto custom-scrollbar space-y-2 flex-1">
+                  {feature.children.map((section) => (
+                    <div key={section.id} className="bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5 overflow-hidden">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
+                        className="w-full flex items-center justify-between p-2 text-xs font-medium text-gray-900 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          {section.id.includes('concrete') && <Box size={12} className="text-blue-600 dark:text-blue-300" />}
+                          {section.id.includes('steel') && <DraftingCompass size={12} className="text-blue-600 dark:text-blue-300" />}
+                          {section.id.includes('qs') && <Calculator size={12} className="text-emerald-600 dark:text-emerald-300" />}
+                          {section.title}
+                        </span>
+                        {expandedSections[section.id] ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                      </button>
+
+                      {/* Dropdown Items */}
+                      {expandedSections[section.id] && (
+                        <div className="bg-black/5 dark:bg-black/20 p-1 space-y-0.5">
+                          {section.items.map((item, idx) => (
+                            <button
+                              key={idx}
+                              onClick={(e) => { e.stopPropagation(); navigate(item.path); }}
+                              className="w-full text-left p-1.5 text-[11px] text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded transition-all pl-5 relative"
+                            >
+                              <span className="absolute left-1.5 top-1/2 -translate-y-1/2">
+                                <Circle size={3} className="fill-current" />
+                              </span>
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
-        )}
-
-        {/* Input */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-          <input
-            ref={fileInputRef}
-            type="file"
-            onChange={handleFileSelect}
-            multiple
-            accept="image/*,.pdf,.doc,.docx"
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
-          >
-            <Paperclip className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleSend}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            Send
-          </button>
         </div>
       </div>
-
-      {/* Loader animation styles */}
       <style>{`
-        .loader-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background-color: #3b82f6;
-          animation: pulse 1s infinite alternate;
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
         }
-        @keyframes pulse {
-          0% { transform: scale(1); opacity: 0.6; }
-          100% { transform: scale(1.8); opacity: 1; }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
         }
       `}</style>
     </div>
