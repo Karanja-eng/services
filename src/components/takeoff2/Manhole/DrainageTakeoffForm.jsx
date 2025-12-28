@@ -118,7 +118,7 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8000/calculate",
+        "http://localhost:8001/manholes_router/calculate",
         projectData
       );
       onCalculationComplete(response.data);
@@ -146,8 +146,8 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-6 py-3 font-medium capitalize ${activeTab === tab
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
               }`}
           >
             {tab}
@@ -577,19 +577,248 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
               />
             </div>
 
+            <div className="md:col-span-3">
+              <button
+                onClick={addManhole}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+              >
+                Add Manhole
+              </button>
+            </div>
+          </div>
+
+          {/* Manholes List */}
+          {projectData.manholes.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">
+                Added Manholes
+              </h3>
+              <div className="space-y-2">
+                {projectData.manholes.map((mh, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                  >
+                    <span className="font-medium">{mh.id}</span>
+                    <span className="text-sm text-gray-600">
+                      {mh.type === "circ" ? (
+                        `Circular Ø${mh.internal_diameter}m`
+                      ) : (
+                        `Rect ${mh.internal_length}x${mh.internal_width}m`
+                      )}
+                      | IL: {mh.invert_level}m
+                    </span>
+                    <button
+                      onClick={() => removeManhole(mh.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pipes Tab */}
+      {activeTab === "pipes" && (
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Pipe Details
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-slate-700 rounded">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity
+                Pipe ID
+              </label>
+              <input
+                type="text"
+                value={currentPipe.id}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, id: e.target.value }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., P1"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                From Manhole
+              </label>
+              <select
+                value={currentPipe.from_point}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, from_point: e.target.value }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Manhole</option>
+                {projectData.manholes.map((mh) => (
+                  <option key={mh.id} value={mh.id}>
+                    {mh.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                To Manhole
+              </label>
+              <select
+                value={currentPipe.to_point}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, to_point: e.target.value }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Manhole</option>
+                {projectData.manholes.map((mh) => (
+                  <option key={mh.id} value={mh.id}>
+                    {mh.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Length (m)
               </label>
               <input
                 type="number"
-                min="1"
-                value={currentPipe.quantity}
+                step="0.1"
+                value={currentPipe.length}
                 onChange={(e) =>
-                  setCurrentPipe((prev) => ({
-                    ...prev,
-                    quantity: parseInt(e.target.value),
-                  }))
+                  setCurrentPipe((prev) => ({ ...prev, length: parseFloat(e.target.value) }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Diameter (mm)
+              </label>
+              <input
+                type="number"
+                step="1"
+                value={currentPipe.diameter_mm}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, diameter_mm: parseFloat(e.target.value) }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Material
+              </label>
+              <select
+                value={currentPipe.pipe_material}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, pipe_material: e.target.value }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="upvc">uPVC</option>
+                <option value="pcc">Concrete (PCC)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Trench Depth Start (m)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={currentPipe.trench_depth_start}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, trench_depth_start: parseFloat(e.target.value) }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Trench Depth End (m)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={currentPipe.trench_depth_end}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, trench_depth_end: parseFloat(e.target.value) }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Trench Width (m)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={currentPipe.trench_width}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, trench_width: parseFloat(e.target.value) }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bedding Type
+              </label>
+              <select
+                value={currentPipe.bedding_type}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, bedding_type: e.target.value }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="granular">Granular</option>
+                <option value="sand">Sand</option>
+                <option value="concrete_bed">Concrete Bed</option>
+                <option value="concrete_surround">Concrete Surround</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Surround Thickness (m)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={currentPipe.surround_thickness}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, surround_thickness: parseFloat(e.target.value) }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gradient (%)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={currentPipe.gradient}
+                onChange={(e) =>
+                  setCurrentPipe((prev) => ({ ...prev, gradient: parseFloat(e.target.value) }))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -749,8 +978,8 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
           onClick={handleCalculate}
           disabled={loading}
           className={`px-8 py-3 rounded font-semibold transition ${loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-600 text-white hover:bg-green-700"
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-600 text-white hover:bg-green-700"
             }`}
         >
           {loading ? "Calculating..." : "Calculate Takeoff"}

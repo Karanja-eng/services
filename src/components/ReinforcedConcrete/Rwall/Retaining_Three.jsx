@@ -1,4 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, PerspectiveCamera, Text } from "@react-three/drei";
 import * as THREE from "three";
 
 /**
@@ -517,8 +519,7 @@ export function DrawRetainingWallMRW1({
   );
 }
 
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, Text } from "@react-three/drei";
+// Imports moved to top
 
 /**
  * MRW2: BASEMENT RETAINING WALL
@@ -1612,6 +1613,9 @@ export function DrawRetainingWallMRW3C({
     joint: "#222222",
     waterBar: "#0066cc",
   },
+  kickerHeight = 0.075,
+  kickerBelowGround = 0.15,
+  hasCavityDrain = true,
   showConcrete = true,
   showRebar = true,
   showLabels = true,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calculator,
   FileText,
@@ -7,8 +7,12 @@ import {
   Trash2,
   Building,
 } from "lucide-react";
+import axios from "axios";
+import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
 
 const RCCSuperstructureApp = () => {
+  const [activeTab, setActiveTab] = useState("calculator");
   const [columns, setColumns] = useState([
     { id: 1, width: 0.3, depth: 0.3, height: 3.0, mark: "C1" },
   ]);
@@ -31,8 +35,13 @@ const RCCSuperstructureApp = () => {
     bar_spacing: 150,
   });
 
-  const [results, setResults] = useState(null);
+  const [takeoffData, setTakeoffData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
+
+  useEffect(() => {
+    calculateTakeoff();
+  }, []); // Run on mount
 
   const addColumn = () => {
     setColumns([
@@ -111,21 +120,64 @@ const RCCSuperstructureApp = () => {
   const calculateTakeoff = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        "http://localhost:8001/api/calculate-superstructure",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ columns, beams, slabs, settings }),
+      const payload = {
+        columns: columns.map(c => ({
+          id: c.id,
+          width: c.width,
+          depth: c.depth,
+          height: c.height,
+          mark: c.mark
+        })),
+        beams: beams.map(b => ({
+          id: b.id,
+          length: b.length,
+          width: b.width,
+          depth: b.depth,
+          mark: b.mark
+        })),
+        slabs: slabs.map(s => ({
+          id: s.id,
+          area: s.area,
+          thickness: s.thickness,
+          mark: s.mark
+        })),
+        settings: {
+          conc_grade: settings.conc_grade,
+          conc_grade_name: settings.conc_grade_name,
+          reinf_density: settings.reinf_density,
+          form_type: settings.form_type,
+          include_wastage: settings.include_wastage,
+          conc_wastage: settings.conc_wastage,
+          reinf_wastage: settings.reinf_wastage,
+          cover: settings.cover,
+          bar_spacing: settings.bar_spacing
         }
-      );
+      };
 
-      if (!response.ok) throw new Error("Calculation failed");
-      const data = await response.json();
-      setResults(data);
+      const response = await axios.post("http://localhost:8001/rc_superstructure_router/api/calculate-superstructure", payload);
+      const data = response.data;
+
+      const items = [
+        { id: 1, billNo: "1", itemNo: "1", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in columns`, unit: "m³", quantity: data.col_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 2, billNo: "2", itemNo: "2", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in beams`, unit: "m³", quantity: data.beam_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 3, billNo: "3", itemNo: "3", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in slabs`, unit: "m³", quantity: data.slab_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 4, billNo: "4", itemNo: "4", description: "High tensile steel reinforcement bars to BS 4449 in columns", unit: "kg", quantity: data.col_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 5, billNo: "5", itemNo: "5", description: "High tensile steel reinforcement bars to BS 4449 in beams", unit: "kg", quantity: data.beam_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 6, billNo: "6", itemNo: "6", description: "High tensile steel reinforcement bars to BS 4449 in slabs", unit: "kg", quantity: data.slab_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 7, billNo: "7", itemNo: "7", description: `Formwork type ${settings.form_type} to columns including props and supports`, unit: "m²", quantity: data.col_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 8, billNo: "8", itemNo: "8", description: `Formwork type ${settings.form_type} to beams including soffit and sides`, unit: "m²", quantity: data.beam_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 9, billNo: "9", itemNo: "9", description: `Formwork type ${settings.form_type} to slabs including soffit and edges`, unit: "m²", quantity: data.slab_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 10, billNo: "10", itemNo: "10", description: "Curing of concrete for 7 days with hessian and polythene", unit: "m²", quantity: data.total_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 11, billNo: "11", itemNo: "11", description: "Testing of concrete including cube samples at 7, 14, and 28 days", unit: "Item", quantity: 1, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        { id: 12, billNo: "12", itemNo: "12", description: "Striking and cleaning formwork and storage", unit: "m²", quantity: data.total_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+      ].filter(item => item.quantity > 0);
+
+      setTakeoffData(items);
+      setEditorKey(prev => prev + 1);
+
     } catch (err) {
-      const demoResults = calculateDemo();
-      setResults(demoResults);
+      console.error(err);
+      alert("Calculation failed. Backend might be offline.");
     } finally {
       setLoading(false);
     }
@@ -219,492 +271,320 @@ const RCCSuperstructureApp = () => {
     };
   };
 
-  const takeoffItems = results
-    ? [
-        {
-          no: 1,
-          description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in columns`,
-          unit: "m³",
-          quantity: results.col_conc_with_wastage,
-        },
-        {
-          no: 2,
-          description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in beams`,
-          unit: "m³",
-          quantity: results.beam_conc_with_wastage,
-        },
-        {
-          no: 3,
-          description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in slabs`,
-          unit: "m³",
-          quantity: results.slab_conc_with_wastage,
-        },
-        {
-          no: 4,
-          description:
-            "High tensile steel reinforcement bars to BS 4449 in columns",
-          unit: "kg",
-          quantity: results.col_reinf_kg,
-        },
-        {
-          no: 5,
-          description:
-            "High tensile steel reinforcement bars to BS 4449 in beams",
-          unit: "kg",
-          quantity: results.beam_reinf_kg,
-        },
-        {
-          no: 6,
-          description:
-            "High tensile steel reinforcement bars to BS 4449 in slabs",
-          unit: "kg",
-          quantity: results.slab_reinf_kg,
-        },
-        {
-          no: 7,
-          description: `Formwork type ${settings.form_type} to columns including props and supports`,
-          unit: "m²",
-          quantity: results.col_form_m2,
-        },
-        {
-          no: 8,
-          description: `Formwork type ${settings.form_type} to beams including soffit and sides`,
-          unit: "m²",
-          quantity: results.beam_form_m2,
-        },
-        {
-          no: 9,
-          description: `Formwork type ${settings.form_type} to slabs including soffit and edges`,
-          unit: "m²",
-          quantity: results.slab_form_m2,
-        },
-        {
-          no: 10,
-          description:
-            "Curing of concrete for 7 days with hessian and polythene",
-          unit: "m²",
-          quantity: results.total_form_m2,
-        },
-        {
-          no: 11,
-          description:
-            "Testing of concrete including cube samples at 7, 14, and 28 days",
-          unit: "Item",
-          quantity: 1,
-        },
-        {
-          no: 12,
-          description: "Striking and cleaning formwork and storage",
-          unit: "m²",
-          quantity: results.total_form_m2,
-        },
-      ]
-    : [];
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex bg-gray-50 h-screen flex-col">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-3">
-            <Building className="w-8 h-8 text-gray-700" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                RCC Superstructure Takeoff
-              </h1>
-              <p className="text-sm text-gray-500">
-                Columns, Beams & Slabs Calculator
-              </p>
-            </div>
+      <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 flex-none">
+        <div className="flex items-center gap-3 mb-4">
+          <Building className="w-8 h-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              RCC Superstructure Takeoff
+            </h1>
+            <p className="text-sm text-gray-600">
+              Columns, Beams & Slabs
+            </p>
           </div>
         </div>
+
+        <UniversalTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+        />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Input Panel */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Columns Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">Columns</h3>
-                <button
-                  onClick={addColumn}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {columns.map((col, idx) => (
-                  <div
-                    key={col.id}
-                    className="p-3 bg-gray-50 rounded border border-gray-200"
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+        {activeTab === "calculator" && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Input Panel */}
+            <div className="lg:col-span-1 space-y-4">
+              {/* Columns Section */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">Columns</h3>
+                  <button
+                    onClick={addColumn}
+                    className="text-gray-600 hover:text-gray-900"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Column {idx + 1}
-                      </span>
-                      {columns.length > 1 && (
-                        <button
-                          onClick={() => removeColumn(col.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={col.width}
-                        onChange={(e) =>
-                          updateColumn(col.id, "width", e.target.value)
-                        }
-                        placeholder="W(m)"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={col.depth}
-                        onChange={(e) =>
-                          updateColumn(col.id, "depth", e.target.value)
-                        }
-                        placeholder="D(m)"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={col.height}
-                        onChange={(e) =>
-                          updateColumn(col.id, "height", e.target.value)
-                        }
-                        placeholder="H(m)"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Beams Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">Beams</h3>
-                <button
-                  onClick={addBeam}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {beams.map((beam, idx) => (
-                  <div
-                    key={beam.id}
-                    className="p-3 bg-gray-50 rounded border border-gray-200"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Beam {idx + 1}
-                      </span>
-                      {beams.length > 1 && (
-                        <button
-                          onClick={() => removeBeam(beam.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={beam.length}
-                        onChange={(e) =>
-                          updateBeam(beam.id, "length", e.target.value)
-                        }
-                        placeholder="L(m)"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={beam.width}
-                        onChange={(e) =>
-                          updateBeam(beam.id, "width", e.target.value)
-                        }
-                        placeholder="W(m)"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={beam.depth}
-                        onChange={(e) =>
-                          updateBeam(beam.id, "depth", e.target.value)
-                        }
-                        placeholder="D(m)"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Slabs Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">Slabs</h3>
-                <button
-                  onClick={addSlab}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {slabs.map((slab, idx) => (
-                  <div
-                    key={slab.id}
-                    className="p-3 bg-gray-50 rounded border border-gray-200"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Slab {idx + 1}
-                      </span>
-                      {slabs.length > 1 && (
-                        <button
-                          onClick={() => removeSlab(slab.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={slab.area}
-                        onChange={(e) =>
-                          updateSlab(slab.id, "area", e.target.value)
-                        }
-                        placeholder="Area(m²)"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={slab.thickness}
-                        onChange={(e) =>
-                          updateSlab(slab.id, "thickness", e.target.value)
-                        }
-                        placeholder="T(m)"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Settings */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Settings</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Concrete Grade
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.conc_grade_name}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        conc_grade_name: e.target.value,
-                      })
-                    }
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Reinf. Density (kg/m³)
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.reinf_density}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        reinf_density: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Formwork Type
-                  </label>
-                  <select
-                    value={settings.form_type}
-                    onChange={(e) =>
-                      setSettings({ ...settings, form_type: e.target.value })
-                    }
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                  >
-                    <option value="F1">F1 - Basic</option>
-                    <option value="F2">F2 - Standard</option>
-                    <option value="F3">F3 - Fair Faced</option>
-                    <option value="F4">F4 - Premium</option>
-                  </select>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={settings.include_wastage}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        include_wastage: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 text-gray-800 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 text-xs font-medium text-gray-700">
-                    Include Wastage
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={calculateTakeoff}
-              disabled={loading}
-              className="w-full bg-gray-800 text-white py-3 rounded-lg font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <span>Calculating...</span>
-              ) : (
-                <>
-                  <Calculator className="w-5 h-5" />
-                  Calculate Takeoff
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Results Panel */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-6 h-6 text-gray-700" />
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Bill of Quantities
-                  </h2>
-                </div>
-                {results && (
-                  <button className="text-gray-600 hover:text-gray-900 flex items-center gap-2 text-sm">
-                    <Download className="w-4 h-4" />
-                    Export
+                    <Plus className="w-5 h-5" />
                   </button>
+                </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                  {columns.length === 0 && <p className="text-sm text-gray-500 italic">No columns added</p>}
+                  {columns.map((col, idx) => (
+                    <div
+                      key={col.id}
+                      className="p-3 bg-gray-50 rounded border border-gray-200"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">
+                          {col.mark || `C${idx + 1}`}
+                        </span>
+                        {columns.length > 0 && (
+                          <button
+                            onClick={() => removeColumn(col.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={col.width}
+                          onChange={(e) =>
+                            updateColumn(col.id, "width", e.target.value)
+                          }
+                          placeholder="W(m)"
+                          className="px-2 py-1 text-sm border border-gray-300 rounded w-full"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={col.depth}
+                          onChange={(e) =>
+                            updateColumn(col.id, "depth", e.target.value)
+                          }
+                          placeholder="D(m)"
+                          className="px-2 py-1 text-sm border border-gray-300 rounded w-full"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={col.height}
+                          onChange={(e) =>
+                            updateColumn(col.id, "height", e.target.value)
+                          }
+                          placeholder="H(m)"
+                          className="px-2 py-1 text-sm border border-gray-300 rounded w-full"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Beams Section */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">Beams</h3>
+                  <button
+                    onClick={addBeam}
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                  {beams.length === 0 && <p className="text-sm text-gray-500 italic">No beams added</p>}
+                  {beams.map((beam, idx) => (
+                    <div
+                      key={beam.id}
+                      className="p-3 bg-gray-50 rounded border border-gray-200"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">
+                          {beam.mark || `B${idx + 1}`}
+                        </span>
+                        {beams.length > 0 && (
+                          <button
+                            onClick={() => removeBeam(beam.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={beam.length}
+                          onChange={(e) =>
+                            updateBeam(beam.id, "length", e.target.value)
+                          }
+                          placeholder="L(m)"
+                          className="px-2 py-1 text-sm border border-gray-300 rounded w-full"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={beam.width}
+                          onChange={(e) =>
+                            updateBeam(beam.id, "width", e.target.value)
+                          }
+                          placeholder="W(m)"
+                          className="px-2 py-1 text-sm border border-gray-300 rounded w-full"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={beam.depth}
+                          onChange={(e) =>
+                            updateBeam(beam.id, "depth", e.target.value)
+                          }
+                          placeholder="D(m)"
+                          className="px-2 py-1 text-sm border border-gray-300 rounded w-full"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Slabs Section */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">Slabs</h3>
+                  <button
+                    onClick={addSlab}
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                  {slabs.length === 0 && <p className="text-sm text-gray-500 italic">No slabs added</p>}
+                  {slabs.map((slab, idx) => (
+                    <div
+                      key={slab.id}
+                      className="p-3 bg-gray-50 rounded border border-gray-200"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">
+                          {slab.mark || `S${idx + 1}`}
+                        </span>
+                        {slabs.length > 0 && (
+                          <button
+                            onClick={() => removeSlab(slab.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={slab.area}
+                          onChange={(e) =>
+                            updateSlab(slab.id, "area", e.target.value)
+                          }
+                          placeholder="Area(m²)"
+                          className="px-2 py-1 text-sm border border-gray-300 rounded w-full"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={slab.thickness}
+                          onChange={(e) =>
+                            updateSlab(slab.id, "thickness", e.target.value)
+                          }
+                          placeholder="T(m)"
+                          className="px-2 py-1 text-sm border border-gray-300 rounded w-full"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Settings */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Settings</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={settings.include_wastage}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          include_wastage: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-gray-800 border-gray-300 rounded"
+                    />
+                    <label className="text-xs font-medium text-gray-700">Include Wastage</label>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={calculateTakeoff}
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:bg-blue-400 flex items-center justify-center gap-2 shadow-sm"
+              >
+                {loading ? (
+                  <span>Calculating...</span>
+                ) : (
+                  <>
+                    <Calculator className="w-5 h-5" />
+                    Calculate Takeoff
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Info Panel */}
+            <div className="lg:col-span-2">
+              <div className="bg-blue-50 p-6 rounded-lg border border-blue-100 flex flex-col h-full">
+                <h3 className="text-lg font-bold text-blue-900 mb-2">Instructions</h3>
+                <ul className="list-disc pl-5 text-sm text-blue-800 space-y-1 mb-6">
+                  <li>Add Columns, Beams, and Slabs using the + buttons.</li>
+                  <li>Enter dimensions for each element.</li>
+                  <li>Adjust settings if needed (grades, wastage).</li>
+                  <li>Click Calculate to generate BOQ.</li>
+                  <li>Check the <strong>Takeoff</strong> tab for detailed breakdown.</li>
+                </ul>
+
+                {takeoffData.length > 0 && (
+                  <div className="bg-white p-4 rounded shadow-sm border">
+                    <h4 className="font-bold text-gray-800 mb-2">Quick Summary</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Total Items:</span>
+                        <span className="font-mono">{takeoffData.length}</span>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-
-              {!results ? (
-                <div className="text-center py-16">
-                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">
-                    Add structural elements and click Calculate
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b-2 border-gray-900">
-                        <th className="text-left py-3 px-2 font-semibold text-gray-900">
-                          No.
-                        </th>
-                        <th className="text-left py-3 px-2 font-semibold text-gray-900">
-                          Description
-                        </th>
-                        <th className="text-center py-3 px-2 font-semibold text-gray-900">
-                          Unit
-                        </th>
-                        <th className="text-right py-3 px-2 font-semibold text-gray-900">
-                          Quantity
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {takeoffItems.map(
-                        (item, idx) =>
-                          item.quantity > 0 && (
-                            <tr
-                              key={idx}
-                              className="border-b border-gray-200 hover:bg-gray-50"
-                            >
-                              <td className="py-3 px-2 text-gray-700">
-                                {item.no}
-                              </td>
-                              <td className="py-3 px-2 text-gray-900">
-                                {item.description}
-                              </td>
-                              <td className="py-3 px-2 text-center text-gray-700">
-                                {item.unit}
-                              </td>
-                              <td className="py-3 px-2 text-right font-mono text-gray-900">
-                                {item.unit === "Item"
-                                  ? "Item"
-                                  : item.quantity.toFixed(3)}
-                              </td>
-                            </tr>
-                          )
-                      )}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t-2 border-gray-900 font-semibold">
-                        <td colSpan="3" className="py-3 px-2 text-gray-900">
-                          Total Concrete Volume (with wastage)
-                        </td>
-                        <td className="py-3 px-2 text-right font-mono text-gray-900">
-                          {results.total_conc_with_wastage.toFixed(3)} m³
-                        </td>
-                      </tr>
-                      <tr className="font-semibold">
-                        <td colSpan="3" className="py-3 px-2 text-gray-900">
-                          Total Reinforcement
-                        </td>
-                        <td className="py-3 px-2 text-right font-mono text-gray-900">
-                          {results.total_reinf_kg.toFixed(2)} kg
-                        </td>
-                      </tr>
-                      <tr className="font-semibold">
-                        <td colSpan="3" className="py-3 px-2 text-gray-900">
-                          Total Formwork
-                        </td>
-                        <td className="py-3 px-2 text-right font-mono text-gray-900">
-                          {results.total_form_m2.toFixed(2)} m²
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              )}
             </div>
           </div>
-        </div>
+        )}
+
+        {activeTab === "takeoff" && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden">
+            <EnglishMethodTakeoffSheet
+              key={editorKey}
+              initialItems={takeoffData}
+              onChange={setTakeoffData}
+              projectInfo={{
+                projectName: "RCC Superstructure",
+                clientName: "Client Name",
+                projectDate: new Date().toLocaleDateString()
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === "sheet" && (
+          <div className="h-full">
+            <UniversalSheet items={takeoffData} />
+          </div>
+        )}
+
+        {activeTab === "boq" && (
+          <div className="h-full">
+            <UniversalBOQ items={takeoffData} />
+          </div>
+        )}
       </div>
     </div>
   );

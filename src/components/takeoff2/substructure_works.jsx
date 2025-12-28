@@ -3,12 +3,21 @@ import {
   Calculator,
   FileText,
   Building2,
-  Download,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import axios from "axios";
+import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
 
 const SubstructureTakeoffApp = () => {
+
+  const [activeTab, setActiveTab] = useState("calculator");
+  const [takeoffData, setTakeoffData] = useState([]);
+  const [editorKey, setEditorKey] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
     plan_type: "rectangle",
     ext_length: "",
@@ -26,29 +35,26 @@ const SubstructureTakeoffApp = () => {
     recess_wid: "",
     has_cavity_wall: false,
     cavity_thick: "",
-    wall_thick: "",
-    veg_depth: "",
-    trench_depth: "",
-    reduce_level_depth: "",
-    conc_thick_strip: "",
-    hardcore_thick: "",
-    blinding_thick: "",
+    wall_thick: 0.2,
+    veg_depth: 0.15,
+    trench_depth: 1.0,
+    reduce_level_depth: 0.2,
+    conc_thick_strip: 0.2,
+    hardcore_thick: 0.3,
+    blinding_thick: 0.05,
     dpm_thick: "",
     anti_termite: false,
     has_formwork: false,
     has_reinforce: false,
     rebar_len: "",
-    clear_extra: "",
-    reinstate_width: "0.4",
-    backfill_reuse_factor: "0.5",
+    clear_extra: 1.0,
+    reinstate_width: 0.4,
+    backfill_reuse_factor: 0.5,
   });
 
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [expandedSections, setExpandedSections] = useState({
     plan: true,
-    walls: false,
+    walls: true,
     features: false,
     depths: false,
     additional: false,
@@ -69,8 +75,9 @@ const SubstructureTakeoffApp = () => {
     }));
   };
 
-  const handleSubmit = async () => {
+  const calculateQuantities = async () => {
     setLoading(true);
+    setTakeoffData([]);
     setError("");
 
     try {
@@ -96,58 +103,41 @@ const SubstructureTakeoffApp = () => {
         dpm_thick: parseFloat(formData.dpm_thick) || 0,
         rebar_len: parseFloat(formData.rebar_len) || 0,
         clear_extra: parseFloat(formData.clear_extra) || 0,
-        reinstate_width: parseFloat(formData.reinstate_width) || 0.4,
-        backfill_reuse_factor:
-          parseFloat(formData.backfill_reuse_factor) || 0.5,
+        reinstate_width: parseFloat(formData.reinstate_width) || 0,
+        backfill_reuse_factor: parseFloat(formData.backfill_reuse_factor) || 0,
       };
 
-      // Replace with your FastAPI backend URL
-      const response = await fetch("http://localhost:8000/api/calculate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await axios.post("http://localhost:8001/rc_substructure_router/api/calculate", payload);
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error("Calculation failed");
+      if (data && data.takeoff_items) {
+        const formattedItems = data.takeoff_items.map((item, index) => ({
+          id: index + 1,
+          billNo: item.item_no.split('.')[0],
+          itemNo: item.item_no,
+          description: item.description,
+          unit: item.unit,
+          quantity: item.quantity,
+          rate: 0, // Rate is not returned from this specific backend yet
+          amount: 0,
+          dimensions: [],
+          isHeader: false
+        }));
+
+        // Grouping items by their prefix if needed, or just adding headers manually if possible
+        // But the backend returns a flat list. 
+        setTakeoffData(formattedItems);
+        setEditorKey(prev => prev + 1);
+        setActiveTab("sheet");
       }
-
-      const data = await response.json();
-      setResults(data);
     } catch (err) {
-      setError("Failed to calculate. Please check your inputs and try again.");
-      console.error(err);
+      console.error("Calculation error:", err);
+      setError("Calculation failed. Backend might be offline.");
     } finally {
       setLoading(false);
     }
   };
 
-  const exportToCSV = () => {
-    if (!results) return;
-
-    const headers = ["Item No.", "Description", "Quantity", "Unit", "Remarks"];
-    const rows = results.takeoff_items.map((item) => [
-      item.item_no,
-      item.description,
-      item.quantity,
-      item.unit,
-      item.remarks,
-    ]);
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "substructure_takeoff.csv";
-    a.click();
-  };
 
   const SectionHeader = ({ title, section, icon: Icon }) => (
     <div
@@ -212,6 +202,7 @@ const SubstructureTakeoffApp = () => {
     </div>
   );
 
+
   const SelectField = ({ label, name, options }) => (
     <div className="flex flex-col">
       <label className="text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -231,405 +222,111 @@ const SubstructureTakeoffApp = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center gap-3">
-            <Building2 className="w-8 h-8 text-gray-700" />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                Substructure Quantity Takeoff
-              </h1>
-              <p className="text-gray-600">
-                Professional civil engineering calculations and BOQ generation
-              </p>
-            </div>
+    <div className="flex bg-gray-50 h-screen flex-col">
+      <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-none">
+        <div className="flex items-center gap-3 mb-4">
+          <Building2 className="w-8 h-8 text-blue-800" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Substructure Takeoff</h1>
+            <p className="text-sm text-gray-500">Foundations & Substructure Works</p>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Input Form */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <Calculator className="w-6 h-6" />
-              Input Parameters
-            </h2>
-
-            <div className="space-y-4">
-              {/* Plan Details Section */}
-              <div className="space-y-3">
-                <SectionHeader
-                  title="Plan Details"
-                  section="plan"
-                  icon={Building2}
-                />
-                {expandedSections.plan && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                    <SelectField
-                      label="Plan Type"
-                      name="plan_type"
-                      options={[
-                        { value: "rectangle", label: "Rectangle" },
-                        { value: "semi-circle", label: "Semi-Circle" },
-                        { value: "complex", label: "Complex" },
-                      ]}
-                    />
-                    <InputField
-                      label="External Length"
-                      name="ext_length"
-                      unit="m"
-                    />
-                    <InputField
-                      label="External Width"
-                      name="ext_width"
-                      unit="m"
-                    />
-                    <InputField
-                      label="Extra Clearance"
-                      name="clear_extra"
-                      unit="m"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Walls Section */}
-              <div className="space-y-3">
-                <SectionHeader
-                  title="Wall Configuration"
-                  section="walls"
-                  icon={FileText}
-                />
-                {expandedSections.walls && (
-                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <InputField
-                        label="Wall Thickness"
-                        name="wall_thick"
-                        unit="m"
-                      />
-                      <div className="flex items-end">
-                        <CheckboxField
-                          label="Has Internal Walls"
-                          name="has_internal_walls"
-                        />
-                      </div>
-                    </div>
-                    {formData.has_internal_walls && (
-                      <InputField
-                        label="Internal Wall Length"
-                        name="int_wall_len"
-                        unit="m"
-                      />
-                    )}
-                    <div className="flex items-center gap-4">
-                      <CheckboxField
-                        label="Cavity Wall"
-                        name="has_cavity_wall"
-                      />
-                    </div>
-                    {formData.has_cavity_wall && (
-                      <InputField
-                        label="Cavity Thickness"
-                        name="cavity_thick"
-                        unit="m"
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Features Section */}
-              <div className="space-y-3">
-                <SectionHeader
-                  title="Additional Features"
-                  section="features"
-                  icon={Building2}
-                />
-                {expandedSections.features && (
-                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="space-y-3">
-                      <CheckboxField label="Has Columns" name="has_columns" />
-                      {formData.has_columns && (
-                        <div className="grid grid-cols-2 gap-4 pl-6">
-                          <InputField
-                            label="Number of Columns"
-                            name="num_columns"
-                            step="1"
-                          />
-                          <InputField
-                            label="Column Size"
-                            name="col_size"
-                            unit="m"
-                          />
-                          <InputField
-                            label="Column Base Size"
-                            name="col_base_size"
-                            unit="m"
-                          />
-                          <InputField
-                            label="Column Excavation Depth"
-                            name="col_excav_depth"
-                            unit="m"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      <CheckboxField
-                        label="Has Recess/Void"
-                        name="has_recess"
-                      />
-                      {formData.has_recess && (
-                        <div className="grid grid-cols-2 gap-4 pl-6">
-                          <SelectField
-                            label="Recess Type"
-                            name="recess_type"
-                            options={[
-                              { value: "corner", label: "Corner" },
-                              { value: "center", label: "Center" },
-                              { value: "bay", label: "Bay" },
-                            ]}
-                          />
-                          <div />
-                          <InputField
-                            label="Recess Length"
-                            name="recess_len"
-                            unit="m"
-                          />
-                          <InputField
-                            label="Recess Width"
-                            name="recess_wid"
-                            unit="m"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Depths & Thicknesses */}
-              <div className="space-y-3">
-                <SectionHeader
-                  title="Depths & Thicknesses"
-                  section="depths"
-                  icon={FileText}
-                />
-                {expandedSections.depths && (
-                  <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                    <InputField
-                      label="Vegetable Soil Depth"
-                      name="veg_depth"
-                      unit="m"
-                    />
-                    <InputField
-                      label="Trench Depth"
-                      name="trench_depth"
-                      unit="m"
-                    />
-                    <InputField
-                      label="Reduce Level Depth"
-                      name="reduce_level_depth"
-                      unit="m"
-                    />
-                    <InputField
-                      label="Strip Concrete Thickness"
-                      name="conc_thick_strip"
-                      unit="m"
-                    />
-                    <InputField
-                      label="Hardcore Thickness"
-                      name="hardcore_thick"
-                      unit="m"
-                    />
-                    <InputField
-                      label="Blinding Thickness"
-                      name="blinding_thick"
-                      unit="m"
-                    />
-                    <InputField
-                      label="DPM Thickness"
-                      name="dpm_thick"
-                      unit="mm"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Additional Options */}
-              <div className="space-y-3">
-                <SectionHeader
-                  title="Additional Options"
-                  section="additional"
-                  icon={FileText}
-                />
-                {expandedSections.additional && (
-                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-2 gap-4">
-                      <CheckboxField
-                        label="Anti-Termite Treatment"
-                        name="anti_termite"
-                      />
-                      <CheckboxField
-                        label="Formwork Required"
-                        name="has_formwork"
-                      />
-                      <CheckboxField
-                        label="Reinforcement Required"
-                        name="has_reinforce"
-                      />
-                    </div>
-                    {formData.has_reinforce && (
-                      <InputField
-                        label="Total Rebar Length"
-                        name="rebar_len"
-                        unit="m"
-                      />
-                    )}
-                    <div className="grid grid-cols-2 gap-4">
-                      <InputField
-                        label="Reinstate Width"
-                        name="reinstate_width"
-                        unit="m"
-                      />
-                      <InputField
-                        label="Backfill Reuse Factor"
-                        name="backfill_reuse_factor"
-                        step="0.1"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                  {error}
-                </div>
-              )}
-
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Calculating...
-                  </>
-                ) : (
-                  <>
-                    <Calculator className="w-5 h-5" />
-                    Calculate Quantities
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Results Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FileText className="w-6 h-6" />
-                Bill of Quantities
-              </h2>
-              {results && (
-                <button
-                  onClick={exportToCSV}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  Export CSV
-                </button>
-              )}
-            </div>
-
-            {!results ? (
-              <div className="flex flex-col items-center justify-center h-96 text-gray-400">
-                <FileText className="w-16 h-16 mb-4" />
-                <p className="text-lg">
-                  Enter parameters and calculate to see results
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6 max-h-[800px] overflow-y-auto">
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(results.summary).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="bg-gray-50 p-4 rounded-lg border border-gray-200"
-                    >
-                      <p className="text-xs text-gray-600 uppercase tracking-wide">
-                        {key.replace(/_/g, " ")}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-800 mt-1">
-                        {value.toFixed(2)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Takeoff Table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead className="sticky top-0 bg-white">
-                      <tr className="bg-gray-200 border-b-2 border-gray-300">
-                        <th className="text-left p-3 font-semibold text-gray-700 border-r border-gray-300">
-                          Item No.
-                        </th>
-                        <th className="text-left p-3 font-semibold text-gray-700 border-r border-gray-300">
-                          Description
-                        </th>
-                        <th className="text-right p-3 font-semibold text-gray-700 border-r border-gray-300">
-                          Qty
-                        </th>
-                        <th className="text-center p-3 font-semibold text-gray-700 border-r border-gray-300">
-                          Unit
-                        </th>
-                        <th className="text-left p-3 font-semibold text-gray-700">
-                          Remarks
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.takeoff_items.map((item, index) => (
-                        <tr
-                          key={index}
-                          className={`border-b border-gray-200 ${
-                            index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                          }`}
-                        >
-                          <td className="p-3 text-sm font-medium text-gray-700 border-r border-gray-200">
-                            {item.item_no}
-                          </td>
-                          <td className="p-3 text-sm text-gray-700 border-r border-gray-200">
-                            {item.description}
-                          </td>
-                          <td className="p-3 text-sm text-right font-semibold text-gray-800 border-r border-gray-200">
-                            {item.quantity}
-                          </td>
-                          <td className="p-3 text-sm text-center text-gray-600 border-r border-gray-200">
-                            {item.unit}
-                          </td>
-                          <td className="p-3 text-sm text-gray-600">
-                            {item.remarks}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <UniversalTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+        />
       </div>
+
+      <main className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+        {activeTab === 'calculator' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Inputs */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Calculator className="w-6 h-6" />
+                  Input Parameters
+                </h2>
+
+                <div className="space-y-3">
+                  {/* Plan Details Section */}
+                  <div className="space-y-3">
+                    <SectionHeader title="Plan Details" section="plan" icon={Building2} />
+                    {expandedSections.plan && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <SelectField label="Plan Type" name="plan_type" options={[{ value: "rectangle", label: "Rectangle" }]} />
+                        <InputField label="Ext. Length (m)" name="ext_length" />
+                        <InputField label="Ext. Width (m)" name="ext_width" />
+                        <InputField label="Internal Wall Len (m)" name="int_wall_len" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Walls & Depths */}
+                  <div className="space-y-3">
+                    <SectionHeader title="Foundation Specs" section="walls" icon={FileText} />
+                    {expandedSections.walls && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <InputField label="Wall Thickness (m)" name="wall_thick" />
+                        <InputField label="Trench Depth (m)" name="trench_depth" />
+                        <InputField label="Strip Conc Thk (m)" name="conc_thick_strip" />
+                        <InputField label="Veg Soil Depth (m)" name="veg_depth" />
+                        <InputField label="Hardcore Thk (m)" name="hardcore_thick" />
+                        <InputField label="Ex. Clearance (m)" name="clear_extra" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 sticky top-0">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Calculate</h2>
+                <button
+                  onClick={calculateQuantities}
+                  disabled={loading}
+                  className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <Calculator className="w-5 h-5" />
+                  {loading ? "Calculating..." : "Calculate Quantities"}
+                </button>
+                {takeoffData.length > 0 && <div className="mt-4 text-green-700 text-sm bg-green-50 p-2 rounded border border-green-200">Done! Check Takeoff/Sheet/BOQ tabs.</div>}
+                {error && <div className="mt-4 text-red-700 text-sm bg-red-50 p-2 rounded border border-red-200">{error}</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'takeoff' && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden">
+            <EnglishMethodTakeoffSheet
+              key={editorKey}
+              initialItems={takeoffData}
+              onChange={setTakeoffData}
+              projectInfo={{
+                projectName: "Substructure Works",
+                clientName: "",
+                projectDate: new Date().toLocaleDateString()
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === 'sheet' && (
+          <div className="h-full">
+            <UniversalSheet items={takeoffData} />
+          </div>
+        )}
+
+        {activeTab === 'boq' && (
+          <div className="h-full">
+            <UniversalBOQ items={takeoffData} />
+          </div>
+        )}
+      </main>
     </div>
   );
 };

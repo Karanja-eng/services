@@ -43,11 +43,16 @@ import BoltedConnectionsModule from "./SteelDesign/bolted_connections_frontend";
 import WeldedConnectionsModule from "./SteelDesign/welded_joints_frontend";
 
 //////////////////////////TakingOff /////////////////////
-import QuantityTakeoff from "./takeoff2/QuantityTakeoff";
-import ApproximateQuantities from "./takeoff2/ApproximateQuantities";
-import BOQ from "./takeoff2/BOQ";
+// REPLACED COMPONENTS
+import EnglishMethodTakeoffSheet from "./takeoff2/ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalSheet, UniversalBOQ } from "./takeoff2/universal_component";
+
+// import QuantityTakeoff from "./takeoff2/QuantityTakeoff"; // REMOVED
+// import ApproximateQuantities from "./takeoff2/ApproximateQuantities"; // REMOVED
+// import BOQ from "./takeoff2/BOQ"; // REMOVED
+
 import DocumentViewer from "./takeoff2/DocumentViewer";
-import IndividualMembers from "./takeoff2/IndividualMembers";
+
 import DrainageComponenet from "./takeoff2/Manhole/MainTakeoff";
 import RoofComponent from "./takeoff2/RoofWorks/RoofMain";
 import ExternalWorksComponent from "./takeoff2/ExternalWorks/MainExternalWorks";
@@ -66,39 +71,68 @@ import StaircaseTakeoffApp from "./takeoff2/Stairs";
 //////////////////////////TakingOff /////////////////////
 
 // Wrapper components for navigation
-const QuantityTakeoffWrapper = () => {
+const QuantityTakeoffWrapper = ({ takeoffData, setTakeoffData }) => {
   const navigate = useNavigate();
   return (
-    <QuantityTakeoff
-      onViewDiagram={() => { }}
-      onGoToApproximate={() => navigate("/quantity/manual/approximate")}
-      onGoToBOQ={() => navigate("/quantity/manual/boq")}
-      onGoToDocuments={() => navigate("/quantity/manual/documents")}
-    />
+    <div className="h-full flex flex-col">
+      <div className="flex justify-between items-center p-4 bg-white border-b">
+        <h1 className="text-2xl font-bold">Quantity Takeoff (English Method)</h1>
+        <div className="flex gap-2">
+          <button onClick={() => navigate("/quantity/manual/approximate")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">View Sheet</button>
+          <button onClick={() => navigate("/quantity/manual/boq")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">View BOQ</button>
+          <button onClick={() => navigate("/quantity/manual/documents")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Documents</button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto bg-gray-50 p-4">
+        <EnglishMethodTakeoffSheet
+          initialItems={takeoffData}
+          onChange={setTakeoffData}
+          projectInfo={{
+            projectName: "Manual Takeoff Project",
+            clientName: "Client Name",
+            projectDate: new Date().toLocaleDateString()
+          }}
+        />
+      </div>
+    </div>
   );
 };
 
-const ApproximateQuantitiesWrapper = () => {
+const ApproximateQuantitiesWrapper = ({ takeoffData }) => {
   const navigate = useNavigate();
   return (
-    <ApproximateQuantities
-      onViewDiagram={() => { }}
-      onGoToTakeoff={() => navigate("/quantity/manual/taking-off")}
-      onGoToBOQ={() => navigate("/quantity/manual/boq")}
-      onGoToDocuments={() => navigate("/quantity/manual/documents")}
-    />
+    <div className="h-full flex flex-col">
+      <div className="flex justify-between items-center p-4 bg-white border-b">
+        <h1 className="text-2xl font-bold">Dimension Paper</h1>
+        <div className="flex gap-2">
+          <button onClick={() => navigate("/quantity/manual/taking-off")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Edit Takeoff</button>
+          <button onClick={() => navigate("/quantity/manual/boq")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">View BOQ</button>
+          <button onClick={() => navigate("/quantity/manual/documents")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Documents</button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto bg-gray-50 p-4">
+        <UniversalSheet items={takeoffData} />
+      </div>
+    </div>
   );
 };
 
-const BOQWrapper = () => {
+const BOQWrapper = ({ takeoffData }) => {
   const navigate = useNavigate();
   return (
-    <BOQ
-      onViewDiagram={() => { }}
-      onGoToTakeoff={() => navigate("/quantity/manual/taking-off")}
-      onGoToApproximate={() => navigate("/quantity/manual/approximate")}
-      onGoToDocuments={() => navigate("/quantity/manual/documents")}
-    />
+    <div className="h-full flex flex-col">
+      <div className="flex justify-between items-center p-4 bg-white border-b">
+        <h1 className="text-2xl font-bold">Bill of Quantities</h1>
+        <div className="flex gap-2">
+          <button onClick={() => navigate("/quantity/manual/taking-off")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Edit Takeoff</button>
+          <button onClick={() => navigate("/quantity/manual/approximate")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">View Sheet</button>
+          <button onClick={() => navigate("/quantity/manual/documents")} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Documents</button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto bg-gray-50 p-4">
+        <UniversalBOQ items={takeoffData} />
+      </div>
+    </div>
   );
 };
 
@@ -247,6 +281,9 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
   const [loading, setLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false); // Toggle for chat results view
   const fileInputRef = useRef(null);
+
+  // Shared Takeoff State
+  const [takeoffData, setTakeoffData] = useState([]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -479,8 +516,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
       {/* Main Content Area */}
       <div className="flex-1 relative z-0 pt-0 overflow-hidden">
         <main className={`h-full w-full overflow-y-auto transition-all duration-300 ${isHomePage ? '' : 'pt-16'}`}>
-          {/* Pass renderSearchInput to children if they are standard Routes, but since Routes are nested below, we must pass it via cloneElement or Context. 
-              However, since we have direct route definitions, we can pass it as a prop to ChatPage explicitly.
+          {/* Pass renderSearchInput to children if they are standard Routes, but since Routes are nested below, we must pass it as a prop to ChatPage explicitly.
           */}
           <Routes>
             <Route path="/" element={<ChatPage isDark={isDark} renderSearch={renderSearchInput} />} />
@@ -539,21 +575,18 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             />
             <Route
               path="/quantity/manual/taking-off"
-              element={<QuantityTakeoffWrapper />}
+              element={<QuantityTakeoffWrapper takeoffData={takeoffData} setTakeoffData={setTakeoffData} />}
             />
             <Route
               path="/quantity/manual/approximate"
-              element={<ApproximateQuantitiesWrapper />}
+              element={<ApproximateQuantitiesWrapper takeoffData={takeoffData} />}
             />
-            <Route path="/quantity/manual/boq" element={<BOQWrapper />} />
+            <Route path="/quantity/manual/boq" element={<BOQWrapper takeoffData={takeoffData} />} />
             <Route
               path="/quantity/manual/documents"
               element={<DocumentViewerWrapper />}
             />
-            <Route
-              path="/quantity/manual/individual-members"
-              element={<IndividualMembers isDark={isDark} />}
-            />
+
 
             {/* // Taking Off ///////////////*/}
             <Route

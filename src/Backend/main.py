@@ -7,7 +7,7 @@ import uvicorn
 from Databases import init_db, check_db_connection, get_db
 
 app = FastAPI(
-    title="Engineering Services API",
+    title="Fundi API",
     description="Comprehensive engineering calculations with database persistence",
     version="2.0.0"
 )
@@ -26,7 +26,7 @@ app.add_middleware(
 async def startup_event():
     """Initialize database on application startup"""
     print("\n" + "="*60)
-    print("🚀 Starting Engineering Services API")
+    print("🚀 Starting Fundi API")
     print("="*60)
     
     # Check database connection
@@ -51,7 +51,7 @@ async def startup_event():
 async def root():
     """Root endpoint with API information"""
     return {
-        "message": "Engineering Services API",
+        "message": "Fundi API",
         "version": "2.0.0",
         "status": "running",
         "features": [
@@ -79,10 +79,8 @@ async def health_check():
 
 @app.get("/db-status", tags=["Health"])
 async def database_status(db: Session = Depends(get_db)):
-    """Detailed database status"""
     try:
-        # Try to execute a simple query
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         return {
             "status": "connected",
             "message": "Database is operational",
@@ -94,10 +92,7 @@ async def database_status(db: Session = Depends(get_db)):
             }
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        return {"status": "error", "message": str(e)}
 #######  Surveying #####
 
 from calculations.surveying.surveying_backend import router as surveying_backend_router
@@ -120,6 +115,11 @@ from calculations.takeoff.underground_tank_router import (
     router as underground_tank_router,
 )
 from calculations.takeoff.stairs import router as stairs_router
+from calculations.takeoff.internal_finishes import router as internal_finishes_router
+from calculations.takeoff.Superstructure_takeoff import router as superstructure_router
+from calculations.takeoff.superstructure import router as rc_superstructure_router
+from calculations.takeoff.substructure import router as rc_substructure_router
+
 
 
 app.include_router(
@@ -127,7 +127,7 @@ app.include_router(
 )
 app.include_router(ManholesRouter, prefix="/manholes_router", tags=["manholes_router"])
 app.include_router(
-    ExternalWorksRouter, prefix="/exteral_works", tags=["manholes_router"]
+    ExternalWorksRouter, prefix="/external_works", tags=["manholes_router"]
 )
 app.include_router(RoofWorksRouter, prefix="/roof_router", tags=["roof_router"])
 app.include_router(septicRouter, prefix="/septicRouter", tags=["septic_Router"])
@@ -145,6 +145,14 @@ app.include_router(
 )
 
 app.include_router(stairs_router, prefix="/stairs_router", tags=["stairs_router"])
+app.include_router(
+    internal_finishes_router,
+    prefix="/internal_finishes_router",
+    tags=["internal_finishes_router"],
+)
+app.include_router(superstructure_router, prefix="/superstructure_router", tags=["superstructure_router"])
+app.include_router(rc_superstructure_router, prefix="/rc_superstructure_router", tags=["rc_superstructure_router"])
+app.include_router(rc_substructure_router, prefix="/rc_substructure_router", tags=["rc_substructure_router"])
 
 ## ##############   Ai Models  ##############
 

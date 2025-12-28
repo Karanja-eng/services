@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
@@ -11,10 +12,10 @@ import {
   Settings,
   Save,
   Upload,
-  FileText,
-  Calculator,
   Download,
 } from "lucide-react";
+import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 
 // Roof 3D Viewer Component
 function RoofStructure({ config }) {
@@ -446,14 +447,203 @@ export default function RoofComponent({ isDark = false }) {
     covering: "tiles",
   });
 
+  const [takeoffData, setTakeoffData] = useState([]);
+  const [editorKey, setEditorKey] = useState(0);
+
   const updateConfig = (key, value) => {
     setRoofConfig((prev) => ({ ...prev, [key]: value }));
   };
 
+  const calculateTakeoffItems = () => {
+    const items = [];
+    const { buildingLength, buildingWidth, wallThickness, overhang, pitchAngle, trussSpacing, covering } = roofConfig;
+
+    // Helper calcs
+    const pitchRad = (pitchAngle * Math.PI) / 180;
+    const effectiveLength = buildingLength + 2 * wallThickness + 2 * overhang;
+    const effectiveWidth = buildingWidth + 2 * wallThickness + 2 * overhang;
+    const rafterLength = (buildingWidth / 2) / Math.cos(pitchRad);
+    const numTrusses = Math.floor(buildingLength / trussSpacing) + 1;
+    const roofArea = 2 * effectiveLength * rafterLength;
+    const wallPlateLen = 2 * (buildingLength + 2 * wallThickness);
+
+    // 1. Wall Plate
+    items.push({
+      billNo: "B.1",
+      description: "Wall plates, 100 x 50mm sawn softwood, treated with preservative",
+      unit: "m",
+      quantity: wallPlateLen,
+      rate: 850,
+      amount: 0
+    });
+
+    // 2. Principal Rafters
+    const totalRafterLen = 2 * numTrusses * rafterLength;
+    items.push({
+      billNo: "B.2",
+      description: "Principal rafters, 150 x 50mm sawn softwood GS grade",
+      unit: "m",
+      quantity: totalRafterLen,
+      rate: 1200,
+      amount: 0
+    });
+
+    // 3. Tie Beams
+    const totalTieBeamLen = numTrusses * effectiveWidth;
+    items.push({
+      billNo: "B.3",
+      description: "Tie beams, 150 x 50mm sawn softwood",
+      unit: "m",
+      quantity: totalTieBeamLen,
+      rate: 1200,
+      amount: 0
+    });
+
+    // 4. Ridge Board
+    items.push({
+      billNo: "B.4",
+      description: "Ridge board, 175 x 25mm sawn softwood",
+      unit: "m",
+      quantity: effectiveLength,
+      rate: 750,
+      amount: 0
+    });
+
+    // 5. Purlins
+    items.push({
+      billNo: "B.5",
+      description: "Purlins, 75 x 75mm sawn softwood",
+      unit: "m",
+      quantity: 2 * effectiveLength,
+      rate: 600,
+      amount: 0
+    });
+
+    // 6. Struts
+    const totalStrutLen = 4 * numTrusses * (buildingWidth / 4);
+    items.push({
+      billNo: "B.6",
+      description: "Struts and ties, 100 x 50mm sawn softwood",
+      unit: "m",
+      quantity: totalStrutLen,
+      rate: 850,
+      amount: 0
+    });
+
+    // 7. Roof Covering
+    const coveringName = covering === "tiles" ? "Clay roof tiles" :
+      covering === "acSheets" ? "A.C. corrugated sheets" :
+        covering === "giSheets" ? "G.I. corrugated sheets" : "Roof covering";
+
+    items.push({
+      billNo: "C.2",
+      description: `${coveringName}, fixed as specified`,
+      unit: "m²",
+      quantity: roofArea * 1.1, // 10% waste
+      rate: covering === "tiles" ? 2500 : 1500,
+      amount: 0
+    });
+
+    // 8. Fascia
+    items.push({
+      billNo: "C.3",
+      description: "Fascia Board 200 x 25mm sawn softwood",
+      unit: "m",
+      quantity: 2 * effectiveLength,
+      rate: 0,
+      amount: 0
+    });
+
+    // 9. Gutters
+    items.push({
+      billNo: "C.4",
+      description: "PVC Gutters 100mm half round",
+      unit: "m",
+      quantity: 2 * (buildingLength + 2 * wallThickness),
+      rate: 0,
+      amount: 0
+    });
+
+    return items;
+  };
+
+  const handleCalculate = async () => {
+    try {
+      const payload = {
+        columns: [], // Roof CAD currently doesn't have these in UI, but model expects them?
+        beams: [],   // Or maybe it uses a different endpoint?
+        slabs: [],
+        settings: {
+          conc_grade: "1:1.5:3",
+          conc_grade_name: "C25",
+          reinf_density: 120,
+          form_type: "F3",
+          include_wastage: true,
+          conc_wastage: 5.0,
+          reinf_wastage: 2.5,
+          cover: 25,
+          bar_spacing: 150
+        }
+      };
+
+      // Wait, RoofBackend.py has /api/calculate which takes RoofConfig model.
+      // Let's use the correct payload for RoofBackend.
+      const roofPayload = {
+        roof_type: roofConfig.roofType,
+        building_length: roofConfig.buildingLength,
+        building_width: roofConfig.buildingWidth,
+        wall_thickness: roofConfig.wallThickness,
+        overhang: roofConfig.overhang,
+        pitch_angle: roofConfig.pitchAngle,
+        truss_spacing: roofConfig.trussSpacing,
+        rafter_spacing: roofConfig.rafterSpacing,
+        material: roofConfig.material,
+        covering: roofConfig.covering
+      };
+
+      const response = await axios.post("http://localhost:8001/roof_router/api/calculate", roofPayload);
+      const data = response.data;
+
+      if (data && data.takeoff_items) {
+        const formattedItems = data.takeoff_items.map((item, index) => ({
+          id: index + 1,
+          billNo: item.bill_no || item.item_no || `R.${index + 1}`,
+          itemNo: (index + 1).toString(),
+          description: item.description,
+          unit: item.unit,
+          quantity: item.quantity,
+          rate: item.rate || 0,
+          amount: item.amount || 0,
+          dimensions: [],
+          isHeader: false
+        }));
+        setTakeoffData(formattedItems);
+        setEditorKey(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error calculating roof takeoff:", error);
+      // Fallback to local calculation if API fails?
+      const rawItems = calculateTakeoffItems();
+      const formattedItems = rawItems.map((item, index) => ({
+        ...item,
+        id: index + 1,
+        itemNo: (index + 1).toString(),
+        dimensions: [],
+        isHeader: false
+      }));
+      setTakeoffData(formattedItems);
+    }
+  };
+
+  // Initial calculation
+  useEffect(() => {
+    handleCalculate();
+  }, []);
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-80 bg-white dark:bg-slate-800 shadow-lg overflow-y-auto">
+      <div className="w-80 bg-white dark:bg-slate-800 shadow-lg overflow-y-auto z-10">
         <div className="p-4 bg-blue-600 text-white">
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Settings className="w-6 h-6" />
@@ -462,39 +652,29 @@ export default function RoofComponent({ isDark = false }) {
           <p className="text-sm mt-1">Professional Roof Design Tool</p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab("3d")}
-            className={`flex-1 py-3 px-4 font-medium ${activeTab === "3d"
-                ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:bg-gray-50"
-              }`}
-          >
-            3D View
-          </button>
-          <button
-            onClick={() => setActiveTab("takeoff")}
-            className={`flex-1 py-3 px-4 font-medium ${activeTab === "takeoff"
-                ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:bg-gray-50"
-              }`}
-          >
-            Take-off
-          </button>
-          <button
-            onClick={() => setActiveTab("boq")}
-            className={`flex-1 py-3 px-4 font-medium ${activeTab === "boq"
-                ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:bg-gray-50"
-              }`}
-          >
-            BOQ
-          </button>
-        </div>
+        {/* Tab Navigation (Custom buttons for sidebar look, or use UniversalTabs if we move it to top? No, keep existing sidebar structure but maybe integrate UniversalTabs there?
+           Actually, the UniversalTabs is a horizontal top bar. The existing design uses a sidebar left menu.
+           I should keep the sidebar menu for navigation to ensure it fits the layout unless the user demanded universal tabs everywhere.
+           The prompt says "The integration also requires a UniversalTabs component for consistent navigation".
+           If I replace the sidebar tabs with UniversalTabs (horizontal), it might break the layout (sidebar vs main content).
+           However, I can just Rendering UniversalTabs inside the sidebar is weird (horizontal in vertical).
+           I will replace the top header tabs (Wait, the original code had tabs in sidebar?).
+           Yes, "Tab Navigation" div in logic I read (lines 580-617) is INSIDE the sidebar.
+           I will replace those buttons with a vertical version of tabs? Or just keep them but map them to the same values.
+           Actually, to be truly "Universal", I should probably use the UniversalTabs component. 
+           But UniversalTabs is styled as a horizontal bar (flex-row).
+           I will use UniversalTabs in the MAIN CONTENT AREA if appropriate, or just keep manual tabs but ensure they map to the same expected keys.
+           Wait, `Stairs.jsx` put UniversalTabs in the main content area.
+           `RoofMain.jsx` has a sidebar. 
+           If I put UniversalTabs in the top of the main content area, I can remove the sidebar tabs.
+           That effectively moves navigation to the top. This is likely the "consistent" look requested.
+           So I will REMOVE tabs from Sidebar and put UniversalTabs in the Main Content Area.
+           This aligns with the goal of "Universal".
+        */}
 
-        {/* Configuration Panel */}
-        <div className="p-4 space-y-4">
+        {/* Configuration Panel - Sidebar Content */}
+        <div className="p-4 space-y-4 border-t">
+          {/* ... config inputs ... */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
               Roof Type
@@ -526,7 +706,6 @@ export default function RoofComponent({ isDark = false }) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Width (m)
@@ -558,7 +737,6 @@ export default function RoofComponent({ isDark = false }) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Overhang (m)
@@ -606,7 +784,6 @@ export default function RoofComponent({ isDark = false }) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Rafter Spacing (m)
@@ -673,34 +850,46 @@ export default function RoofComponent({ isDark = false }) {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-white dark:bg-slate-800 shadow-sm p-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">
-              {activeTab === "3d" && "3D Roof Visualization"}
-              {activeTab === "takeoff" && "Quantity Take-off"}
-              {activeTab === "boq" && "Bill of Quantities"}
-            </h2>
-            <p className="text-sm text-gray-600">
-              {activeTab === "3d" && "Interactive 3D model of roof structure"}
-              {activeTab === "takeoff" &&
-                "Automated quantity calculations (SMM7)"}
-              {activeTab === "boq" && "Detailed bill of quantities"}
-            </p>
+        <div className="bg-white dark:bg-slate-800 shadow-sm p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">
+                {activeTab === "3d" && "3D Roof Visualization"}
+                {activeTab === "takeoff" && "Quantity Take-off [Auto]"}
+                {activeTab === "sheet" && "Standard Takeoff Sheet"}
+                {activeTab === "boq" && "Bill of Quantities"}
+              </h2>
+              <p className="text-sm text-gray-600">
+                {activeTab === "3d" && "Interactive 3D model of roof structure"}
+                {activeTab === "takeoff" && "Automated quantity calculations (SMM7)"}
+                {activeTab === "boq" && "Detailed bill of quantities"}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200">
+                Print
+              </button>
+              <button
+                onClick={handleCalculate}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Calculate
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200">
-              Print
-            </button>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              Calculate
-            </button>
-          </div>
+
+          {/* Universal Tabs */}
+          <UniversalTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            tabs={['3d', 'takeoff', 'sheet', 'boq']}
+          />
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-4 overflow-hidden relative">
           {activeTab === "3d" && (
             <div className="w-full h-full bg-gradient-to-b from-sky-100 to-gray-100 rounded-lg shadow-inner">
               <Canvas>
@@ -728,1031 +917,25 @@ export default function RoofComponent({ isDark = false }) {
 
           {activeTab === "takeoff" && (
             <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 h-full overflow-auto">
-              <h3 className="text-lg font-bold mb-4">
-                DIMENSION PAPER - ROOF STRUCTURE
-              </h3>
-              <p className="text-sm text-gray-600 mb-6">
-                Project: {roofConfig.roofType.toUpperCase()} ROOF | Date:{" "}
-                {new Date().toLocaleDateString()}
-              </p>
-
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-gray-800">
-                    <th className="text-left p-2 w-24">TIMESING</th>
-                    <th className="text-left p-2 w-32">DIMENSION</th>
-                    <th className="text-left p-2 w-32">SQUARING</th>
-                    <th className="text-left p-2">DESCRIPTION</th>
-                    <th className="text-right p-2 w-32">QUANTITY</th>
-                  </tr>
-                </thead>
-                <tbody className="font-mono text-xs">
-                  <tr className="border-b">
-                    <td className="p-2 align-top">2</td>
-                    <td className="p-2 align-top">
-                      {(
-                        roofConfig.buildingLength +
-                        2 * roofConfig.wallThickness
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2 align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness)
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      Wall Plate
-                      <br />
-                      100 x 50mm sawn softwood
-                      <br />
-                      bedded in c.m. (1:3)
-                    </td>
-                    <td className="p-2 text-right align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness)
-                      ).toFixed(2)}{" "}
-                      m
-                    </td>
-                  </tr>
-
-                  <tr className="border-b">
-                    <td className="p-2 align-top">
-                      {Math.floor(
-                        roofConfig.buildingLength / roofConfig.trussSpacing
-                      ) + 1}
-                    </td>
-                    <td className="p-2 align-top">
-                      {(
-                        roofConfig.buildingWidth +
-                        2 * roofConfig.wallThickness +
-                        2 * roofConfig.overhang
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2 align-top">
-                      {(
-                        (Math.floor(
-                          roofConfig.buildingLength / roofConfig.trussSpacing
-                        ) +
-                          1) *
-                        (roofConfig.buildingWidth +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang)
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      Tie Beams
-                      <br />
-                      150 x 50mm sawn softwood
-                      <br />
-                      bolted to rafters
-                    </td>
-                    <td className="p-2 text-right align-top">
-                      {(
-                        (Math.floor(
-                          roofConfig.buildingLength / roofConfig.trussSpacing
-                        ) +
-                          1) *
-                        (roofConfig.buildingWidth +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang)
-                      ).toFixed(2)}{" "}
-                      m
-                    </td>
-                  </tr>
-
-                  <tr className="border-b">
-                    <td className="p-2 align-top">1</td>
-                    <td className="p-2 align-top">
-                      {(
-                        roofConfig.buildingLength +
-                        2 * roofConfig.wallThickness +
-                        2 * roofConfig.overhang
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2 align-top">
-                      {(
-                        roofConfig.buildingLength +
-                        2 * roofConfig.wallThickness +
-                        2 * roofConfig.overhang
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      Ridge Board
-                      <br />
-                      175 x 25mm sawn softwood
-                      <br />
-                      fixed to rafters
-                    </td>
-                    <td className="p-2 text-right align-top">
-                      {(
-                        roofConfig.buildingLength +
-                        2 * roofConfig.wallThickness +
-                        2 * roofConfig.overhang
-                      ).toFixed(2)}{" "}
-                      m
-                    </td>
-                  </tr>
-
-                  <tr className="border-b">
-                    <td className="p-2 align-top">2</td>
-                    <td className="p-2 align-top">
-                      {(
-                        roofConfig.buildingLength +
-                        2 * roofConfig.wallThickness +
-                        2 * roofConfig.overhang
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2 align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang)
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      Purlins
-                      <br />
-                      75 x 75mm sawn softwood
-                      <br />
-                      supported on struts
-                    </td>
-                    <td className="p-2 text-right align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang)
-                      ).toFixed(2)}{" "}
-                      m
-                    </td>
-                  </tr>
-
-                  <tr className="border-b bg-gray-50">
-                    <td colSpan="4" className="p-2 font-bold">
-                      ROOF COVERING
-                    </td>
-                    <td className="p-2"></td>
-                  </tr>
-
-                  <tr className="border-b">
-                    <td className="p-2 align-top">1</td>
-                    <td className="p-2 align-top">
-                      {(
-                        roofConfig.buildingLength +
-                        2 * roofConfig.wallThickness +
-                        2 * roofConfig.overhang
-                      ).toFixed(2)}
-                      <br />
-                      {(
-                        roofConfig.buildingWidth /
-                        2 /
-                        Math.cos((roofConfig.pitchAngle * Math.PI) / 180)
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2 align-top">
-                      {(
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        (roofConfig.buildingWidth /
-                          2 /
-                          Math.cos((roofConfig.pitchAngle * Math.PI) / 180))
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      Roof Covering
-                      <br />
-                      {roofConfig.covering === "tiles"
-                        ? "Clay tiles"
-                        : roofConfig.covering === "acSheets"
-                          ? "A.C. corrugated sheets"
-                          : roofConfig.covering === "giSheets"
-                            ? "G.I. corrugated sheets"
-                            : roofConfig.covering}
-                      <br />
-                      to manufacturer's specification
-                    </td>
-                    <td className="p-2 text-right align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        (roofConfig.buildingWidth /
-                          2 /
-                          Math.cos((roofConfig.pitchAngle * Math.PI) / 180))
-                      ).toFixed(2)}{" "}
-                      m²
-                    </td>
-                  </tr>
-
-                  <tr className="border-b">
-                    <td className="p-2 align-top">2</td>
-                    <td className="p-2 align-top">
-                      {(
-                        roofConfig.buildingLength +
-                        2 * roofConfig.wallThickness +
-                        2 * roofConfig.overhang
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2 align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang)
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      Fascia Board
-                      <br />
-                      200 x 25mm sawn softwood
-                      <br />
-                      treated with preservative
-                    </td>
-                    <td className="p-2 text-right align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang)
-                      ).toFixed(2)}{" "}
-                      m
-                    </td>
-                  </tr>
-
-                  <tr className="border-b">
-                    <td className="p-2 align-top">2</td>
-                    <td className="p-2 align-top">
-                      {(
-                        roofConfig.buildingLength +
-                        2 * roofConfig.wallThickness
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2 align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness)
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      PVC Gutters
-                      <br />
-                      100mm half round
-                      <br />
-                      inc. brackets at 1m c/c
-                    </td>
-                    <td className="p-2 text-right align-top">
-                      {(
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness)
-                      ).toFixed(2)}{" "}
-                      m
-                    </td>
-                  </tr>
-
-                  <tr className="border-b">
-                    <td className="p-2 align-top">4</td>
-                    <td className="p-2 align-top">3.00</td>
-                    <td className="p-2 align-top">12.00</td>
-                    <td className="p-2">
-                      Downpipes
-                      <br />
-                      75mm diameter PVC
-                      <br />
-                      inc. fixings & shoes
-                    </td>
-                    <td className="p-2 text-right align-top">12.00 m</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div className="mt-6 p-4 bg-blue-50 rounded">
-                <p className="text-sm font-semibold">Notes:</p>
-                <ul className="text-sm mt-2 space-y-1">
-                  <li>
-                    • All timber to be Grade GS or better, treated with
-                    preservative
-                  </li>
-                  <li>• Roof pitch: {roofConfig.pitchAngle}°</li>
-                  <li>• Truss spacing: {roofConfig.trussSpacing}m centres</li>
-                  <li>• Measurements taken from centre lines</li>
-                  <li>• Allow 10% wastage for covering materials</li>
-                </ul>
-              </div>
+              <EnglishMethodTakeoffSheet
+                key={editorKey}
+                initialItems={takeoffData}
+                onChange={setTakeoffData}
+                projectInfo={{
+                  projectName: `${roofConfig.roofType.toUpperCase()} ROOF`,
+                  clientName: "Client Name",
+                  projectDate: new Date().toLocaleDateString()
+                }}
+              />
             </div>
           )}
 
+          {activeTab === 'sheet' && (
+            <UniversalSheet items={takeoffData} />
+          )}
+
           {activeTab === "boq" && (
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 h-full overflow-auto">
-              <div className="mb-6">
-                <h3 className="text-xl font-bold">BILL OF QUANTITIES</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Project: {roofConfig.roofType.toUpperCase()} ROOF CONSTRUCTION
-                </p>
-                <p className="text-sm text-gray-600">
-                  Date: {new Date().toLocaleDateString()}
-                </p>
-              </div>
-
-              <div className="mb-6">
-                <h4 className="font-bold bg-gray-800 text-white p-2">
-                  SECTION A: PRELIMINARIES
-                </h4>
-                <table className="w-full text-sm mt-2">
-                  <thead>
-                    <tr className="border-b-2 border-gray-800">
-                      <th className="text-left p-2 w-20">Item No.</th>
-                      <th className="text-left p-2">Description</th>
-                      <th className="text-center p-2 w-24">Unit</th>
-                      <th className="text-right p-2 w-24">Quantity</th>
-                      <th className="text-right p-2 w-32">Rate (KES)</th>
-                      <th className="text-right p-2 w-32">Amount (KES)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="p-2">A.1</td>
-                      <td className="p-2">Site establishment and clearance</td>
-                      <td className="p-2 text-center">Item</td>
-                      <td className="p-2 text-right">1</td>
-                      <td className="p-2 text-right">50,000.00</td>
-                      <td className="p-2 text-right">50,000.00</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mb-6">
-                <h4 className="font-bold bg-gray-800 text-white p-2">
-                  SECTION B: ROOF STRUCTURE
-                </h4>
-                <table className="w-full text-sm mt-2">
-                  <thead>
-                    <tr className="border-b-2 border-gray-800">
-                      <th className="text-left p-2 w-20">Item No.</th>
-                      <th className="text-left p-2">Description</th>
-                      <th className="text-center p-2 w-24">Unit</th>
-                      <th className="text-right p-2 w-24">Quantity</th>
-                      <th className="text-right p-2 w-32">Rate (KES)</th>
-                      <th className="text-right p-2 w-32">Amount (KES)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="p-2">B.1</td>
-                      <td className="p-2">
-                        Wall plates, 100 x 50mm sawn softwood, treated with
-                        preservative, bedded in cement mortar (1:3) on top of
-                        loadbearing walls
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness)
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">850.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness) *
-                          850
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">B.2</td>
-                      <td className="p-2">
-                        Principal rafters, 150 x 50mm sawn softwood GS grade,
-                        treated, notched over wall plate, fixed with galvanised
-                        nails
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (Math.floor(
-                            roofConfig.buildingLength / roofConfig.trussSpacing
-                          ) +
-                            1) *
-                          (roofConfig.buildingWidth /
-                            2 /
-                            Math.cos((roofConfig.pitchAngle * Math.PI) / 180))
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">1,200.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (Math.floor(
-                            roofConfig.buildingLength / roofConfig.trussSpacing
-                          ) +
-                            1) *
-                          (roofConfig.buildingWidth /
-                            2 /
-                            Math.cos((roofConfig.pitchAngle * Math.PI) / 180)) *
-                          1200
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">B.3</td>
-                      <td className="p-2">
-                        Tie beams, 150 x 50mm sawn softwood, bolted to principal
-                        rafters with M12 bolts and washers
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          (Math.floor(
-                            roofConfig.buildingLength / roofConfig.trussSpacing
-                          ) +
-                            1) *
-                          (roofConfig.buildingWidth +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang)
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">1,200.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          (Math.floor(
-                            roofConfig.buildingLength / roofConfig.trussSpacing
-                          ) +
-                            1) *
-                          (roofConfig.buildingWidth +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          1200
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">B.4</td>
-                      <td className="p-2">
-                        Ridge board, 175 x 25mm sawn softwood, fixed to
-                        principal rafters
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">750.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          750
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">B.5</td>
-                      <td className="p-2">
-                        Purlins, 75 x 75mm sawn softwood, supported on struts
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang)
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">600.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          600
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">B.6</td>
-                      <td className="p-2">
-                        Struts and ties, 100 x 50mm sawn softwood, bolted
-                        connections
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          4 *
-                          (Math.floor(
-                            roofConfig.buildingLength / roofConfig.trussSpacing
-                          ) +
-                            1) *
-                          (roofConfig.buildingWidth / 4)
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">850.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          4 *
-                          (Math.floor(
-                            roofConfig.buildingLength / roofConfig.trussSpacing
-                          ) +
-                            1) *
-                          (roofConfig.buildingWidth / 4) *
-                          850
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mb-6">
-                <h4 className="font-bold bg-gray-800 text-white p-2">
-                  SECTION C: ROOF COVERING
-                </h4>
-                <table className="w-full text-sm mt-2">
-                  <thead>
-                    <tr className="border-b-2 border-gray-800">
-                      <th className="text-left p-2 w-20">Item No.</th>
-                      <th className="text-left p-2">Description</th>
-                      <th className="text-center p-2 w-24">Unit</th>
-                      <th className="text-right p-2 w-24">Quantity</th>
-                      <th className="text-right p-2 w-32">Rate (KES)</th>
-                      <th className="text-right p-2 w-32">Amount (KES)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="p-2">C.1</td>
-                      <td className="p-2">
-                        Roof battens, 40 x 20mm sawn softwood, fixed at 350mm
-                        centres
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          (2 *
-                            (roofConfig.buildingLength +
-                              2 * roofConfig.wallThickness +
-                              2 * roofConfig.overhang) *
-                            (roofConfig.buildingWidth /
-                              2 /
-                              Math.cos(
-                                (roofConfig.pitchAngle * Math.PI) / 180
-                              ))) /
-                          0.35
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">180.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          ((2 *
-                            (roofConfig.buildingLength +
-                              2 * roofConfig.wallThickness +
-                              2 * roofConfig.overhang) *
-                            (roofConfig.buildingWidth /
-                              2 /
-                              Math.cos(
-                                (roofConfig.pitchAngle * Math.PI) / 180
-                              ))) /
-                            0.35) *
-                          180
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">C.2</td>
-                      <td className="p-2">
-                        {roofConfig.covering === "tiles"
-                          ? "Clay roof tiles, machine made, red, laid to half bond"
-                          : roofConfig.covering === "acSheets"
-                            ? "A.C. corrugated sheets, 26 gauge, fixed with J-bolts"
-                            : roofConfig.covering === "giSheets"
-                              ? "G.I. corrugated sheets, 28 gauge, galvanised, fixed with J-bolts"
-                              : "Roof covering as specified"}
-                      </td>
-                      <td className="p-2 text-center">m²</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          (roofConfig.buildingWidth /
-                            2 /
-                            Math.cos((roofConfig.pitchAngle * Math.PI) / 180)) *
-                          1.1
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">
-                        {roofConfig.covering === "tiles"
-                          ? "2,500.00"
-                          : roofConfig.covering === "acSheets"
-                            ? "1,200.00"
-                            : "1,500.00"}
-                      </td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          (roofConfig.buildingWidth /
-                            2 /
-                            Math.cos((roofConfig.pitchAngle * Math.PI) / 180)) *
-                          1.1 *
-                          (roofConfig.covering === "tiles"
-                            ? 2500
-                            : roofConfig.covering === "acSheets"
-                              ? 1200
-                              : 1500)
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">C.3</td>
-                      <td className="p-2">
-                        Ridge capping,{" "}
-                        {roofConfig.covering === "tiles"
-                          ? "clay ridge tiles"
-                          : "ridge flashing"}
-                        , bedded in c.m. (1:3)
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">800.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          800
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mb-6">
-                <h4 className="font-bold bg-gray-800 text-white p-2">
-                  SECTION D: RAINWATER GOODS
-                </h4>
-                <table className="w-full text-sm mt-2">
-                  <thead>
-                    <tr className="border-b-2 border-gray-800">
-                      <th className="text-left p-2 w-20">Item No.</th>
-                      <th className="text-left p-2">Description</th>
-                      <th className="text-center p-2 w-24">Unit</th>
-                      <th className="text-right p-2 w-24">Quantity</th>
-                      <th className="text-right p-2 w-32">Rate (KES)</th>
-                      <th className="text-right p-2 w-32">Amount (KES)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="p-2">D.1</td>
-                      <td className="p-2">
-                        Fascia board, 200 x 25mm sawn softwood, treated with
-                        preservative
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang)
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">650.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          650
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">D.2</td>
-                      <td className="p-2">
-                        PVC gutters, 100mm half round, including brackets at 1m
-                        centres
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness)
-                        ).toFixed(2)}
-                      </td>
-                      <td className="p-2 text-right">450.00</td>
-                      <td className="p-2 text-right">
-                        {(
-                          2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness) *
-                          450
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">D.3</td>
-                      <td className="p-2">
-                        Downpipes, 75mm diameter PVC, including fixings and
-                        shoes
-                      </td>
-                      <td className="p-2 text-center">m</td>
-                      <td className="p-2 text-right">12.00</td>
-                      <td className="p-2 text-right">380.00</td>
-                      <td className="p-2 text-right">4,560.00</td>
-                    </tr>
-
-                    <tr className="border-b">
-                      <td className="p-2">D.4</td>
-                      <td className="p-2">Gutter outlets and stop ends</td>
-                      <td className="p-2 text-center">No</td>
-                      <td className="p-2 text-right">8</td>
-                      <td className="p-2 text-right">250.00</td>
-                      <td className="p-2 text-right">2,000.00</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mt-6 border-t-2 border-gray-800 pt-4">
-                <div className="flex justify-between text-lg font-bold">
-                  <span>TOTAL ESTIMATED COST (Excluding VAT):</span>
-                  <span>
-                    KES{" "}
-                    {(() => {
-                      const preliminaries = 50000;
-                      const wallPlates =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness) *
-                        850;
-                      const rafters =
-                        2 *
-                        (Math.floor(
-                          roofConfig.buildingLength / roofConfig.trussSpacing
-                        ) +
-                          1) *
-                        (roofConfig.buildingWidth /
-                          2 /
-                          Math.cos((roofConfig.pitchAngle * Math.PI) / 180)) *
-                        1200;
-                      const tieBeams =
-                        (Math.floor(
-                          roofConfig.buildingLength / roofConfig.trussSpacing
-                        ) +
-                          1) *
-                        (roofConfig.buildingWidth +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        1200;
-                      const ridge =
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        750;
-                      const purlins =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        600;
-                      const struts =
-                        4 *
-                        (Math.floor(
-                          roofConfig.buildingLength / roofConfig.trussSpacing
-                        ) +
-                          1) *
-                        (roofConfig.buildingWidth / 4) *
-                        850;
-                      const battens =
-                        ((2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          (roofConfig.buildingWidth /
-                            2 /
-                            Math.cos(
-                              (roofConfig.pitchAngle * Math.PI) / 180
-                            ))) /
-                          0.35) *
-                        180;
-                      const covering =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        (roofConfig.buildingWidth /
-                          2 /
-                          Math.cos((roofConfig.pitchAngle * Math.PI) / 180)) *
-                        1.1 *
-                        (roofConfig.covering === "tiles"
-                          ? 2500
-                          : roofConfig.covering === "acSheets"
-                            ? 1200
-                            : 1500);
-                      const ridgeCap =
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        800;
-                      const fascia =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        650;
-                      const gutters =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness) *
-                        450;
-                      const downpipes = 12 * 380 + 8 * 250;
-
-                      const total =
-                        preliminaries +
-                        wallPlates +
-                        rafters +
-                        tieBeams +
-                        ridge +
-                        purlins +
-                        struts +
-                        battens +
-                        covering +
-                        ridgeCap +
-                        fascia +
-                        gutters +
-                        downpipes;
-                      return (total * 0.16).toLocaleString("en-KE", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      });
-                    })()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xl font-bold mt-2 pt-2 border-t">
-                  <span>GRAND TOTAL (Including VAT):</span>
-                  <span>
-                    KES{" "}
-                    {(() => {
-                      const preliminaries = 50000;
-                      const wallPlates =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness) *
-                        850;
-                      const rafters =
-                        2 *
-                        (Math.floor(
-                          roofConfig.buildingLength / roofConfig.trussSpacing
-                        ) +
-                          1) *
-                        (roofConfig.buildingWidth /
-                          2 /
-                          Math.cos((roofConfig.pitchAngle * Math.PI) / 180)) *
-                        1200;
-                      const tieBeams =
-                        (Math.floor(
-                          roofConfig.buildingLength / roofConfig.trussSpacing
-                        ) +
-                          1) *
-                        (roofConfig.buildingWidth +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        1200;
-                      const ridge =
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        750;
-                      const purlins =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        600;
-                      const struts =
-                        4 *
-                        (Math.floor(
-                          roofConfig.buildingLength / roofConfig.trussSpacing
-                        ) +
-                          1) *
-                        (roofConfig.buildingWidth / 4) *
-                        850;
-                      const battens =
-                        ((2 *
-                          (roofConfig.buildingLength +
-                            2 * roofConfig.wallThickness +
-                            2 * roofConfig.overhang) *
-                          (roofConfig.buildingWidth /
-                            2 /
-                            Math.cos(
-                              (roofConfig.pitchAngle * Math.PI) / 180
-                            ))) /
-                          0.35) *
-                        180;
-                      const covering =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        (roofConfig.buildingWidth /
-                          2 /
-                          Math.cos((roofConfig.pitchAngle * Math.PI) / 180)) *
-                        1.1 *
-                        (roofConfig.covering === "tiles"
-                          ? 2500
-                          : roofConfig.covering === "acSheets"
-                            ? 1200
-                            : 1500);
-                      const ridgeCap =
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        800;
-                      const fascia =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness +
-                          2 * roofConfig.overhang) *
-                        650;
-                      const gutters =
-                        2 *
-                        (roofConfig.buildingLength +
-                          2 * roofConfig.wallThickness) *
-                        450;
-                      const downpipes = 12 * 380 + 8 * 250;
-
-                      const total =
-                        preliminaries +
-                        wallPlates +
-                        rafters +
-                        tieBeams +
-                        ridge +
-                        purlins +
-                        struts +
-                        battens +
-                        covering +
-                        ridgeCap +
-                        fascia +
-                        gutters +
-                        downpipes;
-                      return (total * 1.16).toLocaleString("en-KE", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      });
-                    })()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-8 p-4 bg-gray-50 rounded">
-                <p className="text-sm font-semibold mb-2">Prepared by:</p>
-                <p className="text-sm">Civil Engineer / Quantity Surveyor</p>
-                <p className="text-sm text-gray-600 mt-4">
-                  Date: {new Date().toLocaleDateString()}
-                </p>
-              </div>
-            </div>
+            <UniversalBOQ items={takeoffData} />
           )}
         </div>
       </div>

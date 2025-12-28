@@ -1,50 +1,24 @@
 import React, { useState, useEffect } from "react";
 import {
   Menu,
-  X,
-  Home,
-  Box,
-  FileText,
-  Calculator,
   Settings,
-  Download,
-  Upload,
   Save,
+  Upload,
+  Calculator,
 } from "lucide-react";
+import axios from "axios";
 import ExternalWorks3DVisualizer from "./3DExternalWorksVisualizer";
 import ExternalWorksInputForm from "./ExternalWorksInputForm";
 import EnglishMethodTakeoffSheet from "./EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 
 // Main Application Component
 export default function ExternalWorksComponent({ isDark = false }) {
-  const [currentView, setCurrentView] = useState("home");
-  const [projectData, setProjectData] = useState(null);
-  const [calculations, setCalculations] = useState(null);
+  const [activeTab, setActiveTab] = useState("calculator");
 
-  // Simplified theme using slate/teal palette
-  const currentTheme = isDark
-    ? {
-        bg: "#0f172a",
-        card: "#1e293b",
-        text: "#f1f5f9",
-        textSecondary: "#94a3b8",
-        border: "#334155",
-        accent: "#14b8a6",
-        accentHover: "#0d9488",
-        sidebar: "#1e293b",
-        hover: "#334155",
-      }
-    : {
-        bg: "#f8fafc",
-        card: "#ffffff",
-        text: "#0f172a",
-        textSecondary: "#64748b",
-        border: "#e2e8f0",
-        accent: "#14b8a6",
-        accentHover: "#0d9488",
-        sidebar: "#ffffff",
-        hover: "#f1f5f9",
-      };
+  // Theme check (simplified)
+  const bgClass = isDark ? "bg-slate-900 text-white" : "bg-gray-50 text-gray-900";
+  const cardClass = isDark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200";
 
   // Sample project state
   const [formData, setFormData] = useState({
@@ -61,7 +35,7 @@ export default function ExternalWorksComponent({ isDark = false }) {
       siteLength: 50,
       siteWidth: 40,
     },
-    demolition: {
+    demolitions: {
       houseLength: 12,
       houseWidth: 10,
       buildingDemolitionVolume: 0,
@@ -72,155 +46,113 @@ export default function ExternalWorksComponent({ isDark = false }) {
       pipelineDiameter: 225,
       vegetableSoilDepth: 0.15,
     },
-    roadConfig: {
-      roadLength: 32,
-      roadWidth: 9,
-      roadType: "bitumen",
-      drivewayLength: 20,
-      drivewayWidth: 9,
-      drivewayType: "bitumen",
-      parkingLength: 25,
-      parkingWidth: 9,
-      parkingType: "cabro",
-      bellmouthRadius1: 3.5,
-      bellmouthRadius2: 2.5,
+    siteClearance: {
+      clearArea: 1800,
+      vegSoilDepth: 0.15,
+      treesSmall: 3,
+      treesLarge: 2,
+      stumps: 1
     },
-    pavementLayers: {
-      bitumenThickness: 0.05,
-      bitumenMacadamBase: 0.15,
-      murramDepth: 0.2,
-      hardcoreThickness: 0.2,
-      sandBedThickness: 0.15,
-      excavationDepthAfterVeg: 0.5,
-      backingAllowance: 0.1,
-      concreteBackingThickness: 0.1,
+    excavations: {
+      pavedArea: 500,
+      depth: 0.5,
+      rockVolume: 0,
+      workingSpace: 0.3
     },
-    kerbsChannels: {
-      kerbType: "pcc",
-      kerbStraightLength: 64,
-      kerbCurvedLength: 0,
-      channelStraightLength: 64,
-      channelCurvedLength: 0,
+    filling: {
+      murramVolume: 100,
+      hardcoreVolume: 100,
+      sandBedVolume: 20
+    },
+    pavement: {
+      bitumenArea: 500,
+      bitumenThick: 0.05,
+      cabroArea: 0,
+      cabroThick: 0.06
+    },
+    kerbs: {
+      kerbStraight: 100,
+      kerbRadius: 10,
+      channelStraight: 100,
+      channelRadius: 10
     },
     drainage: {
-      invertBlockCount: 10,
-      invertBlockSize: 0.35,
-      pccSlabLength: 32,
-      pccSlabWidth: 0.5,
-      pccSlabThickness: 0.05,
-      drainageChannelLength: 32,
+      invertBlocks: 100,
+      sideSlabs: 200,
+      manholes: 5
     },
     landscaping: {
-      grassSeedingArea: 500,
-      importedTopsoilThickness: 0.15,
-      mahoganyTrees: 3,
-      ornamentalTrees: 4,
-      euphorbiaHedgeLength: 30,
+      grassArea: 500,
+      trees: 10,
+      hedgeLength: 30
     },
     fencing: {
-      timberPostWireFence: 100,
-      fenceType1Length: 50,
-      fenceType2Length: 30,
-      metalGates: 1,
-      normalGates: 2,
+      fenceLength: 200,
+      fenceType: "Chainlink"
     },
+    gate: {
+      numGates: 1,
+      gateType: "Steel"
+    }
   });
 
-  const [view3DConfig, setView3DConfig] = useState({
-    roadWidth: 9,
-    roadLength: 32,
-    parkingWidth: 9,
-    parkingLength: 25,
-    bellmouthRadius1: 3.5,
-    bellmouthRadius2: 2.5,
-    drivewayWidth: 9,
-    surfaceType: "bitumen",
-    showLayers: {
-      subBase: true,
-      hardcore: true,
-      baseCoarse: true,
-      bitumen: true,
-      kerb: true,
-      channel: true,
-      invertBlock: true,
-      bellmouth: true,
-    },
-  });
+  const [takeoffData, setTakeoffData] = useState([]);
+  const [editorKey, setEditorKey] = useState(0);
 
-  // Navigation items
-  const navItems = [
-    { id: "home", label: "Dashboard", icon: Home },
-    { id: "3d", label: "3D Visualizer", icon: Box },
-    { id: "input", label: "Input Form", icon: FileText },
-    { id: "takeoff", label: "Takeoff Sheet", icon: Calculator },
-    { id: "settings", label: "Settings", icon: Settings },
-  ];
+  const handleCalculate = async () => {
+    try {
+      const payload = {
+        site_details: {
+          length: formData.siteData.siteLength,
+          width: formData.siteData.siteWidth
+        },
+        demolitions: formData.demolitions,
+        site_clearance: formData.siteClearance,
+        excavation: formData.excavations,
+        filling: formData.filling,
+        pavement: formData.pavement,
+        kerbs: formData.kerbs,
+        drainage: formData.drainage,
+        landscaping: formData.landscaping,
+        fencing: formData.fencing,
+        gate: formData.gate
+      };
 
-  // Calculate quantities
-  const calculateQuantities = () => {
-    const clearArea =
-      formData.siteData.siteLength * formData.siteData.siteWidth -
-      formData.demolition.houseLength * formData.demolition.houseWidth;
+      const response = await axios.post("http://localhost:8001/external_works/calculate", payload);
+      const data = response.data;
 
-    const vegSoilVolume = clearArea * formData.demolition.vegetableSoilDepth;
-
-    const roadArea =
-      formData.roadConfig.roadLength * formData.roadConfig.roadWidth;
-    const drivewayArea =
-      formData.roadConfig.drivewayLength * formData.roadConfig.drivewayWidth;
-    const parkingArea =
-      formData.roadConfig.parkingLength * formData.roadConfig.parkingWidth;
-
-    const bellmouthArea =
-      (3 / 14) *
-      Math.PI *
-      (Math.pow(formData.roadConfig.bellmouthRadius1, 2) +
-        Math.pow(formData.roadConfig.bellmouthRadius2, 2));
-
-    const totalPavedArea =
-      roadArea + drivewayArea + parkingArea + bellmouthArea;
-
-    const excavationVolume =
-      totalPavedArea * formData.pavementLayers.excavationDepthAfterVeg;
-
-    const murramVolume = totalPavedArea * formData.pavementLayers.murramDepth;
-    const hardcoreVolume =
-      totalPavedArea * formData.pavementLayers.hardcoreThickness;
-    const bitumenVolume =
-      totalPavedArea * formData.pavementLayers.bitumenThickness;
-
-    return {
-      clearArea,
-      vegSoilVolume,
-      totalPavedArea,
-      excavationVolume,
-      murramVolume,
-      hardcoreVolume,
-      bitumenVolume,
-      roadArea,
-      drivewayArea,
-      parkingArea,
-      bellmouthArea,
-    };
+      if (data && data.takeoff_items) {
+        const formattedItems = data.takeoff_items.map((item, index) => ({
+          id: index + 1,
+          billNo: item.item_no || `EW.${index + 1}`,
+          itemNo: (index + 1).toString(),
+          description: item.description,
+          unit: item.unit,
+          quantity: item.quantity,
+          rate: item.rate || 0,
+          amount: item.amount || 0,
+          dimensions: [],
+          isHeader: false
+        }));
+        setTakeoffData(formattedItems);
+        setEditorKey(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error calculating external works:", error);
+      alert("Calculation failed. Backend might be offline.");
+    }
   };
 
-  const totals = calculateQuantities();
-
-  // Save project
   const saveProject = () => {
-    const dataStr = JSON.stringify({ formData, view3DConfig }, null, 2);
+    const dataStr = JSON.stringify({ formData }, null, 2);
     const dataBlob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${formData.projectInfo.projectName.replace(
-      /\s+/g,
-      "-"
-    )}_${Date.now()}.json`;
+    link.download = `${formData.projectInfo.projectName.replace(/\s+/g, "-")}_${Date.now()}.json`;
     link.click();
   };
 
-  // Load project
   const loadProject = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -229,8 +161,6 @@ export default function ExternalWorksComponent({ isDark = false }) {
         try {
           const data = JSON.parse(e.target.result);
           if (data.formData) setFormData(data.formData);
-          if (data.view3DConfig) setView3DConfig(data.view3DConfig);
-          alert("Project loaded successfully!");
         } catch (error) {
           alert("Error loading project file");
         }
@@ -239,548 +169,86 @@ export default function ExternalWorksComponent({ isDark = false }) {
     }
   };
 
-  // Render different views
-  const renderView = () => {
-    switch (currentView) {
-      case "home":
-        return (
-          <DashboardView
-            theme={currentTheme}
-            totals={totals}
-            projectInfo={formData.projectInfo}
-          />
-        );
-      case "3d":
-        return (
-          <ExternalWorks3DVisualizer
-            theme={currentTheme}
-            config={view3DConfig}
-            setConfig={setView3DConfig}
-          />
-        );
-      case "input":
-        return (
-          <ExternalWorksInputForm
-            theme={currentTheme}
-            formData={formData}
-            setFormData={setFormData}
-          />
-        );
-      case "takeoff":
-        return (
-          <EnglishMethodTakeoffSheet
-            theme={currentTheme}
-            formData={formData}
-            totals={totals}
-          />
-        );
-      case "settings":
-        return <SettingsView theme={currentTheme} />;
-      default:
-        return (
-          <DashboardView
-            theme={currentTheme}
-            totals={totals}
-            projectInfo={formData.projectInfo}
-          />
-        );
-    }
-  };
-
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        overflow: "hidden",
-        background: currentTheme.bg,
-        color: currentTheme.text,
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-        transition: "all 0.3s ease",
-      }}
-    >
-      {/* Sidebar removed — navigation handled in header */}
-
-      {/* Main Content */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
+    <div className={`flex h-screen ${bgClass} font-sans transition-colors duration-300`}>
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header
-          style={{
-            background: currentTheme.card,
-            borderBottom: `1px solid ${currentTheme.border}`,
-            padding: "12px 20px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "12px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              flex: 1,
-            }}
-          >
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentView === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentView(item.id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    border: isActive
-                      ? `1px solid ${currentTheme.accent}`
-                      : `1px solid transparent`,
-                    background: isActive ? currentTheme.accent : "transparent",
-                    color: isActive ? "#ffffff" : currentTheme.text,
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: isActive ? 600 : 500,
-                  }}
-                >
-                  <Icon size={16} />
-                  <span style={{ display: "inline-block" }}>{item.label}</span>
-                </button>
-              );
-            })}
-
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "18px",
-                fontWeight: "600",
-                marginLeft: "8px",
-              }}
-            >
-              {navItems.find((item) => item.id === currentView)?.label ||
-                "Dashboard"}
-            </h1>
+        <header className={`${cardClass} border-b px-5 py-3 flex justify-between items-center shadow-sm z-10`}>
+          <div className="flex items-center gap-4 flex-1">
+            <h1 className="text-xl font-bold">External Works</h1>
           </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              alignItems: "center",
-              marginLeft: "12px",
-            }}
-          >
+          <UniversalTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            tabs={['calculator', '3d', 'takeoff', 'sheet', 'boq']}
+          />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCalculate}
+              className="px-3 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2 hover:bg-blue-700 text-sm font-medium"
+            >
+              <Calculator size={14} /> Calculate
+            </button>
             <button
               onClick={saveProject}
-              style={{
-                padding: "8px 12px",
-                background: currentTheme.accent,
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "14px",
-                fontWeight: 600,
-              }}
+              className="px-3 py-2 bg-teal-600 text-white rounded-md flex items-center gap-2 hover:bg-teal-700 text-sm font-medium"
             >
-              <Save size={14} />
-              Save
+              <Save size={14} /> Save
             </button>
-
-            <label
-              style={{
-                padding: "8px 12px",
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: "8px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                color: currentTheme.text,
-                fontSize: "14px",
-                fontWeight: 500,
-              }}
-            >
-              <Upload size={14} />
-              Load
-              <input
-                type="file"
-                accept=".json"
-                onChange={loadProject}
-                style={{ display: "none" }}
-              />
+            <label className={`px-3 py-2 border rounded-md cursor-pointer flex items-center gap-2 text-sm font-medium ${isDark ? 'border-slate-600 hover:bg-slate-700' : 'border-gray-300 hover:bg-gray-100'}`}>
+              <Upload size={14} /> Load
+              <input type="file" accept=".json" onChange={loadProject} className="hidden" />
             </label>
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main
-          style={{
-            flex: 1,
-            overflow: "auto",
-            padding: "24px",
-            background: currentTheme.bg,
-          }}
-        >
-          {renderView()}
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto p-6 relative">
+          {activeTab === "calculator" && (
+            <ExternalWorksInputForm
+              theme={{
+                bg: isDark ? "#0f172a" : "#f8fafc",
+                card: isDark ? "#1e293b" : "#ffffff",
+                text: isDark ? "#f1f5f9" : "#0f172a",
+                border: isDark ? "#334155" : "#e2e8f0",
+                accent: "#14b8a6"
+              }}
+              formData={formData}
+              setFormData={setFormData}
+            />
+          )}
+
+          {activeTab === "3d" && (
+            <ExternalWorks3DVisualizer
+              theme={{ bg: isDark ? "#0f172a" : "#f8fafc" }}
+              config={formData.roadConfig}
+              setConfig={(cfg) => setFormData({ ...formData, roadConfig: cfg })}
+            />
+          )}
+
+          {activeTab === "takeoff" && (
+            <div className={`rounded-lg shadow p-0 h-full overflow-hidden ${cardClass}`}>
+              <EnglishMethodTakeoffSheet
+                key={editorKey}
+                initialItems={takeoffData}
+                onChange={setTakeoffData}
+              />
+            </div>
+          )}
+
+          {activeTab === "sheet" && (
+            <div className="h-full overflow-auto">
+              <UniversalSheet items={takeoffData} />
+            </div>
+          )}
+
+          {activeTab === "boq" && (
+            <div className="h-full overflow-auto">
+              <UniversalBOQ items={takeoffData} />
+            </div>
+          )}
         </main>
       </div>
-    </div>
-  );
-}
-
-// Dashboard View Component
-function DashboardView({ theme, totals, projectInfo }) {
-  const cards = [
-    {
-      label: "Site Clearance",
-      value: totals.clearArea.toFixed(2),
-      unit: "m²",
-      color: "#4CAF50",
-    },
-    {
-      label: "Total Excavation",
-      value: totals.excavationVolume.toFixed(2),
-      unit: "m³",
-      color: "#FF9800",
-    },
-    {
-      label: "Paved Area",
-      value: totals.totalPavedArea.toFixed(2),
-      unit: "m²",
-      color: "#2196F3",
-    },
-    {
-      label: "Murram Filling",
-      value: totals.murramVolume.toFixed(2),
-      unit: "m³",
-      color: "#9C27B0",
-    },
-    {
-      label: "Hardcore",
-      value: totals.hardcoreVolume.toFixed(2),
-      unit: "m³",
-      color: "#FF5722",
-    },
-    {
-      label: "Bitumen",
-      value: totals.bitumenVolume.toFixed(2),
-      unit: "m³",
-      color: "#607D8B",
-    },
-  ];
-
-  return (
-    <div>
-      {/* Welcome Section */}
-      <div
-        style={{
-          background: theme.card,
-          borderRadius: "12px",
-          padding: "32px",
-          marginBottom: "24px",
-          border: `1px solid ${theme.border}`,
-        }}
-      >
-        <h2
-          style={{ margin: "0 0 8px 0", fontSize: "28px", fontWeight: "600" }}
-        >
-          {projectInfo.projectName}
-        </h2>
-        <p style={{ margin: 0, color: theme.textSecondary, fontSize: "16px" }}>
-          {projectInfo.location} • Drawing: {projectInfo.drawingNumber} •{" "}
-          {projectInfo.date}
-        </p>
-      </div>
-
-      {/* Quantity Cards */}
-      <h3 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "600" }}>
-        Quick Summary
-      </h3>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "20px",
-          marginBottom: "32px",
-        }}
-      >
-        {cards.map((card, index) => (
-          <div
-            key={index}
-            style={{
-              background: theme.card,
-              borderRadius: "12px",
-              padding: "24px",
-              border: `1px solid ${theme.border}`,
-              borderLeft: `4px solid ${card.color}`,
-              transition: "transform 0.2s ease",
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.transform = "translateY(-4px)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.transform = "translateY(0)")
-            }
-          >
-            <div
-              style={{
-                color: theme.textSecondary,
-                fontSize: "14px",
-                marginBottom: "8px",
-              }}
-            >
-              {card.label}
-            </div>
-            <div
-              style={{ display: "flex", alignItems: "baseline", gap: "8px" }}
-            >
-              <span
-                style={{
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  color: card.color,
-                }}
-              >
-                {card.value}
-              </span>
-              <span style={{ fontSize: "16px", color: theme.textSecondary }}>
-                {card.unit}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Area Breakdown */}
-      <h3 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "600" }}>
-        Area Breakdown
-      </h3>
-      <div
-        style={{
-          background: theme.card,
-          borderRadius: "12px",
-          padding: "24px",
-          border: `1px solid ${theme.border}`,
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "20px",
-          }}
-        >
-          <div>
-            <p
-              style={{
-                margin: "0 0 8px 0",
-                color: theme.textSecondary,
-                fontSize: "14px",
-              }}
-            >
-              Road Area
-            </p>
-            <p style={{ margin: 0, fontSize: "24px", fontWeight: "600" }}>
-              {totals.roadArea.toFixed(2)} m²
-            </p>
-          </div>
-          <div>
-            <p
-              style={{
-                margin: "0 0 8px 0",
-                color: theme.textSecondary,
-                fontSize: "14px",
-              }}
-            >
-              Parking Area
-            </p>
-            <p style={{ margin: 0, fontSize: "24px", fontWeight: "600" }}>
-              {totals.parkingArea.toFixed(2)} m²
-            </p>
-          </div>
-          <div>
-            <p
-              style={{
-                margin: "0 0 8px 0",
-                color: theme.textSecondary,
-                fontSize: "14px",
-              }}
-            >
-              Driveway Area
-            </p>
-            <p style={{ margin: 0, fontSize: "24px", fontWeight: "600" }}>
-              {totals.drivewayArea.toFixed(2)} m²
-            </p>
-          </div>
-          <div>
-            <p
-              style={{
-                margin: "0 0 8px 0",
-                color: theme.textSecondary,
-                fontSize: "14px",
-              }}
-            >
-              Bellmouth Area
-            </p>
-            <p style={{ margin: 0, fontSize: "24px", fontWeight: "600" }}>
-              {totals.bellmouthArea.toFixed(2)} m²
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Settings View
-function SettingsView({ theme }) {
-  return (
-    <div
-      style={{
-        background: theme.card,
-        borderRadius: "12px",
-        padding: "32px",
-        border: `1px solid ${theme.border}`,
-      }}
-    >
-      <h3 style={{ margin: "0 0 24px 0", fontSize: "20px", fontWeight: "600" }}>
-        Settings
-      </h3>
-
-      <div style={{ marginBottom: "24px" }}>
-        <h4
-          style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "600" }}
-        >
-          API Configuration
-        </h4>
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "8px",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
-          >
-            Backend API URL
-          </label>
-          <input
-            type="text"
-            defaultValue="http://localhost:8001"
-            style={{
-              width: "100%",
-              padding: "12px",
-              background: theme.bg,
-              border: `1px solid ${theme.border}`,
-              borderRadius: "6px",
-              color: theme.text,
-              fontSize: "14px",
-            }}
-          />
-        </div>
-      </div>
-
-      <div style={{ marginBottom: "24px" }}>
-        <h4
-          style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "600" }}
-        >
-          Units
-        </h4>
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "8px",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
-          >
-            Measurement System
-          </label>
-          <select
-            style={{
-              width: "100%",
-              padding: "12px",
-              background: theme.bg,
-              border: `1px solid ${theme.border}`,
-              borderRadius: "6px",
-              color: theme.text,
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
-          >
-            <option value="metric">Metric (m, m², m³)</option>
-            <option value="imperial">Imperial (ft, ft², ft³)</option>
-          </select>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: "24px" }}>
-        <h4
-          style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "600" }}
-        >
-          Standards
-        </h4>
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "8px",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
-          >
-            Measurement Standard
-          </label>
-          <select
-            style={{
-              width: "100%",
-              padding: "12px",
-              background: theme.bg,
-              border: `1px solid ${theme.border}`,
-              borderRadius: "6px",
-              color: theme.text,
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
-          >
-            <option value="cesmm4">CESMM4</option>
-            <option value="cesmm3">CESMM3</option>
-            <option value="smm7">SMM7</option>
-          </select>
-        </div>
-      </div>
-
-      <button
-        style={{
-          padding: "12px 24px",
-          background: theme.accent,
-          color: "#ffffff",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontSize: "14px",
-          fontWeight: "500",
-        }}
-      >
-        Save Settings
-      </button>
     </div>
   );
 }

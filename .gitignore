@@ -40,5 +40,12 @@
 # Allow GitHub workflows
 !.github/
 
+# Allow Docker configuration
+!Dockerfile
+!src/Backend/Dockerfile
+!docker-compose.yml
+!README_DOCKER.md
+!start_app.bat
+
 # Always ignore node_modules
 /node_modules/

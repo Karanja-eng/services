@@ -1,1172 +1,394 @@
-// IndividualMembers.jsx
 import React, { useState } from "react";
 import axios from "axios";
 import {
   Building,
   Layers,
   Home,
-  Droplets,
   Square,
   TreePine,
   Waves,
+  ArrowLeft,
+  Calculator,
+  Droplets
 } from "lucide-react";
+import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
 
 const IndividualMembers = ({ onViewDiagram, onGoToBOQ, onGoToApproximate }) => {
+  const [activeTab, setActiveTab] = useState("calculator");
+  const [takeoffData, setTakeoffData] = useState([]);
+  const [editorKey, setEditorKey] = useState(0);
+
   const [activeCalculator, setActiveCalculator] = useState(null);
-  const [calculationResults, setCalculationResults] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({});
 
-  // API configuration
-  const API_BASE_URL = "http://localhost:8000/api"; // FastAPI backend
+  const API_BASE_URL = "http://localhost:8000/api";
 
-  // Individual member calculators
   const memberCalculators = [
     {
-      id: "stairs",
-      name: "Stairs",
-      icon: Building,
-      color: "blue",
-      description: "Calculate stairs concrete, formwork & reinforcement",
+      id: "stairs", name: "Stairs", icon: Building, color: "blue", description: "Stairs concrete, formwork & reinforcement",
       fields: [
-        {
-          name: "height",
-          label: "Total Height (m)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "length",
-          label: "Total Length (m)",
-          type: "number",
-          required: true,
-        },
+        { name: "height", label: "Total Height (m)", type: "number", required: true },
+        { name: "length", label: "Total Length (m)", type: "number", required: true },
         { name: "width", label: "Width (m)", type: "number", required: true },
-        {
-          name: "riser_height",
-          label: "Riser Height (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 175,
-        },
-        {
-          name: "tread_width",
-          label: "Tread Width (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 250,
-        },
-        {
-          name: "thickness",
-          label: "Slab Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-      ],
+        { name: "riser_height", label: "Riser Height (mm)", type: "number", defaultValue: 175 },
+        { name: "tread_width", label: "Tread Width (mm)", type: "number", defaultValue: 250 },
+        { name: "thickness", label: "Waist Thickness (mm)", type: "number", defaultValue: 150 },
+      ]
     },
     {
-      id: "foundation",
-      name: "Foundation",
-      icon: Layers,
-      color: "gray",
-      description: "Calculate foundation excavation, concrete & reinforcement",
+      id: "foundation", name: "Foundation", icon: Layers, color: "gray", description: "Foundation excavation & concrete",
       fields: [
         { name: "length", label: "Length (m)", type: "number", required: true },
         { name: "width", label: "Width (m)", type: "number", required: true },
         { name: "depth", label: "Depth (m)", type: "number", required: true },
-        {
-          name: "concrete_grade",
-          label: "Concrete Grade",
-          type: "select",
-          required: true,
-          options: ["C10/12", "C16/20", "C20/25", "C25/30"],
-          defaultValue: "C20/25",
-        },
-        {
-          name: "reinforcement_type",
-          label: "Reinforcement",
-          type: "select",
-          required: true,
-          options: ["Y12", "Y16", "Y20", "Y25"],
-          defaultValue: "Y12",
-        },
-      ],
+        { name: "concrete_grade", label: "Grade", type: "select", options: ["C15", "C20", "C25"], defaultValue: "C20" },
+      ]
     },
     {
-      id: "superstructure",
-      name: "Superstructure",
-      icon: Home,
-      color: "green",
-      description: "Calculate beams, columns, slabs",
+      id: "superstructure", name: "Superstructure", icon: Home, color: "green", description: "Beams, columns, slabs",
       fields: [
-        {
-          name: "floor_area",
-          label: "Floor Area (m²)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "storey_height",
-          label: "Storey Height (m)",
-          type: "number",
-          required: true,
-          defaultValue: 3,
-        },
-        {
-          name: "number_floors",
-          label: "Number of Floors",
-          type: "number",
-          required: true,
-          defaultValue: 1,
-        },
-        {
-          name: "slab_thickness",
-          label: "Slab Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-        {
-          name: "beam_size",
-          label: "Beam Size (mm)",
-          type: "text",
-          required: true,
-          defaultValue: "230x450",
-        },
-        {
-          name: "column_size",
-          label: "Column Size (mm)",
-          type: "text",
-          required: true,
-          defaultValue: "230x230",
-        },
-      ],
+        { name: "floor_area", label: "Floor Area (m²)", type: "number", required: true },
+        { name: "storey_height", label: "Storey Height (m)", type: "number", defaultValue: 3 },
+        { name: "number_floors", label: "Stories", type: "number", defaultValue: 1 },
+        { name: "slab_thickness", label: "Slab Thk (mm)", type: "number", defaultValue: 150 },
+      ]
     },
     {
-      id: "manholes",
-      name: "Manholes",
-      icon: Square,
-      color: "yellow",
-      description: "Calculate manhole excavation, concrete & covers",
+      id: "manholes", name: "Manholes", icon: Square, color: "yellow", description: "Manhole excavation & concrete",
       fields: [
-        {
-          name: "internal_diameter",
-          label: "Internal Diameter (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 1050,
-        },
+        { name: "internal_diameter", label: "Int. Diameter (mm)", type: "number", defaultValue: 1050 },
         { name: "depth", label: "Depth (m)", type: "number", required: true },
-        {
-          name: "wall_thickness",
-          label: "Wall Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-        {
-          name: "base_thickness",
-          label: "Base Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-        {
-          name: "number_manholes",
-          label: "Number of Manholes",
-          type: "number",
-          required: true,
-          defaultValue: 1,
-        },
-      ],
+        { name: "number_manholes", label: "Count", type: "number", defaultValue: 1 },
+      ]
     },
     {
-      id: "pavements",
-      name: "Pavements",
-      icon: Square,
-      color: "purple",
-      description: "Calculate pavement layers & materials",
+      id: "pavements", name: "Pavements", icon: Square, color: "purple", description: "Pavement layers",
       fields: [
-        {
-          name: "area",
-          label: "Pavement Area (m²)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "subbase_thickness",
-          label: "Sub-base Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-        {
-          name: "base_thickness",
-          label: "Base Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-        {
-          name: "surface_thickness",
-          label: "Surface Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 40,
-        },
-        {
-          name: "pavement_type",
-          label: "Pavement Type",
-          type: "select",
-          required: true,
-          options: ["Flexible", "Rigid", "Interlocking"],
-          defaultValue: "Flexible",
-        },
-      ],
+        { name: "area", label: "Area (m²)", type: "number", required: true },
+        { name: "subbase_thickness", label: "Sub-base (mm)", type: "number", defaultValue: 150 },
+        { name: "base_thickness", label: "Base (mm)", type: "number", defaultValue: 150 },
+        { name: "surface_thickness", label: "Surface (mm)", type: "number", defaultValue: 50 },
+      ]
     },
     {
-      id: "retaining_walls",
-      name: "Retaining Walls",
-      icon: Building,
-      color: "red",
-      description: "Calculate retaining wall concrete & reinforcement",
-      fields: [
-        {
-          name: "length",
-          label: "Wall Length (m)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "height",
-          label: "Wall Height (m)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "thickness",
-          label: "Wall Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 200,
-        },
-        {
-          name: "foundation_width",
-          label: "Foundation Width (m)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "foundation_thickness",
-          label: "Foundation Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 300,
-        },
-      ],
-    },
-    {
-      id: "septic_tanks",
-      name: "Septic Tanks",
-      icon: Droplets,
-      color: "teal",
-      description: "Calculate septic tank excavation & construction",
-      fields: [
-        {
-          name: "capacity",
-          label: "Capacity (m³)",
-          type: "number",
-          required: true,
-        },
-        { name: "length", label: "Length (m)", type: "number", required: true },
-        { name: "width", label: "Width (m)", type: "number", required: true },
-        { name: "depth", label: "Depth (m)", type: "number", required: true },
-        {
-          name: "wall_thickness",
-          label: "Wall Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-      ],
-    },
-    {
-      id: "swimming_pools",
-      name: "Swimming Pools",
-      icon: Waves,
-      color: "cyan",
-      description: "Calculate swimming pool excavation & construction",
-      fields: [
-        {
-          name: "length",
-          label: "Pool Length (m)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "width",
-          label: "Pool Width (m)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "shallow_depth",
-          label: "Shallow End Depth (m)",
-          type: "number",
-          required: true,
-          defaultValue: 1.2,
-        },
-        {
-          name: "deep_depth",
-          label: "Deep End Depth (m)",
-          type: "number",
-          required: true,
-          defaultValue: 2.5,
-        },
-        {
-          name: "wall_thickness",
-          label: "Wall Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 200,
-        },
-        {
-          name: "floor_thickness",
-          label: "Floor Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-      ],
-    },
-    {
-      id: "basements",
-      name: "Basements",
-      icon: Building,
-      color: "indigo",
-      description: "Calculate basement excavation, walls & waterproofing",
+      id: "retaining_walls", name: "Retaining Walls", icon: Building, color: "red", description: "Retaining wall concrete",
       fields: [
         { name: "length", label: "Length (m)", type: "number", required: true },
-        { name: "width", label: "Width (m)", type: "number", required: true },
-        { name: "depth", label: "Depth (m)", type: "number", required: true },
-        {
-          name: "wall_thickness",
-          label: "Wall Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 200,
-        },
-        {
-          name: "floor_thickness",
-          label: "Floor Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-        {
-          name: "waterproofing",
-          label: "Include Waterproofing",
-          type: "checkbox",
-          defaultValue: true,
-        },
-      ],
-    },
-    {
-      id: "water_tanks",
-      name: "Water Tanks",
-      icon: Droplets,
-      color: "blue",
-      description: "Calculate water tank construction materials",
-      fields: [
-        {
-          name: "capacity",
-          label: "Capacity (m³)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "tank_type",
-          label: "Tank Type",
-          type: "select",
-          required: true,
-          options: ["Circular", "Rectangular"],
-          defaultValue: "Circular",
-        },
         { name: "height", label: "Height (m)", type: "number", required: true },
-        {
-          name: "wall_thickness",
-          label: "Wall Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-        {
-          name: "base_thickness",
-          label: "Base Thickness (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-      ],
+        { name: "thickness", label: "Thickness (mm)", type: "number", defaultValue: 200 },
+        { name: "foundation_width", label: "Found. Width (m)", type: "number", defaultValue: 1.0 },
+      ]
     },
     {
-      id: "landscaping",
-      name: "Landscaping",
-      icon: TreePine,
-      color: "green",
-      description: "Calculate landscaping materials & quantities",
+      id: "septic_tanks", name: "Septic Tanks", icon: Droplets, color: "teal", description: "Excavation & Construction",
       fields: [
-        {
-          name: "total_area",
-          label: "Total Area (m²)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "lawn_area",
-          label: "Lawn Area (m²)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "planting_area",
-          label: "Planting Area (m²)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "paving_area",
-          label: "Paving Area (m²)",
-          type: "number",
-          required: true,
-        },
-        {
-          name: "topsoil_depth",
-          label: "Topsoil Depth (mm)",
-          type: "number",
-          required: true,
-          defaultValue: 150,
-        },
-      ],
+        { name: "length", label: "Length (m)", type: "number", required: true },
+        { name: "width", label: "Width (m)", type: "number", required: true },
+        { name: "depth", label: "Depth (m)", type: "number", required: true },
+      ]
     },
+    {
+      id: "swimming_pools", name: "Swimming Pools", icon: Waves, color: "cyan", description: "Pool excavation & concrete",
+      fields: [
+        { name: "length", label: "Length (m)", type: "number", required: true },
+        { name: "width", label: "Width (m)", type: "number", required: true },
+        { name: "avg_depth", label: "Avg Depth (m)", type: "number", required: true, defaultValue: 1.5 },
+      ]
+    }
   ];
 
-  // Calculate quantities using FastAPI backend
-  const calculateQuantities = async (calculatorId, formData) => {
+  const handleCalculatorSelect = (calc) => {
+    setActiveCalculator(calc);
+    setFormData({}); // Reset form
+    setTakeoffData([]);
+  };
+
+  const calculate = async () => {
+    if (!activeCalculator) return;
     setIsLoading(true);
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/calculate/${calculatorId}`,
-        formData
-      );
-      setCalculationResults((prev) => ({
-        ...prev,
-        [calculatorId]: response.data,
-      }));
-    } catch (error) {
-      console.error("Calculation error:", error);
-      // Fallback to mock calculations if backend is not available
-      mockCalculate(calculatorId, formData);
-    } finally {
+
+    // Simulate API or Mock
+    setTimeout(() => {
+      const results = mockCalculate(activeCalculator.id, formData);
+      setTakeoffData(results);
+      setEditorKey(prev => prev + 1);
       setIsLoading(false);
-    }
+    }, 600);
   };
 
-  // Mock calculations for when backend is not available
-  const mockCalculate = (calculatorId, formData) => {
-    let results = {};
+  const mockCalculate = (id, data) => {
+    const items = [];
+    let itemCounter = 1;
+    const makeItem = (desc, unit, qty, rate, dims) => ({
+      id: itemCounter++, billNo: "X", itemNo: itemCounter.toString(), description: desc, unit, quantity: qty, rate, amount: qty * rate, dimensions: dims, isHeader: false
+    });
+    const makeHeader = (desc) => ({ id: itemCounter++, description: desc, isHeader: true });
 
-    switch (calculatorId) {
-      case "stairs":
-        const stepsCount = Math.ceil(
-          (formData.height * 1000) / formData.riser_height
-        );
-        const concreteVolume =
-          (formData.length * formData.width * formData.thickness) / 1000;
-        results = {
-          steps_count: stepsCount,
-          concrete_volume: concreteVolume.toFixed(2),
-          formwork_area: (
-            (formData.length * 2 + formData.width * 2) *
-            (formData.height + formData.thickness / 1000)
-          ).toFixed(2),
-          reinforcement_weight: (concreteVolume * 80).toFixed(2),
-          items: [
-            {
-              description: `E100.1.2 - Excavation for stairs foundation`,
-              quantity: (concreteVolume * 1.2).toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F100 - Concrete grade C25/30 for stairs`,
-              quantity: concreteVolume.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G100.1.1 - Formwork to stairs`,
-              quantity: (
-                (formData.length * 2 + formData.width * 2) *
-                formData.height
-              ).toFixed(2),
-              unit: "m²",
-            },
-            {
-              description: `G600.1.3 - Reinforcement bars Y12`,
-              quantity: (concreteVolume * 80).toFixed(2),
-              unit: "kg",
-            },
-          ],
-        };
-        break;
+    try {
+      switch (id) {
+        case "stairs":
+          // Simple Stair Logic
+          items.push(makeHeader("STAIRCASE"));
+          const sL = parseFloat(data.length) || 0;
+          const sW = parseFloat(data.width) || 0;
+          const sH = parseFloat(data.height) || 0;
+          const sThk = parseFloat(data.thickness) / 1000 || 0.15;
 
-      case "foundation":
-        const foundationVolume =
-          formData.length * formData.width * formData.depth;
-        const excavationVolume = foundationVolume * 1.2;
-        results = {
-          excavation_volume: excavationVolume.toFixed(2),
-          concrete_volume: foundationVolume.toFixed(2),
-          reinforcement_weight: (foundationVolume * 60).toFixed(2),
-          items: [
-            {
-              description: `E200.1.3 - Excavation for foundations, depth ${formData.depth}m`,
-              quantity: excavationVolume.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F100 - Foundation concrete ${formData.concrete_grade}`,
-              quantity: foundationVolume.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G600 - Reinforcement bars ${formData.reinforcement_type}`,
-              quantity: (foundationVolume * 60).toFixed(2),
-              unit: "kg",
-            },
-          ],
-        };
-        break;
+          // Waist Vol = Length * Width * Thickness (Sloped length actually, approx sqrt(L^2+H^2))
+          const slopeL = Math.sqrt(sL * sL + sH * sH);
+          const waistVol = slopeL * sW * sThk;
 
-      case "superstructure":
-        const totalFloorArea = formData.floor_area * formData.number_floors;
-        const slabVolume = (totalFloorArea * formData.slab_thickness) / 1000;
-        const beamVolume = totalFloorArea * 0.05;
-        const columnVolume =
-          formData.number_floors *
-          formData.storey_height *
-          0.02 *
-          totalFloorArea;
-        const totalConcrete = slabVolume + beamVolume + columnVolume;
+          // Steps Vol = 0.5 * R * T * N_steps * Width
+          // R = riser, T = tread. N = H/R.
+          // Total Step Vol = 0.5 * L * H * Width ? (Area of triangle under steps * Width)
+          const stepsVol = 0.5 * sL * sH * sW;
 
-        results = {
-          slab_volume: slabVolume.toFixed(2),
-          beam_volume: beamVolume.toFixed(2),
-          column_volume: columnVolume.toFixed(2),
-          total_concrete: totalConcrete.toFixed(2),
-          formwork_area: (totalFloorArea * 1.5).toFixed(2),
-          reinforcement_weight: (totalConcrete * 100).toFixed(2),
-          items: [
-            {
-              description: `F200.1.2 - Slab concrete C25/30`,
-              quantity: slabVolume.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F300.1.2 - Beam concrete C25/30`,
-              quantity: beamVolume.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F400.1.2 - Column concrete C25/30`,
-              quantity: columnVolume.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G100.2.2 - Formwork to superstructure`,
-              quantity: (totalFloorArea * 1.5).toFixed(2),
-              unit: "m²",
-            },
-            {
-              description: `G600 - Reinforcement bars, mixed sizes`,
-              quantity: (totalConcrete * 100).toFixed(2),
-              unit: "kg",
-            },
-          ],
-        };
-        break;
+          const totalVol = waistVol + stepsVol;
 
-      case "manholes":
-        const diameter = formData.internal_diameter / 1000;
-        const wallThickness = formData.wall_thickness / 1000;
-        const baseThickness = formData.base_thickness / 1000;
+          items.push(makeItem("Reinforced Concrete (Grade 25) in Stairs", "m³", totalVol, 13500, [
+            { number: 1, length: slopeL.toFixed(2), width: sW.toFixed(2), height: sThk.toFixed(2), text: "Waist" },
+            { number: 1, length: sL.toFixed(2), width: sW.toFixed(2), height: sH.toFixed(2), multiplier: 0.5, text: "Steps (Triangle)" }
+          ]));
 
-        const excavationDiameter = diameter + wallThickness * 2 + 0.5;
-        const excavationVol =
-          Math.PI *
-          Math.pow(excavationDiameter / 2, 2) *
-          (formData.depth + baseThickness) *
-          formData.number_manholes;
+          // Formwork (Soffit + Risers + Sides)
+          const soffit = slopeL * sW;
+          // Risers area = W * H_total
+          const risersArea = sW * sH;
+          // Sides = (Waist side + Steps side) * 2
+          // Approx side area = (slopeL * sThk) + (0.5 * sL * sH)
+          const sidesArea = 2 * ((slopeL * sThk) + (0.5 * sL * sH));
 
-        const concreteVol =
-          (Math.PI * Math.pow(diameter / 2 + wallThickness, 2) * baseThickness +
-            Math.PI *
-            wallThickness *
-            (diameter + wallThickness) *
-            formData.depth) *
-          formData.number_manholes;
+          items.push(makeItem("Formwork to Soffits", "m²", soffit, 1200, [{ number: 1, length: slopeL.toFixed(2), width: sW.toFixed(2) }]));
+          items.push(makeItem("Formwork to Risers", "m²", risersArea, 1200, [{ number: 1, length: sW.toFixed(2), width: sH.toFixed(2) }]));
+          items.push(makeItem("Formwork to Sides (Stringers)", "m²", sidesArea, 1200, [{ number: 2, length: "Area", text: "Sides Custom" }])); // simplified
 
-        results = {
-          excavation_volume: excavationVol.toFixed(2),
-          concrete_volume: concreteVol.toFixed(2),
-          reinforcement_weight: (concreteVol * 70).toFixed(2),
-          cover_area: (
-            Math.PI *
-            Math.pow(excavationDiameter / 2, 2) *
-            formData.number_manholes
-          ).toFixed(2),
-          items: [
-            {
-              description: `E100.1.3 - Excavation for manholes`,
-              quantity: excavationVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F100 - Concrete C25/30 for manholes`,
-              quantity: concreteVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G600 - Reinforcement for manholes`,
-              quantity: (concreteVol * 70).toFixed(2),
-              unit: "kg",
-            },
-            {
-              description: `J600 - Manhole covers ${formData.internal_diameter}mm`,
-              quantity: formData.number_manholes,
-              unit: "no",
-            },
-          ],
-        };
-        break;
+          break;
 
-      case "pavements":
-        const subbaseVol = formData.area * (formData.subbase_thickness / 1000);
-        const baseVol = formData.area * (formData.base_thickness / 1000);
-        const surfaceVol = formData.area * (formData.surface_thickness / 1000);
+        case "foundation":
+          items.push(makeHeader("FOUNDATION"));
+          const fL = parseFloat(data.length);
+          const fW = parseFloat(data.width);
+          const fD = parseFloat(data.depth);
 
-        results = {
-          pavement_area: formData.area.toFixed(2),
-          subbase_volume: subbaseVol.toFixed(2),
-          base_volume: baseVol.toFixed(2),
-          surface_volume: surfaceVol.toFixed(2),
-          items: [
-            {
-              description: `E100.1.1 - General excavation for pavement`,
-              quantity: (subbaseVol * 1.1).toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `P100.1.2 - Granular sub-base material Type 1`,
-              quantity: subbaseVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `P200.1.1 - Road base material`,
-              quantity: baseVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `${formData.pavement_type} surface course`,
-              quantity: surfaceVol.toFixed(2),
-              unit: "m³",
-            },
-          ],
-        };
-        break;
+          // Excavation
+          const fExc = fL * fW * fD;
+          items.push(makeItem(`Excavation for footing ne ${fD}m deep`, "m³", fExc, 450,
+            [{ number: 1, length: fL.toFixed(2), width: fW.toFixed(2), height: fD.toFixed(2) }]
+          ));
+          // Concrete (assume fill)
+          items.push(makeItem(`Concrete ${data.concrete_grade || "C20"} in footing`, "m³", fExc, 12000,
+            [{ number: 1, length: fL.toFixed(2), width: fW.toFixed(2), height: fD.toFixed(2) }]
+          ));
+          break;
 
-      case "retaining_walls":
-        const wallVol =
-          formData.length * (formData.thickness / 1000) * formData.height;
-        const foundVol =
-          formData.length *
-          formData.foundation_width *
-          (formData.foundation_thickness / 1000);
-        const totalVol = wallVol + foundVol;
+        case "superstructure":
+          items.push(makeHeader("SUPERSTRUCTURE FRAME"));
+          const flArea = parseFloat(data.floor_area);
+          const nFl = parseFloat(data.number_floors);
+          const stH = parseFloat(data.storey_height);
+          const slThk = parseFloat(data.slab_thickness) / 1000;
 
-        results = {
-          wall_volume: wallVol.toFixed(2),
-          foundation_volume: foundVol.toFixed(2),
-          total_concrete: totalVol.toFixed(2),
-          reinforcement_weight: (totalVol * 120).toFixed(2),
-          items: [
-            {
-              description: `E200.1.1 - Excavation for retaining wall`,
-              quantity: (foundVol * 1.2).toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F100 - Foundation concrete C25/30`,
-              quantity: foundVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F300.1.2 - Wall concrete C30/37`,
-              quantity: wallVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G600 - Reinforcement for retaining wall`,
-              quantity: (totalVol * 120).toFixed(2),
-              unit: "kg",
-            },
-          ],
-        };
-        break;
+          // Slabs
+          const slabVol = flArea * slThk * nFl;
+          items.push(makeItem("RC in Slabs", "m³", slabVol, 13500, [{ number: nFl, length: flArea.toFixed(2), width: slThk.toFixed(2), text: "Area * Thk" }]));
 
-      case "septic_tanks":
-        const septicExcavVol =
-          (formData.length + 0.5) *
-          (formData.width + 0.5) *
-          (formData.depth + 0.3);
-        const baseConc = formData.length * formData.width * 0.15;
-        const wallConc =
-          2 *
-          (formData.length *
-            (formData.wall_thickness / 1000) *
-            formData.depth) +
-          2 *
-          (formData.width *
-            (formData.wall_thickness / 1000) *
-            formData.depth);
-        const coverConc = formData.length * formData.width * 0.1;
-        const totalSepticConc = baseConc + wallConc + coverConc;
+          // Columns (Estimate 1 col per 15m2 ?)
+          // Heuristic from previous code: col vol = floors * height * 0.02 * area (very rough)
+          // Let's use simple logic: 
+          const colVol = nFl * stH * (flArea * 0.02); // 2% of volume? No, previous logic.
+          items.push(makeItem("RC in Columns (Est)", "m³", colVol, 13500, [{ number: 1, length: colVol.toFixed(2), text: "Estimate" }]));
 
-        results = {
-          excavation_volume: septicExcavVol.toFixed(2),
-          concrete_volume: totalSepticConc.toFixed(2),
-          reinforcement_weight: (totalSepticConc * 80).toFixed(2),
-          items: [
-            {
-              description: `E100.1.3 - Excavation for septic tank`,
-              quantity: septicExcavVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F100 - Concrete C20/25 for septic tank`,
-              quantity: totalSepticConc.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G600 - Reinforcement for septic tank`,
-              quantity: (totalSepticConc * 80).toFixed(2),
-              unit: "kg",
-            },
-          ],
-        };
-        break;
+          break;
 
-      case "swimming_pools":
-        const avgDepth = (formData.shallow_depth + formData.deep_depth) / 2;
-        const poolExcavVol =
-          (formData.length + 1) * (formData.width + 1) * (avgDepth + 0.5);
-        const poolFloorConc =
-          formData.length * formData.width * (formData.floor_thickness / 1000);
-        const poolWallConc =
-          2 * (formData.length * (formData.wall_thickness / 1000) * avgDepth) +
-          2 * (formData.width * (formData.wall_thickness / 1000) * avgDepth);
-        const totalPoolConc = poolFloorConc + poolWallConc;
+        case "manholes":
+          items.push(makeHeader("MANHOLES"));
+          const mhD = parseFloat(data.depth);
+          const mhDiam = parseFloat(data.internal_diameter) / 1000;
+          const count = parseFloat(data.number_manholes);
 
-        results = {
-          excavation_volume: poolExcavVol.toFixed(2),
-          concrete_volume: totalPoolConc.toFixed(2),
-          reinforcement_weight: (totalPoolConc * 150).toFixed(2),
-          items: [
-            {
-              description: `E100.1.4 - Excavation for swimming pool`,
-              quantity: poolExcavVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F200.2.1 - Pool concrete C30/37`,
-              quantity: totalPoolConc.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G600 - Reinforcement for pool`,
-              quantity: (totalPoolConc * 150).toFixed(2),
-              unit: "kg",
-            },
-            {
-              description: `Pool waterproofing system`,
-              quantity: (
-                formData.length * formData.width +
-                2 * (formData.length + formData.width) * avgDepth
-              ).toFixed(2),
-              unit: "m²",
-            },
-          ],
-        };
-        break;
+          // Excavation (approx 1.5m diam hole for 1m diam mh)
+          const excDiam = mhDiam + 0.5;
+          const mhExc = (Math.PI * Math.pow(excDiam, 2) / 4) * mhD * count;
 
-      case "basements":
-        const basementExcavVol =
-          (formData.length + 1) * (formData.width + 1) * (formData.depth + 0.3);
-        const basementFloorConc =
-          formData.length * formData.width * (formData.floor_thickness / 1000);
-        const basementWallConc =
-          2 *
-          (formData.length *
-            (formData.wall_thickness / 1000) *
-            formData.depth) +
-          2 *
-          (formData.width *
-            (formData.wall_thickness / 1000) *
-            formData.depth);
-        const totalBasementConc = basementFloorConc + basementWallConc;
+          items.push(makeItem("Excavation for Manholes", "m³", mhExc, 550, [
+            { number: count, length: (Math.PI / 4).toFixed(2), width: excDiam.toFixed(2), height: (excDiam * mhD).toFixed(2) }
+          ]));
 
-        results = {
-          excavation_volume: basementExcavVol.toFixed(2),
-          concrete_volume: totalBasementConc.toFixed(2),
-          reinforcement_weight: (totalBasementConc * 100).toFixed(2),
-          waterproof_area: formData.waterproofing
-            ? (
-              formData.length * formData.width +
-              2 * (formData.length + formData.width) * formData.depth
-            ).toFixed(2)
-            : 0,
-          items: [
-            {
-              description: `E100.1.4 - Excavation for basement`,
-              quantity: basementExcavVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F200.2.2 - Basement concrete C25/30`,
-              quantity: totalBasementConc.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G600 - Reinforcement for basement`,
-              quantity: (totalBasementConc * 100).toFixed(2),
-              unit: "kg",
-            },
-          ],
-        };
-        if (formData.waterproofing) {
-          results.items.push({
-            description: `Basement waterproofing membrane`,
-            quantity: (
-              formData.length * formData.width +
-              2 * (formData.length + formData.width) * formData.depth
-            ).toFixed(2),
-            unit: "m²",
-          });
-        }
-        break;
+          items.push(makeItem("Precast Manhole Rings", "m", mhD * count, 4500, [{ number: count, length: mhD.toFixed(2) }]));
+          items.push(makeItem("Manhole Covers", "No", count, 8500, [{ number: count, length: 1 }]));
+          break;
 
-      case "water_tanks":
-        let tankExcavVol, tankConc;
-        if (formData.tank_type === "Circular") {
-          const tankDiameter = Math.sqrt(
-            (4 * formData.capacity) / (Math.PI * formData.height)
-          );
-          tankExcavVol =
-            Math.PI *
-            Math.pow((tankDiameter + 1) / 2, 2) *
-            (formData.height + 0.5);
-          tankConc =
-            Math.PI *
-            Math.pow(tankDiameter / 2 + formData.wall_thickness / 1000, 2) *
-            (formData.base_thickness / 1000) +
-            Math.PI *
-            (formData.wall_thickness / 1000) *
-            (tankDiameter + formData.wall_thickness / 1000) *
-            formData.height;
-        } else {
-          const sideLength = Math.sqrt(formData.capacity / formData.height);
-          tankExcavVol = Math.pow(sideLength + 1, 2) * (formData.height + 0.5);
-          tankConc =
-            Math.pow(sideLength + 2 * (formData.wall_thickness / 1000), 2) *
-            (formData.base_thickness / 1000) +
-            4 * sideLength * (formData.wall_thickness / 1000) * formData.height;
-        }
+        case "pavements":
+          items.push(makeHeader("PAVEMENTS"));
+          const pArea = parseFloat(data.area);
+          const sbT = parseFloat(data.subbase_thickness) / 1000;
+          const bT = parseFloat(data.base_thickness) / 1000;
 
-        results = {
-          excavation_volume: tankExcavVol.toFixed(2),
-          concrete_volume: tankConc.toFixed(2),
-          reinforcement_weight: (tankConc * 90).toFixed(2),
-          items: [
-            {
-              description: `E100.1.2 - Excavation for water tank`,
-              quantity: tankExcavVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `F100 - Water tank concrete C30/37`,
-              quantity: tankConc.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `G600 - Reinforcement for water tank`,
-              quantity: (tankConc * 90).toFixed(2),
-              unit: "kg",
-            },
-            {
-              description: `Water tank waterproofing`,
-              quantity: tankConc.toFixed(2),
-              unit: "m²",
-            },
-          ],
-        };
-        break;
+          items.push(makeItem("Sub-base Compaction", "m³", pArea * sbT, 3500, [{ number: 1, length: pArea.toFixed(2), width: sbT.toFixed(2) }]));
+          items.push(makeItem("Base Course", "m³", pArea * bT, 4500, [{ number: 1, length: pArea.toFixed(2), width: bT.toFixed(2) }]));
+          items.push(makeItem("Paving Blocks / Surface", "m²", pArea, 1200, [{ number: 1, length: pArea.toFixed(2) }]));
+          break;
 
-      case "landscaping":
-        const topsoilVol =
-          (formData.lawn_area + formData.planting_area) *
-          (formData.topsoil_depth / 1000);
-        const plantsNum = formData.planting_area * 2;
+        case "retaining_walls":
+          items.push(makeHeader("RETAINING WALL"));
+          const rwL = parseFloat(data.length);
+          const rwH = parseFloat(data.height);
+          const rwThk = parseFloat(data.thickness) / 1000;
+          const rwFW = parseFloat(data.foundation_width);
 
-        results = {
-          topsoil_volume: topsoilVol.toFixed(2),
-          grass_area: formData.lawn_area.toFixed(2),
-          planting_area: formData.planting_area.toFixed(2),
-          paving_area: formData.paving_area.toFixed(2),
-          items: [
-            {
-              description: `E100.1.1 - Site preparation`,
-              quantity: (formData.total_area * 0.1).toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `E500.2.1 - Imported topsoil`,
-              quantity: topsoilVol.toFixed(2),
-              unit: "m³",
-            },
-            {
-              description: `Grass seeding and lawn establishment`,
-              quantity: formData.lawn_area.toFixed(2),
-              unit: "m²",
-            },
-            {
-              description: `Planting of shrubs and plants`,
-              quantity: plantsNum.toFixed(0),
-              unit: "no",
-            },
-            {
-              description: `Paving stones and installation`,
-              quantity: formData.paving_area.toFixed(2),
-              unit: "m²",
-            },
-          ],
-        };
-        break;
+          // Wall
+          const rwVol = rwL * rwH * rwThk;
+          items.push(makeItem("RC Retaining Wall", "m³", rwVol, 13500, [{ number: 1, length: rwL.toFixed(2), height: rwH.toFixed(2), width: rwThk.toFixed(2) }]));
+          // Found (assume 0.3 thk)
+          const rwFVol = rwL * rwFW * 0.3;
+          items.push(makeItem("RC Foundation", "m³", rwFVol, 12500, [{ number: 1, length: rwL.toFixed(2), width: rwFW.toFixed(2), height: "0.30" }]));
+          break;
 
-      default:
-        results = {
-          message: `${calculatorId} calculation completed`,
-          items: [
-            {
-              description: `${calculatorId} calculation`,
-              quantity: "1.00",
-              unit: "lump",
-            },
-          ],
-        };
-    }
+        case "septic_tanks":
+          items.push(makeHeader("SEPTIC TANK"));
+          const stL = parseFloat(data.length);
+          const stW = parseFloat(data.width);
+          const stD = parseFloat(data.depth);
 
-    setCalculationResults((prev) => ({
-      ...prev,
-      [calculatorId]: results,
-    }));
+          const stExc = (stL + 1) * (stW + 1) * stD; // working space
+          items.push(makeItem("Excavation", "m³", stExc, 450, [{ number: 1, length: (stL + 1).toFixed(2), width: (stW + 1).toFixed(2), height: stD.toFixed(2) }]));
+          items.push(makeItem("Concrete Bed", "m³", stL * stW * 0.15, 12500, [{ number: 1, length: stL.toFixed(2), width: stW.toFixed(2), height: "0.15" }]));
+          break;
+
+        case "swimming_pools":
+          items.push(makeHeader("SWIMMING POOL"));
+          const spL = parseFloat(data.length);
+          const spW = parseFloat(data.width);
+          const spD = parseFloat(data.avg_depth);
+
+          const spExc = spL * spW * spD;
+          items.push(makeItem("Bulk Excavation", "m³", spExc, 450, [{ number: 1, length: spL.toFixed(2), width: spW.toFixed(2), height: spD.toFixed(2) }]));
+          // Shell (approx area * 0.2 thk)
+          const shellArea = (spL * spW) + 2 * (spL * spD) + 2 * (spW * spD);
+          const shellVol = shellArea * 0.2;
+          items.push(makeItem("RC Shell (Floor & Walls)", "m³", shellVol, 14500, [{ number: 1, length: shellArea.toFixed(2), width: "0.20", text: "Total Surface * Thk" }]));
+          break;
+
+        default:
+          break;
+      }
+    } catch (e) { console.error(e); }
+    return items;
   };
-
-  // Form component for individual calculators
-  const CalculatorForm = ({ calculator }) => {
-    const [formData, setFormData] = useState(
-      calculator.fields.reduce(
-        (acc, field) => ({
-          ...acc,
-          [field.name]: field.defaultValue || "",
-        }),
-        {}
-      )
-    );
-
-    const handleInputChange = (fieldName, value) => {
-      setFormData((prev) => ({
-        ...prev,
-        [fieldName]: value,
-      }));
-    };
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      calculateQuantities(calculator.id, formData);
-    };
-
-    const results = calculationResults[calculator.id];
-
-    return (
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-full bg-gray-100 dark:bg-slate-700`}>
-              {calculator.icon &&
-                React.createElement(calculator.icon, {
-                  className: "w-6 h-6 text-gray-700",
-                })}
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">{calculator.name}</h3>
-              <p className="text-sm text-gray-500">{calculator.description}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onViewDiagram && onViewDiagram(calculator.id)}
-              className="px-3 py-1 bg-gray-100 rounded"
-            >
-              View
-            </button>
-            <button
-              type="button"
-              onClick={() => onGoToBOQ && onGoToBOQ()}
-              className="px-3 py-1 bg-blue-600 text-white rounded"
-            >
-              BOQ
-            </button>
-            <button
-              type="button"
-              onClick={() => onGoToApproximate && onGoToApproximate()}
-              className="px-3 py-1 bg-green-600 text-white rounded"
-            >
-              Approx
-            </button>
-          </div>
-        </div>
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"
-        >
-          {calculator.fields.map((field) => (
-            <div key={field.name} className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700">
-                {field.label}
-              </label>
-              {field.type === "select" ? (
-                <select
-                  value={formData[field.name]}
-                  onChange={(e) =>
-                    handleInputChange(field.name, e.target.value)
-                  }
-                  className="mt-1 p-2 border rounded"
-                >
-                  {field.options &&
-                    field.options.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                </select>
-              ) : field.type === "checkbox" ? (
-                <input
-                  type="checkbox"
-                  checked={!!formData[field.name]}
-                  onChange={(e) =>
-                    handleInputChange(field.name, e.target.checked)
-                  }
-                />
-              ) : (
-                <input
-                  type={field.type}
-                  value={formData[field.name]}
-                  onChange={(e) =>
-                    handleInputChange(field.name, e.target.value)
-                  }
-                  className="mt-1 p-2 border rounded"
-                />
-              )}
-            </div>
-          ))}
-          <div className="col-span-1 md:col-span-2 flex items-center gap-2">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded"
-            >
-              Calculate
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setFormData(
-                  calculator.fields.reduce(
-                    (acc, f) => ({ ...acc, [f.name]: f.defaultValue || "" }),
-                    {}
-                  )
-                )
-              }
-              className="px-4 py-2 bg-gray-200 rounded"
-            >
-              Reset
-            </button>
-          </div>
-        </form>
-        {isLoading && (
-          <div className="text-sm text-gray-500">Calculating...</div>
-        )}
-        {results && (
-          <div className="mt-4">
-            <h4 className="font-semibold">Results</h4>
-            <pre className="text-sm bg-gray-50 dark:bg-slate-800 p-3 rounded mt-2 overflow-auto">
-              {JSON.stringify(results, null, 2)}
-            </pre>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const activeCalcObj = memberCalculators.find(
-    (c) => c.id === activeCalculator
-  );
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {memberCalculators.map((calc) => (
-          <button
-            key={calc.id}
-            onClick={() => setActiveCalculator(calc.id)}
-            className="text-left p-4 bg-white dark:bg-slate-800 rounded shadow hover:shadow-md"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded bg-gray-100">
-                {calc.icon &&
-                  React.createElement(calc.icon, {
-                    className: "w-5 h-5 text-gray-700",
-                  })}
-              </div>
-              <div>
-                <h4 className="font-semibold">{calc.name}</h4>
-                <p className="text-sm text-gray-500">{calc.description}</p>
-              </div>
-            </div>
-          </button>
-        ))}
+    <div className="flex bg-gray-50 h-screen flex-col">
+      <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-none">
+        <div className="flex items-center gap-3 mb-4">
+          {activeCalculator ? (
+            <button onClick={() => setActiveCalculator(null)} className="p-2 hover:bg-gray-100 rounded-full mr-2">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          ) : (
+            <Calculator className="w-8 h-8 text-blue-700" />
+          )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {activeCalculator ? activeCalculator.name : "Quick Calculators"}
+            </h1>
+            <p className="text-sm text-gray-500">
+              {activeCalculator ? activeCalculator.description : "Select a component to estimate"}
+            </p>
+          </div>
+        </div>
+        <UniversalTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+        />
       </div>
 
-      {activeCalcObj && (
-        <div>
-          <button
-            onClick={() => setActiveCalculator(null)}
-            className="mb-3 text-sm text-blue-600"
-          >
-            ← Back to calculators
-          </button>
-          <CalculatorForm calculator={activeCalcObj} />
-        </div>
-      )}
+      <main className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+        {activeTab === 'calculator' && (
+          <>
+            {!activeCalculator ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {memberCalculators.map((calc) => (
+                  <div
+                    key={calc.id}
+                    onClick={() => handleCalculatorSelect(calc)}
+                    className="bg-white p-6 rounded-xl shadow-sm border hover:border-blue-500 hover:shadow-md cursor-pointer transition-all flex flex-col items-center text-center group"
+                  >
+                    <div className={`p-4 rounded-full bg-${calc.color}-50 text-${calc.color}-600 mb-4 group-hover:scale-110 transition-transform`}>
+                      <calc.icon className="w-8 h-8" />
+                    </div>
+                    <h3 className="font-bold text-lg text-gray-800">{calc.name}</h3>
+                    <p className="text-sm text-gray-500 mt-2">{calc.description}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {activeCalculator.fields.map((field) => (
+                      <div key={field.name} className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                        {field.type === 'select' ? (
+                          <select
+                            className="border rounded px-3 py-2"
+                            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                            value={formData[field.name] || field.defaultValue || ""}
+                          >
+                            {field.options.map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        ) : (
+                          <input
+                            type={field.type}
+                            className="border rounded px-3 py-2"
+                            placeholder={field.defaultValue}
+                            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                            value={formData[field.name] || ""}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="lg:col-span-1 bg-white rounded-lg shadow-sm border p-6 h-fit">
+                  <button
+                    onClick={calculate}
+                    disabled={isLoading}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 flex items-center justify-center gap-2"
+                  >
+                    <Calculator className="w-5 h-5" /> {isLoading ? "Calculating..." : "Calculate"}
+                  </button>
+                  {takeoffData.length > 0 && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+                      Calculations complete. Check Tabs.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'takeoff' && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden">
+            <EnglishMethodTakeoffSheet
+              key={editorKey}
+              initialItems={takeoffData}
+              onChange={setTakeoffData}
+              projectInfo={{
+                projectName: activeCalculator ? activeCalculator.name : "Quick Calc",
+                clientName: "",
+                projectDate: new Date().toLocaleDateString()
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === 'sheet' && <div className="h-full"><UniversalSheet items={takeoffData} /></div>}
+        {activeTab === 'boq' && <div className="h-full"><UniversalBOQ items={takeoffData} /></div>}
+      </main>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { Text } from "@react-three/drei";
 import { Line } from "@react-three/drei";
 
@@ -1553,9 +1553,9 @@ export function DrawMultiColumnBaseMF3({
                       x - 0.45 * Math.cos(angle),
                       y - 0.45 * Math.sin(angle),
                       bottomCover +
-                        mainBarDiameterX +
-                        mainBarDiameterY +
-                        lacerDiameter * 2,
+                      mainBarDiameterX +
+                      mainBarDiameterY +
+                      lacerDiameter * 2,
                     ]}
                     rotation={[0, 0, angle]}
                   />
@@ -2211,8 +2211,8 @@ export function DrawTrenchMF5A({
                       x,
                       -trenchWidth / 2 + wallThickness / 2,
                       slabThickness +
-                        (trenchDepth + tensionLap) / 2 -
-                        tensionLap / 2,
+                      (trenchDepth + tensionLap) / 2 -
+                      tensionLap / 2,
                     ]}
                   />
                   <mesh
@@ -2222,8 +2222,8 @@ export function DrawTrenchMF5A({
                       x,
                       trenchWidth / 2 - wallThickness / 2,
                       slabThickness +
-                        (trenchDepth + tensionLap) / 2 -
-                        tensionLap / 2,
+                      (trenchDepth + tensionLap) / 2 -
+                      tensionLap / 2,
                     ]}
                   />
                 </React.Fragment>
@@ -2560,12 +2560,12 @@ export function DrawTrenchMF5B({
                     position={[
                       x,
                       -trenchWidth / 2 +
-                        wallThickness / 2 -
-                        buriedCover -
-                        verticalBarDiameter / 2,
+                      wallThickness / 2 -
+                      buriedCover -
+                      verticalBarDiameter / 2,
                       slabThickness +
-                        (trenchDepth + tensionLap) / 2 -
-                        tensionLap / 2,
+                      (trenchDepth + tensionLap) / 2 -
+                      tensionLap / 2,
                     ]}
                   />
                   <mesh
@@ -2574,12 +2574,12 @@ export function DrawTrenchMF5B({
                     position={[
                       x,
                       trenchWidth / 2 -
-                        wallThickness / 2 +
-                        internalCover +
-                        verticalBarDiameter / 2,
+                      wallThickness / 2 +
+                      internalCover +
+                      verticalBarDiameter / 2,
                       slabThickness +
-                        (trenchDepth + tensionLap) / 2 -
-                        tensionLap / 2,
+                      (trenchDepth + tensionLap) / 2 -
+                      tensionLap / 2,
                     ]}
                   />
                 </React.Fragment>
@@ -2607,12 +2607,12 @@ export function DrawTrenchMF5B({
                     position={[
                       x,
                       -trenchWidth / 2 +
-                        wallThickness / 2 +
-                        internalCover +
-                        verticalBarDiameter / 2,
+                      wallThickness / 2 +
+                      internalCover +
+                      verticalBarDiameter / 2,
                       slabThickness +
-                        (trenchDepth + tensionLap) / 2 -
-                        tensionLap / 2,
+                      (trenchDepth + tensionLap) / 2 -
+                      tensionLap / 2,
                     ]}
                   />
                   <mesh
@@ -2621,12 +2621,12 @@ export function DrawTrenchMF5B({
                     position={[
                       x,
                       trenchWidth / 2 -
-                        wallThickness / 2 -
-                        buriedCover -
-                        verticalBarDiameter / 2,
+                      wallThickness / 2 -
+                      buriedCover -
+                      verticalBarDiameter / 2,
                       slabThickness +
-                        (trenchDepth + tensionLap) / 2 -
-                        tensionLap / 2,
+                      (trenchDepth + tensionLap) / 2 -
+                      tensionLap / 2,
                     ]}
                   />
                 </React.Fragment>
@@ -2655,10 +2655,10 @@ export function DrawTrenchMF5B({
                     position={[
                       0,
                       -trenchWidth / 2 +
-                        wallThickness / 2 -
-                        buriedCover -
-                        verticalBarDiameter -
-                        horizontalBarDiameter / 2,
+                      wallThickness / 2 -
+                      buriedCover -
+                      verticalBarDiameter -
+                      horizontalBarDiameter / 2,
                       z,
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
@@ -2670,10 +2670,10 @@ export function DrawTrenchMF5B({
                     position={[
                       0,
                       -trenchWidth / 2 +
-                        wallThickness / 2 +
-                        internalCover +
-                        verticalBarDiameter +
-                        horizontalBarDiameter / 2,
+                      wallThickness / 2 +
+                      internalCover +
+                      verticalBarDiameter +
+                      horizontalBarDiameter / 2,
                       z,
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
@@ -2685,10 +2685,10 @@ export function DrawTrenchMF5B({
                     position={[
                       0,
                       trenchWidth / 2 -
-                        wallThickness / 2 -
-                        buriedCover -
-                        verticalBarDiameter -
-                        horizontalBarDiameter / 2,
+                      wallThickness / 2 -
+                      buriedCover -
+                      verticalBarDiameter -
+                      horizontalBarDiameter / 2,
                       z,
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
@@ -2700,10 +2700,10 @@ export function DrawTrenchMF5B({
                     position={[
                       0,
                       trenchWidth / 2 -
-                        wallThickness / 2 +
-                        internalCover +
-                        verticalBarDiameter +
-                        horizontalBarDiameter / 2,
+                      wallThickness / 2 +
+                      internalCover +
+                      verticalBarDiameter +
+                      horizontalBarDiameter / 2,
                       z,
                     ]}
                     rotation={[0, 0, Math.PI / 2]}

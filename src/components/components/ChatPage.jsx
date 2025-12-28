@@ -64,7 +64,7 @@ const ChatPage = ({ renderSearch, isDark }) => {
       title: "Quantity Survey",
       icon: Calculator,
       color: "from-emerald-500 to-emerald-700",
-      bg: "bg-emerald-50 dark:bg-emerald-900/20",
+      bg: "bg-emerald-50 dark:bg-emerald-900/20 ",
       description: "Taking off & BOQ",
       children: [
         {
@@ -73,9 +73,9 @@ const ChatPage = ({ renderSearch, isDark }) => {
           type: "section",
           items: [
             { label: "Taking Off", path: "/quantity/manual/taking-off" },
-            { label: "Approximate Quantities", path: "/quantity/manual/approximate" },
+            { label: "Dimension Paper", path: "/quantity/manual/approximate" },
             { label: "Bill of Quantities", path: "/quantity/manual/boq" },
-            { label: "Individual Members", path: "/quantity/manual/individual-members" },
+
             { label: "Substructure Works", path: "/quantity/manual/substructure_works" },
             { label: "Superstructure", path: "/quantity/manual/superstructure-takeoff" },
             { label: "RCC Superstructure", path: "/quantity/manual/rcc-superstructure" },

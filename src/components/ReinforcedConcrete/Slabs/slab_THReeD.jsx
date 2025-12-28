@@ -48,6 +48,11 @@ export function DrawSlabMS1({
     mainRebar: "#cc3333",
     distributionBars: "#cc8833",
   },
+  numNominalBarsInDrop = 0,
+  dropSize = 0,
+  dropDepth = 0,
+  nominalBarSpacing = 0.2,
+  nominalBarDiameter = 0.012,
   showConcrete = true,
   showRebar = true,
   showLabels = true,
@@ -135,6 +140,8 @@ export function DrawSlabMS1({
       }),
     [colors.distributionBars, wireframe]
   );
+
+  const nominalBarMaterial = mainBarMaterial;
 
   return (
     <group name="MS1-Slab">

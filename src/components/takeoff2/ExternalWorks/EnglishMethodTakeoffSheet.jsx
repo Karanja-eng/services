@@ -1,7 +1,239 @@
-import React, { useState, useRef } from "react";
-import { Download, Printer, Plus, Trash2, Edit2 } from "lucide-react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { Download, Printer, Plus, Trash2, Edit2, Copy } from "lucide-react";
+import descriptionsData from "../../takeoff2/descriptions";
 
-export default function EnglishMethodTakeoffSheet() {
+// Flatten descriptions for auto-complete
+const ALL_DESCRIPTIONS = Object.values(descriptionsData).flat();
+
+const EditableDescription = ({ value, onChange, placeholder }) => {
+  const [inputValue, setInputValue] = useState(value);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const wrapperRef = useRef(null);
+
+  // Sync internal state if prop value changes externally
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  const filteredSuggestions = useMemo(() => {
+    if (!inputValue) return [];
+    const lowerInput = inputValue.toLowerCase();
+    return ALL_DESCRIPTIONS.filter((desc) =>
+      desc.toLowerCase().includes(lowerInput)
+    ).slice(0, 10); // Limit to top 10 matches for performance
+  }, [inputValue]);
+
+  const handleSelect = (desc) => {
+    setInputValue(desc);
+    onChange(desc);
+    setShowSuggestions(false);
+  };
+
+  const handleChange = (e) => {
+    const newVal = e.target.value;
+    setInputValue(newVal);
+    onChange(newVal);
+    setShowSuggestions(true);
+  };
+
+  // Click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div
+      ref={wrapperRef}
+      style={{ position: "relative", width: "100%" }}
+      className="no-print"
+    >
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleChange}
+        onFocus={() => setShowSuggestions(true)}
+        placeholder={placeholder}
+        style={{
+          width: "100%",
+          padding: "8px",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+          fontSize: "13px",
+          fontFamily: "Arial, sans-serif",
+        }}
+      />
+      {showSuggestions && filteredSuggestions.length > 0 && (
+        <ul
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            backgroundColor: "white",
+            border: "1px solid #ddd",
+            borderRadius: "0 0 4px 4px",
+            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+            maxHeight: "200px",
+            overflowY: "auto",
+            zIndex: 1000,
+            listStyle: "none",
+            padding: 0,
+            margin: 0,
+          }}
+        >
+          {filteredSuggestions.map((desc, idx) => (
+            <li
+              key={idx}
+              onClick={() => handleSelect(desc)}
+              style={{
+                padding: "8px 12px",
+                cursor: "pointer",
+                borderBottom: "1px solid #f0f0f0",
+                fontSize: "12px",
+                transition: "background 0.1s",
+              }}
+              onMouseEnter={(e) => (e.target.style.background = "#f5f5f5")}
+              onMouseLeave={(e) => (e.target.style.background = "white")}
+            >
+              {desc}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+// Default sample items if none provided
+const DEFAULT_ITEMS = [
+  {
+    id: 1,
+    billNo: "A",
+    itemNo: "1",
+    description: "DEMOLITION & SITE CLEARANCE (Class D)",
+    dimensions: [],
+    quantity: null,
+    unit: "",
+    rate: null,
+    amount: null,
+    isHeader: true,
+  },
+  {
+    id: 2,
+    billNo: "A",
+    itemNo: "1.1",
+    description: "Site clearance, general",
+    dimensions: [
+      {
+        id: 1,
+        length: "50.00",
+        width: "40.00",
+        height: "",
+        number: "1",
+        deduction: false,
+      },
+      {
+        id: 2,
+        length: "12.00",
+        width: "10.00",
+        height: "",
+        number: "1",
+        deduction: true,
+      },
+    ],
+    quantity: 1880.0,
+    unit: "m²",
+    rate: 150.0,
+    amount: 282000.0,
+    isHeader: false,
+  },
+  {
+    id: 3,
+    billNo: "A",
+    itemNo: "1.2",
+    description: "Remove trees, girth 0.5-2m",
+    dimensions: [
+      {
+        id: 1,
+        length: "",
+        width: "",
+        height: "",
+        number: "3",
+        deduction: false,
+      },
+    ],
+    quantity: 3,
+    unit: "no",
+    rate: 5000.0,
+    amount: 15000.0,
+    isHeader: false,
+  },
+  {
+    id: 4,
+    billNo: "A",
+    itemNo: "1.3",
+    description: "Remove trees, girth >2m",
+    dimensions: [
+      {
+        id: 1,
+        length: "",
+        width: "",
+        height: "",
+        number: "2",
+        deduction: false,
+      },
+    ],
+    quantity: 2,
+    unit: "no",
+    rate: 8000.0,
+    amount: 16000.0,
+    isHeader: false,
+  },
+  {
+    id: 5,
+    billNo: "B",
+    itemNo: "2",
+    description: "EARTHWORKS (Class E)",
+    dimensions: [],
+    quantity: null,
+    unit: "",
+    rate: null,
+    amount: null,
+    isHeader: true,
+  },
+  {
+    id: 6,
+    billNo: "B",
+    itemNo: "2.1",
+    description: "Excavate vegetable soil for preservation, average depth 150mm",
+    dimensions: [
+      {
+        id: 1,
+        length: "50.00",
+        width: "40.00",
+        height: "0.15",
+        number: "1",
+        deduction: false,
+      },
+    ],
+    quantity: 300.0,
+    unit: "m³",
+    rate: 250.0,
+    amount: 75000.0,
+    isHeader: false,
+  },
+];
+
+export default function EnglishMethodTakeoffSheet({
+  initialItems = DEFAULT_ITEMS,
+  onChange,
+}) {
   const [projectInfo, setProjectInfo] = useState({
     projectName: "PROPOSED EXTERNAL WORKS",
     location: "Sample Site",
@@ -12,363 +244,14 @@ export default function EnglishMethodTakeoffSheet() {
     scale: "1:100",
   });
 
-  // Sample takeoff items following English Method format
-  const [takeoffItems, setTakeoffItems] = useState([
-    {
-      id: 1,
-      billNo: "A",
-      itemNo: "1",
-      description: "DEMOLITION & SITE CLEARANCE (Class D)",
-      dimensions: [],
-      quantity: null,
-      unit: "",
-      rate: null,
-      amount: null,
-      isHeader: true,
-    },
-    {
-      id: 2,
-      billNo: "A",
-      itemNo: "1.1",
-      description: "Site clearance, general",
-      dimensions: [
-        {
-          id: 1,
-          length: "50.00",
-          width: "40.00",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-        {
-          id: 2,
-          length: "12.00",
-          width: "10.00",
-          height: "",
-          number: "1",
-          deduction: true,
-        },
-      ],
-      quantity: 1880.0,
-      unit: "m²",
-      rate: 150.0,
-      amount: 282000.0,
-      isHeader: false,
-    },
-    {
-      id: 3,
-      billNo: "A",
-      itemNo: "1.2",
-      description: "Remove trees, girth 0.5-2m",
-      dimensions: [
-        {
-          id: 1,
-          length: "",
-          width: "",
-          height: "",
-          number: "3",
-          deduction: false,
-        },
-      ],
-      quantity: 3,
-      unit: "no",
-      rate: 5000.0,
-      amount: 15000.0,
-      isHeader: false,
-    },
-    {
-      id: 4,
-      billNo: "A",
-      itemNo: "1.3",
-      description: "Remove trees, girth >2m",
-      dimensions: [
-        {
-          id: 1,
-          length: "",
-          width: "",
-          height: "",
-          number: "2",
-          deduction: false,
-        },
-      ],
-      quantity: 2,
-      unit: "no",
-      rate: 8000.0,
-      amount: 16000.0,
-      isHeader: false,
-    },
-    {
-      id: 5,
-      billNo: "B",
-      itemNo: "2",
-      description: "EARTHWORKS (Class E)",
-      dimensions: [],
-      quantity: null,
-      unit: "",
-      rate: null,
-      amount: null,
-      isHeader: true,
-    },
-    {
-      id: 6,
-      billNo: "B",
-      itemNo: "2.1",
-      description:
-        "Excavate vegetable soil for preservation, average depth 150mm",
-      dimensions: [
-        {
-          id: 1,
-          length: "50.00",
-          width: "40.00",
-          height: "0.15",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 300.0,
-      unit: "m³",
-      rate: 250.0,
-      amount: 75000.0,
-      isHeader: false,
-    },
-    {
-      id: 7,
-      billNo: "B",
-      itemNo: "2.2",
-      description: "Mass excavation, maximum depth 0.5m",
-      subItems: ["Road area", "Parking area", "Bellmouth"],
-      dimensions: [
-        {
-          id: 1,
-          length: "32.00",
-          width: "9.20",
-          height: "0.50",
-          number: "1",
-          deduction: false,
-        },
-        {
-          id: 2,
-          length: "25.00",
-          width: "9.20",
-          height: "0.50",
-          number: "1",
-          deduction: false,
-        },
-        {
-          id: 3,
-          length: "8.50",
-          width: "",
-          height: "0.50",
-          number: "1",
-          deduction: false,
-          note: "(bellmouth area)",
-        },
-      ],
-      quantity: 150.55,
-      unit: "m³",
-      rate: 350.0,
-      amount: 52692.5,
-      isHeader: false,
-    },
-    {
-      id: 8,
-      billNo: "B",
-      itemNo: "2.3",
-      description: "Disposal of excavated material",
-      dimensions: [
-        {
-          id: 1,
-          length: "150.55",
-          width: "",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 150.55,
-      unit: "m³",
-      rate: 200.0,
-      amount: 30110.0,
-      isHeader: false,
-    },
-    {
-      id: 9,
-      billNo: "B",
-      itemNo: "2.4",
-      description: "Filling, imported murram, compacted in layers",
-      dimensions: [
-        {
-          id: 1,
-          length: "32.00",
-          width: "9.20",
-          height: "0.20",
-          number: "1",
-          deduction: false,
-        },
-        {
-          id: 2,
-          length: "25.00",
-          width: "9.20",
-          height: "0.20",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 105.04,
-      unit: "m³",
-      rate: 800.0,
-      amount: 84032.0,
-      isHeader: false,
-    },
-    {
-      id: 10,
-      billNo: "C",
-      itemNo: "3",
-      description: "ROADS & PAVINGS (Class R)",
-      dimensions: [],
-      quantity: null,
-      unit: "",
-      rate: null,
-      amount: null,
-      isHeader: true,
-    },
-    {
-      id: 11,
-      billNo: "C",
-      itemNo: "3.1",
-      description: "Hardcore filling, 200mm thick, compacted",
-      dimensions: [
-        {
-          id: 1,
-          length: "32.00",
-          width: "9.20",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-        {
-          id: 2,
-          length: "25.00",
-          width: "9.20",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 524.4,
-      unit: "m²",
-      rate: 650.0,
-      amount: 340860.0,
-      isHeader: false,
-    },
-    {
-      id: 12,
-      billNo: "C",
-      itemNo: "3.2",
-      description: "Bitumen bound macadam base course, 150mm thick",
-      dimensions: [
-        {
-          id: 1,
-          length: "32.00",
-          width: "9.00",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 288.0,
-      unit: "m²",
-      rate: 1200.0,
-      amount: 345600.0,
-      isHeader: false,
-    },
-    {
-      id: 13,
-      billNo: "C",
-      itemNo: "3.3",
-      description: "Bitumen premix wearing course, 50mm thick",
-      dimensions: [
-        {
-          id: 1,
-          length: "32.00",
-          width: "9.00",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 288.0,
-      unit: "m²",
-      rate: 850.0,
-      amount: 244800.0,
-      isHeader: false,
-    },
-    {
-      id: 14,
-      billNo: "C",
-      itemNo: "3.4",
-      description: "PCC kerb, 125x250mm, straight",
-      dimensions: [
-        {
-          id: 1,
-          length: "32.00",
-          width: "",
-          height: "",
-          number: "2",
-          deduction: false,
-        },
-      ],
-      quantity: 64.0,
-      unit: "m",
-      rate: 1500.0,
-      amount: 96000.0,
-      isHeader: false,
-    },
-    {
-      id: 15,
-      billNo: "C",
-      itemNo: "3.5",
-      description: "PCC channel, 125x100mm, straight",
-      dimensions: [
-        {
-          id: 1,
-          length: "32.00",
-          width: "",
-          height: "",
-          number: "2",
-          deduction: false,
-        },
-      ],
-      quantity: 64.0,
-      unit: "m",
-      rate: 1200.0,
-      amount: 76800.0,
-      isHeader: false,
-    },
-    {
-      id: 16,
-      billNo: "C",
-      itemNo: "3.6",
-      description: "Concrete backing to kerb, 100mm thick",
-      dimensions: [
-        {
-          id: 1,
-          length: "32.00",
-          width: "0.20",
-          height: "0.10",
-          number: "2",
-          deduction: false,
-        },
-      ],
-      quantity: 1.28,
-      unit: "m³",
-      rate: 12000.0,
-      amount: 15360.0,
-      isHeader: false,
-    },
-  ]);
+  const [takeoffItems, setTakeoffItems] = useState(initialItems);
 
-  const [editingCell, setEditingCell] = useState(null);
+  // Notify parent of changes whenever items update
+  useEffect(() => {
+    if (onChange) {
+      onChange(takeoffItems);
+    }
+  }, [takeoffItems, onChange]);
 
   const calculateDimensionTotal = (dimensions) => {
     if (!dimensions || dimensions.length === 0) return 0;
@@ -385,6 +268,58 @@ export default function EnglishMethodTakeoffSheet() {
 
       return dim.deduction ? total - dimTotal : total + dimTotal;
     }, 0);
+  };
+
+  const addNewClass = () => {
+    // Find the next Bill No logic could be improved, simplistic for now
+    const lastItem = takeoffItems[takeoffItems.length - 1];
+    const nextBillNo = lastItem
+      ? String.fromCharCode(lastItem.billNo.charCodeAt(0) + 1)
+      : "A";
+
+    const newHeader = {
+      id: Date.now(),
+      billNo: nextBillNo,
+      itemNo: "",
+      description: "NEW WORK CLASS",
+      dimensions: [],
+      quantity: null,
+      unit: "",
+      rate: null,
+      amount: null,
+      isHeader: true,
+    };
+
+    // Add start item for this class
+    const newItem = {
+      id: Date.now() + 1,
+      billNo: nextBillNo,
+      itemNo: "1",
+      description: "Description of work...",
+      dimensions: [
+        {
+          id: 1,
+          length: "",
+          width: "",
+          height: "",
+          number: "1",
+          deduction: false,
+        },
+      ],
+      quantity: 0,
+      unit: "m²",
+      rate: 0,
+      amount: 0,
+      isHeader: false,
+    };
+
+    setTakeoffItems([...takeoffItems, newHeader, newItem]);
+  };
+
+  const updateItemNo = (id, newNo) => {
+    setTakeoffItems((items) =>
+      items.map((item) => (item.id === id ? { ...item, itemNo: newNo } : item))
+    );
   };
 
   const addNewItem = () => {
@@ -412,8 +347,56 @@ export default function EnglishMethodTakeoffSheet() {
     setTakeoffItems([...takeoffItems, newItem]);
   };
 
+  const addItemBelow = (index) => {
+    const newItem = {
+      id: Date.now(),
+      billNo: takeoffItems[index].billNo, // Inherit Bill No
+      itemNo: "",
+      description: "",
+      dimensions: [
+        {
+          id: 1,
+          length: "",
+          width: "",
+          height: "",
+          number: "1",
+          deduction: false,
+        },
+      ],
+      quantity: 0,
+      unit: "m²",
+      rate: 0,
+      amount: 0,
+      isHeader: false,
+    };
+    const newItems = [...takeoffItems];
+    newItems.splice(index + 1, 0, newItem);
+    setTakeoffItems(newItems);
+  };
+
   const deleteItem = (id) => {
     setTakeoffItems(takeoffItems.filter((item) => item.id !== id));
+  };
+
+  const updateItemDescription = (id, newDesc) => {
+    setTakeoffItems(
+      takeoffItems.map((item) =>
+        item.id === id ? { ...item, description: newDesc } : item
+      )
+    );
+  };
+
+  const updateRate = (itemId, newRate) => {
+    setTakeoffItems(
+      takeoffItems.map((item) => {
+        if (item.id === itemId) {
+          const rate = parseFloat(newRate) || 0;
+          const amount = item.quantity ? item.quantity * rate : 0;
+          return { ...item, rate: rate, amount: amount };
+        }
+        return item;
+      })
+    );
   };
 
   const updateDimension = (itemId, dimId, field, value) => {
@@ -530,9 +513,11 @@ export default function EnglishMethodTakeoffSheet() {
     >
       <style>{`
         @media print {
-          .no-print { display: none; }
+          .no-print { display: none !important; }
           table { page-break-inside: auto; }
           tr { page-break-inside: avoid; page-break-after: auto; }
+          input { border: none !important; padding: 0 !important; }
+          button { display: none !important; }
         }
         .takeoff-table {
           width: 100%;
@@ -566,29 +551,21 @@ export default function EnglishMethodTakeoffSheet() {
         .dimension-row {
           background: #fafafa;
         }
-        .underline {
-          border-bottom: 1px solid #000;
-          display: inline-block;
-          min-width: 60px;
-        }
-        .deduction {
-          color: red;
-        }
         .subtotal-row {
           background: #fffacd;
           font-weight: bold;
         }
-        .grand-total-row {
-          background: #90ee90;
-          font-weight: bold;
-          font-size: 13px;
-        }
         input[type="text"],
         input[type="number"] {
-          border: 1px solid #ccc;
+          border: 1px solid #ddd;
           padding: 4px;
           width: 100%;
           box-sizing: border-box;
+          font-family: inherit;
+        }
+        input:focus {
+          outline: 2px solid #2196F3;
+          border-color: transparent;
         }
         .action-btn {
           background: none;
@@ -596,9 +573,13 @@ export default function EnglishMethodTakeoffSheet() {
           cursor: pointer;
           padding: 4px;
           margin: 0 2px;
+          border-radius: 4px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
         .action-btn:hover {
-          opacity: 0.7;
+          background-color: #f0f0f0;
         }
       `}</style>
 
@@ -614,6 +595,22 @@ export default function EnglishMethodTakeoffSheet() {
         >
           <h1 style={{ margin: 0 }}>Quantity Takeoff Sheet</h1>
           <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={addNewClass}
+              style={{
+                padding: "10px 20px",
+                background: "#673AB7",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+            >
+              <Plus size={16} /> Add Class
+            </button>
             <button
               onClick={addNewItem}
               style={{
@@ -738,7 +735,7 @@ export default function EnglishMethodTakeoffSheet() {
             <th style={{ width: "50px" }}>Unit</th>
             <th style={{ width: "100px" }}>Rate</th>
             <th style={{ width: "120px" }}>Amount</th>
-            <th className="no-print" style={{ width: "60px" }}>
+            <th className="no-print" style={{ width: "70px" }}>
               Actions
             </th>
           </tr>
@@ -750,18 +747,48 @@ export default function EnglishMethodTakeoffSheet() {
                 <React.Fragment key={item.id}>
                   <tr className="header-row">
                     <td>{item.billNo}</td>
-                    <td>{item.itemNo}</td>
-                    <td colSpan="9">{item.description}</td>
+                    <td>
+                      <input
+                        type="text"
+                        value={item.itemNo}
+                        onChange={(e) => updateItemNo(item.id, e.target.value)}
+                        style={{
+                          textAlign: "center",
+                          border: "none",
+                          background: "transparent",
+                          width: "100%",
+                          color: "inherit",
+                          fontWeight: "inherit"
+                        }}
+                      />
+                    </td>
+                    <td colSpan="9">
+                      <EditableDescription
+                        value={item.description}
+                        onChange={(val) =>
+                          updateItemDescription(item.id, val)
+                        }
+                        placeholder="Header Description..."
+                      />
+                    </td>
                     <td className="no-print">
                       <button
                         className="action-btn"
+                        onClick={() => addItemBelow(itemIndex)}
+                        title="Add Item Below"
+                      >
+                        <Plus size={14} color="green" />
+                      </button>
+                      <button
+                        className="action-btn"
                         onClick={() => deleteItem(item.id)}
+                        title="Delete Row"
                       >
                         <Trash2 size={14} color="red" />
                       </button>
                     </td>
                   </tr>
-                  {/* Show subtotal before next section */}
+                  {/* Show subtotal before next section (if logic applies) */}
                   {itemIndex > 0 &&
                     takeoffItems[itemIndex - 1] &&
                     takeoffItems[itemIndex - 1].billNo !== item.billNo && (
@@ -798,26 +825,31 @@ export default function EnglishMethodTakeoffSheet() {
                     {dimIndex === 0 && (
                       <>
                         <td rowSpan={dimensionRows.length}>{item.billNo}</td>
-                        <td rowSpan={dimensionRows.length}>{item.itemNo}</td>
                         <td rowSpan={dimensionRows.length}>
-                          {item.description}
-                          {item.subItems && (
-                            <div
-                              style={{
-                                marginTop: "5px",
-                                fontSize: "10px",
-                                color: "#666",
-                              }}
-                            >
-                              {item.subItems.map((sub, i) => (
-                                <div key={i}>• {sub}</div>
-                              ))}
-                            </div>
-                          )}
+                          <input
+                            type="text"
+                            value={item.itemNo}
+                            onChange={(e) => updateItemNo(item.id, e.target.value)}
+                            style={{
+                              textAlign: "center",
+                              border: "none",
+                              background: "transparent",
+                              width: "100%"
+                            }}
+                          />
+                        </td>
+                        <td rowSpan={dimensionRows.length}>
+                          <EditableDescription
+                            value={item.description}
+                            onChange={(val) =>
+                              updateItemDescription(item.id, val)
+                            }
+                            placeholder="Type for suggestions..."
+                          />
                         </td>
                       </>
                     )}
-                    <td className="dim-cell">
+                    <td>
                       <input
                         type="text"
                         value={dim.number}
@@ -829,10 +861,10 @@ export default function EnglishMethodTakeoffSheet() {
                             e.target.value
                           )
                         }
-                        style={{ textAlign: "right" }}
+                        style={{ textAlign: "center" }}
                       />
                     </td>
-                    <td className="dim-cell">
+                    <td>
                       <input
                         type="text"
                         value={dim.length}
@@ -847,7 +879,7 @@ export default function EnglishMethodTakeoffSheet() {
                         style={{ textAlign: "right" }}
                       />
                     </td>
-                    <td className="dim-cell">
+                    <td>
                       <input
                         type="text"
                         value={dim.width}
@@ -862,7 +894,7 @@ export default function EnglishMethodTakeoffSheet() {
                         style={{ textAlign: "right" }}
                       />
                     </td>
-                    <td className="dim-cell">
+                    <td>
                       <input
                         type="text"
                         value={dim.height}
@@ -874,58 +906,62 @@ export default function EnglishMethodTakeoffSheet() {
                             e.target.value
                           )
                         }
-                        className={
-                          dimIndex === dimensionRows.length - 1
-                            ? "underline"
-                            : ""
-                        }
                         style={{ textAlign: "right" }}
                       />
                     </td>
                     {dimIndex === 0 && (
                       <>
-                        <td
-                          rowSpan={dimensionRows.length}
-                          style={{ textAlign: "right", fontWeight: "bold" }}
-                        >
-                          {item.quantity ? item.quantity.toFixed(2) : "0.00"}
+                        <td rowSpan={dimensionRows.length}>
+                          {item.quantity?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </td>
+                        <td rowSpan={dimensionRows.length}>{item.unit}</td>
+                        <td rowSpan={dimensionRows.length} style={{ padding: 0 }}>
+                          <input
+                            type="number"
+                            value={item.rate || ""}
+                            onChange={(e) => updateRate(item.id, e.target.value)}
+                            style={{
+                              textAlign: "right",
+                              width: "100%",
+                              border: "none",
+                              background: "transparent",
+                              padding: "6px 8px"
+                            }}
+                            placeholder="0.00"
+                          />
+                        </td>
+                        <td rowSpan={dimensionRows.length}>
+                          {item.amount?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </td>
                         <td
                           rowSpan={dimensionRows.length}
-                          style={{ textAlign: "center" }}
+                          className="no-print"
+                          style={{ verticalAlign: "top" }}
                         >
-                          {item.unit}
-                        </td>
-                        <td
-                          rowSpan={dimensionRows.length}
-                          style={{ textAlign: "right" }}
-                        >
-                          {item.rate ? item.rate.toLocaleString() : "-"}
-                        </td>
-                        <td
-                          rowSpan={dimensionRows.length}
-                          style={{ textAlign: "right", fontWeight: "bold" }}
-                        >
-                          {item.amount
-                            ? item.amount.toLocaleString("en-KE", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })
-                            : "-"}
-                        </td>
-                        <td rowSpan={dimensionRows.length} className="no-print">
-                          <button
-                            className="action-btn"
-                            onClick={() => addDimension(item.id)}
-                          >
-                            <Plus size={14} />
-                          </button>
-                          <button
-                            className="action-btn"
-                            onClick={() => deleteItem(item.id)}
-                          >
-                            <Trash2 size={14} color="red" />
-                          </button>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex' }}>
+                              <button
+                                className="action-btn"
+                                onClick={() => addItemBelow(itemIndex)}
+                                title="Add Item Below"
+                              >
+                                <Plus size={14} color="green" />
+                              </button>
+                              <button
+                                className="action-btn"
+                                onClick={() => deleteItem(item.id)}
+                                title="Delete Item"
+                              >
+                                <Trash2 size={14} color="red" />
+                              </button>
+                            </div>
+                          </div>
                         </td>
                       </>
                     )}
@@ -934,59 +970,22 @@ export default function EnglishMethodTakeoffSheet() {
               </React.Fragment>
             );
           })}
-
-          {/* Final subtotal */}
-          {takeoffItems.length > 0 && (
-            <tr className="subtotal-row">
-              <td
-                colSpan="10"
-                style={{ textAlign: "right", paddingRight: "20px" }}
-              >
-                Sub-total {takeoffItems[takeoffItems.length - 1].billNo}:
-              </td>
-              <td style={{ textAlign: "right" }}>
-                {calculateSubtotal(
-                  takeoffItems[takeoffItems.length - 1].billNo
-                ).toLocaleString("en-KE", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </td>
-              <td className="no-print"></td>
-            </tr>
-          )}
-
-          {/* Grand Total */}
-          <tr className="grand-total-row">
-            <td
-              colSpan="10"
-              style={{ textAlign: "right", paddingRight: "20px" }}
-            >
-              GRAND TOTAL:
+          {/* Grand Total Row */}
+          <tr className="subtotal-row" style={{ borderTop: "3px double #000" }}>
+            <td colSpan="10" style={{ textAlign: "right", paddingRight: "20px", fontSize: "14px" }}>
+              <strong>GRAND TOTAL:</strong>
             </td>
             <td style={{ textAlign: "right", fontSize: "14px" }}>
               {calculateGrandTotal().toLocaleString("en-KE", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
+                style: "currency",
+                currency: "KES",
+                minimumFractionDigits: 2
               })}
             </td>
             <td className="no-print"></td>
           </tr>
-        </tbody>
-      </table>
-
-      {/* Footer Notes */}
-      <div style={{ marginTop: "30px", fontSize: "11px" }}>
-        <p>
-          <strong>NOTES:</strong>
-        </p>
-        <ol>
-          <li>All quantities are net unless otherwise stated</li>
-          <li>Rates include for labour, materials, and plant</li>
-          <li>Measurement in accordance with CESMM4</li>
-          <li>Deductions shown in red</li>
-        </ol>
-      </div>
-    </div>
+        </tbody >
+      </table >
+    </div >
   );
 }

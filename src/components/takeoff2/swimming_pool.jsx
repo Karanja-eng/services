@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { Waves, FileText, Download, AlertCircle } from "lucide-react";
+import { Waves, FileText, Download, AlertCircle, Calculator } from "lucide-react";
+import axios from "axios";
+import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
 
 const InputField = ({
   label,
@@ -38,6 +41,7 @@ const CheckboxField = ({ label, name, checked, onChange }) => (
 );
 
 export default function SwimmingPoolTakeoffApp() {
+  const [activeTab, setActiveTab] = useState("calculator");
   const [formData, setFormData] = useState({
     intL: 12.0,
     intW: 8.0,
@@ -63,9 +67,10 @@ export default function SwimmingPoolTakeoffApp() {
     backfillIncl: true,
   });
 
-  const [results, setResults] = useState(null);
+  const [takeoffData, setTakeoffData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [editorKey, setEditorKey] = useState(0);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -105,24 +110,30 @@ export default function SwimmingPoolTakeoffApp() {
         backfill_incl: formData.backfillIncl,
       };
 
-      const response = await fetch("http://localhost:8001/api/calculate-pool", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await axios.post("http://localhost:8001/swimming_pool_router/api/calculate-pool", payload);
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error("Calculation failed");
+      // Standardize data
+      if (data.boq) {
+        const formattedItems = data.boq.map((row, index) => ({
+          id: index + 1,
+          billNo: row.item,
+          itemNo: (index + 1).toString(),
+          description: row.description,
+          unit: row.unit,
+          quantity: row.quantity || 0,
+          rate: 0,
+          amount: 0,
+          dimensions: [],
+          isHeader: false
+        }));
+        setTakeoffData(formattedItems);
+        setEditorKey(prev => prev + 1);
       }
-
-      const data = await response.json();
-      setResults(data.boq);
     } catch (err) {
       setError(
         err.message ||
-          "Failed to connect to backend. Please ensure the FastAPI server is running."
+        "Failed to connect to backend. Please ensure the FastAPI server is running."
       );
       console.error("Error:", err);
     } finally {
@@ -130,262 +141,67 @@ export default function SwimmingPoolTakeoffApp() {
     }
   };
 
-  const handleExport = () => {
-    if (!results) return;
-
-    let csv = "Item,Description,Unit,Quantity\n";
-    results.forEach((row) => {
-      csv += `${row.item},"${row.description}",${row.unit},${row.quantity}\n`;
-    });
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "swimming_pool_boq.csv";
-    a.click();
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <header className="bg-white border-b border-gray-200 shadow-sm px-6 py-4">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Waves className="w-8 h-8 text-gray-700" />
+            <Waves className="w-8 h-8 text-blue-600" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Swimming Pool Quantity Takeoff
               </h1>
               <p className="text-sm text-gray-600">
-                Professional BOQ Calculator for Civil Engineers
+                Professional BOQ Calculator
               </p>
             </div>
           </div>
+
+        </div>
+
+        <div className="mt-4">
+          <UniversalTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+          />
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Input Form */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Input Parameters
+      <main className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+        {activeTab === "calculator" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            {/* Left Col: Inputs */}
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
+                <Calculator className="w-5 h-5 text-gray-500" /> Parameters
               </h2>
 
-              <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
-                {/* Pool Dimensions */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 border-b pb-2">
-                    Pool Dimensions
-                  </h3>
-                  <div className="space-y-3">
-                    <InputField
-                      label="Internal Length (m)"
-                      name="intL"
-                      value={formData.intL}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Internal Width (m)"
-                      name="intW"
-                      value={formData.intW}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Shallow End Depth (m)"
-                      name="shallowDepth"
-                      value={formData.shallowDepth}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Deep End Depth (m)"
-                      name="deepDepth"
-                      value={formData.deepDepth}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Wall Height Above Ground (m)"
-                      name="wallHeightAbove"
-                      value={formData.wallHeightAbove}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <h3 className="col-span-2 text-sm font-bold text-gray-700 mt-2">Dimensions</h3>
+                  <InputField label="Len (m)" name="intL" value={formData.intL} onChange={handleChange} />
+                  <InputField label="Wid (m)" name="intW" value={formData.intW} onChange={handleChange} />
+                  <InputField label="Shallow Dep (m)" name="shallowDepth" value={formData.shallowDepth} onChange={handleChange} />
+                  <InputField label="Deep Dep (m)" name="deepDepth" value={formData.deepDepth} onChange={handleChange} />
 
-                {/* Structural Elements */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 border-b pb-2">
-                    Structural Elements
-                  </h3>
-                  <div className="space-y-3">
-                    <InputField
-                      label="Wall Thickness (m)"
-                      name="wallThick"
-                      value={formData.wallThick}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Base Slab Thickness (m)"
-                      name="bedThick"
-                      value={formData.bedThick}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Tanking Thickness (m)"
-                      name="tankingThick"
-                      value={formData.tankingThick}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Blinding Thickness (m)"
-                      name="blindingThick"
-                      value={formData.blindingThick}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
+                  <h3 className="col-span-2 text-sm font-bold text-gray-700 mt-2">Structure</h3>
+                  <InputField label="Wall Thk (m)" name="wallThick" value={formData.wallThick} onChange={handleChange} />
+                  <InputField label="Bed Thk (m)" name="bedThick" value={formData.bedThick} onChange={handleChange} />
+                  <InputField label="Tanking (m)" name="tankingThick" value={formData.tankingThick} onChange={handleChange} />
 
-                {/* Foundation Trench */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 border-b pb-2">
-                    Foundation Trench
-                  </h3>
-                  <div className="space-y-3">
-                    <InputField
-                      label="Trench Width (m)"
-                      name="trenchWidth"
-                      value={formData.trenchWidth}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Trench Depth (m)"
-                      name="trenchDepth"
-                      value={formData.trenchDepth}
-                      onChange={handleChange}
-                    />
+                  <h3 className="col-span-2 text-sm font-bold text-gray-700 mt-2">Excavation</h3>
+                  <div className="col-span-2 grid grid-cols-2 gap-4">
+                    <InputField label="Veg Soil (m)" name="vegSoilDepth" value={formData.vegSoilDepth} onChange={handleChange} />
+                    <InputField label="Work Space (m)" name="workingSpace" value={formData.workingSpace} onChange={handleChange} />
                   </div>
-                </div>
 
-                {/* Steps */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 border-b pb-2">
-                    Steps (Optional)
-                  </h3>
-                  <div className="space-y-3">
-                    <InputField
-                      label="Number of Steps"
-                      name="numSteps"
-                      value={formData.numSteps}
-                      onChange={handleChange}
-                      type="number"
-                      step="1"
-                    />
-                    {formData.numSteps > 0 && (
-                      <>
-                        <InputField
-                          label="Step Rise (m)"
-                          name="stepRise"
-                          value={formData.stepRise}
-                          onChange={handleChange}
-                        />
-                        <InputField
-                          label="Step Tread (m)"
-                          name="stepTread"
-                          value={formData.stepTread}
-                          onChange={handleChange}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Site Work */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 border-b pb-2">
-                    Site Work
-                  </h3>
-                  <div className="space-y-3">
-                    <InputField
-                      label="Vegetable Soil Depth (m)"
-                      name="vegSoilDepth"
-                      value={formData.vegSoilDepth}
-                      onChange={handleChange}
-                    />
-                    <InputField
-                      label="Working Space (m)"
-                      name="workingSpace"
-                      value={formData.workingSpace}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-
-                {/* Excavation Staging */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 border-b pb-2">
-                    Excavation Options
-                  </h3>
-                  <div className="space-y-3">
-                    <CheckboxField
-                      label="Excavate in Stages"
-                      name="excavStaged"
-                      checked={formData.excavStaged}
-                      onChange={handleChange}
-                    />
-                    {formData.excavStaged && (
-                      <InputField
-                        label="Stage Depth (m)"
-                        name="stageDepth"
-                        value={formData.stageDepth}
-                        onChange={handleChange}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Reinforcement */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 border-b pb-2">
-                    Reinforcement
-                  </h3>
-                  <div className="space-y-3">
-                    <CheckboxField
-                      label="Include Reinforcement"
-                      name="reinfIncl"
-                      checked={formData.reinfIncl}
-                      onChange={handleChange}
-                    />
-                    {formData.reinfIncl && (
-                      <InputField
-                        label="Reinforcement Density (kg/m³)"
-                        name="reinfDensity"
-                        value={formData.reinfDensity}
-                        onChange={handleChange}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Other Options */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 border-b pb-2">
-                    Other Options
-                  </h3>
-                  <div className="space-y-3">
-                    <CheckboxField
-                      label="Include Formwork"
-                      name="formIncl"
-                      checked={formData.formIncl}
-                      onChange={handleChange}
-                    />
-                    <CheckboxField
-                      label="Include Backfill"
-                      name="backfillIncl"
-                      checked={formData.backfillIncl}
-                      onChange={handleChange}
-                    />
+                  <h3 className="col-span-2 text-sm font-bold text-gray-700 mt-2">Options</h3>
+                  <div className="col-span-2 space-y-2">
+                    <CheckboxField label="Reinf" name="reinfIncl" checked={formData.reinfIncl} onChange={handleChange} />
+                    <CheckboxField label="Formwork" name="formIncl" checked={formData.formIncl} onChange={handleChange} />
+                    <CheckboxField label="Backfill" name="backfillIncl" checked={formData.backfillIncl} onChange={handleChange} />
                   </div>
                 </div>
               </div>
@@ -393,126 +209,72 @@ export default function SwimmingPoolTakeoffApp() {
               <button
                 onClick={handleCalculate}
                 disabled={loading}
-                className="w-full mt-6 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition-colors disabled:opacity-50"
               >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Calculating...
-                  </>
-                ) : (
-                  <>
-                    <Waves className="w-4 h-4" />
-                    Calculate BOQ
-                  </>
-                )}
+                {loading ? "Calculating..." : "Calculate Quantities"}
               </button>
-            </div>
-          </div>
-
-          {/* Results Table */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-gray-700" />
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Bill of Quantities
-                  </h2>
-                </div>
-                {results && (
-                  <button
-                    onClick={handleExport}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md transition-colors"
-                  >
-                    <Download className="w-4 h-4" />
-                    Export CSV
-                  </button>
-                )}
-              </div>
 
               {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-red-800">Error</p>
-                    <p className="text-sm text-red-700 mt-1">{error}</p>
-                    <p className="text-xs text-red-600 mt-2">
-                      Make sure FastAPI server is running on
-                      http://localhost:8000
-                    </p>
-                  </div>
+                <div className="bg-red-50 text-red-700 p-3 rounded text-sm flex gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5" />
+                  <div>{error}</div>
                 </div>
               )}
+            </div>
 
-              {!results && !error && (
-                <div className="text-center py-12">
-                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">
-                    Enter parameters and click "Calculate BOQ" to see results
+            {/* Right Col: Info / Preview */}
+            <div className="bg-blue-50/50 p-6 rounded-lg border border-blue-100">
+              <h3 className="font-bold text-blue-900 mb-2">Swimming Pool Calculation</h3>
+              <p className="text-sm text-blue-800 mb-4">
+                Enter pool dimensions and structural details to generate a comprehensive Bill of Quantities including:
+              </p>
+              <ul className="list-disc pl-5 text-sm text-blue-800 space-y-1">
+                <li>Excavation volumes (bulk and trench)</li>
+                <li>Disposal and backfilling</li>
+                <li>Concrete works (blinding, bed, walls)</li>
+                <li>Formwork areas</li>
+                <li>Reinforcement weights</li>
+                <li>Finishes (plaster, tiling, painting)</li>
+              </ul>
+
+              {takeoffData.length > 0 && (
+                <div className="mt-8 bg-white p-4 rounded shadow-sm border border-green-100">
+                  <h4 className="text-green-700 font-bold mb-1">Success!</h4>
+                  <p className="text-sm text-gray-600">
+                    Generated {takeoffData.length} BOQ items. Check the <strong>BOQ</strong> tab for details.
                   </p>
                 </div>
               )}
-
-              {results && (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-100 border-b-2 border-gray-300">
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 w-16">
-                          Item
-                        </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                          Description
-                        </th>
-                        <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 w-20">
-                          Unit
-                        </th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 w-28">
-                          Quantity
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.map((row, index) => (
-                        <tr
-                          key={index}
-                          className="border-b border-gray-200 hover:bg-gray-50"
-                        >
-                          <td className="py-3 px-4 text-sm text-gray-700 font-medium">
-                            {row.item}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-700">
-                            {row.description}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-700 text-center">
-                            {row.unit}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-900 font-medium text-right">
-                            {row.quantity}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Backend Instructions */}
-            <div className="mt-4 bg-gray-100 border border-gray-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                Backend Setup Instructions
-              </h3>
-              <p className="text-xs text-gray-600 mb-2">
-                Save the Python FastAPI backend code and run:
-              </p>
-              <code className="block bg-white px-3 py-2 rounded text-xs text-gray-800 font-mono border border-gray-300">
-                uvicorn main:app --reload
-              </code>
             </div>
           </div>
-        </div>
+        )}
+
+        {activeTab === "takeoff" && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden">
+            <EnglishMethodTakeoffSheet
+              key={editorKey}
+              initialItems={takeoffData}
+              onChange={setTakeoffData}
+              projectInfo={{
+                projectName: "Swimming Pool Project",
+                clientName: "Client Name",
+                projectDate: new Date().toLocaleDateString()
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === "sheet" && (
+          <div className="h-full">
+            <UniversalSheet items={takeoffData} />
+          </div>
+        )}
+
+        {activeTab === "boq" && (
+          <div className="h-full">
+            <UniversalBOQ items={takeoffData} />
+          </div>
+        )}
       </main>
     </div>
   );

@@ -9,11 +9,24 @@ from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 import os
 
+
+from sqlalchemy import text
+
+def check_db_connection():
+    """Check if database connection is working"""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return True, "Database connection successful"
+    except Exception as e:
+        return False, f"Database connection failed: {str(e)}"
+
 # Database connection settings
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/services_db"
+    "postgresql://postgres:newpassword@localhost:5432/fundi_database_mvp"
 )
+
 
 # Create SQLAlchemy engine
 engine = create_engine(
@@ -76,14 +89,3 @@ def init_db():
     print("✅ Database tables created successfully")
 
 
-def check_db_connection():
-    """
-    Check if database connection is working
-    Returns: (bool, str) - (success, message)
-    """
-    try:
-        with engine.connect() as conn:
-            conn.execute("SELECT 1")
-        return True, "Database connection successful"
-    except Exception as e:
-        return False, f"Database connection failed: {str(e)}"
