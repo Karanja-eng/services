@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { Calculator, FileText, Download, AlertCircle, Settings, Box, Layers } from "lucide-react";
+import axios from "axios";
+import { SepticSystem2DDrawings } from "./TwoD";
+import { SepticSystem3DView } from "./ThreeD";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 
 const InputField = ({ label, name, value, onChange, type = "number", step = "0.01", min = "0" }) => (
   <div>
@@ -35,10 +40,11 @@ export default function EnhancedSepticTakeoffApp({ isDark = false }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [editorKey, setEditorKey] = useState(0);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+    setFormData(prev => ({ ...prev, [name]: (e.target.type === "number" || e.target.type === "select-one") ? (parseFloat(value) || value) : value }));
   };
 
   const handleCalculate = async () => {
@@ -54,18 +60,27 @@ export default function EnhancedSepticTakeoffApp({ isDark = false }) {
         num_baffles: formData.numBaffles, baffle_l: formData.baffleL, baffle_thick: formData.baffleThick, baffle_heights: baffleHeights,
         inlet_pipe_l: formData.inletPipeL, outlet_pipe_l: formData.outletPipeL,
         blinding_thick: formData.blindingThick, veg_soil: formData.vegSoil, working_space: formData.workingSpace, cover_soil_depth: formData.coverSoilDepth,
+        soakpit_shape: formData.soakpitShape, soakpit_diameter: formData.soakpitDiameter, soakpit_depth: formData.soakpitDepth, soakpit_wall_thick: formData.soakpitWallThick
       };
-      const response = await fetch("http://localhost:8001/septicRouter/api/calculate", {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-      });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
+
+      const response = await axios.post("http://localhost:8001/septicRouter/api/calculate", payload);
+      const data = response.data;
+
       if (data.boq) {
         setTakeoffData(data.boq.map((row, i) => ({
-          id: i + 1, itemNo: (i + 1).toString(), description: row.description, unit: row.unit,
-          quantity: parseFloat(row.quantity) || 0, rate: 0, amount: 0
+          id: i + 1,
+          billNo: "S" + (i + 1),
+          itemNo: row.item.toString(),
+          description: row.description,
+          unit: row.unit,
+          quantity: parseFloat(row.quantity) || 0,
+          rate: row.rate || 0,
+          amount: row.amount || 0,
+          dimensions: []
         })));
         setSummary(data.summary);
+        setEditorKey(prev => prev + 1);
+        setActiveTab("takeoff");
       }
     } catch (err) {
       setError(err.message || "Failed to connect to backend");
@@ -74,8 +89,37 @@ export default function EnhancedSepticTakeoffApp({ isDark = false }) {
     }
   };
 
+  // Map config for 2D/3D
+  const visualConfig = {
+    septicTank: {
+      intL: formData.tankIntL,
+      intW: formData.tankIntW,
+      depth: formData.tankDepthInt,
+      wallThick: formData.wallThick,
+      slabThick: formData.slabThick,
+      bedThick: formData.bedThickTank,
+      numBaffles: formData.numBaffles,
+      baffleThick: formData.baffleThick,
+      baffleHeights: Array.from({ length: formData.numBaffles }, (_, i) => formData[`baffleHeight${i + 1}`] || 1.5)
+    },
+    manhole: {
+      intL: formData.manholeIntL,
+      intW: formData.manholeIntW,
+      depth: formData.manholeDepthInt,
+      wallThick: formData.wallThick,
+      coverL: formData.coverL,
+      coverW: formData.coverW
+    },
+    soakpit: {
+      diameter: formData.soakpitDiameter,
+      depth: formData.soakpitDepth,
+      wallThick: formData.soakpitWallThick,
+      shape: formData.soakpitShape
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-slate-900">
+    <div className="flex h-screen bg-gray-50 dark:bg-slate-900 overflow-hidden">
       <div className="flex-1 flex flex-col h-full">
         <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm px-6 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -87,22 +131,11 @@ export default function EnhancedSepticTakeoffApp({ isDark = false }) {
               </div>
             </div>
           </div>
-          <div className="flex gap-1">
-            {[
-              { id: "calculator", icon: Settings, label: "Calculator" },
-              { id: "2d", icon: Layers, label: "2D Drawings" },
-              { id: "3d", icon: Box, label: "3D Model" },
-              { id: "boq", icon: FileText, label: "BOQ" }
-            ].map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all rounded-t-lg ${activeTab === tab.id
-                    ? 'bg-white dark:bg-slate-800 text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}>
-                <tab.icon className="w-4 h-4" />{tab.label}
-              </button>
-            ))}
-          </div>
+          <UniversalTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            tabs={['calculator', '2d', '3d', 'takeoff', 'sheet', 'boq']}
+          />
         </header>
 
         <div className="flex-1 overflow-auto p-6">
@@ -148,20 +181,21 @@ export default function EnhancedSepticTakeoffApp({ isDark = false }) {
                     <div className="grid grid-cols-3 gap-3">
                       <SelectField label="Shape" name="soakpitShape" value={formData.soakpitShape} onChange={handleChange}
                         options={[{ value: 'circular', label: 'Circular' }, { value: 'rectangular', label: 'Rectangular' }]} />
-                      <InputField label="Size (m)" name="soakpitDiameter" value={formData.soakpitDiameter} onChange={handleChange} />
+                      <InputField label="Size/Dia (m)" name="soakpitDiameter" value={formData.soakpitDiameter} onChange={handleChange} />
                       <InputField label="Depth (m)" name="soakpitDepth" value={formData.soakpitDepth} onChange={handleChange} />
+                      <InputField label="Wall (m)" name="soakpitWallThick" value={formData.soakpitWallThick} onChange={handleChange} />
                     </div>
                   </div>
                 </div>
 
                 <button onClick={handleCalculate} disabled={loading}
-                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2">
+                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 transition-colors">
                   {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Calculator className="w-5 h-5" />}
                   {loading ? 'Calculating...' : 'Calculate Quantities'}
                 </button>
 
                 {error && (
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md flex gap-2">
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md flex gap-2 animate-pulse">
                     <AlertCircle className="w-5 h-5" />
                     <div><p className="font-bold">Error</p><p className="text-sm">{error}</p></div>
                   </div>
@@ -174,20 +208,22 @@ export default function EnhancedSepticTakeoffApp({ isDark = false }) {
                   <ul className="space-y-2 text-sm text-gray-600 dark:text-slate-400">
                     <li>1. Enter septic tank, manhole, and soakpit dimensions</li>
                     <li>2. Specify baffle walls configuration</li>
-                    <li>3. Click Calculate to generate BOQ</li>
-                    <li>4. View 2D/3D visualizations</li>
-                    <li>5. Export results to CSV</li>
+                    <li>3. Click Calculate to generate BOQ & Takeoff</li>
+                    <li>4. View 2D/3D visualizations for design check</li>
+                    <li>5. Export results to Universal BOQ template</li>
                   </ul>
                 </div>
 
                 {summary && (
-                  <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg shadow">
-                    <h4 className="font-bold text-green-800 dark:text-green-400 mb-3">Summary</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between"><span>Concrete:</span><strong>{summary.total_concrete} m³</strong></div>
-                      <div className="flex justify-between"><span>Excavation:</span><strong>{summary.total_excavation} m³</strong></div>
-                      <div className="flex justify-between"><span>Formwork:</span><strong>{summary.total_formwork} m²</strong></div>
-                      <div className="flex justify-between pt-2 border-t"><span>Items:</span><strong>{takeoffData.length}</strong></div>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg shadow border border-green-100 dark:border-green-900/30">
+                    <h4 className="font-bold text-green-800 dark:text-green-400 mb-3 flex items-center gap-2">
+                      Summary Results
+                    </h4>
+                    <div className="space-y-2 text-sm text-gray-700 dark:text-slate-300">
+                      <div className="flex justify-between"><span>Total Concrete:</span><strong>{summary.total_concrete} m³</strong></div>
+                      <div className="flex justify-between"><span>Total Excavation:</span><strong>{summary.total_excavation} m³</strong></div>
+                      <div className="flex justify-between"><span>Total Formwork:</span><strong>{summary.total_formwork} m²</strong></div>
+                      <div className="flex justify-between pt-2 border-t dark:border-slate-700"><span>Components:</span><strong>{takeoffData.length} Items</strong></div>
                     </div>
                   </div>
                 )}
@@ -195,54 +231,37 @@ export default function EnhancedSepticTakeoffApp({ isDark = false }) {
             </div>
           )}
 
-          {activeTab === "boq" && (
-            <div className="max-w-7xl mx-auto bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
-              <div className="p-6 border-b">
-                <h2 className="text-xl font-bold">Bill of Quantities</h2>
-              </div>
-              {takeoffData.length === 0 ? (
-                <div className="p-12 text-center"><FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No data. Run calculation first.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-slate-700">
-                      <tr>{['No.', 'Description', 'Unit', 'Quantity', 'Rate', 'Amount'].map(h => (
-                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{h}</th>
-                      ))}</tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-                      {takeoffData.map(item => (
-                        <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                          <td className="px-6 py-4 text-sm">{item.itemNo}</td>
-                          <td className="px-6 py-4 text-sm">{item.description}</td>
-                          <td className="px-6 py-4 text-sm">{item.unit}</td>
-                          <td className="px-6 py-4 text-sm font-semibold">{item.quantity.toFixed(2)}</td>
-                          <td className="px-6 py-4 text-sm">{item.rate}</td>
-                          <td className="px-6 py-4 text-sm">{item.amount}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+          {activeTab === "takeoff" && (
+            <div className="h-full bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
+              <EnglishMethodTakeoffSheet
+                key={editorKey}
+                initialItems={takeoffData}
+                onChange={setTakeoffData}
+              />
             </div>
           )}
 
-          {(activeTab === "2d" || activeTab === "3d") && (
-            <div className="h-full flex items-center justify-center bg-white dark:bg-slate-800 rounded-lg shadow">
-              <div className="text-center p-12">
-                <div className="text-4xl mb-4">{activeTab === "2d" ? "📐" : "🎨"}</div>
-                <p className="text-gray-600 dark:text-gray-400 mb-2">
-                  {activeTab === "2d" ? "2D CAD Drawings" : "3D Visualization"}
-                </p>
-                <p className="text-sm text-gray-500">Import drawings components separately:<br />
-                  <code className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded text-xs">
-                    {activeTab === "2d" ? "SepticSystem2DDrawings" : "SepticSystem3DView"}
-                  </code>
-                </p>
-              </div>
+          {activeTab === "sheet" && (
+            <div className="h-full bg-white dark:bg-slate-800 rounded-lg shadow overflow-auto">
+              <UniversalSheet items={takeoffData} />
+            </div>
+          )}
+
+          {activeTab === "boq" && (
+            <div className="h-full bg-white dark:bg-slate-800 rounded-lg shadow overflow-auto">
+              <UniversalBOQ items={takeoffData} />
+            </div>
+          )}
+
+          {activeTab === "2d" && (
+            <div className="h-full bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
+              <SepticSystem2DDrawings config={visualConfig} darkMode={isDark} />
+            </div>
+          )}
+
+          {activeTab === "3d" && (
+            <div className="h-full bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
+              <SepticSystem3DView config={visualConfig} darkMode={isDark} />
             </div>
           )}
         </div>

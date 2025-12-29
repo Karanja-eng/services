@@ -60,7 +60,12 @@ export const SepticSystem2DDrawings = ({ config, darkMode = false }) => {
         }
     };
 
-    const cfg = { ...defaultConfig, ...config };
+    const cfg = {
+        septicTank: { ...defaultConfig.septicTank, ...(config?.septicTank || {}) },
+        manhole: { ...defaultConfig.manhole, ...(config?.manhole || {}) },
+        soakpit: { ...defaultConfig.soakpit, ...(config?.soakpit || {}) },
+        connections: { ...defaultConfig.connections, ...(config?.connections || {}) }
+    };
 
     // Drawing helper functions
     const drawHatch = (x, y, w, h, angle = 45, spacing = 10) => {

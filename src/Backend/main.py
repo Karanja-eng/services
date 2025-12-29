@@ -43,6 +43,12 @@ async def startup_event():
         print(f"⚠️  {message}")
         print("   Application will continue without database persistence")
     
+    # Preload AI Models
+    try:
+        preload_model()
+    except Exception as e:
+        print(f"⚠️  Model preloading warning: {str(e)}")
+    
     print("="*60 + "\n")
 
 
@@ -160,6 +166,9 @@ app.include_router(rc_substructure_router, prefix="/rc_substructure_router", tag
 # from calculations.Atomationmodels.yolomodel import router as yolo_model_router
 # from calculations.Atomationmodels.opencvmodel import router as open_cv_model_router
 # from calculations.Atomationmodels.phi_vision import router as phi_model_router
+from calculations.Atomationmodels.qwen_3_vl_4B import router as qwen_model_router, preload_model
+
+app.include_router(qwen_model_router, prefix="/qwen_model", tags=["qwen_model_router"])
 
 # app.include_router(yolo_model_router, prefix="/yolo", tags=["Yolo_model"])
 # app.include_router(open_cv_model_router, prefix="/opencv", tags=["OpenCv_model"])

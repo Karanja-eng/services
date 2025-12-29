@@ -56,7 +56,7 @@ import DocumentViewer from "./takeoff2/DocumentViewer";
 import DrainageComponenet from "./takeoff2/Manhole/MainTakeoff";
 import RoofComponent from "./takeoff2/RoofWorks/RoofMain";
 import ExternalWorksComponent from "./takeoff2/ExternalWorks/MainExternalWorks";
-import SepticTakeoffApp from "./takeoff2/septik_tank";
+import SepticTakeoffApp from "./takeoff2/septik/septik_tank";
 import SwimmingPoolTakeoffApp from "./takeoff2/swimming_pool";
 import BasementTakeoffApp from "./takeoff2/Basement_Takeoff";
 import RCCSuperstructureApp from "./takeoff2/superstructure";
@@ -306,20 +306,45 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("prompt", userMessage.text);
-
-      // Mocking backend call for UI demonstration 
-      const res = await axios.post("http://127.0.0.1:8000/generate", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
+      // Adding a temporary AI message for streaming
+      const aiMessageId = Date.now() + 1;
       const aiMessage = {
-        text: res.data.response,
+        id: aiMessageId,
+        text: "",
         user: false,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, aiMessage]);
+
+      const response = await fetch("http://127.0.0.1:8001/qwen_model/generate_stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: userMessage.text }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let accumulatedResponse = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedResponse += chunk;
+
+        // Update the specific AI message incrementally
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiMessageId ? { ...msg, text: accumulatedResponse } : msg
+          )
+        );
+      }
+
       setLoading(false);
 
     } catch (err) {
@@ -327,11 +352,15 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
       // MOCK RESPONSE FOR TESTING UI
       setTimeout(() => {
         const mockResponse = {
-          text: `**Fundi AI Analysis (Mock):**\n\nBased on your query regarding "${userMessage.text.substring(0, 30)}${userMessage.text.length > 30 ? '...' : ''}", here is a preliminary analysis:\n\n1. **Design Considerations:** Checked against Eurocode standards.\n2. **Recommendation:** Verify load cases in the Structural module.\n\n*Note: This is a placeholder response because the backend is currently unreachable.*`,
+          text: `**Fundi AI Analysis (Mock):**\n\nBased on your query regarding "${userMessage.text.substring(0, 30)}${userMessage.text.length > 30 ? '...' : ''}", here is a preliminary analysis:\n\n1. **Design Considerations:** Checked against Eurocode standards.\n2. **Recommendation:** Verify load cases in the Structural module.\n\n*Note: This is a placeholder response because the backend is currently unreachable (tried http://127.0.0.1:8001/qwen_model/generate_stream).*`,
           user: false,
           timestamp: new Date().toISOString()
         };
-        setMessages((prev) => [...prev, mockResponse]);
+        setMessages((prev) =>
+          prev.some(m => m.user === false && m.text === "")
+            ? prev.map(m => (m.user === false && m.text === "") ? mockResponse : m)
+            : [...prev, mockResponse]
+        );
         setLoading(false);
       }, 1500);
     }

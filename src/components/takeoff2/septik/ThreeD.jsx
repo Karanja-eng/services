@@ -48,7 +48,12 @@ export const SepticSystem3DView = ({ config, darkMode = false }) => {
         }
     };
 
-    const cfg = { ...defaultConfig, ...config };
+    const cfg = {
+        septicTank: { ...defaultConfig.septicTank, ...(config?.septicTank || {}) },
+        manhole: { ...defaultConfig.manhole, ...(config?.manhole || {}) },
+        soakpit: { ...defaultConfig.soakpit, ...(config?.soakpit || {}) },
+        connections: { ...defaultConfig.connections, ...(config?.connections || {}) }
+    };
 
     useEffect(() => {
         if (!mountRef.current) return;
