@@ -1,0 +1,22 @@
+fastapi>=0.85.0,<1.0
+uvicorn[standard]>=0.18.0,<1.0
+SQLAlchemy>=1.4.0,<2.0
+psycopg2-binary>=2.9.0
+
+pandas>=1.5.0
+numpy>=1.23.0
+
+# OpenCV (Dockerfile installs system deps for this)
+opencv-python>=4.6.0
+
+# Optional / AI model dependencies (heavy)
+transformers>=4.30.0
+torch>=2.0.0
+accelerate>=0.20.0
+
+# FastAPI extras often useful for file uploads and static files
+python-multipart>=0.0.6
+aiofiles>=23.0.0
+
+# Utility / typing improvements (if needed)
+typing-extensions>=4.0.0
