@@ -26,31 +26,24 @@ app.add_middleware(
 async def startup_event():
     """Initialize database on application startup"""
     print("\n" + "="*60)
-    print("🚀 Starting Fundi🔨 API")
+    print("Starting Fundi API")
     print("="*60)
     
     # Check database connection
-    print("⏳ Skipping synchronous DB check on startup...")
-    # success, message = check_db_connection()
-    # if success:
-    #     print(f"✅ {message}")
-    #     try:
-    #         init_db()
-    #         print("✅ Database initialized successfully")
-    #     except Exception as e:
-    #         print(f"⚠️  Database initialization warning: {str(e)}")
-    #         print("   Application will continue without database persistence")
-    # else:
-    #     print(f"⚠️  {message}")
-    #     print("   Application will continue without database persistence")
+    success, message = check_db_connection()
+    if success:
+        print(f"DB: {message}")
+        try:
+            init_db()
+            print("DB: Database initialized successfully")
+        except Exception as e:
+            print(f"DB: Database initialization warning: {str(e)}")
+    else:
+        print(f"DB: {message}")
     
-    # Preload AI Models
-    print("⏳ Model preloading skipped (avoiding startup block)...")
-    # try:
-    #     preload_model()
-    #     print("✅ Preloading AI Models finished")
-    # except Exception as e:
-    #     print(f"⚠️  Model preloading warning: {str(e)}")
+    # Preload AI Models (Optional/Background)
+    # print("Preloading AI Models in background...")
+    # asyncio.create_task(asyncio.to_thread(preload_model))
     
     print("="*60 + "\n")
 
