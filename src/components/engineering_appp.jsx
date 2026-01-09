@@ -25,7 +25,7 @@ import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
 import ChatPage from "./components/ChatPage"; // Home Page
 import SurveyingApp from "./Surveying/surveying_app";
-import CadDrawer from "./Drawings/cad_drawing";
+import ArchitecturalCAD from "./takeoff2/Superstructure/Superstructure_takeoff";
 import StructuralVisualizationComponent from "./Drawings/visualise_component";
 
 import StructuralEngineeeringSuite from "./ReinforcedConcrete/Beams/StructuralEngineeeringSuite";
@@ -57,12 +57,12 @@ import DrainageComponenet from "./takeoff2/Manhole/MainTakeoff";
 import RoofComponent from "./takeoff2/RoofWorks/RoofMain";
 import ExternalWorksComponent from "./takeoff2/ExternalWorks/MainExternalWorks";
 import SepticTakeoffApp from "./takeoff2/septik/septik_tank";
-import SwimmingPoolTakeoffApp from "./takeoff2/swimming_pool";
+import SwimmingPoolTakeoffApp from "./takeoff2/swimming/swimming_pool";
 import BasementTakeoffApp from "./takeoff2/Basement_Takeoff";
 import RCCSuperstructureApp from "./takeoff2/superstructure";
 import DoorWindowTakeoff from "./takeoff2/Doors&Window";
 import InternalFinishesTakeoff from "./takeoff2/internal_finishes";
-import SuperstructureTakeoffApp from "./takeoff2/Superstructure_takeoff";
+import SuperstructureTakeoffApp from "./takeoff2/Superstructure/Superstructure_takeoff";
 import UnderGroundTankComponent from "./takeoff2/underground_tank";
 import SubstructureTakeoffApp from "./takeoff2/substructure_works";
 import StaircaseTakeoffApp from "./takeoff2/Stairs";
@@ -179,17 +179,17 @@ const ChatInputWithLogic = ({ input, setInput, handleSend, attachments, setAttac
       <div className="relative w-full transition-all duration-300">
         <div className="relative group">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl opacity-75 group-hover:opacity-100 transition duration-200 blur shadow-lg filter"></div>
-          <div className="relative flex items-end bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden p-2">
-            <div className="flex-1 min-h-[44px]">
+          <div className="relative flex items-end bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden p-1">
+            <div className="flex-1 min-h-[36px]">
               <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask Fundi anything..."
-                className="w-full bg-transparent border-none focus:ring-0 px-4 py-2 text-gray-800 dark:text-white placeholder-gray-500 resize-none max-h-[150px] overflow-y-auto custom-scrollbar leading-relaxed"
+                className="w-full bg-transparent border-none focus:ring-0 px-4 py-1.5 text-gray-800 dark:text-white placeholder-gray-500 resize-none max-h-[150px] overflow-y-auto custom-scrollbar leading-relaxed"
                 rows={1}
-                style={{ minHeight: '44px' }}
+                style={{ minHeight: '36px' }}
               />
             </div>
 
@@ -285,11 +285,32 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
   // Shared Takeoff State
   const [takeoffData, setTakeoffData] = useState([]);
 
+  // AI Quality of Life Features
+  const [thinkingTime, setThinkingTime] = useState(0);
+  const [isAiLive, setIsAiLive] = useState(false);
+  const timerRef = useRef(null);
+
+  // Check AI Status every 30 seconds
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:8001/qwen_model/status");
+        setIsAiLive(response.data.status === "live");
+      } catch (err) {
+        setIsAiLive(false);
+      }
+    };
+    checkStatus();
+    const interval = setInterval(checkStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const navigate = useNavigate();
   const location = useLocation();
   const isHomePage = location.pathname === "/";
 
   const handleSend = async () => {
+    console.log("DEBUG: handleSend triggered", input);
     if (!input.trim() && attachments.length === 0) return;
 
     setChatOpen(true); // Open chat view when sending
@@ -316,39 +337,64 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
       };
       setMessages((prev) => [...prev, aiMessage]);
 
+      // Timer Logic for Thinking Time
+      setThinkingTime(0);
+      const startTime = Date.now();
+      timerRef.current = setInterval(() => {
+        setThinkingTime(((Date.now() - startTime) / 1000).toFixed(1));
+      }, 100);
+
+      console.log("DEBUG: Calling fetch at http://127.0.0.1:8001/qwen_model/generate_stream");
       const response = await fetch("http://127.0.0.1:8001/qwen_model/generate_stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: userMessage.text }),
       });
 
+      console.log("DEBUG: Fetch response status:", response.status);
+
       if (!response.ok) {
+        console.error("DEBUG: Fetch NOT OK:", response.status);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      console.log("DEBUG: Fetch OK, getting reader");
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let accumulatedResponse = "";
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log("DEBUG: Reader done");
+          break;
+        }
 
         const chunk = decoder.decode(value, { stream: true });
+        console.log("DEBUG: Received chunk:", chunk);
+
+        // Stop timer on first chunk
+        if (accumulatedResponse === "") {
+          console.log("DEBUG: Stopping timer (first chunk received)");
+          clearInterval(timerRef.current);
+        }
+
         accumulatedResponse += chunk;
 
         // Update the specific AI message incrementally
+        const currentChunkResult = accumulatedResponse; // Capture current state
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === aiMessageId ? { ...msg, text: accumulatedResponse } : msg
+            msg.id === aiMessageId ? { ...msg, text: currentChunkResult } : msg
           )
         );
       }
 
+      console.log("DEBUG: Streaming loop finished. Final length:", accumulatedResponse.length);
       setLoading(false);
 
     } catch (err) {
-      console.error("Backend error:", err);
+      console.error("DEBUG: Backend error caught in handleSend:", err);
       // MOCK RESPONSE FOR TESTING UI
       setTimeout(() => {
         const mockResponse = {
@@ -362,6 +408,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             : [...prev, mockResponse]
         );
         setLoading(false);
+        clearInterval(timerRef.current);
       }, 1500);
     }
   };
@@ -396,7 +443,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
     <div className={`flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-black transition-colors duration-300 ${isDark ? "dark" : ""}`}>
 
       {/* Top Bar */}
-      <div className={`absolute top-0 left-0 w-full z-40 px-4 py-3 flex items-center justify-between pointer-events-none transition-all duration-300 ${isHomePage ? '' : 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm'}`}>
+      <div className={`absolute top-0 left-0 w-full z-40 px-4 py-2 flex items-center justify-between pointer-events-none transition-all duration-300 ${isHomePage ? '' : 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm'}`}>
 
         {/* Top Left Controls */}
         <div className="flex items-center gap-2 pointer-events-auto">
@@ -451,7 +498,13 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
                   <Hammer size={20} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800 dark:text-gray-100">Engineering Assistant</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100">Engineering Assistant</h3>
+                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isAiLive ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full ${isAiLive ? "bg-green-500 animate-pulse" : "bg-red-500"}`}></div>
+                      {isAiLive ? "AI Live" : "AI Offline"}
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Powered by Fundi AI</p>
                 </div>
               </div>
@@ -525,7 +578,16 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
               <div className="flex w-full justify-start">
                 <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl rounded-bl-none p-4 flex items-center gap-3 shadow-sm">
                   <Hammer className="animate-hit origin-top text-blue-600 dark:text-blue-400" size={24} />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">Fundi is thinking...</span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">Fundi is thinking...</span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      Thinking time: {
+                        thinkingTime > 59
+                          ? `${Math.floor(thinkingTime / 60)}:${(Math.floor(thinkingTime % 60)).toString().padStart(2, '0')}`
+                          : `${thinkingTime}s`
+                      }
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -544,7 +606,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
 
       {/* Main Content Area */}
       <div className="flex-1 relative z-0 pt-0 overflow-hidden">
-        <main className={`h-full w-full overflow-y-auto transition-all duration-300 ${isHomePage ? '' : 'pt-16'}`}>
+        <main className={`h-full w-full overflow-y-auto transition-all duration-300 ${isHomePage ? '' : 'pt-24'}`}>
           {/* Pass renderSearchInput to children if they are standard Routes, but since Routes are nested below, we must pass it as a prop to ChatPage explicitly.
           */}
           <Routes>
@@ -559,7 +621,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             />
             <Route
               path="/drawing"
-              element={<CadDrawer isDark={isDark} />}
+              element={<ArchitecturalCAD isDark={isDark} />}
             />
 
             <Route

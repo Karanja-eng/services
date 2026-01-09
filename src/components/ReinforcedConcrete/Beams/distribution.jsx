@@ -26,18 +26,16 @@ import {
   Zap,
   GitBranch,
 } from "lucide-react";
-import Beam3DVisualization from "../../components/beam_3d_helper";
 
-const API_BASE_URL = "http://localhost:8001";
+const API_BASE_URL = "http://localhost:8001/moment_distribution";
 
-const MomentDistributionCalculator = ({ isDark = false }) => {
+const MomentDistributionCalculator = ({ onAnalysisComplete }) => {
   const [joints, setJoints] = useState([
     {
       joint_id: "A",
       joint_type: "Fixed Joint",
       x_coordinate: 0.0,
       y_coordinate: 0.0,
-      is_support: true,
     },
     {
       joint_id: "B",
@@ -70,41 +68,6 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("input");
-
-  // Design parameters (integrated from previous implementation)
-  const [designParams, setDesignParams] = useState({
-    beam_type: "Rectangular",
-    support_condition: "Continuous",
-    imposed_load: 10.0,
-    permanent_load: 5.0,
-    materials: {
-      concrete_grade: "C30",
-      steel_grade: "Grade 460",
-      concrete_density: 25.0,
-      steel_density: 78.5,
-    },
-    rectangular_geometry: {
-      width: 300,
-      depth: 500,
-      cover: 25,
-    },
-    t_beam_geometry: {
-      web_width: 300,
-      web_depth: 400,
-      flange_width: 1000,
-      flange_thickness: 150,
-      cover: 25,
-    },
-    l_beam_geometry: {
-      web_width: 250,
-      web_depth: 350,
-      flange_width: 600,
-      flange_thickness: 120,
-      cover: 30,
-    },
-  });
-  const [designResults, setDesignResults] = useState(null);
-  const [designLoading, setDesignLoading] = useState(false);
 
   const addJoint = () => {
     const newJointId = String.fromCharCode(65 + joints.length); // A, B, C, ...
@@ -180,7 +143,7 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
 
       const length = Math.sqrt(
         Math.pow(endJoint.x_coordinate - startJoint.x_coordinate, 2) +
-          Math.pow(endJoint.y_coordinate - startJoint.y_coordinate, 2)
+        Math.pow(endJoint.y_coordinate - startJoint.y_coordinate, 2)
       );
 
       setMembers([
@@ -255,11 +218,15 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
       };
 
       const response = await axios.post(
-        `${API_BASE_URL}/beam_analysis/moment_distribution/analyze`,
+        `${API_BASE_URL}/analyze`,
         frameData
       );
       setResults(response.data);
       setActiveTab("results");
+
+      if (onAnalysisComplete) {
+        onAnalysisComplete({ ...response.data, inputs: { joints, members } });
+      }
     } catch (err) {
       setError(
         err.response?.data?.detail || "Moment Distribution analysis failed"
@@ -269,36 +236,10 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
     }
   };
 
-  const designMembers = async () => {
-    if (!results) {
-      setError("Please analyze frame first");
-      return;
-    }
-
-    setDesignLoading(true);
-    setError(null);
-
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/beam_analysis/integrated/moment_distribution_design`,
-        {
-          md_results: results,
-          design_parameters: designParams,
-        }
-      );
-      setDesignResults(response.data);
-      setActiveTab("design");
-    } catch (err) {
-      setError(err.response?.data?.detail || "Design failed");
-    } finally {
-      setDesignLoading(false);
-    }
-  };
-
   const loadExample = async (exampleName) => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/beam_analysis/moment_distribution/examples`
+        `${API_BASE_URL}/examples`
       );
       const example = response.data.find((ex) => ex.name === exampleName);
       if (example) {
@@ -335,8 +276,8 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
     const offsetY = height - 100 + minY * scale;
 
     return (
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-slate-100">
+      <div className="bg-white p-6 rounded-lg shadow-lg">
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
           <GitBranch className="h-5 w-5 mr-2 text-blue-600" />
           Frame Configuration - Moment Distribution Method
         </h3>
@@ -494,9 +435,8 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                 {joint.is_support && (
                   <g>
                     <polygon
-                      points={`${x - 12},${y + 15} ${x + 12},${y + 15} ${x},${
-                        y + 8
-                      }`}
+                      points={`${x - 12},${y + 15} ${x + 12},${y + 15} ${x},${y + 8
+                        }`}
                       fill="#DC2626"
                       stroke="#B91C1C"
                       strokeWidth={1}
@@ -584,8 +524,8 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
     if (!results || !results.iteration_history) return null;
 
     return (
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-slate-100">
+      <div className="bg-white p-6 rounded-lg shadow-lg">
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
           <Zap className="h-5 w-5 mr-2 text-yellow-600" />
           Hardy Cross Iteration History
         </h3>
@@ -616,11 +556,10 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                 </h4>
                 {iteration.max_unbalance && (
                   <span
-                    className={`text-sm px-2 py-1 rounded ${
-                      iteration.max_unbalance < results.convergence_tolerance
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
+                    className={`text-sm px-2 py-1 rounded ${iteration.max_unbalance < results.convergence_tolerance
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                      }`}
                   >
                     Max Unbalance: {iteration.max_unbalance.toFixed(6)} kN⋅m
                   </span>
@@ -631,7 +570,7 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse border border-gray-300">
                   <thead>
-                    <tr className="bg-gray-50 dark:bg-slate-800">
+                    <tr className="bg-gray-50">
                       <th className="border border-gray-300 px-2 py-1">
                         Joint
                       </th>
@@ -678,7 +617,7 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
               {/* Show distribution details for this iteration */}
               {iteration.changes &&
                 Object.keys(iteration.changes).length > 0 && (
-                  <div className="mt-3 p-3 bg-gray-50 dark:bg-slate-800 rounded">
+                  <div className="mt-3 p-3 bg-gray-50 rounded">
                     <div className="text-sm font-medium text-gray-700 mb-2">
                       Distribution Details:
                     </div>
@@ -715,166 +654,13 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
     );
   };
 
-  const MemberDiagramsPanel = ({ results }) => {
-    if (!results || !results.moment_data) return null;
 
-    return (
-      <div className="space-y-6">
-        {Object.entries(results.moment_data).map(([memberId, momentData]) => {
-          const shearData = results.shear_force_data[memberId] || [];
-          const deflectionData = results.deflection_data[memberId] || [];
-
-          return (
-            <div
-              key={memberId}
-              className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg"
-            >
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-slate-100">
-                Member {memberId} - Force Diagrams
-              </h3>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Shear Force Diagram */}
-                <div>
-                  <h4 className="font-semibold text-blue-600 mb-2">
-                    Shear Force Diagram
-                  </h4>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <AreaChart data={shearData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="x" />
-                      <YAxis />
-                      <Tooltip
-                        formatter={(value) => [
-                          `${value.toFixed(2)} kN`,
-                          "Shear",
-                        ]}
-                      />
-                      <ReferenceLine
-                        y={0}
-                        stroke="black"
-                        strokeDasharray="2 2"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="y"
-                        stroke="#3B82F6"
-                        fill="#3B82F6"
-                        fillOpacity={0.3}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Bending Moment Diagram */}
-                <div>
-                  <h4 className="font-semibold text-red-600 mb-2">
-                    Bending Moment Diagram
-                  </h4>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <AreaChart data={momentData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="x" />
-                      <YAxis />
-                      <Tooltip
-                        formatter={(value) => [
-                          `${value.toFixed(2)} kN⋅m`,
-                          "Moment",
-                        ]}
-                      />
-                      <ReferenceLine
-                        y={0}
-                        stroke="black"
-                        strokeDasharray="2 2"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="y"
-                        stroke="#EF4444"
-                        fill="#EF4444"
-                        fillOpacity={0.3}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Deflection Diagram */}
-                <div>
-                  <h4 className="font-semibold text-green-600 mb-2">
-                    Deflection Diagram
-                  </h4>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={deflectionData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="x" />
-                      <YAxis />
-                      <Tooltip
-                        formatter={(value) => [
-                          `${value.toFixed(4)} m`,
-                          "Deflection",
-                        ]}
-                      />
-                      <ReferenceLine
-                        y={0}
-                        stroke="black"
-                        strokeDasharray="2 2"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="y"
-                        stroke="#10B981"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Critical values */}
-              <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-                <div className="bg-blue-50 p-2 rounded">
-                  <div className="text-blue-600 font-medium">Max Shear</div>
-                  <div className="text-blue-800">
-                    {Math.max(...shearData.map((d) => Math.abs(d.y))).toFixed(
-                      2
-                    )}{" "}
-                    kN
-                  </div>
-                </div>
-                <div className="bg-red-50 p-2 rounded">
-                  <div className="text-red-600 font-medium">Max Moment</div>
-                  <div className="text-red-800">
-                    {Math.max(...momentData.map((d) => Math.abs(d.y))).toFixed(
-                      2
-                    )}{" "}
-                    kN⋅m
-                  </div>
-                </div>
-                <div className="bg-green-50 p-2 rounded">
-                  <div className="text-green-600 font-medium">
-                    Max Deflection
-                  </div>
-                  <div className="text-green-800">
-                    {Math.max(
-                      ...deflectionData.map((d) => Math.abs(d.y))
-                    ).toFixed(4)}{" "}
-                    m
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
 
   const DistributionFactorsPanel = ({ results }) => {
     if (!results || !results.distribution_factors) return null;
 
     return (
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+      <div className="bg-white p-6 rounded-lg shadow-lg">
         <h3 className="text-lg font-semibold mb-4">
           Distribution Factors & Stiffness
         </h3>
@@ -1015,486 +801,158 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
     );
   };
 
-  const DesignConfigPanel = () => {
-    return (
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-6">
-          BS 8110 Design Configuration
-        </h2>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Basic Parameters */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Design Parameters</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Member Type
-                </label>
-                <select
-                  value={designParams.beam_type}
-                  onChange={(e) =>
-                    setDesignParams({
-                      ...designParams,
-                      beam_type: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                >
-                  <option value="Rectangular">Rectangular</option>
-                  <option value="T-Beam">T-Beam</option>
-                  <option value="L-Beam">L-Beam</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Support Condition
-                </label>
-                <select
-                  value={designParams.support_condition}
-                  onChange={(e) =>
-                    setDesignParams({
-                      ...designParams,
-                      support_condition: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                >
-                  <option value="Continuous">Continuous</option>
-                  <option value="Simply Supported">Simply Supported</option>
-                  <option value="Cantilever">Cantilever</option>
-                  <option value="Fixed">Fixed</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Imposed Load (kN/m)
-                  </label>
-                  <input
-                    type="number"
-                    value={designParams.imposed_load}
-                    onChange={(e) =>
-                      setDesignParams({
-                        ...designParams,
-                        imposed_load: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    step="0.1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Permanent Load (kN/m)
-                  </label>
-                  <input
-                    type="number"
-                    value={designParams.permanent_load}
-                    onChange={(e) =>
-                      setDesignParams({
-                        ...designParams,
-                        permanent_load: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    step="0.1"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Material Properties */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Material Properties</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Concrete Grade
-                  </label>
-                  <select
-                    value={designParams.materials.concrete_grade}
-                    onChange={(e) =>
-                      setDesignParams({
-                        ...designParams,
-                        materials: {
-                          ...designParams.materials,
-                          concrete_grade: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="C20">C20</option>
-                    <option value="C25">C25</option>
-                    <option value="C30">C30</option>
-                    <option value="C35">C35</option>
-                    <option value="C40">C40</option>
-                    <option value="C45">C45</option>
-                    <option value="C50">C50</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Steel Grade
-                  </label>
-                  <select
-                    value={designParams.materials.steel_grade}
-                    onChange={(e) =>
-                      setDesignParams({
-                        ...designParams,
-                        materials: {
-                          ...designParams.materials,
-                          steel_grade: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="Grade 250">Grade 250</option>
-                    <option value="Grade 460">Grade 460</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Cross-section geometry - Same as previous implementation */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-4">Cross-Section Geometry</h3>
-
-          {designParams.beam_type === "Rectangular" && (
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Width (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.rectangular_geometry.width}
-                  onChange={(e) =>
-                    setDesignParams({
-                      ...designParams,
-                      rectangular_geometry: {
-                        ...designParams.rectangular_geometry,
-                        width: parseFloat(e.target.value),
-                      },
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Depth (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.rectangular_geometry.depth}
-                  onChange={(e) =>
-                    setDesignParams({
-                      ...designParams,
-                      rectangular_geometry: {
-                        ...designParams.rectangular_geometry,
-                        depth: parseFloat(e.target.value),
-                      },
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cover (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.rectangular_geometry.cover}
-                  onChange={(e) =>
-                    setDesignParams({
-                      ...designParams,
-                      rectangular_geometry: {
-                        ...designParams.rectangular_geometry,
-                        cover: parseFloat(e.target.value),
-                      },
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* T-Beam and L-Beam geometry inputs would go here - similar to previous implementation */}
-        </div>
-      </div>
-    );
-  };
-
-  const DesignResultsPanel = ({ designResults }) => {
-    if (!designResults || !designResults.member_designs) return null;
+  const MemberDiagramsPanel = ({ results, members }) => {
+    if (!results || !results.moment_data) return null;
 
     return (
       <div className="space-y-6">
-        {/* Design Summary */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-4 flex items-center">
-            <Award className="h-6 w-6 mr-2 text-green-600" />
-            BS 8110 Design Results - Moment Distribution Method
-          </h2>
+        {Object.entries(results.moment_data).map(([memberId, momentData]) => {
+          // Find member to get length for interpolation
+          const member = members && members.find((m) => m.member_id === memberId);
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-sm text-blue-600">
-                Total Members Designed
-              </div>
-              <div className="text-2xl font-bold text-blue-700">
-                {designResults.summary.total_members}
-              </div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-sm text-green-600">Analysis Method</div>
-              <div className="text-lg font-semibold text-green-700">
-                {designResults.summary.analysis_method}
-              </div>
-            </div>
-            <div
-              className={`p-4 rounded-lg ${
-                designResults.summary.all_designs_ok
-                  ? "bg-green-50"
-                  : "bg-red-50"
-              }`}
-            >
-              <div
-                className={`text-sm ${
-                  designResults.summary.all_designs_ok
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
-              >
-                Design Status
-              </div>
-              <div
-                className={`text-lg font-semibold ${
-                  designResults.summary.all_designs_ok
-                    ? "text-green-700"
-                    : "text-red-700"
-                }`}
-              >
-                {designResults.summary.all_designs_ok
-                  ? "✓ All OK"
-                  : "✗ Issues Found"}
-              </div>
-            </div>
-          </div>
-        </div>
+          const shearData = results.shear_force_data[memberId] || [];
 
-        {/* Individual Member Results */}
-        {designResults.member_designs.map((memberDesign, index) => (
-          <div
-            key={index}
-            className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg"
-          >
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <Wrench className="h-5 w-5 mr-2 text-blue-600" />
-              Member {memberDesign.member_id || `Member ${index + 1}`} Design
-              Details
-            </h3>
+          // Calculate breakdown if member info is available
+          let bmdSupportsData = [];
+          let bmdLoadsData = [];
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Reinforcement Details */}
-              <div>
+          if (member && results.final_moments && results.final_moments[memberId]) {
+            const startMoment = results.final_moments[memberId].start;
+            const endMoment = results.final_moments[memberId].end;
+            const length = member.length;
+
+            bmdSupportsData = momentData.map((pt) => {
+              const x = pt.x;
+              // Linear interpolation: M(x) = M_start + (M_end - M_start) * x / L
+              const y = startMoment + (endMoment - startMoment) * (x / length);
+              return { x, y };
+            });
+
+            bmdLoadsData = momentData.map((pt, i) => {
+              const supportY = bmdSupportsData[i] ? bmdSupportsData[i].y : 0;
+              return { x: pt.x, y: pt.y - supportY };
+            });
+          }
+
+          return (
+            <div key={memberId} className="bg-white p-6 rounded-lg shadow-lg">
+              <h3 className="text-lg font-semibold mb-4">
+                Member {memberId} - Force Diagrams
+              </h3>
+
+              {/* Combined BMD */}
+              <div className="mb-6">
                 <h4 className="font-semibold text-gray-700 mb-3">
-                  Reinforcement Details
+                  Bending Moment Diagram (Combined)
                 </h4>
-                <div className="space-y-3">
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-600">Main Bars</div>
-                    <div className="font-medium">
-                      {memberDesign.reinforcement.main_bars.join("mm + ")}mm
-                      bars
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Total Area:{" "}
-                      {memberDesign.reinforcement.main_bars_area.toFixed(0)} mm²
-                    </div>
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart data={momentData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="x" label={{ value: "Position (m)", position: "insideBottom", offset: -5 }} />
+                    <YAxis label={{ value: "Moment (kN⋅m)", angle: -90, position: "insideLeft" }} />
+                    <Tooltip formatter={(value) => [`${value.toFixed(2)} kN⋅m`, "Moment"]} />
+                    <ReferenceLine y={0} stroke="black" strokeDasharray="2 2" />
+                    <Area
+                      type="monotone"
+                      dataKey="y"
+                      stroke="#3B82F6"
+                      fill="#3B82F6"
+                      fillOpacity={0.3}
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* BMD Breakdown */}
+              {member && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* BMD - Due to Loads */}
+                  <div>
+                    <h4 className="font-semibold text-green-600 mb-3">
+                      BMD - Due to Vertical Loads Only
+                    </h4>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <AreaChart data={bmdLoadsData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="x" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`${value.toFixed(2)} kN⋅m`, "Moment (Loads)"]} />
+                        <ReferenceLine y={0} stroke="black" strokeDasharray="2 2" />
+                        <Area
+                          type="monotone"
+                          dataKey="y"
+                          stroke="#10B981"
+                          fill="#10B981"
+                          fillOpacity={0.3}
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
 
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-600">Shear Links</div>
-                    <div className="font-medium">
-                      {memberDesign.reinforcement.shear_links}mm @{" "}
-                      {memberDesign.reinforcement.link_spacing}mm c/c
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-600">Steel Ratio</div>
-                    <div className="font-medium">
-                      {memberDesign.reinforcement.steel_ratio.toFixed(3)}%
-                    </div>
+                  {/* BMD - Due to Support Moments */}
+                  <div>
+                    <h4 className="font-semibold text-purple-600 mb-3">
+                      BMD - Due to Support Moments
+                    </h4>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <AreaChart data={bmdSupportsData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="x" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`${value.toFixed(2)} kN⋅m`, "Moment (Supports)"]} />
+                        <ReferenceLine y={0} stroke="black" strokeDasharray="2 2" />
+                        <Area
+                          type="monotone"
+                          dataKey="y"
+                          stroke="#8B5CF6"
+                          fill="#8B5CF6"
+                          fillOpacity={0.3}
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Design Checks */}
-              <div>
-                <h4 className="font-semibold text-gray-700 mb-3">
-                  Design Checks
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Moment Capacity</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        memberDesign.design_checks.moment_capacity_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {memberDesign.design_checks.moment_capacity_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                      (
-                      {(
-                        memberDesign.design_checks.moment_utilization * 100
-                      ).toFixed(1)}
-                      %)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Shear Capacity</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        memberDesign.design_checks.shear_capacity_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {memberDesign.design_checks.shear_capacity_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                      (
-                      {(
-                        memberDesign.design_checks.shear_utilization * 100
-                      ).toFixed(1)}
-                      %)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Deflection</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        memberDesign.design_checks.deflection_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {memberDesign.design_checks.deflection_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Steel Limits</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        memberDesign.design_checks.minimum_steel_ok &&
-                        memberDesign.design_checks.maximum_steel_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {memberDesign.design_checks.minimum_steel_ok &&
-                      memberDesign.design_checks.maximum_steel_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                    </span>
-                  </div>
+              {/* Shear Force Diagram */}
+              {shearData && (
+                <div className="mt-6">
+                  <h4 className="font-semibold text-gray-700 mb-3">
+                    Shear Force Diagram
+                  </h4>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <AreaChart data={shearData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="x" label={{ value: "Position (m)", position: "insideBottom", offset: -5 }} />
+                      <YAxis label={{ value: "Shear (kN)", angle: -90, position: "insideLeft" }} />
+                      <Tooltip formatter={(value) => [`${value.toFixed(2)} kN`, "Shear"]} />
+                      <ReferenceLine y={0} stroke="black" strokeDasharray="2 2" />
+                      <Area
+                        type="monotone"
+                        dataKey="y"
+                        stroke="#EF4444"
+                        fill="#EF4444"
+                        fillOpacity={0.3}
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
-
-                {/* Warnings and Errors */}
-                {memberDesign.design_checks.warnings.length > 0 && (
-                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                    <h5 className="text-sm font-semibold text-yellow-800 mb-1">
-                      Warnings:
-                    </h5>
-                    <ul className="text-sm text-yellow-700">
-                      {memberDesign.design_checks.warnings.map(
-                        (warning, idx) => (
-                          <li key={idx} className="flex items-start">
-                            <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
-                            {warning}
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-
-            {/* Utilization Chart */}
-            <div className="mt-6">
-              <h4 className="font-semibold text-gray-700 mb-3">
-                Capacity Utilization
-              </h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart
-                  data={[
-                    {
-                      name: "Moment",
-                      utilization:
-                        memberDesign.design_checks.moment_utilization * 100,
-                      limit: 100,
-                    },
-                    {
-                      name: "Shear",
-                      utilization:
-                        memberDesign.design_checks.shear_utilization * 100,
-                      limit: 100,
-                    },
-                  ]}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis
-                    label={{
-                      value: "Utilization (%)",
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
-                  />
-                  <Tooltip
-                    formatter={(value) => [
-                      `${value.toFixed(1)}%`,
-                      "Utilization",
-                    ]}
-                  />
-                  <ReferenceLine y={100} stroke="red" strokeDasharray="2 2" />
-                  <ReferenceLine y={90} stroke="orange" strokeDasharray="2 2" />
-                  <Bar dataKey="utilization" fill="#3B82F6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-slate-900">
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
+      <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
@@ -1511,17 +969,10 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => loadExample("Two-Span Continuous Beam")}
-                className="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded hover:bg-gray-200 dark:hover:bg-slate-600 text-sm"
-              >
-                <BookOpen className="h-4 w-4 inline mr-1" />
-                Two Span
-              </button>
-              <button
-                onClick={() => loadExample("UDL Three-Span Beam")}
                 className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
               >
                 <BookOpen className="h-4 w-4 inline mr-1" />
-                Three Span
+                Multi-Span
               </button>
             </div>
           </div>
@@ -1531,25 +982,23 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Navigation Tabs */}
         <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-200 dark:bg-slate-700 rounded-lg p-1">
+          <div className="flex space-x-1 bg-gray-200 rounded-lg p-1">
             <button
               onClick={() => setActiveTab("input")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "input"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "input"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               <Settings className="h-4 w-4 inline mr-2" />
               Frame Configuration
             </button>
             <button
               onClick={() => setActiveTab("results")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "results"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "results"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
               disabled={!results}
             >
               <Zap className="h-4 w-4 inline mr-2" />
@@ -1557,26 +1006,13 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
             </button>
             <button
               onClick={() => setActiveTab("design-config")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "design-config"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "design-config"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               <Wrench className="h-4 w-4 inline mr-2" />
-              Design Config
-            </button>
-            <button
-              onClick={() => setActiveTab("design")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "design"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-              disabled={!designResults}
-            >
-              <Award className="h-4 w-4 inline mr-2" />
-              Design Results
+              Design Configuration
             </button>
           </div>
         </div>
@@ -1603,7 +1039,7 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
         {activeTab === "input" && (
           <div className="space-y-6">
             {/* Joints Configuration */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Joints Configuration</h2>
                 <button
@@ -1718,7 +1154,7 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
             </div>
 
             {/* Members Configuration */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Members Configuration</h2>
                 <button
@@ -1959,26 +1395,26 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
                             {(load.load_type === "Partial UDL" ||
                               load.load_type === "Triangular" ||
                               load.load_type === "Trapezoidal") && (
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Length (m)
-                                </label>
-                                <input
-                                  type="number"
-                                  value={load.length}
-                                  onChange={(e) =>
-                                    updateLoad(
-                                      memberIndex,
-                                      loadIndex,
-                                      "length",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                                  step="0.1"
-                                />
-                              </div>
-                            )}
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Length (m)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={load.length}
+                                    onChange={(e) =>
+                                      updateLoad(
+                                        memberIndex,
+                                        loadIndex,
+                                        "length",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                    step="0.1"
+                                  />
+                                </div>
+                              )}
                           </div>
 
                           {load.load_type === "Trapezoidal" && (
@@ -2017,7 +1453,7 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
             </div>
 
             {/* Analysis Settings */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Analysis Settings</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -2090,53 +1526,27 @@ const MomentDistributionCalculator = ({ isDark = false }) => {
             />
             <IterationHistoryPanel results={results} />
             <DistributionFactorsPanel results={results} />
-            <MemberDiagramsPanel results={results} />
-
-            {/* 3D Visualization Component */}
-            <Beam3DVisualization
-              inputs={{
-                joints: joints,
-                members: members,
-              }}
-              results={results}
-              theme={isDark ? "dark" : "light"}
-              beamType="continuous"
-            />
+            <MemberDiagramsPanel results={results} members={members} />
           </div>
         )}
+
 
         {activeTab === "design-config" && (
-          <div className="space-y-6">
-            <DesignConfigPanel />
-
-            {/* Design Button */}
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={designMembers}
-                disabled={designLoading || !results}
-                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center text-lg font-semibold"
-              >
-                {designLoading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                ) : (
-                  <Wrench className="h-5 w-5 mr-3" />
-                )}
-                {designLoading ? "Designing..." : "Design Members (BS 8110)"}
-              </button>
-
-              {!results && (
-                <div className="text-sm text-gray-500 flex items-center">
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Please analyze frame first
-                </div>
-              )}
-            </div>
+          <div className="text-center text-gray-500 py-8">
+            <p>Design configuration removed. Use RCBeamDesigner component for design.</p>
           </div>
         )}
 
-        {activeTab === "design" && designResults && (
-          <DesignResultsPanel designResults={designResults} />
-        )}
+        {/* Footer */}
+        <div className="mt-12 text-center text-gray-500 text-sm">
+          <p>
+            Moment Distribution Method (Hardy Cross) with BS 8110 Reinforced
+            Concrete Design
+          </p>
+          <p className="mt-1">
+            © 2024 - Advanced Structural Analysis & Design Suite
+          </p>
+        </div>
       </div>
     </div>
   );

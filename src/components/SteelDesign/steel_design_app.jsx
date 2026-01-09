@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { Calculator, Save, FileText, AlertCircle, CheckCircle, Menu, X } from 'lucide-react';
+import axios from 'axios';
+import { Calculator, Save, FileText, AlertCircle, CheckCircle, Menu, X, Loader2, Zap, Shield, GitBranch } from 'lucide-react';
+import MomentDistributionCalculator from '../ReinforcedConcrete/Beams/distribution';
+
+const API_BASE_URL = "http://localhost:8001/steel_backend";
 
 // Steel Section Database (BS 5950 Universal Beams & Columns)
 const steelSections = {
@@ -55,6 +59,7 @@ const SteelDesignApp = ({ isDark = false }) => {
   const [activeModule, setActiveModule] = useState('beam');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Beam Design States
   const [beamData, setBeamData] = useState({
@@ -233,39 +238,35 @@ const SteelDesignApp = ({ isDark = false }) => {
     });
   };
 
-  const calculateFrameAnalysis = () => {
-    // Simplified moment distribution for continuous beam
-    const spans = frameData.spans;
-    const n = spans.length;
+  const calculateFrameAnalysis = async () => {
+    setLoading(true);
+    setResults(null);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/frame-analysis`, {
+        method: frameData.method,
+        spans: frameData.spans,
+        supports: frameData.supports.map(s => s.charAt(0).toUpperCase() + s.slice(1)) // Fix case for backend
+      });
 
-    // Calculate fixed end moments
-    const FEM = spans.map(span => ({
-      left: -(span.load * span.length * span.length) / 12,
-      right: (span.load * span.length * span.length) / 12
-    }));
-
-    // Generate shear and moment diagrams data
-    const diagrams = spans.map((span, i) => {
-      const L = span.length;
-      const w = span.load;
-      const points = [];
-
-      for (let x = 0; x <= L; x += L / 20) {
-        const M = (w * L * x / 2) - (w * x * x / 2);
-        const V = (w * L / 2) - (w * x);
-        points.push({ x, M: M.toFixed(2), V: V.toFixed(2) });
-      }
-
-      return { span: i + 1, points };
-    });
-
-    setResults({
-      type: 'frame',
-      method: frameData.method,
-      diagrams,
-      maxMoment: Math.max(...diagrams.flatMap(d => d.points.map(p => Math.abs(parseFloat(p.M))))).toFixed(2),
-      maxShear: Math.max(...diagrams.flatMap(d => d.points.map(p => Math.abs(parseFloat(p.V))))).toFixed(2)
-    });
+      setResults({
+        type: 'frame',
+        method: response.data.method,
+        diagrams: response.data.diagrams,
+        maxMoment: response.data.max_moment,
+        maxShear: response.data.max_shear,
+        iteration_history: response.data.iteration_history,
+        distribution_factors: response.data.distribution_factors,
+        final_moments: response.data.final_moments,
+        fixed_end_moments: response.data.fixed_end_moments,
+        joints: response.data.joints,
+        members: response.data.members
+      });
+    } catch (err) {
+      console.error("Frame analysis failed:", err);
+      // Fallback or error state
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderBeamModule = () => (
@@ -506,82 +507,29 @@ const SteelDesignApp = ({ isDark = false }) => {
 
   const renderFrameModule = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Frame Analysis</h2>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Analysis Method</label>
-          <select
-            value={frameData.method}
-            onChange={(e) => setFrameData({ ...frameData, method: e.target.value })}
-            className="w-full px-4 py-2 border-2 border-blue-200 rounded-lg focus:outline-none focus:border-blue-500"
-          >
-            <option value="moment-distribution">Moment Distribution Method</option>
-            <option value="slope-deflection">Slope-Deflection Method</option>
-          </select>
-        </div>
-
-        <div className="bg-gradient-to-r from-blue-50 to-green-50 p-6 rounded-lg border-2 border-blue-200">
-          <h3 className="font-semibold text-gray-800 mb-4">Define Spans</h3>
-          {frameData.spans.map((span, i) => (
-            <div key={i} className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Span {i + 1} Length (m)</label>
-                <input
-                  type="number"
-                  value={span.length}
-                  onChange={(e) => {
-                    const newSpans = [...frameData.spans];
-                    newSpans[i].length = parseFloat(e.target.value);
-                    setFrameData({ ...frameData, spans: newSpans });
-                  }}
-                  className="w-full px-4 py-2 border-2 border-blue-200 rounded-lg focus:outline-none focus:border-blue-500"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">UDL (kN/m)</label>
-                <input
-                  type="number"
-                  value={span.load}
-                  onChange={(e) => {
-                    const newSpans = [...frameData.spans];
-                    newSpans[i].load = parseFloat(e.target.value);
-                    setFrameData({ ...frameData, spans: newSpans });
-                  }}
-                  className="w-full px-4 py-2 border-2 border-green-200 rounded-lg focus:outline-none focus:border-green-500"
-                  step="1"
-                />
-              </div>
-            </div>
-          ))}
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFrameData({ ...frameData, spans: [...frameData.spans, { length: 6, load: 50 }] })}
-              className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all"
-            >
-              Add Span
-            </button>
-            {frameData.spans.length > 1 && (
-              <button
-                onClick={() => setFrameData({ ...frameData, spans: frameData.spans.slice(0, -1) })}
-                className="flex-1 bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition-all"
-              >
-                Remove Span
-              </button>
-            )}
-          </div>
-        </div>
-
-        <button
-          onClick={calculateFrameAnalysis}
-          className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
-        >
-          <Calculator size={20} />
-          Analyze Frame
-        </button>
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-2xl shadow-xl mb-6">
+        <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <GitBranch className="h-8 w-8" />
+          Frame Analysis - Moment Distribution Method
+        </h2>
+        <p className="text-blue-100 text-sm">
+          Professional Hardy Cross analysis for continuous steel frames. Define joints, members, and loads below.
+        </p>
       </div>
+
+      <MomentDistributionCalculator
+        isDark={false}
+        onAnalysisComplete={(results) => {
+          // Store results for potential steel design use
+          setResults({
+            type: 'frame',
+            method: 'Moment Distribution Method',
+            maxMoment: Math.max(...Object.values(results.moment_data || {}).flatMap(data => data.map(p => Math.abs(p.y)))),
+            maxShear: Math.max(...Object.values(results.shear_force_data || {}).flatMap(data => data.map(p => Math.abs(p.y)))),
+            ...results
+          });
+        }}
+      />
     </div>
   );
 
@@ -768,6 +716,189 @@ const SteelDesignApp = ({ isDark = false }) => {
         </div>
       );
     }
+    const IterationHistoryPanel = ({ results }) => {
+      if (!results || !results.iteration_history) return null;
+
+      return (
+        <div className="mt-8 space-y-4">
+          <div className="flex items-center gap-3">
+            <Zap className="text-yellow-600" size={24} />
+            <h4 className="text-xl font-bold text-gray-800">Hardy Cross Iteration History</h4>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {results.iteration_history.slice(-3).map((iteration, index) => (
+              <div key={index} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="font-bold text-gray-700">
+                    {iteration.type === "Initial FEM" ? "Fixed-End Moments" : `Iteration ${iteration.iteration}`}
+                  </span>
+                  {iteration.max_unbalance && (
+                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full font-semibold">
+                      Unbalance: {iteration.max_unbalance.toFixed(4)} kNm
+                    </span>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="text-gray-500 border-b">
+                        <th className="pb-2">Joint</th>
+                        <th className="pb-2">Member</th>
+                        <th className="pb-2 text-right">Moment (kNm)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(iteration.moments || {}).map(([jointId, memberMoments]) =>
+                        Object.entries(memberMoments).map(([memberId, moment]) => (
+                          <tr key={`${jointId}-${memberId}`} className="border-b last:border-0">
+                            <td className="py-2 font-medium">{jointId}</td>
+                            <td className="py-2 text-gray-600">{memberId}</td>
+                            <td className="py-2 text-right font-mono">{moment.toFixed(2)}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+            {results.iteration_history.length > 3 && (
+              <p className="text-center text-sm text-gray-500 italic">... showing last 3 iterations of {results.iteration_history.length} ...</p>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    const DistributionFactorsPanel = ({ results }) => {
+      if (!results || !results.distribution_factors) return null;
+
+      return (
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <h4 className="text-lg font-bold text-gray-800 mb-4">Distribution Factors (DF)</h4>
+            <div className="space-y-3">
+              {Object.entries(results.distribution_factors).map(([jointId, factors]) => (
+                <div key={jointId} className="p-3 bg-blue-50 rounded-lg">
+                  <div className="text-sm font-bold text-blue-800 mb-2">Joint {jointId}</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(factors).map(([memberId, df]) => (
+                      <div key={memberId} className="flex justify-between text-xs">
+                        <span className="text-gray-600">{memberId}:</span>
+                        <span className="font-bold text-blue-700">{df.toFixed(3)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <h4 className="text-lg font-bold text-gray-800 mb-4">Final Member End Moments</h4>
+            <div className="space-y-3">
+              {Object.entries(results.final_moments || {}).map(([memberId, moments]) => (
+                <div key={memberId} className="p-3 bg-green-50 rounded-lg">
+                  <div className="text-sm font-bold text-green-800 mb-2">Member {memberId}</div>
+                  <div className="flex justify-between text-xs">
+                    <div>Start: <span className="font-bold text-green-700">{moments.start.toFixed(2)} kNm</span></div>
+                    <div>End: <span className="font-bold text-green-700">{moments.end.toFixed(2)} kNm</span></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const FrameSchematic = ({ joints, members, results }) => {
+      if (!joints || !members) return null;
+
+      const allX = joints.map((j) => j.x_coordinate);
+      const allY = joints.map((j) => j.y_coordinate);
+      const minX = Math.min(...allX) - 1;
+      const maxX = Math.max(...allX) + 1;
+      const minY = Math.min(...allY) - 1;
+      const maxY = Math.max(...allY) + 1;
+
+      const width = 800;
+      const height = 300;
+
+      const scaleX = (width - 100) / (maxX - minX || 1);
+      const scaleY = (height - 150) / (maxY - minY || 1);
+      const scale = Math.min(scaleX, scaleY, 50);
+
+      const offsetX = 50 - minX * scale;
+      const offsetY = height - 50 + minY * scale;
+
+      return (
+        <div className="mt-8 bg-slate-50 border-2 border-slate-200 p-6 rounded-xl overflow-hidden">
+          <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <GitBranch className="text-blue-600" size={20} /> Frame Configuration
+          </h4>
+          <div className="overflow-x-auto">
+            <svg width={width} height={height} className="mx-auto">
+              <defs>
+                <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6" />
+                </marker>
+              </defs>
+
+              {members.map((member, index) => {
+                const startJoint = joints.find(j => j.joint_id === member.start_joint_id);
+                const endJoint = joints.find(j => j.joint_id === member.end_joint_id);
+                if (!startJoint || !endJoint) return null;
+
+                const x1 = startJoint.x_coordinate * scale + offsetX;
+                const y1 = offsetY - startJoint.y_coordinate * scale;
+                const x2 = endJoint.x_coordinate * scale + offsetX;
+                const y2 = offsetY - endJoint.y_coordinate * scale;
+
+                return (
+                  <g key={index}>
+                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#3B82F6" strokeWidth="6" strokeLinecap="round" />
+                    <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 10} textAnchor="middle" className="text-[10px] font-bold fill-slate-600">
+                      {member.member_id}
+                    </text>
+
+                    {[0.2, 0.4, 0.6, 0.8].map(t => (
+                      <line
+                        key={t}
+                        x1={x1 + (x2 - x1) * t}
+                        y1={y1 + (y2 - y1) * t - 30}
+                        x2={x1 + (x2 - x1) * t}
+                        y2={y1 + (y2 - y1) * t - 2}
+                        stroke="#3B82F6"
+                        strokeWidth="1.5"
+                        markerEnd="url(#arrow-blue)"
+                      />
+                    ))}
+                  </g>
+                );
+              })}
+
+              {joints.map((joint, index) => {
+                const x = joint.x_coordinate * scale + offsetX;
+                const y = offsetY - joint.y_coordinate * scale;
+                return (
+                  <g key={joint.joint_id}>
+                    <circle cx={x} cy={y} r={6} fill={joint.is_support ? "#EF4444" : "#1F2937"} stroke="white" strokeWidth="2" />
+                    <text x={x} y={y + 20} textAnchor="middle" className="text-[12px] font-black fill-slate-800">
+                      {joint.joint_id}
+                    </text>
+                    {joint.is_support && (
+                      <rect x={x - 10} y={y + 6} width="20" height="4" fill="#EF4444" />
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        </div>
+      );
+    };
 
     if (results.type === 'frame') {
       return (
@@ -850,9 +981,20 @@ const SteelDesignApp = ({ isDark = false }) => {
 
           <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-300">
             <p className="text-sm text-gray-700">
-              <strong>Analysis Method:</strong> {results.method === 'moment-distribution' ? 'Moment Distribution Method' : 'Slope-Deflection Method'}
+              <strong>Analysis Method:</strong> {results.method}
+            </p>
+            <p className="text-xs text-gray-500 mt-1 italic">
+              Analysis results from this frame calculation can now be used for the beam or column design sections below.
             </p>
           </div>
+
+          {results.method === "Moment Distribution Method" && (
+            <>
+              <FrameSchematic joints={results.joints} members={results.members} results={results} />
+              <DistributionFactorsPanel results={results} />
+              <IterationHistoryPanel results={results} />
+            </>
+          )}
         </div>
       );
     }

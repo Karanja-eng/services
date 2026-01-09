@@ -9,6 +9,16 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 import math
 from enum import Enum
+from calculations.Beams.moment_distribution_backend import (
+    MomentDistributionSolver,
+    FrameMD,
+    JointMD,
+    MemberMD,
+    LoadMD,
+    MemberType,
+    JointType,
+    EndCondition,
+)
 
 router = APIRouter()
 
@@ -676,6 +686,13 @@ class FrameAnalysisResponse(BaseModel):
     diagrams: List[SpanDiagram]
     max_moment: float
     max_shear: float
+    # MD specific fields
+    iteration_history: Optional[List[Dict]] = None
+    distribution_factors: Optional[Dict[str, Dict[str, float]]] = None
+    final_moments: Optional[Dict[str, Dict[str, float]]] = None
+    fixed_end_moments: Optional[Dict[str, Dict[str, float]]] = None
+    joints: Optional[List[JointMD]] = None
+    members: Optional[List[MemberMD]] = None
 
 
 # Helper Functions
@@ -881,8 +898,105 @@ async def design_column(request: ColumnDesignRequest):
 
 @router.post("/api/frame-analysis", response_model=FrameAnalysisResponse)
 async def analyze_frame(request: FrameAnalysisRequest):
-    """Analyze continuous beam/frame"""
+    """Analyze continuous beam/frame using selected method"""
 
+    if request.method == "moment-distribution":
+        try:
+            # 1. Build FrameMD structure from spans and supports
+            joints = []
+            members = []
+            current_x = 0.0
+
+            # Add joints at each support position
+            for i, support_type in enumerate(request.supports):
+                joint_id = f"J{i}"
+                j_type = JointType.FIXED_JOINT if support_type == "Fixed" else JointType.PINNED_JOINT
+                
+                joints.append(JointMD(
+                    joint_id=joint_id,
+                    joint_type=j_type,
+                    x_coordinate=current_x,
+                    is_support=True
+                ))
+                
+                if i < len(request.spans):
+                    current_x += request.spans[i].length
+
+            # Add members between joints
+            for i, span in enumerate(request.spans):
+                member_id = f"M{i}"
+                start_j = f"J{i}"
+                end_j = f"J{i+1}"
+                
+                # Determine end conditions based on support types
+                start_cond = EndCondition.FIXED if request.supports[i] == "Fixed" else EndCondition.PINNED
+                end_cond = EndCondition.FIXED if request.supports[i+1] == "Fixed" else EndCondition.PINNED
+
+                members.append(MemberMD(
+                    member_id=member_id,
+                    member_type=MemberType.BEAM,
+                    start_joint_id=start_j,
+                    end_joint_id=end_j,
+                    length=span.length,
+                    E=2.1e11, # 210 GPa for steel
+                    I=1e-4,   # Sample I value, should ideally follow selected section
+                    start_condition=start_cond,
+                    end_condition=end_cond,
+                    loads=[LoadMD(load_type="UDL", magnitude=span.load)]
+                ))
+
+            # 2. Run Analysis
+            frame_md = FrameMD(joints=joints, members=members)
+            solver = MomentDistributionSolver(frame_md)
+            results = solver.solve()
+
+            # 3. Format response
+            diagrams = []
+            max_moment = 0.0
+            max_shear = 0.0
+
+            for i, span in enumerate(request.spans):
+                member_id = f"M{i}"
+                points = []
+                
+                # Extract points from MD results
+                md_points = results.moment_data.get(member_id, [])
+                shear_points = results.shear_force_data.get(member_id, [])
+                
+                for j, p in enumerate(md_points):
+                    m_val = p["y"]
+                    v_val = shear_points[j]["y"] if j < len(shear_points) else 0.0
+                    
+                    points.append(DiagramPoint(
+                        x=round(p["x"], 2),
+                        M=round(m_val, 2),
+                        V=round(v_val, 2)
+                    ))
+                    
+                    max_moment = max(max_moment, abs(m_val))
+                    max_shear = max(max_shear, abs(v_val))
+                
+                diagrams.append(SpanDiagram(span=i + 1, points=points))
+
+            return FrameAnalysisResponse(
+                method="Moment Distribution Method",
+                diagrams=diagrams,
+                max_moment=round(max_moment, 2),
+                max_shear=round(max_shear, 2),
+                iteration_history=results.iteration_history,
+                distribution_factors=results.distribution_factors,
+                final_moments=results.final_moments,
+                fixed_end_moments=results.fixed_end_moments,
+                joints=joints,
+                members=members
+            )
+
+        except Exception as e:
+            # Fallback or raise error
+            print(f"Moment Distribution failed, using simple analysis: {e}")
+            pass
+
+    # Simple Analysis (Fallback or default)
     diagrams = []
     all_moments = []
     all_shears = []

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Calculator, FileText, Plus, Trash2, Building } from "lucide-react";
 import axios from "axios";
-import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
-import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
+import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 
 const SuperstructureTakeoffApp = () => {
   // Main UI Tabs (Calculator, Takeoff, Sheet, BOQ)

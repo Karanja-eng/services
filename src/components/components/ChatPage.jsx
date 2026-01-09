@@ -139,7 +139,7 @@ const ChatPage = ({ renderSearch, isDark }) => {
       <div className="relative z-10 w-full max-w-7xl flex flex-col items-center h-full pt-12 pb-12">
         <div className="text-center mb-24 space-y-2 flex-shrink-0 w-full flex flex-col items-center">
           <h1 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-md">
-            <span className="text-blue-600 dark:text-blue-400">Fundi</span> Let's Build
+            <span className="text-blue-600 dark:text-blue-400">Welcome Fundi</span> Let's Build
           </h1>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-xl mx-auto drop-shadow-sm">
             Professional tools for every stage.

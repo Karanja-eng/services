@@ -26,28 +26,31 @@ app.add_middleware(
 async def startup_event():
     """Initialize database on application startup"""
     print("\n" + "="*60)
-    print("🚀 Starting Fundi API")
+    print("🚀 Starting Fundi🔨 API")
     print("="*60)
     
     # Check database connection
-    success, message = check_db_connection()
-    if success:
-        print(f"✅ {message}")
-        try:
-            init_db()
-            print("✅ Database initialized successfully")
-        except Exception as e:
-            print(f"⚠️  Database initialization warning: {str(e)}")
-            print("   Application will continue without database persistence")
-    else:
-        print(f"⚠️  {message}")
-        print("   Application will continue without database persistence")
+    print("⏳ Skipping synchronous DB check on startup...")
+    # success, message = check_db_connection()
+    # if success:
+    #     print(f"✅ {message}")
+    #     try:
+    #         init_db()
+    #         print("✅ Database initialized successfully")
+    #     except Exception as e:
+    #         print(f"⚠️  Database initialization warning: {str(e)}")
+    #         print("   Application will continue without database persistence")
+    # else:
+    #     print(f"⚠️  {message}")
+    #     print("   Application will continue without database persistence")
     
     # Preload AI Models
-    try:
-        preload_model()
-    except Exception as e:
-        print(f"⚠️  Model preloading warning: {str(e)}")
+    print("⏳ Model preloading skipped (avoiding startup block)...")
+    # try:
+    #     preload_model()
+    #     print("✅ Preloading AI Models finished")
+    # except Exception as e:
+    #     print(f"⚠️  Model preloading warning: {str(e)}")
     
     print("="*60 + "\n")
 
@@ -125,6 +128,7 @@ from calculations.takeoff.internal_finishes import router as internal_finishes_r
 from calculations.takeoff.Superstructure_takeoff import router as superstructure_router
 from calculations.takeoff.superstructure import router as rc_superstructure_router
 from calculations.takeoff.substructure import router as rc_substructure_router
+#from calculations.takeoff.main import router as architectural_router
 
 
 
@@ -159,7 +163,7 @@ app.include_router(
 app.include_router(superstructure_router, prefix="/superstructure_router", tags=["superstructure_router"])
 app.include_router(rc_superstructure_router, prefix="/rc_superstructure_router", tags=["rc_superstructure_router"])
 app.include_router(rc_substructure_router, prefix="/rc_substructure_router", tags=["rc_substructure_router"])
-
+#app.include_router(architectural_router, prefix="/architectural_router", tags=["architectural_router"])
 ## ##############   Ai Models  ##############
 
 ##Ai models
@@ -238,9 +242,30 @@ from calculations.Walls.wall_calc_backend import router as walls_bsdesign_router
 app.include_router(beam_analysis_router)
 # Also expose the same routes under /beam_analysis for frontend compatibility
 app.include_router(beam_analysis_router, prefix="/beam_analysis")
-# app.include_router(
 #     three_mom_analysis_router, prefix="/three_analysis", tags=["three_analysis"]
 # )
+
+from calculations.Beams.main_eurocode import router as eurocode_beam_router
+app.include_router(eurocode_beam_router, prefix="/eurocode_beam", tags=["Eurocode_Beam"])
+
+# AutoCAD Export Endpoint
+from fastapi import Request
+from fastapi.responses import Response
+from calculations.Beams.autocad_drawer import generate_beam_dxf
+
+@app.post("/api/export-dxf", tags=["Export"])
+async def export_dxf(request: Request):
+    data = await request.json()
+    dxf_content = generate_beam_dxf(data)
+    
+    filename = f"beam_{data.get('beam_type', 'design')}.dxf"
+    
+    return Response(
+        content=dxf_content, 
+        media_type="application/dxf", 
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 ####Foundation
 # app.include_router(beam_record_router, prefix="/beam_records", tags=["Beam_records"])
 # app.include_router(

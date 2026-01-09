@@ -29,11 +29,10 @@ import {
   FileText,
   Award,
 } from "lucide-react";
-import Beam3DVisualization from "../../components/beam_3d_helper";
 
-const API_BASE_URL = "http://localhost:8001";
+const API_BASE_URL = "http://localhost:8001/three_analysis";
 
-const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
+const EnhancedThreeMomentCalculator = ({ isDark = false, onAnalysisComplete }) => {
   const [spans, setSpans] = useState([
     { length: 6.0, E: 200e9, I: 8.33e-6, loads: [] },
   ]);
@@ -45,42 +44,6 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("input");
-
-  // Design parameters
-  const [designEnabled, setDesignEnabled] = useState(false);
-  const [designParams, setDesignParams] = useState({
-    beam_type: "Rectangular",
-    support_condition: "Simply Supported",
-    imposed_load: 10.0,
-    permanent_load: 5.0,
-    materials: {
-      concrete_grade: "C30",
-      steel_grade: "Grade 460",
-      concrete_density: 25.0,
-      steel_density: 78.5,
-    },
-    rectangular_geometry: {
-      width: 300,
-      depth: 500,
-      cover: 25,
-    },
-    t_beam_geometry: {
-      web_width: 300,
-      web_depth: 400,
-      flange_width: 1000,
-      flange_thickness: 150,
-      cover: 25,
-    },
-    l_beam_geometry: {
-      web_width: 250,
-      web_depth: 350,
-      flange_width: 600,
-      flange_thickness: 120,
-      cover: 30,
-    },
-  });
-  const [designResults, setDesignResults] = useState(null);
-  const [designLoading, setDesignLoading] = useState(false);
 
   // Update support positions when spans change
   useEffect(() => {
@@ -146,33 +109,21 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
     setSupports(newSupports);
   };
 
-  const updateDesignParam = (path, value) => {
-    const newParams = { ...designParams };
-    const keys = path.split(".");
-    let current = newParams;
-
-    for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]];
-    }
-
-    current[keys[keys.length - 1]] = value;
-    setDesignParams(newParams);
-  };
-
   const analyzeBeam = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/three_analysis/analyze`,
-        {
-          spans,
-          supports,
-        }
-      );
+      const response = await axios.post(`${API_BASE_URL}/analyze`, {
+        spans,
+        supports,
+      });
       setResults(response.data);
       setActiveTab("results");
+
+      if (onAnalysisComplete) {
+        onAnalysisComplete({ ...response.data, inputs: { spans, supports } });
+      }
     } catch (err) {
       setError(err.response?.data?.detail || "Analysis failed");
     } finally {
@@ -180,37 +131,9 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
     }
   };
 
-  const designBeam = async () => {
-    if (!results) {
-      setError("Please analyze beam first");
-      return;
-    }
-
-    setDesignLoading(true);
-    setError(null);
-
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/three_analysis/integrate_analysis_design`,
-        {
-          analysis_results: results,
-          design_parameters: designParams,
-        }
-      );
-      setDesignResults(response.data);
-      setActiveTab("design");
-    } catch (err) {
-      setError(err.response?.data?.detail || "Design failed");
-    } finally {
-      setDesignLoading(false);
-    }
-  };
-
   const loadExample = async (exampleName) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/three_analysis/examples`
-      );
+      const response = await axios.get(`${API_BASE_URL}/examples`);
       const example = response.data.find((ex) => ex.name === exampleName);
       if (example) {
         setSpans(example.spans);
@@ -221,36 +144,6 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
     }
   };
 
-  const loadDesignExample = async (exampleName) => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/three_analysis/beam_design_examples`
-      );
-      const example = response.data.find((ex) => ex.name === exampleName);
-      if (example) {
-        setDesignParams({
-          ...designParams,
-          beam_type: example.beam_type,
-          support_condition: example.support_condition,
-          imposed_load: example.imposed_load,
-          permanent_load: example.permanent_load,
-          materials: example.materials,
-          ...(example.rectangular_geometry && {
-            rectangular_geometry: example.rectangular_geometry,
-          }),
-          ...(example.t_beam_geometry && {
-            t_beam_geometry: example.t_beam_geometry,
-          }),
-          ...(example.l_beam_geometry && {
-            l_beam_geometry: example.l_beam_geometry,
-          }),
-        });
-      }
-    } catch (err) {
-      setError("Failed to load design example");
-    }
-  };
-
   const BeamSchematic = ({ spans, supports, results }) => {
     const totalLength = spans.reduce((sum, span) => sum + span.length, 0);
     const scale = 800 / totalLength;
@@ -258,10 +151,8 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
     let currentPos = 0;
 
     return (
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-slate-100">
-          Beam Configuration
-        </h3>
+      <div className="bg-white p-6 rounded-lg shadow-lg">
+        <h3 className="text-lg font-semibold mb-4">Beam Configuration</h3>
         <svg width="900" height="200" viewBox="0 0 900 200">
           {/* Draw spans */}
           {spans.map((span, index) => {
@@ -486,7 +377,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
     return (
       <div className="space-y-6">
         {/* Shear Force Diagram */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
           <h3 className="text-lg font-semibold mb-4 text-blue-600">
             Shear Force Diagram (SFD)
           </h3>
@@ -529,7 +420,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
         </div>
 
         {/* Combined Bending Moment Diagram */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
           <h3 className="text-lg font-semibold mb-4 text-red-600">
             Bending Moment Diagram (BMD) - Combined View
           </h3>
@@ -621,7 +512,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
 
         {/* Separate BMD Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-green-600">
               BMD - Due to Vertical Loads Only
             </h3>
@@ -649,7 +540,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-purple-600">
               BMD - Due to Support Moments
             </h3>
@@ -681,874 +572,20 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
     );
   };
 
-  const DesignConfigPanel = () => {
-    return (
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
-            BS 8110 Beam Design Configuration
-          </h2>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => loadDesignExample("Simple Rectangular Beam")}
-              className="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded hover:bg-gray-200 dark:hover:bg-slate-600 text-sm"
-            >
-              Rectangle Example
-            </button>
-            <button
-              onClick={() => loadDesignExample("Continuous T-Beam")}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
-            >
-              T-Beam Example
-            </button>
-            <button
-              onClick={() => loadDesignExample("Cantilever L-Beam")}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
-            >
-              L-Beam Example
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Basic Parameters */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Basic Parameters</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Beam Type
-                </label>
-                <select
-                  value={designParams.beam_type}
-                  onChange={(e) =>
-                    updateDesignParam("beam_type", e.target.value)
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                >
-                  <option value="Rectangular">Rectangular</option>
-                  <option value="T-Beam">T-Beam</option>
-                  <option value="L-Beam">L-Beam</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Support Condition
-                </label>
-                <select
-                  value={designParams.support_condition}
-                  onChange={(e) =>
-                    updateDesignParam("support_condition", e.target.value)
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                >
-                  <option value="Simply Supported">Simply Supported</option>
-                  <option value="Continuous">Continuous</option>
-                  <option value="Cantilever">Cantilever</option>
-                  <option value="Fixed">Fixed</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Imposed Load (kN/m)
-                  </label>
-                  <input
-                    type="number"
-                    value={designParams.imposed_load}
-                    onChange={(e) =>
-                      updateDesignParam(
-                        "imposed_load",
-                        parseFloat(e.target.value)
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    step="0.1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Permanent Load (kN/m)
-                  </label>
-                  <input
-                    type="number"
-                    value={designParams.permanent_load}
-                    onChange={(e) =>
-                      updateDesignParam(
-                        "permanent_load",
-                        parseFloat(e.target.value)
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    step="0.1"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Material Properties */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Material Properties</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Concrete Grade
-                  </label>
-                  <select
-                    value={designParams.materials.concrete_grade}
-                    onChange={(e) =>
-                      updateDesignParam(
-                        "materials.concrete_grade",
-                        e.target.value
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="C20">C20</option>
-                    <option value="C25">C25</option>
-                    <option value="C30">C30</option>
-                    <option value="C35">C35</option>
-                    <option value="C40">C40</option>
-                    <option value="C45">C45</option>
-                    <option value="C50">C50</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Steel Grade
-                  </label>
-                  <select
-                    value={designParams.materials.steel_grade}
-                    onChange={(e) =>
-                      updateDesignParam("materials.steel_grade", e.target.value)
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="Grade 250">Grade 250</option>
-                    <option value="Grade 460">Grade 460</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Geometry Configuration */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-4">Cross-Section Geometry</h3>
-
-          {designParams.beam_type === "Rectangular" && (
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Width (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.rectangular_geometry.width}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "rectangular_geometry.width",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Depth (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.rectangular_geometry.depth}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "rectangular_geometry.depth",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cover (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.rectangular_geometry.cover}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "rectangular_geometry.cover",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-            </div>
-          )}
-
-          {designParams.beam_type === "T-Beam" && (
-            <div className="grid grid-cols-5 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Web Width (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.t_beam_geometry.web_width}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "t_beam_geometry.web_width",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Web Depth (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.t_beam_geometry.web_depth}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "t_beam_geometry.web_depth",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Flange Width (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.t_beam_geometry.flange_width}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "t_beam_geometry.flange_width",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Flange Thickness (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.t_beam_geometry.flange_thickness}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "t_beam_geometry.flange_thickness",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cover (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.t_beam_geometry.cover}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "t_beam_geometry.cover",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-            </div>
-          )}
-
-          {designParams.beam_type === "L-Beam" && (
-            <div className="grid grid-cols-5 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Web Width (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.l_beam_geometry.web_width}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "l_beam_geometry.web_width",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Web Depth (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.l_beam_geometry.web_depth}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "l_beam_geometry.web_depth",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Flange Width (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.l_beam_geometry.flange_width}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "l_beam_geometry.flange_width",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Flange Thickness (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.l_beam_geometry.flange_thickness}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "l_beam_geometry.flange_thickness",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cover (mm)
-                </label>
-                <input
-                  type="number"
-                  value={designParams.l_beam_geometry.cover}
-                  onChange={(e) =>
-                    updateDesignParam(
-                      "l_beam_geometry.cover",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Cross-section visualization would go here */}
-        <div className="mt-6">
-          <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">
-              Cross-Section Preview
-            </h4>
-            <div className="text-sm text-gray-600">
-              {designParams.beam_type} section with{" "}
-              {designParams.materials.concrete_grade} concrete and{" "}
-              {designParams.materials.steel_grade} steel
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const DesignResultsPanel = ({ designResults }) => {
-    if (!designResults || !designResults.span_designs) return null;
-
-    return (
-      <div className="space-y-6">
-        {/* Design Summary */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-4 flex items-center">
-            <Award className="h-6 w-6 mr-2 text-green-600" />
-            BS 8110 Design Results Summary
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-sm text-blue-600">Total Spans Designed</div>
-              <div className="text-2xl font-bold text-blue-700">
-                {designResults.summary.total_spans}
-              </div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-sm text-green-600">Beam Type</div>
-              <div className="text-lg font-semibold text-green-700">
-                {designResults.summary.beam_type}
-              </div>
-            </div>
-            <div
-              className={`p-4 rounded-lg ${
-                designResults.summary.all_designs_ok
-                  ? "bg-green-50"
-                  : "bg-red-50"
-              }`}
-            >
-              <div
-                className={`text-sm ${
-                  designResults.summary.all_designs_ok
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
-              >
-                Design Status
-              </div>
-              <div
-                className={`text-lg font-semibold ${
-                  designResults.summary.all_designs_ok
-                    ? "text-green-700"
-                    : "text-red-700"
-                }`}
-              >
-                {designResults.summary.all_designs_ok
-                  ? "✓ All OK"
-                  : "✗ Issues Found"}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Individual Span Results */}
-        {designResults.span_designs.map((spanDesign, index) => (
-          <div
-            key={index}
-            className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg"
-          >
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <Wrench className="h-5 w-5 mr-2 text-blue-600" />
-              Span {index + 1} Design Details
-            </h3>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Reinforcement Details */}
-              <div>
-                <h4 className="font-semibold text-gray-700 mb-3">
-                  Reinforcement Details
-                </h4>
-                <div className="space-y-3">
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-600">Main Bars</div>
-                    <div className="font-medium">
-                      {spanDesign.reinforcement.main_bars.join("mm + ")}mm bars
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Total Area:{" "}
-                      {spanDesign.reinforcement.main_bars_area.toFixed(0)} mm²
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-600">Shear Links</div>
-                    <div className="font-medium">
-                      {spanDesign.reinforcement.shear_links}mm @{" "}
-                      {spanDesign.reinforcement.link_spacing}mm c/c
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-600">Steel Ratio</div>
-                    <div className="font-medium">
-                      {spanDesign.reinforcement.steel_ratio.toFixed(3)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Design Checks */}
-              <div>
-                <h4 className="font-semibold text-gray-700 mb-3">
-                  Design Checks
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Moment Capacity</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.moment_capacity_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {spanDesign.design_checks.moment_capacity_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                      (
-                      {(
-                        spanDesign.design_checks.moment_utilization * 100
-                      ).toFixed(1)}
-                      %)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Shear Capacity</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.shear_capacity_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {spanDesign.design_checks.shear_capacity_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                      (
-                      {(
-                        spanDesign.design_checks.shear_utilization * 100
-                      ).toFixed(1)}
-                      %)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Deflection</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.deflection_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {spanDesign.design_checks.deflection_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Minimum Steel</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.minimum_steel_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {spanDesign.design_checks.minimum_steel_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Maximum Steel</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        spanDesign.design_checks.maximum_steel_ok
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {spanDesign.design_checks.maximum_steel_ok
-                        ? "✓ OK"
-                        : "✗ FAIL"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Warnings and Errors */}
-                {spanDesign.design_checks.warnings.length > 0 && (
-                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                    <h5 className="text-sm font-semibold text-yellow-800 mb-1">
-                      Warnings:
-                    </h5>
-                    <ul className="text-sm text-yellow-700">
-                      {spanDesign.design_checks.warnings.map((warning, idx) => (
-                        <li key={idx} className="flex items-start">
-                          <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
-                          {warning}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {spanDesign.design_checks.errors.length > 0 && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
-                    <h5 className="text-sm font-semibold text-red-800 mb-1">
-                      Errors:
-                    </h5>
-                    <ul className="text-sm text-red-700">
-                      {spanDesign.design_checks.errors.map((error, idx) => (
-                        <li key={idx} className="flex items-start">
-                          <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
-                          {error}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Capacity Utilization Chart */}
-            <div className="mt-6">
-              <h4 className="font-semibold text-gray-700 mb-3">
-                Capacity Utilization
-              </h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart
-                  data={[
-                    {
-                      name: "Moment",
-                      utilization:
-                        spanDesign.design_checks.moment_utilization * 100,
-                      limit: 100,
-                    },
-                    {
-                      name: "Shear",
-                      utilization:
-                        spanDesign.design_checks.shear_utilization * 100,
-                      limit: 100,
-                    },
-                  ]}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis
-                    label={{
-                      value: "Utilization (%)",
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
-                  />
-                  <Tooltip
-                    formatter={(value) => [
-                      `${value.toFixed(1)}%`,
-                      "Utilization",
-                    ]}
-                  />
-                  <ReferenceLine y={100} stroke="red" strokeDasharray="2 2" />
-                  <ReferenceLine y={90} stroke="orange" strokeDasharray="2 2" />
-                  <Bar dataKey="utilization" fill="#3B82F6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Cost Estimate */}
-            {spanDesign.cost_estimate && (
-              <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-700 mb-3">
-                  Cost Estimate (per meter)
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-600">Concrete Volume</div>
-                    <div className="font-medium">
-                      {spanDesign.cost_estimate.concrete_volume_per_meter.toFixed(
-                        3
-                      )}{" "}
-                      m³
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Steel Weight</div>
-                    <div className="font-medium">
-                      {spanDesign.cost_estimate.steel_weight_per_meter.toFixed(
-                        1
-                      )}{" "}
-                      kg
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Material Cost</div>
-                    <div className="font-medium">
-                      £
-                      {spanDesign.cost_estimate.total_cost_per_meter.toFixed(2)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Total Span Cost</div>
-                    <div className="font-medium text-lg text-blue-600">
-                      £
-                      {(
-                        spanDesign.cost_estimate.total_cost_per_meter *
-                          spans[index]?.length || 0
-                      ).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Design Calculations Summary */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <FileText className="h-5 w-5 mr-2 text-gray-600" />
-            Design Calculations Summary
-          </h3>
-
-          <div className="space-y-4">
-            {designResults.span_designs.map((spanDesign, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4"
-              >
-                <h4 className="font-semibold text-gray-700 mb-2">
-                  Span {index + 1} Calculations
-                </h4>
-                <div className="bg-gray-50 p-3 rounded font-mono text-xs overflow-x-auto">
-                  {spanDesign.calculations_summary.map((line, lineIdx) => (
-                    <div key={lineIdx} className="whitespace-pre-wrap">
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const ResultsTable = ({ results }) => {
-    if (!results) return null;
-
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-4">Analysis Results</h3>
-
-        <div className="mb-6">
-          <h4 className="font-semibold text-gray-700 mb-3">Support Results</h4>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 px-4 py-2">Support</th>
-                  <th className="border border-gray-300 px-4 py-2">Type</th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    Position (m)
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    Moment (kN⋅m)
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    Reaction (kN)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {supports.map((support, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="border border-gray-300 px-4 py-2 font-semibold">
-                      {index + 1}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {support.support_type}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {support.position.toFixed(2)}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">
-                      {results.support_moments[index].toFixed(2)}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">
-                      {results.support_reactions[index].toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <h4 className="font-semibold text-gray-700 mb-3">Critical Values</h4>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-              <div className="text-sm text-red-600">Max Moment</div>
-              <div className="text-lg font-semibold text-red-700">
-                {results.critical_values.max_moment.toFixed(2)} kN⋅m
-              </div>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-              <div className="text-sm text-red-600">Min Moment</div>
-              <div className="text-lg font-semibold text-red-700">
-                {results.critical_values.min_moment.toFixed(2)} kN⋅m
-              </div>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="text-sm text-blue-600">Max Shear</div>
-              <div className="text-lg font-semibold text-blue-700">
-                {results.critical_values.max_shear.toFixed(2)} kN
-              </div>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="text-sm text-blue-600">Min Shear</div>
-              <div className="text-lg font-semibold text-blue-700">
-                {results.critical_values.min_shear.toFixed(2)} kN
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="font-semibold text-gray-700 mb-3">
-            Three-Moment Theorem Equations
-          </h4>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            {results.equations_used.map((equation, index) => (
-              <div key={index} className="text-sm font-mono text-gray-700 mb-2">
-                {equation}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-slate-900">
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
+      <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
               <Settings className="h-8 w-8 text-blue-600" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Three-Moment Theorem + BS 8110 Design
+                  Three-Moment Theorem Analysis
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Professional Continuous Beam Analysis & Reinforced Concrete
-                  Design
+                  Professional Continuous Beam Analysis
                 </p>
               </div>
             </div>
@@ -1575,52 +612,27 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Navigation Tabs */}
         <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-200 dark:bg-slate-700 rounded-lg p-1">
+          <div className="flex space-x-1 bg-gray-200 rounded-lg p-1">
             <button
               onClick={() => setActiveTab("input")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "input"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "input"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               <Settings className="h-4 w-4 inline mr-2" />
               Input Configuration
             </button>
             <button
               onClick={() => setActiveTab("results")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "results"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${activeTab === "results"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
               disabled={!results}
             >
               <Calculator className="h-4 w-4 inline mr-2" />
               Analysis Results
-            </button>
-            <button
-              onClick={() => setActiveTab("design-config")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "design-config"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              <Wrench className="h-4 w-4 inline mr-2" />
-              Design Configuration
-            </button>
-            <button
-              onClick={() => setActiveTab("design")}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === "design"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-              disabled={!designResults}
-            >
-              <Award className="h-4 w-4 inline mr-2" />
-              Design Results
             </button>
           </div>
         </div>
@@ -1633,23 +645,13 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
           </div>
         )}
 
-        {/* Success Display */}
-        {results && !error && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-            <span className="text-green-700">
-              Analysis completed successfully!
-            </span>
-          </div>
-        )}
-
         {/* Tab Content */}
         {activeTab === "input" && (
           <div className="space-y-6">
-            {/* Beam Configuration - Same as before */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+            {/* Span Configuration */}
+            <div className="bg-white p-6 rounded-lg shadow-lg">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Beam Configuration</h2>
+                <h2 className="text-xl font-semibold">Span Configuration</h2>
                 <button
                   onClick={addSpan}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
@@ -1659,7 +661,6 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                 </button>
               </div>
 
-              {/* Spans configuration - keeping the same structure as before but condensed */}
               <div className="space-y-4">
                 {spans.map((span, spanIndex) => (
                   <div
@@ -1680,6 +681,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                       )}
                     </div>
 
+                    {/* Span Properties */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1706,6 +708,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                             updateSpan(spanIndex, "E", e.target.value)
                           }
                           className="w-full border border-gray-300 rounded-md px-3 py-2"
+                          step="1e9"
                         />
                       </div>
                       <div>
@@ -1724,7 +727,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                       </div>
                     </div>
 
-                    {/* Load configuration - simplified */}
+                    {/* Loads */}
                     <div>
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="font-medium text-gray-700">Loads</h4>
@@ -1754,7 +757,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                             </button>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
                                 Load Type
@@ -1774,15 +777,6 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                                 <option value="Point Load">Point Load</option>
                                 <option value="Uniformly Distributed Load">
                                   UDL
-                                </option>
-                                <option value="Partial Uniformly Distributed Load">
-                                  Partial UDL
-                                </option>
-                                <option value="Triangular Load">
-                                  Triangular
-                                </option>
-                                <option value="Trapezoidal Load">
-                                  Trapezoidal
                                 </option>
                               </select>
                             </div>
@@ -1808,47 +802,25 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
                                 step="0.1"
                               />
                             </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Position (m)
-                              </label>
-                              <input
-                                type="number"
-                                value={load.position}
-                                onChange={(e) =>
-                                  updateLoad(
-                                    spanIndex,
-                                    loadIndex,
-                                    "position",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                                step="0.1"
-                                max={span.length}
-                              />
-                            </div>
-                            {(load.load_type ===
-                              "Partial Uniformly Distributed Load" ||
-                              load.load_type === "Triangular Load" ||
-                              load.load_type === "Trapezoidal Load") && (
+                            {load.load_type === "Point Load" && (
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Length (m)
+                                  Position (m)
                                 </label>
                                 <input
                                   type="number"
-                                  value={load.length}
+                                  value={load.position}
                                   onChange={(e) =>
                                     updateLoad(
                                       spanIndex,
                                       loadIndex,
-                                      "length",
+                                      "position",
                                       e.target.value
                                     )
                                   }
                                   className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                                   step="0.1"
+                                  max={span.length}
                                 />
                               </div>
                             )}
@@ -1867,64 +839,7 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
               </div>
             </div>
 
-            {/* Support Configuration - Same as before */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-              <h2 className="text-xl font-semibold mb-4">
-                Support Configuration
-              </h2>
-
-              <div className="space-y-3">
-                {supports.map((support, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center space-x-4 p-3 bg-gray-50 rounded"
-                  >
-                    <div className="flex-shrink-0 w-20">
-                      <span className="text-sm font-medium text-gray-700">
-                        Support {index + 1}
-                      </span>
-                    </div>
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Support Type
-                        </label>
-                        <select
-                          value={support.support_type}
-                          onChange={(e) =>
-                            updateSupport(index, "support_type", e.target.value)
-                          }
-                          className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                        >
-                          <option value="Pinned">Pinned</option>
-                          <option value="Fixed">Fixed</option>
-                          <option value="Simply Supported">
-                            Simply Supported
-                          </option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Position (m)
-                        </label>
-                        <input
-                          type="number"
-                          value={support.position}
-                          readOnly
-                          className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-gray-100"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <BeamSchematic
-              spans={spans}
-              supports={supports}
-              results={results}
-            />
+            <BeamSchematic spans={spans} supports={supports} results={results} />
 
             {/* Analyze Button */}
             <div className="flex justify-center">
@@ -1946,77 +861,15 @@ const EnhancedThreeMomentCalculator = ({ isDark = false }) => {
 
         {activeTab === "results" && results && (
           <div className="space-y-6">
-            <BeamSchematic
-              spans={spans}
-              supports={supports}
-              results={results}
-            />
+            <BeamSchematic spans={spans} supports={supports} results={results} />
             <DiagramsPanel results={results} />
-            <ResultsTable results={results} />
-
-            {/* 3D Visualization Component */}
-            <Beam3DVisualization
-              inputs={{
-                spans: spans,
-                supports: supports,
-                loads: spans.flatMap((span, idx) =>
-                  span.loads.map((load) => ({
-                    ...load,
-                    span_index: idx,
-                  }))
-                ),
-              }}
-              results={results}
-              theme={isDark ? "dark" : "light"}
-              beamType={
-                supports.length === 2 ? "simply_supported" : "continuous"
-              }
-            />
           </div>
-        )}
-
-        {activeTab === "design-config" && (
-          <div className="space-y-6">
-            <DesignConfigPanel />
-
-            {/* Design Button */}
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={designBeam}
-                disabled={designLoading || !results}
-                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center text-lg font-semibold"
-              >
-                {designLoading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                ) : (
-                  <Wrench className="h-5 w-5 mr-3" />
-                )}
-                {designLoading ? "Designing..." : "Design Beam (BS 8110)"}
-              </button>
-
-              {!results && (
-                <div className="text-sm text-gray-500 flex items-center">
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Please analyze beam first
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "design" && designResults && (
-          <DesignResultsPanel designResults={designResults} />
         )}
 
         {/* Footer */}
         <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>
-            Three-Moment Theorem Calculator with BS 8110 Reinforced Concrete
-            Design
-          </p>
-          <p className="mt-1">
-            © 2024 - Professional Structural Analysis & Design Tool
-          </p>
+          <p>Three-Moment Theorem Calculator</p>
+          <p className="mt-1">© 2024 - Professional Structural Analysis Tool</p>
         </div>
       </div>
     </div>
