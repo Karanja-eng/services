@@ -81,7 +81,7 @@ class BeamCalculator:
         
         # Initialize arrays for analysis
         num_points = 100
-        x_coords = np.linspace(0, span_m, num_points)
+        x_coords = np.linspace(0, span_m, num_points).tolist()
         
         # Calculate reactions
         reactions = self._calculate_reactions(loads, span_m)
@@ -110,7 +110,7 @@ class BeamCalculator:
             "max_moment": round(max_moment, 2),
             "max_moment_position": round(max_moment_pos, 2),
             "max_shear": round(max_shear, 2),
-            "x_points": x_coords.tolist(),
+            "x_points": x_coords,
             "moment": bending_moments,
             "shear": shear_forces,
             "ultimate_moment": round(ult_moment, 2),
@@ -634,11 +634,11 @@ class BeamCalculator:
         actual_L_over_d = (span_m * 1000) / d if d > 0 else 0
         
         # Check
-        status = "OK" if actual_L_over_d <= L_over_d else "FAIL"
+        status = "OK" if bool(actual_L_over_d <= L_over_d) else "FAIL"
         
         return {
-            "allowable_span_depth_ratio": round(L_over_d, 2),
-            "actual_span_depth_ratio": round(actual_L_over_d, 2),
+            "allowable_span_depth_ratio": round(float(L_over_d), 2),
+            "actual_span_depth_ratio": round(float(actual_L_over_d), 2),
             "status": status,
             "rho": round(rho * 100, 3),
             "rho_0": round(rho_0 * 100, 3),
@@ -701,19 +701,19 @@ class BeamCalculator:
         
         clear_spacing = (self.width - 2 * (self.cover + 8) - num_bars * bar_dia) / (num_bars - 1) if num_bars > 1 else 0
         
-        spacing_ok = clear_spacing <= max_spacing
-        min_steel_ok = A_s_provided >= A_s_min_crack
+        spacing_ok = bool(clear_spacing <= max_spacing)
+        min_steel_ok = bool(A_s_provided >= A_s_min_crack)
         status = "OK" if (spacing_ok and min_steel_ok) else "FAIL"
         
         return {
-            "crack_width_limit": w_k,
+            "crack_width_limit": float(w_k),
             "exposure_class": exposure,
-            "steel_stress_sls": round(sigma_s, 2),
-            "maximum_bar_spacing": max_spacing,
-            "actual_bar_spacing": round(clear_spacing, 2),
+            "steel_stress_sls": round(float(sigma_s), 2),
+            "maximum_bar_spacing": int(max_spacing),
+            "actual_bar_spacing": round(float(clear_spacing), 2),
             "spacing_ok": spacing_ok,
-            "minimum_steel_crack": round(A_s_min_crack, 2),
-            "steel_provided": round(A_s_provided, 2),
+            "minimum_steel_crack": round(float(A_s_min_crack), 2),
+            "steel_provided": round(float(A_s_provided), 2),
             "minimum_steel_ok": min_steel_ok,
             "status": status
         }

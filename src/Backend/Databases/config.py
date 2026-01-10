@@ -86,6 +86,6 @@ def init_db():
     """
     from Databases.models import Base
     Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created successfully")
+    print("DB: Database tables created successfully")
 
 
