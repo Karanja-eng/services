@@ -45,6 +45,8 @@ class RoofConfigRequest(BaseModel):
     rafter_spacing: float = Field(0.6, gt=0, description="Rafter spacing in meters")
     bearer_spacing: float = Field(0.6, gt=0, description="Bearer spacing in meters")
     material: str = Field("timber", description="Material: timber or steel")
+    pitch_angle_2: float = Field(15.0, ge=5, le=45, description="Upper pitch for Gambrel/Mansard")
+    break_ratio: float = Field(0.6, ge=0.1, le=0.9, description="Break ratio for Gambrel/Mansard")
 
     # Member sizes (optional, will use defaults if not provided)
     wall_plate_size: Optional[List[float]] = None
@@ -210,6 +212,8 @@ async def calculate_roof(config: RoofConfigRequest):
             truss_spacing=config.truss_spacing,
             rafter_spacing=config.rafter_spacing,
             bearer_spacing=config.bearer_spacing,
+            pitch_angle_2=config.pitch_angle_2,
+            break_ratio=config.break_ratio,
         )
 
         # Create member sizes object
@@ -310,6 +314,8 @@ async def generate_takeoff(config: RoofConfigRequest):
             truss_spacing=config.truss_spacing,
             rafter_spacing=config.rafter_spacing,
             bearer_spacing=config.bearer_spacing,
+            pitch_angle_2=config.pitch_angle_2,
+            break_ratio=config.break_ratio,
         )
 
         sizes = MemberSizes()

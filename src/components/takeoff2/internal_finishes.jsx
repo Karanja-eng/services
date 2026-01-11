@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Calculator, Plus, Trash2, Download, FileText, Paintbrush } from "lucide-react";
+import { Calculator, Plus, Trash2, Download, FileText, Paintbrush, Upload, Loader2, Eye, Box, Settings as SettingsIcon } from "lucide-react";
 import axios from "axios";
+import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
+import InternalFinishes3DScene from "./InternalFinishes3DScene";
+
+const API_BASE = "http://localhost:8001";
 
 const InternalFinishesTakeoff = () => {
   const [activeTab, setActiveTab] = useState("calculator");
@@ -36,6 +39,64 @@ const InternalFinishesTakeoff = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [calcSubTab, setCalcSubTab] = useState("automation");
+
+  // Automation State
+  const [buildingData, setBuildingData] = useState(null);
+  const [processing, setProcessing] = useState(false);
+  const [fileId, setFileId] = useState(null);
+  const [selectedElement, setSelectedElement] = useState(null);
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setProcessing(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
+      const data = await res.json();
+      setFileId(data.file_id);
+      await processFloorplan(data.file_id);
+    } catch (err) { console.error(err); }
+    setProcessing(false);
+  };
+
+  const processFloorplan = async (fid) => {
+    const fd = new FormData();
+    fd.append("file_id", fid);
+    fd.append("use_yolo", "true");
+    try {
+      const res = await fetch(`${API_BASE}/arch_pro/api/process`, { method: "POST", body: fd });
+      const data = await res.json();
+      setBuildingData(data);
+      autoFillInputs(data);
+    } catch (err) { console.error(err); }
+  };
+
+  const autoFillInputs = (data) => {
+    if (!data || !data.floors[0]) return;
+    const floor = data.floors[0];
+
+    const extractedRooms = floor.rooms.map((r, i) => {
+      // Find windows/doors touching this room's polygon? 
+      // Simplified: use provided counts if any, or defaults
+      return {
+        id: r.id || Date.now() + i,
+        name: r.name || r.type || `Room ${i + 1}`,
+        length: Math.sqrt(r.area).toFixed(2), // Rough estimate if only area provided
+        width: Math.sqrt(r.area).toFixed(2),
+        height: data.wallHeight || 2.8,
+        doors: 1,
+        doorHeight: 2.1,
+        doorWidth: 0.9,
+        windows: 1,
+        windowHeight: 1.2,
+        windowWidth: 1.5,
+      };
+    });
+    setRooms(extractedRooms);
+  };
 
   const addRoom = () => {
     setRooms([
@@ -137,7 +198,7 @@ const InternalFinishesTakeoff = () => {
         <UniversalTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+          tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
         />
       </div>
 
@@ -147,8 +208,43 @@ const InternalFinishesTakeoff = () => {
             {/* Rooms Input */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex border-b border-gray-200 bg-gray-50 mb-4 rounded-t-lg">
+                  {["automation", "rooms"].map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setCalcSubTab(tab)}
+                      className={`px-6 py-3 text-sm font-medium transition-colors ${calcSubTab === tab ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      {tab === "automation" ? "AI Automation" : "Manual Input"}
+                    </button>
+                  ))}
+                </div>
+
+                {calcSubTab === "automation" && (
+                  <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-xl space-y-4 mb-6">
+                    {processing ? (
+                      <div className="flex flex-col items-center space-y-3">
+                        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+                        <p className="text-sm font-medium text-gray-700">Detecting Rooms & Walls...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-10 h-10 text-blue-400" />
+                        <div className="text-center">
+                          <h3 className="font-bold text-gray-900">Extract Room Finishes</h3>
+                          <p className="text-xs text-gray-500">Upload plan to auto-calculate paint areas and floor tiling.</p>
+                        </div>
+                        <input type="file" id="finishes-upload" className="hidden" onChange={handleUpload} />
+                        <label htmlFor="finishes-upload" className="cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition-all text-sm">
+                          Select Floor Plan
+                        </label>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-bold text-gray-800">Rooms</h2>
+                  <h2 className="font-bold text-gray-800">Rooms List</h2>
                   <button onClick={addRoom} className="flex items-center gap-1 text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">
                     <Plus className="w-4 h-4" /> Add Room
                   </button>
@@ -261,6 +357,32 @@ const InternalFinishesTakeoff = () => {
         {activeTab === 'boq' && (
           <div className="h-full">
             <UniversalBOQ items={takeoffData} />
+          </div>
+        )}
+
+        {activeTab === '3d-view' && (
+          <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative border border-slate-800 shadow-2xl">
+            {buildingData ? (
+              <Canvas shadows dpr={[1, 2]}>
+                <Suspense fallback={null}>
+                  <InternalFinishes3DScene buildingData={buildingData} />
+                </Suspense>
+              </Canvas>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
+                <Eye className="w-16 h-16 opacity-20" />
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-slate-200">No Finishes Data</h3>
+                  <p className="text-sm">Upload a plan to visualize room-by-room finishes.</p>
+                </div>
+                <button
+                  onClick={() => { setActiveTab('calculator'); setCalcSubTab('automation'); }}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold"
+                >
+                  Start Automation
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

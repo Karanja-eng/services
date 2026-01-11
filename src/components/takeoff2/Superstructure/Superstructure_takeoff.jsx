@@ -1,8 +1,12 @@
-import React, { useState } from "react";
-import { Calculator, FileText, Plus, Trash2, Building } from "lucide-react";
+import React, { useState, Suspense } from "react";
+import { Calculator, FileText, Plus, Trash2, Building, Upload, Loader2, Eye, Box, Settings as SettingsIcon } from "lucide-react";
 import axios from "axios";
+import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import Superstructure3DScene from "./Superstructure3DScene";
+
+const API_BASE = "http://localhost:8001";
 
 const SuperstructureTakeoffApp = () => {
   // Main UI Tabs (Calculator, Takeoff, Sheet, BOQ)
@@ -13,6 +17,12 @@ const SuperstructureTakeoffApp = () => {
   const [takeoffData, setTakeoffData] = useState([]);
   const [editorKey, setEditorKey] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // Automation State
+  const [buildingData, setBuildingData] = useState(null);
+  const [processing, setProcessing] = useState(false);
+  const [fileId, setFileId] = useState(null);
+  const [selectedElement, setSelectedElement] = useState(null);
 
   // State for all inputs
   const [projectInfo, setProjectInfo] = useState({
@@ -108,6 +118,93 @@ const SuperstructureTakeoffApp = () => {
     newSlabs[idx][field] = val;
     setSlabs(newSlabs);
   }
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setProcessing(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
+      const data = await res.json();
+      setFileId(data.file_id);
+      await processFloorplan(data.file_id);
+    } catch (err) { console.error(err); }
+    setProcessing(false);
+  };
+
+  const processFloorplan = async (fid) => {
+    const fd = new FormData();
+    fd.append("file_id", fid);
+    fd.append("use_yolo", "true");
+    try {
+      const res = await fetch(`${API_BASE}/arch_pro/api/process`, { method: "POST", body: fd });
+      const data = await res.json();
+      setBuildingData(data);
+      autoFillInputs(data);
+    } catch (err) { console.error(err); }
+  };
+
+  const autoFillInputs = (data) => {
+    if (!data || !data.floors[0]) return;
+    const floor = data.floors[0];
+
+    // 1. Walls Logic
+    const totalWallLength = floor.walls.reduce((sum, w) => sum + w.length, 0);
+
+    setWallData(prev => ({
+      ...prev,
+      externalLength: (totalWallLength * 0.4).toFixed(2), // Heuristic split
+      externalWidth: (totalWallLength * 0.3).toFixed(2),  // Heuristic split
+      internalWallLength: (totalWallLength * 0.3).toFixed(2),
+      wallHeight: data.wallHeight.toFixed(2),
+      numDoors: floor.doors.length,
+      doorWidth: floor.doors[0]?.width?.toFixed(2) || "0.9",
+      doorHeight: floor.doors[0]?.height?.toFixed(2) || "2.1",
+      numWindows: floor.windows.length,
+      windowWidth: floor.windows[0]?.width?.toFixed(2) || "1.5",
+      windowHeight: floor.windows[0]?.height?.toFixed(2) || "1.2",
+    }));
+
+    // 2. Beams Logic: All walls above them, no deductions
+    // Using total wall length as beam length
+    setBeams([{
+      id: 1,
+      length: totalWallLength.toFixed(2),
+      width: "0.20",
+      depth: "0.45",
+      count: 1
+    }]);
+
+    // 3. Slabs Logic: Entire outside contour
+    // Estimate area from wall bounds if house is roughly rectangular
+    const wallPoints = floor.walls.flatMap(w => [w.start, w.end]);
+    if (wallPoints.length > 0) {
+      const xs = wallPoints.map(p => p[0]);
+      const ys = wallPoints.map(p => p[1]);
+      const width = Math.max(...xs) - Math.min(...xs);
+      const depth = Math.max(...ys) - Math.min(...ys);
+      const estimatedArea = width * depth;
+      setSlabs([{
+        id: 1,
+        area: estimatedArea.toFixed(2),
+        thickness: "0.15",
+        mark: "S1"
+      }]);
+    }
+
+    // 4. Columns Logic
+    if (floor.columns && floor.columns.length > 0) {
+      setColumns(floor.columns.map((c, i) => ({
+        id: i,
+        width: c.size || 0.2,
+        depth: c.size || 0.2,
+        height: data.wallHeight,
+        count: 1
+      })));
+    }
+  };
 
   const calculateQuantities = async () => {
     setLoading(true);
@@ -216,7 +313,7 @@ const SuperstructureTakeoffApp = () => {
         <UniversalTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+          tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
         />
       </div>
 
@@ -225,18 +322,49 @@ const SuperstructureTakeoffApp = () => {
           <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             {/* Calculator Sub-Nav */}
             <div className="flex border-b border-gray-200 bg-gray-50">
-              {["walls", "columns", "beams", "slabs", "settings"].map(tab => (
+              {["automation", "walls", "columns", "beams", "slabs", "settings"].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setCalcSubTab(tab)}
                   className={`px-6 py-3 text-sm font-medium transition-colors ${calcSubTab === tab ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === "automation" ? "Auto-Takeoff" : tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
               ))}
             </div>
 
             <div className="p-6 flex-1 overflow-y-auto">
+              {/* Automation Sub-Tab */}
+              {calcSubTab === "automation" && (
+                <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl space-y-4">
+                  {processing ? (
+                    <div className="flex flex-col items-center space-y-3">
+                      <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                      <p className="font-medium text-gray-700">Analyzing Architecture with AI...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="p-4 bg-blue-50 rounded-full">
+                        <Upload className="w-12 h-12 text-blue-600" />
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-lg font-bold text-gray-900">AI Floorplan Extraction</h3>
+                        <p className="text-sm text-gray-500 max-w-sm">Upload your floor plan image to automatically extract wall lengths, door/window counts, and column positions.</p>
+                      </div>
+                      <input type="file" id="takeoff-upload" className="hidden" onChange={handleUpload} />
+                      <label htmlFor="takeoff-upload" className="cursor-pointer bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200">
+                        Select Plan Image
+                      </label>
+                      {buildingData && (
+                        <div className="mt-4 p-3 bg-green-50 text-green-700 text-sm rounded-lg flex items-center gap-2">
+                          <Box size={16} /> Successfully extracted {buildingData.floors[0].walls.length} walls and {buildingData.floors[0].doors.length} doors.
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Walls Sub-Tab */}
               {calcSubTab === "walls" && (
                 <div className="space-y-6 max-w-3xl">
@@ -368,6 +496,61 @@ const SuperstructureTakeoffApp = () => {
         {activeTab === 'boq' && (
           <div className="h-full">
             <UniversalBOQ items={takeoffData} />
+          </div>
+        )}
+
+        {activeTab === '3d-view' && (
+          <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative border border-slate-800 shadow-2xl">
+            {buildingData ? (
+              <>
+                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                  <div className="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 flex items-center gap-2 shadow-lg">
+                    <Box className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Superstructure Model</span>
+                  </div>
+                  <div className="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 flex items-center gap-2 shadow-lg">
+                    <SettingsIcon className="w-4 h-4 text-slate-400" />
+                    <span className="text-[10px] text-slate-400 font-mono">Height: {buildingData.wallHeight}m</span>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-4 right-4 z-10">
+                  <button
+                    onClick={() => setActiveTab('calculator')}
+                    className="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 font-bold text-sm"
+                  >
+                    <Calculator size={18} />
+                    Edit Dimensions
+                  </button>
+                </div>
+
+                <Canvas shadows dpr={[1, 2]}>
+                  <Suspense fallback={null}>
+                    <Superstructure3DScene
+                      buildingData={buildingData}
+                      selectedId={selectedElement?.id}
+                      onSelect={setSelectedElement}
+                    />
+                  </Suspense>
+                </Canvas>
+              </>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
+                <div className="p-6 bg-slate-800 rounded-full">
+                  <Eye className="w-16 h-16 opacity-20" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-slate-200">No 3D Model Data</h3>
+                  <p className="text-sm max-w-xs">Upload a plan in the Calculator tab to generate the 3D visualization.</p>
+                </div>
+                <button
+                  onClick={() => { setActiveTab('calculator'); setCalcSubTab('automation'); }}
+                  className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition-colors border border-slate-700"
+                >
+                  Go to Upload
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

@@ -26,17 +26,47 @@ const DrainageComponenet = () => {
     if (results && results.boq_items) {
       const formattedItems = results.boq_items.map((item, index) => ({
         id: index + 1,
-        billNo: item.code || (index + 1).toString(),
-        itemNo: (index + 1).toString(),
-        description: descriptions[item.name] || item.name,
+        billNo: item.code.split('.')[0] || "A", // Extract A from A.1
+        itemNo: item.code,
+        description: descriptions[item.name] || item.description || item.name,
         unit: item.unit,
         quantity: item.quantity,
         rate: item.rate || 0,
         amount: item.amount || 0,
-        dimensions: [], // Empty initially
+        dimensions: (item.dimensions || []).map((dim, dIdx) => ({
+          id: dIdx + 1,
+          number: dim.number?.toString() || "1",
+          length: dim.length?.toString() || "",
+          width: dim.width?.toString() || "",
+          height: dim.height?.toString() || "",
+          description: dim.description || "",
+          deduction: false
+        })),
         isHeader: false
       }));
-      setTakeoffData(formattedItems);
+
+      // Group headers for better structure
+      const groupedItems = [];
+      let currentBill = "";
+
+      formattedItems.forEach(item => {
+        const bill = item.billNo;
+        if (bill !== currentBill) {
+          groupedItems.push({
+            id: `header-${bill}`,
+            billNo: bill,
+            itemNo: "",
+            description: `CLASS ${bill}`, // Placeholder, backend could provide more
+            dimensions: [],
+            isHeader: true
+          });
+          currentBill = bill;
+        }
+        groupedItems.push(item);
+      });
+
+      setTakeoffData(groupedItems);
+      setProjectData(results);
       setEditorKey(prev => prev + 1); // Reset editor on new calculation
       setActiveTab("takeoff");
     }

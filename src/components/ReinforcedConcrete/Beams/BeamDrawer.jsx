@@ -2,8 +2,8 @@ import React, { useRef, useEffect } from "react";
 
 /**
  * BeamColumnDrawer (2D)
- * Renders cross-sections of RC beams/columns.
- * Can render a specific section or multiple sections side-by-side.
+ * Renders professional cross-sections of RC beams/columns.
+ * AutoCAD-style clean lines, black theme, dimensions, and callouts.
  */
 const BeamColumnDrawer = ({
   config = {},
@@ -11,9 +11,8 @@ const BeamColumnDrawer = ({
   showLabels = true
 }) => {
   const canvasRef = useRef(null);
-  const SCALE = 0.5; // Pixels per mm
+  const SCALE = 0.4; // Pixels per mm - slightly smaller to fit labels
 
-  // Destructure config with defaults
   const {
     type = "t_beam",
     webWidth = 300,
@@ -21,21 +20,19 @@ const BeamColumnDrawer = ({
     flangeThk = 150,
     flangeWidth = 1000,
 
-    // Reinforcement - Midspan (Bottom heavy)
     saggingBarsCount = 3,
     saggingBarDiameter = 20,
     saggingCompCount = 2,
     saggingCompDia = 12,
 
-    // Reinforcement - Support (Top heavy)
     hoggingBarsCount = 3,
     hoggingBarDiameter = 20,
     hoggingCompCount = 2,
     hoggingCompDia = 20,
 
-    linksDiameter = 10, // Stirrups
+    linksDiameter = 10,
+    linksSpacing = 200,
     cover = 30,
-    sideBars = 0 // Side face reinforcement
   } = config;
 
   useEffect(() => {
@@ -47,182 +44,252 @@ const BeamColumnDrawer = ({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
-    // Clear
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Calc Dimensions
-    // Max Width needed?
-    const sectionWidth = (type === "t_beam" ? flangeWidth : webWidth) * SCALE + 100;
-
-    // Draw Logic
     if (section === "midspan") {
-      drawSection(ctx, canvas.width / 2 - sectionWidth / 2, "Section A-A (Mid-span)", true);
+      drawSection(ctx, canvas.width / 2, canvas.height / 2, "SECTION A-A (MID-SPAN)", true);
     } else if (section === "support") {
-      drawSection(ctx, canvas.width / 2 - sectionWidth / 2, "Section B-B (Support)", false);
+      drawSection(ctx, canvas.width / 2, canvas.height / 2, "SECTION B-B (SUPPORT)", false);
     } else if (section === "both") {
-      // Draw side by side
-      // Scale down if needed? 
-      // 800px canvas. Two sections.
-      drawSection(ctx, 50, "Section A-A (Mid-span)", true);
-      drawSection(ctx, 450, "Section B-B (Support)", false);
+      drawSection(ctx, 220, canvas.height / 2, "SECTION A-A (MID-SPAN)", true);
+      drawSection(ctx, 580, canvas.height / 2, "SECTION B-B (SUPPORT)", false);
     }
   };
 
-  const drawSection = (ctx, xOffset, label, isSagging) => {
-    // isSagging = true -> Midspan (Show sagging bottom bars, and top hangers/comp)
-    // isSagging = false -> Support (Show hogging top bars, and bottom comp)
+  const drawSection = (ctx, centerX, centerY, label, isSagging) => {
+    const bw = webWidth;
+    const bf = type === "rectangular" ? webWidth : flangeWidth;
+    const h = beamDepth;
+    const hf = flangeThk;
 
-    const flipY = (y) => 200 - y * SCALE + 100; // Center vertically somewhat
-
-    const bottomCount = isSagging ? saggingBarsCount : hoggingCompCount;
-    const bottomDia = isSagging ? saggingBarDiameter : hoggingCompDia;
-
+    // Reinforcement logic
     const topCount = isSagging ? saggingCompCount : hoggingBarsCount;
     const topDia = isSagging ? saggingCompDia : hoggingBarDiameter;
+    const botCount = isSagging ? saggingBarsCount : hoggingCompCount;
+    const botDia = isSagging ? saggingBarDiameter : hoggingCompDia;
 
-    // If sagging comp count is 0, define min hangers? Usually 2.
-    // But we follow props.
-    const actualTopCount = topCount < 2 ? 2 : topCount;
-    const actualTopDia = topDia || 12;
+    // Origin is the center of the beam vertically, and center of web horizontally
+    const x0 = centerX;
+    const y0 = centerY;
 
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#333";
-    ctx.fillStyle = "#ddd"; // Concrete gray
+    const drawLine = (x1, y1, x2, y2, width = 1, dash = []) => {
+      ctx.beginPath();
+      ctx.setLineDash(dash);
+      ctx.lineWidth = width;
+      ctx.strokeStyle = "#000000";
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    };
 
-    // 1. Draw Concrete Outline
-    let x0 = xOffset + 50; // Padding
-    let y0 = flipY(0); // Top local
+    const drawDimension = (x1, y1, x2, y2, text, offset, vertical = false) => {
+      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = "#000000";
+      ctx.fillStyle = "#000000";
+      ctx.font = "10px sans-serif";
+      ctx.textAlign = "center";
 
-    const wStirrup = webWidth - 2 * cover;
-    const hStirrup = beamDepth - 2 * cover;
+      if (vertical) {
+        const dx = offset;
+        drawLine(x1, y1, x1 + dx * 1.2, y1, 0.5); // Extension lines
+        drawLine(x2, y2, x2 + dx * 1.2, y2, 0.5);
 
-    // Draw Shape
-    ctx.beginPath();
-    if (type === "t_beam" || type === "l_beam") {
-      // Simplified T shape drawing
-      const bf = flangeWidth;
-      const hf = flangeThk;
-      const bw = webWidth;
-      const h = beamDepth;
+        // Dim line
+        const dimX = x1 + dx;
+        drawLine(dimX, y1, dimX, y2, 0.8);
 
-      const xCenter = x0 + (bf * SCALE) / 2;
-      // Top Left
-      const xTL = xCenter - (bf * SCALE) / 2;
-      const yTop = flipY(0);
-      const yFlangeBot = flipY(-hf);
-      const yBot = flipY(-h);
+        // Ticks (45 deg)
+        drawLine(dimX - 4, y1 + 4, dimX + 4, y1 - 4, 1);
+        drawLine(dimX - 4, y2 + 4, dimX + 4, y2 - 4, 1);
 
-      // Vertices
-      ctx.moveTo(xTL, yTop);
-      ctx.lineTo(xTL + bf * SCALE, yTop);
-      ctx.lineTo(xTL + bf * SCALE, yFlangeBot);
-      ctx.lineTo(xCenter + bw * SCALE / 2, yFlangeBot);
-      ctx.lineTo(xCenter + bw * SCALE / 2, yBot);
-      ctx.lineTo(xCenter - bw * SCALE / 2, yBot);
-      ctx.lineTo(xCenter - bw * SCALE / 2, yFlangeBot);
-      ctx.lineTo(xTL, yFlangeBot);
-      ctx.closePath();
+        // Text
+        ctx.save();
+        ctx.translate(dimX - 10, (y1 + y2) / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+      } else {
+        const dy = offset;
+        drawLine(x1, y1, x1, y1 + dy * 1.2, 0.5);
+        drawLine(x2, y2, x2, y2 + dy * 1.2, 0.5);
 
-    } else {
-      // Rectangular
-      const w = webWidth;
-      const h = beamDepth;
-      const xCenter = x0 + w * SCALE / 2;
+        const dimY = y1 + dy;
+        drawLine(x1, dimY, x2, dimY, 0.8);
 
-      ctx.rect(x0, flipY(-h), w * SCALE, h * SCALE);
-    }
-    ctx.fill();
-    ctx.stroke();
+        // Ticks
+        drawLine(x1 - 4, dimY + 4, x1 + 4, dimY - 4, 1);
+        drawLine(x2 - 4, dimY + 4, x2 + 4, dimY - 4, 1);
 
-    // 2. Draw Stirrup
-    // Always rectangular in web approx
-    const xWebLeft = x0 + (type === "t_beam" ? (flangeWidth - webWidth) / 2 : 0) * SCALE;
-    const xStirL = xWebLeft + cover * SCALE;
-    const yStirTop = flipY(-cover);
-    const wS = (webWidth - 2 * cover) * SCALE;
-    const hS = (beamDepth - 2 * cover) * SCALE;
-
-    ctx.beginPath();
-    ctx.strokeStyle = "blue";
-    ctx.lineWidth = 2;
-    ctx.rect(xStirL, yStirTop + hS, wS, -hS); // Rect draws from top-left usually? 
-    // yStirTop is top Y. hS is height.
-    // Canvas rect(x, y, w, h). y is top-left.
-    // flipY returns canvas Y. 
-    // yStirTop is the higher Y value (visually top).
-    // We want to draw down. h needs to be positive.
-    // But y coordinate grows down. 
-    // flipY(-cover) -> e.g. 200 - (-30)*0.5 = 215. 
-    // flipY(-h-cover) -> 200 - (-500)*0.5 = 450.
-    // So yStirTop is smaller value (UP).
-    // Wait flipY: 200 - y*SCALE. 
-    // y=0 -> 200. y=-500 -> 450. 
-    // So 0 is "Top" visually if canvas 0 is top.
-
-    const yS_Top = flipY(-cover); // 215
-    const yS_Bot = flipY(-beamDepth + cover); // 435
-    // Height = yS_Bot - yS_Top = 220.
-
-    ctx.rect(xStirL, yS_Top, wS, yS_Bot - yS_Top);
-    ctx.stroke();
-
-    // 3. Draw Bars
-    // Helper
-    const drawBars = (count, dia, isTop, color) => {
-      if (count < 1) return;
-      const y = isTop ? yS_Top + dia * SCALE : yS_Bot - dia * SCALE; // Located inside stirrup
-      const availW = wS - dia * SCALE; // Center-to-center span available
-      const spacing = count > 1 ? availW / (count - 1) : 0;
-
-      ctx.fillStyle = color;
-      for (let i = 0; i < count; i++) {
-        const cx = xStirL + dia * SCALE / 2 + i * spacing;
-        const cy = y;
-        ctx.beginPath();
-        ctx.arc(cx, cy, dia * SCALE / 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        ctx.fillText(text, (x1 + x2) / 2, dimY - 5);
       }
     };
 
-    // Top Bars
-    // If Sagging: Top = Compression/Hanger (Red/Gray).
-    // If Hogging: Top = Main Tension (Red).
-    const topColor = isSagging ? "#888" : "#d32f2f";
-    const botColor = isSagging ? "#d32f2f" : "#888";
+    const drawLeader = (targetX, targetY, endX, endY, text) => {
+      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = "#000000";
+      ctx.beginPath();
+      ctx.moveTo(targetX, targetY);
+      ctx.lineTo(endX, endY);
+      const horizontalEnd = endX > targetX ? endX + 30 : endX - 30;
+      ctx.lineTo(horizontalEnd, endY);
+      ctx.stroke();
 
-    // Draw Top
-    drawBars(actualTopCount, actualTopDia, true, topColor);
+      ctx.fillStyle = "#000000";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = endX > targetX ? "left" : "right";
+      ctx.fillText(text, horizontalEnd + (endX > targetX ? 5 : -5), endY + 4);
+    };
 
-    // Draw Bottom
-    drawBars(bottomCount, bottomDia, false, botColor);
+    // 1. Concrete Shape
+    ctx.beginPath();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = "#000000";
 
-    // 4. Label
+    let topY = y0 - (h / 2) * SCALE;
+    let botY = y0 + (h / 2) * SCALE;
+    let flangeBotY = topY + hf * SCALE;
+    let webLX = x0 - (bw / 2) * SCALE;
+    let webRX = x0 + (bw / 2) * SCALE;
+    let flangeLX = x0 - (bf / 2) * SCALE;
+    let flangeRX = x0 + (bf / 2) * SCALE;
+
+    if (type === "t_beam") {
+      ctx.moveTo(flangeLX, topY);
+      ctx.lineTo(flangeRX, topY);
+      ctx.lineTo(flangeRX, flangeBotY);
+      ctx.lineTo(webRX, flangeBotY);
+      ctx.lineTo(webRX, botY);
+      ctx.lineTo(webLX, botY);
+      ctx.lineTo(webLX, flangeBotY);
+      ctx.lineTo(flangeLX, flangeBotY);
+      ctx.closePath();
+    } else if (type === "l_beam") {
+      ctx.moveTo(flangeLX, topY);
+      ctx.lineTo(webRX, topY);
+      ctx.lineTo(webRX, botY);
+      ctx.lineTo(webLX, botY);
+      ctx.lineTo(webLX, flangeBotY);
+      ctx.lineTo(flangeLX, flangeBotY);
+      ctx.closePath();
+    } else {
+      ctx.rect(webLX, topY, (webRX - webLX), (botY - topY));
+    }
+    ctx.stroke();
+
+    // 2. Stirrups (Links)
+    ctx.beginPath();
+    ctx.lineWidth = 1.0;
+    const sCover = cover * SCALE;
+    const sLX = webLX + sCover;
+    const sRX = webRX - sCover;
+    const sTY = topY + sCover;
+    const sBY = botY - sCover;
+    ctx.rect(sLX, sTY, sRX - sLX, sBY - sTY);
+    ctx.stroke();
+
+    // 3. Reinforcement Bars
+    const drawBars = (count, dia, isTop) => {
+      if (!count || count <= 0) return;
+      const dS = dia * SCALE;
+      // Fixed position slightly inside stirrup corners
+      const barY = isTop ? sTY + dS / 2 + 1 : sBY - dS / 2 - 1;
+      const availW = (sRX - sLX) - dS - 2;
+      const spacing = count > 1 ? availW / (count - 1) : 0;
+
+      for (let i = 0; i < count; i++) {
+        const barX = sLX + dS / 2 + 1 + (count > 1 ? i * spacing : availW / 2);
+        ctx.beginPath();
+        ctx.fillStyle = "#000000";
+        ctx.arc(barX, barY, Math.max(dS / 2, 1.5), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Leader for the first group of bars
+        if (i === 0) {
+          const leaderText = `${count}T${dia}`;
+          const isLeft = centerX < 400; // Heuristic for side to place callouts
+          const endX = isLeft ? centerX - 120 : centerX + 120;
+          const endY = isTop ? topY - 50 : botY + 50;
+          drawLeader(barX, barY, endX, endY, leaderText);
+        }
+      }
+    };
+
+    drawBars(topCount, topDia, true);
+    drawBars(botCount, botDia, false);
+
+    // Leader for Stirrups
+    const stirrupText = `R${linksDiameter} @ ${linksSpacing}`;
+    drawLeader(sLX, (sTY + sBY) / 2, centerX - 130, centerY, stirrupText);
+
+    // 4. Dimensions
     if (showLabels) {
-      ctx.fillStyle = "#000";
-      ctx.font = "bold 16px Sans-Serif";
-      ctx.textAlign = "center";
-      // Center label below section
-      const xLabel = xWebLeft + (webWidth * SCALE) / 2;
-      ctx.fillText(label, xLabel, yS_Bot + 50);
+      // Depth
+      drawDimension(webRX, topY, webRX, botY, h.toString(), 40, true);
 
-      // Zoning Label
-      ctx.font = "italic 12px Sans-Serif";
-      ctx.fillText(isSagging ? "(Bottom Tension)" : "(Top Tension)", xLabel, yS_Bot + 70);
+      // Web Width
+      drawDimension(webLX, botY, webRX, botY, bw.toString(), 30);
+
+      if (type !== "rectangular") {
+        // Flange Width
+        drawDimension(flangeLX, topY, flangeRX, topY, bf.toString(), -30);
+        // Flange Thickness
+        drawDimension(flangeRX, topY, flangeRX, flangeBotY, hf.toString(), 20, true);
+      }
+
+      // Title/Label
+      ctx.fillStyle = "#000000";
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(label, centerX, botY + 100);
+
+      ctx.font = "italic 11px sans-serif";
+      ctx.fillText(isSagging ? "(Span Section)" : "(Support Section)", centerX, botY + 115);
     }
   };
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <canvas
-        ref={canvasRef}
-        width={800}
-        height={500}
-        className="bg-white"
-        style={{ maxWidth: '100%' }}
-      />
+    <div className="flex flex-col items-center w-full p-6 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+      <div className="w-full flex justify-between items-center mb-6">
+        <h3 className="text-lg font-bold text-slate-800 tracking-tight flex items-center">
+          <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+          </svg>
+          2D Detailing View
+        </h3>
+        <span className="text-[10px] font-mono bg-slate-100 px-2 py-1 rounded text-slate-500 border border-slate-200 uppercase">
+          AutoCAD Detailing Mode
+        </span>
+      </div>
+
+      <div className="relative w-full aspect-[8/5] bg-[#fdfdfd] rounded-lg border border-slate-200 flex items-center justify-center p-4">
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+        <canvas
+          ref={canvasRef}
+          width={800}
+          height={500}
+          className="max-w-full h-auto drop-shadow-sm"
+        />
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 w-full mt-6">
+        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Beam Type</p>
+          <p className="text-sm font-semibold text-slate-700 capitalize">{type.replace('_', ' ')}</p>
+        </div>
+        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Dimensions</p>
+          <p className="text-sm font-semibold text-slate-700">{webWidth} × {beamDepth} mm</p>
+        </div>
+        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Cover</p>
+          <p className="text-sm font-semibold text-slate-700">{cover} mm (Nominal)</p>
+        </div>
+      </div>
     </div>
   );
 };

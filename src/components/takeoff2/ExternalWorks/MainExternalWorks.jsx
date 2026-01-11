@@ -20,7 +20,7 @@ export default function ExternalWorksComponent({ isDark = false }) {
   const bgClass = isDark ? "bg-slate-900 text-white" : "bg-gray-50 text-gray-900";
   const cardClass = isDark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200";
 
-  // Sample project state
+  // Sample project state aligned with backend Pydantic models
   const [formData, setFormData] = useState({
     projectInfo: {
       projectName: "External Works Project",
@@ -35,7 +35,7 @@ export default function ExternalWorksComponent({ isDark = false }) {
       siteLength: 50,
       siteWidth: 40,
     },
-    demolitions: {
+    demolition: {
       houseLength: 12,
       houseWidth: 10,
       buildingDemolitionVolume: 0,
@@ -46,53 +46,57 @@ export default function ExternalWorksComponent({ isDark = false }) {
       pipelineDiameter: 225,
       vegetableSoilDepth: 0.15,
     },
-    siteClearance: {
-      clearArea: 1800,
-      vegSoilDepth: 0.15,
-      treesSmall: 3,
-      treesLarge: 2,
-      stumps: 1
+    roadConfig: {
+      roadLength: 32,
+      roadWidth: 9,
+      roadType: 'bitumen',
+      drivewayLength: 20,
+      drivewayWidth: 9,
+      drivewayType: 'bitumen',
+      parkingLength: 25,
+      parkingWidth: 9,
+      parkingType: 'cabro',
+      bellmouthRadius1: 3.5,
+      bellmouthRadius2: 2.5,
     },
-    excavations: {
-      pavedArea: 500,
-      depth: 0.5,
-      rockVolume: 0,
-      workingSpace: 0.3
+    pavementLayers: {
+      bitumenThickness: 0.05,
+      bitumenMacadamBase: 0.15,
+      murramDepth: 0.20,
+      hardcoreThickness: 0.20,
+      sandBedThickness: 0.15,
+      excavationDepthAfterVeg: 0.50,
+      backingAllowance: 0.10,
+      concreteBackingThickness: 0.10,
     },
-    filling: {
-      murramVolume: 100,
-      hardcoreVolume: 100,
-      sandBedVolume: 20
-    },
-    pavement: {
-      bitumenArea: 500,
-      bitumenThick: 0.05,
-      cabroArea: 0,
-      cabroThick: 0.06
-    },
-    kerbs: {
-      kerbStraight: 100,
-      kerbRadius: 10,
-      channelStraight: 100,
-      channelRadius: 10
+    kerbsChannels: {
+      kerbType: 'pcc',
+      kerbStraightLength: 0,
+      kerbCurvedLength: 0,
+      channelStraightLength: 0,
+      channelCurvedLength: 0,
     },
     drainage: {
-      invertBlocks: 100,
-      sideSlabs: 200,
-      manholes: 5
+      invertBlockCount: 0,
+      invertBlockSize: 0.35,
+      pccSlabLength: 0,
+      pccSlabWidth: 0.50,
+      pccSlabThickness: 0.05,
+      drainageChannelLength: 0,
     },
     landscaping: {
-      grassArea: 500,
-      trees: 10,
-      hedgeLength: 30
+      grassSeedingArea: 0,
+      importedTopsoilThickness: 0.15,
+      mahoganyTrees: 0,
+      ornamentalTrees: 0,
+      euphorbiaHedgeLength: 0,
     },
     fencing: {
-      fenceLength: 200,
-      fenceType: "Chainlink"
-    },
-    gate: {
-      numGates: 1,
-      gateType: "Steel"
+      timberPostWireFence: 0,
+      fenceType1Length: 0,
+      fenceType2Length: 0,
+      metalGates: 0,
+      normalGates: 0,
     }
   });
 
@@ -101,45 +105,110 @@ export default function ExternalWorksComponent({ isDark = false }) {
 
   const handleCalculate = async () => {
     try {
+      // Transform camelCase keys to snake_case for backend validation
       const payload = {
-        site_details: {
-          length: formData.siteData.siteLength,
-          width: formData.siteData.siteWidth
+        project_info: {
+          project_name: formData.projectInfo.projectName,
+          location: formData.projectInfo.location,
+          drawing_number: formData.projectInfo.drawingNumber,
+          date: formData.projectInfo.date,
+          taken_by: formData.projectInfo.takenBy,
+          checked_by: formData.projectInfo.checkedBy,
+          scale: formData.projectInfo.scale
         },
-        demolitions: formData.demolitions,
-        site_clearance: formData.siteClearance,
-        excavation: formData.excavations,
-        filling: formData.filling,
-        pavement: formData.pavement,
-        kerbs: formData.kerbs,
-        drainage: formData.drainage,
-        landscaping: formData.landscaping,
-        fencing: formData.fencing,
-        gate: formData.gate
+        site_data: {
+          site_length: formData.siteData.siteLength,
+          site_width: formData.siteData.siteWidth
+        },
+        demolition: {
+          house_length: formData.demolition.houseLength,
+          house_width: formData.demolition.houseWidth,
+          building_demolition_volume: formData.demolition.buildingDemolitionVolume,
+          trees_small: formData.demolition.treesSmall,
+          trees_large: formData.demolition.treesLarge,
+          stumps: formData.demolition.stumps,
+          pipeline_removal_length: formData.demolition.pipelineRemovalLength,
+          pipeline_diameter: formData.demolition.pipelineDiameter,
+          vegetable_soil_depth: formData.demolition.vegetableSoilDepth
+        },
+        road_config: {
+          road_length: formData.roadConfig.roadLength,
+          road_width: formData.roadConfig.roadWidth,
+          road_type: formData.roadConfig.roadType,
+          driveway_length: formData.roadConfig.drivewayLength,
+          driveway_width: formData.roadConfig.drivewayWidth,
+          driveway_type: formData.roadConfig.drivewayType,
+          parking_length: formData.roadConfig.parkingLength,
+          parking_width: formData.roadConfig.parkingWidth,
+          parking_type: formData.roadConfig.parkingType,
+          bellmouth_radius_1: formData.roadConfig.bellmouthRadius1,
+          bellmouth_radius_2: formData.roadConfig.bellmouthRadius2
+        },
+        pavement_layers: {
+          bitumen_thickness: formData.pavementLayers.bitumenThickness,
+          bitumen_macadam_base: formData.pavementLayers.bitumenMacadamBase,
+          murram_depth: formData.pavementLayers.murramDepth,
+          hardcore_thickness: formData.pavementLayers.hardcoreThickness,
+          sand_bed_thickness: formData.pavementLayers.sandBedThickness,
+          excavation_depth_after_veg: formData.pavementLayers.excavationDepthAfterVeg,
+          backing_allowance: formData.pavementLayers.backingAllowance,
+          concrete_backing_thickness: formData.pavementLayers.concreteBackingThickness
+        },
+        kerbs_channels: {
+          kerb_type: formData.kerbsChannels.kerbType,
+          kerb_straight_length: formData.kerbsChannels.kerbStraightLength,
+          kerb_curved_length: formData.kerbsChannels.kerbCurvedLength,
+          channel_straight_length: formData.kerbsChannels.channelStraightLength,
+          channel_curved_length: formData.kerbsChannels.channelCurvedLength
+        },
+        drainage: {
+          invert_block_count: formData.drainage.invertBlockCount,
+          invert_block_size: formData.drainage.invertBlockSize,
+          pcc_slab_length: formData.drainage.pccSlabLength,
+          pcc_slab_width: formData.drainage.pccSlabWidth,
+          pcc_slab_thickness: formData.drainage.pccSlabThickness,
+          drainage_channel_length: formData.drainage.drainageChannelLength
+        },
+        landscaping: {
+          grass_seeding_area: formData.landscaping.grassSeedingArea,
+          imported_topsoil_thickness: formData.landscaping.importedTopsoilThickness,
+          mahogany_trees: formData.landscaping.mahoganyTrees,
+          ornamental_trees: formData.landscaping.ornamentalTrees,
+          euphorbia_hedge_length: formData.landscaping.euphorbiaHedgeLength
+        },
+        fencing: {
+          timber_post_wire_fence: formData.fencing.timberPostWireFence,
+          fence_type_1_length: formData.fencing.fenceType1Length,
+          fence_type_2_length: formData.fencing.fenceType2Length,
+          metal_gates: formData.fencing.metalGates,
+          normal_gates: formData.fencing.normalGates
+        }
       };
 
       const response = await axios.post("http://localhost:8001/external_works/calculate", payload);
       const data = response.data;
 
-      if (data && data.takeoff_items) {
-        const formattedItems = data.takeoff_items.map((item, index) => ({
+      if (data && data.items) {
+        const formattedItems = data.items.map((item, index) => ({
           id: index + 1,
-          billNo: item.item_no || `EW.${index + 1}`,
-          itemNo: (index + 1).toString(),
+          billNo: item.bill_no,
+          itemNo: item.item_no,
           description: item.description,
           unit: item.unit,
           quantity: item.quantity,
           rate: item.rate || 0,
           amount: item.amount || 0,
-          dimensions: [],
-          isHeader: false
+          dimensions: item.dimensions || [],
+          isHeader: item.is_header || false
         }));
         setTakeoffData(formattedItems);
         setEditorKey(prev => prev + 1);
+        setActiveTab("takeoff"); // Switch to results view automatically
       }
     } catch (error) {
       console.error("Error calculating external works:", error);
-      alert("Calculation failed. Backend might be offline.");
+      const detail = error.response?.data?.detail;
+      alert(`Calculation failed: ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`);
     }
   };
 
@@ -215,6 +284,7 @@ export default function ExternalWorksComponent({ isDark = false }) {
               }}
               formData={formData}
               setFormData={setFormData}
+              handleCalculate={handleCalculate}
             />
           )}
 

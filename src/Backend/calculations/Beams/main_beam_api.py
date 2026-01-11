@@ -45,6 +45,7 @@ from .moment_distribution_backend import (
     MemberType,
     EndCondition,
     JointType,
+    router as md_router
 )
 
 # Create the main router for this module
@@ -53,6 +54,7 @@ router = APIRouter()
 # Include routers on the module's router
 router.include_router(three_moment_router, prefix="/three_analysis", tags=["Three-Moment"])
 router.include_router(design_router, prefix="/rc_design", tags=["RC Design"])
+router.include_router(md_router, prefix="/moment_distribution", tags=["Moment Distribution"])
 
 # Create the main FastAPI application for standalone test/dev
 app = FastAPI(
@@ -61,10 +63,9 @@ app = FastAPI(
     description="Complete structural analysis and design platform",
 )
 
-# Include routers
+# Include routers. Note: we include 'router' which already includes others with prefixes.
 app.include_router(router)
-app.include_router(three_moment_router, prefix="/three_analysis", tags=["Three-Moment"])
-app.include_router(design_router, prefix="/rc_design", tags=["RC Design"])
+
 
 # Enable CORS for local development (adjust origins if needed)
 app.add_middleware(
@@ -74,10 +75,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# No startup debug logging; endpoints below are defined on `router` which is
-# included on `app` above. The frontend should call the paths defined here.
 
 
 # ============================================================================
@@ -309,125 +306,3 @@ if __name__ == "__main__":
         port=8001,
         reload=True,
     )
-
-# ============================================================================
-# MOMENT DISTRIBUTION METHOD ENDPOINTS
-# ============================================================================
-
-
-@router.post("/moment_distribution/analyze", response_model=MomentDistributionResponse)
-async def analyze_moment_distribution(frame: FrameMD):
-    """Analyze frame using Moment Distribution Method (Hardy Cross)"""
-    try:
-        solver = MomentDistributionSolver(frame)
-        return solver.solve()
-    except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Moment Distribution analysis failed: {str(e)}"
-        )
-
-
-@router.get("/moment_distribution/examples")
-async def get_moment_distribution_examples():
-    """Get Moment Distribution Method example configurations"""
-    examples = [
-        {
-            "name": "Two-Span Continuous Beam",
-            "description": "Continuous beam analyzed with Hardy Cross method",
-            "method": "Moment Distribution (Hardy Cross)",
-            "joints": [
-                {
-                    "joint_id": "A",
-                    "joint_type": "Fixed Joint",
-                    "x_coordinate": 0.0,
-                    "y_coordinate": 0.0,
-                    "is_support": True,
-                },
-                {
-                    "joint_id": "B",
-                    "joint_type": "Fixed Joint",
-                    "x_coordinate": 6.0,
-                    "y_coordinate": 0.0,
-                    "is_support": True,
-                },
-                {
-                    "joint_id": "C",
-                    "joint_type": "Fixed Joint",
-                    "x_coordinate": 12.0,
-                    "y_coordinate": 0.0,
-                    "is_support": True,
-                },
-            ],
-            "members": [
-                {
-                    "member_id": "AB",
-                    "member_type": "Beam",
-                    "start_joint_id": "A",
-                    "end_joint_id": "B",
-                    "length": 6.0,
-                    "E": 200e9,
-                    "I": 8.33e-6,
-                    "loads": [{"load_type": "UDL", "magnitude": 20.0}],
-                },
-                {
-                    "length": 6.0,
-                    "E": 200e9,
-                    "I": 8.33e-6,
-                    "loads": [
-                        {"load_type": "Point Load", "magnitude": 50.0, "position": 3.0}
-                    ],
-                },
-                {
-                    "length": 8.0,
-                    "E": 200e9,
-                    "I": 8.33e-6,
-                    "loads": [
-                        {"load_type": "Point Load", "magnitude": 30.0, "position": 4.0}
-                    ],
-                },
-            ],
-            "supports": [
-                {"support_type": "Pinned", "position": 0.0},
-                {"support_type": "Pinned", "position": 6.0},
-                {"support_type": "Pinned", "position": 14.0},
-            ],
-        },
-        {
-            "name": "UDL Three-Span Beam",
-            "description": "Three spans with uniform loads",
-            "method": "Three-Moment Theorem",
-            "spans": [
-                {
-                    "length": 4.0,
-                    "E": 200e9,
-                    "I": 1e-5,
-                    "loads": [
-                        {"load_type": "Uniformly Distributed Load", "magnitude": 20.0}
-                    ],
-                },
-                {
-                    "length": 6.0,
-                    "E": 200e9,
-                    "I": 1e-5,
-                    "loads": [
-                        {"load_type": "Uniformly Distributed Load", "magnitude": 20.0}
-                    ],
-                },
-                {
-                    "length": 4.0,
-                    "E": 200e9,
-                    "I": 1e-5,
-                    "loads": [
-                        {"load_type": "Uniformly Distributed Load", "magnitude": 20.0}
-                    ],
-                },
-            ],
-            "supports": [
-                {"support_type": "Pinned", "position": 0.0},
-                {"support_type": "Pinned", "position": 4.0},
-                {"support_type": "Pinned", "position": 10.0},
-                {"support_type": "Pinned", "position": 14.0},
-            ],
-        },
-    ]
-    return examples

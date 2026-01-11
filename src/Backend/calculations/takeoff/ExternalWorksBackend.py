@@ -1012,7 +1012,6 @@ async def calculate_takeoff(input_data: TakeoffInput):
         
         totals = {
             'grand_total': grand_total,
-            'subtotals': summary,
             **clearance,
             **excavation,
             **filling,

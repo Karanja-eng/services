@@ -340,7 +340,11 @@ class BS8110Designer:
 
         # Deflection Check
         b_eff_sag = bf if request.beam_type != BeamType.RECTANGULAR else b
-        def_check = self._check_deflection(request, b_eff_sag, d, request.span_length * 1000, sag_res["As_req"], sag_bars["As_prov"], fcu, fy)
+        def_check = self._check_deflection(
+            request, b_eff_sag, d, request.span_length * 1000, 
+            sag_res["As_req"], sag_bars["As_prov"], fcu, fy,
+            sag_bars.get("As_comp_prov", 0.0)
+        )
         checks.deflection_ok = def_check["ok"]
         checks.actual_L_d = def_check["actual_L_d"]
         checks.allowable_L_d = def_check["allowable_L_d"]
@@ -620,6 +624,47 @@ class BS8110Designer:
         msg = f"Cover {prov}mm < Required {req_total}mm (Nominal {req_nom} + 10 dev)" if prov < req_total else ""
         
         return {"ok": prov >= req_total, "required": req_total, "msg": msg}
+
+    def _check_deflection(self, request, b, d, span_mm, As_req, As_prov, fcu, fy, As_prime_prov=0.0) -> Dict:
+        """
+        BS 8110-1:1997 Span/depth ratio check
+        """
+        # 1. Basic Ratio (Table 3.9)
+        b_type = "flanged" if request.beam_type != BeamType.RECTANGULAR else "rectangular"
+        support = "simply_supported"
+        if request.support_condition == SupportCondition.CANTILEVER:
+            support = "cantilever"
+        elif request.support_condition == SupportCondition.CONTINUOUS:
+            support = "continuous"
+            
+        basic_ratio = table_3_9_span_depth[b_type][support]
+        
+        # 2. Tension Modification (Table 3.10)
+        # fs = 2/3 * fy * (As_req / As_prov) * (1 / beta)
+        # Simplified: fs = 0.67 * fy * (As_req / As_prov)
+        fs = 0.67 * fy * (As_req / As_prov) if As_prov > 0 else 0
+        
+        # M/bd²
+        m_max = max(request.design_moments) if request.design_moments else 0
+        mf_tension = get_tension_modification_factor(m_max * 1e6, b, d, fs)
+        
+        # 3. Compression Modification (Table 3.11)
+        mf_compression = get_compression_modification_factor(As_prime_prov, b, d)
+        
+        # 4. Allowable Ratio
+        allowable = basic_ratio * mf_tension * mf_compression
+        
+        # Adjust for spans > 10m (except cantilevers)
+        if span_mm > 10000 and request.support_condition != SupportCondition.CANTILEVER:
+            allowable *= (10000 / span_mm)
+            
+        actual = span_mm / d if d > 0 else 0
+        
+        return {
+            "ok": actual <= allowable,
+            "actual_L_d": round(actual, 2),
+            "allowable_L_d": round(allowable, 2)
+        }
 
 # ============================================================================
 # ANALYSIS CALCULATOR (BS Coefficients)

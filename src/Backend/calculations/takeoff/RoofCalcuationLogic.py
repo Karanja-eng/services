@@ -20,6 +20,8 @@ class RoofDimensions:
     truss_spacing: float
     rafter_spacing: float
     bearer_spacing: float = 0.6
+    pitch_angle_2: float = 15.0  # For Gambrel/Mansard upper slope
+    break_ratio: float = 0.6  # For Gambrel/Mansard break position (0-1)
 
 
 @dataclass
@@ -128,10 +130,8 @@ class RoofCalculator:
     def calculate_all(self) -> RoofQuantities:
         """Calculate all roof quantities"""
         q = RoofQuantities()
-
-        # Basic calculations
         pitch_rad = math.radians(self.dims.pitch_angle)
-
+        
         # Effective dimensions
         q.effective_span = (
             self.dims.building_width
@@ -144,72 +144,43 @@ class RoofCalculator:
             + 2 * self.dims.overhang
         )
 
-        # Roof geometry
-        half_span = q.effective_span / 2
-        q.roof_height = half_span * math.tan(pitch_rad)
-        q.rafter_length = half_span / math.cos(pitch_rad)
-
-        # Number of structural elements
+        # Resource counts (Used by specialized calculators)
         q.num_trusses = (
             math.floor(self.dims.building_length / self.dims.truss_spacing) + 1
         )
-        total_rafters = (
+        total_rafter_positions = (
             math.floor(self.dims.building_length / self.dims.rafter_spacing) + 1
         )
-        q.num_common_rafters = total_rafters - q.num_trusses
+        q.num_common_rafters = total_rafter_positions - q.num_trusses
 
-        # Wall plates (2 sides)
+        if self.roof_type == "gable":
+            self._calculate_gable(q, pitch_rad)
+        elif self.roof_type == "hipped":
+            self._calculate_hipped(q, pitch_rad)
+        elif self.roof_type == "lean-to":
+            self._calculate_lean_to(q, pitch_rad)
+        elif self.roof_type == "gambrel":
+            self._calculate_gambrel(q, pitch_rad)
+        elif self.roof_type == "mansard":
+            self._calculate_mansard(q, pitch_rad)
+
+        # Wall plates
         wall_plate_length = self.dims.building_length + 2 * self.dims.wall_thickness
-        q.wall_plate_m = 2 * wall_plate_length
-
-        # Principal rafters (part of trusses)
-        q.principal_rafter_m = 2 * q.num_trusses * q.rafter_length
-
-        # Common rafters (between trusses)
-        q.common_rafter_m = 2 * q.num_common_rafters * q.rafter_length
-
-        # Tie beams
-        tie_beam_length = q.effective_span
-        q.tie_beam_m = q.num_trusses * tie_beam_length
-
-        # Calculate struts and ties based on span
-        if q.effective_span < 8:
-            # King post truss
-            strut_height = q.roof_height - self.sizes.tie_beam[1]
-            q.struts_m = q.num_trusses * strut_height
-            q.ties_m = 0
+        if self.roof_type == "lean-to":
+            q.wall_plate_m = 2 * wall_plate_length # Top and bottom
         else:
-            # Queen post truss
-            strut_offset = q.effective_span / 4
-            strut_height = q.roof_height * 0.6
-            c = half_span * math.cos(pitch_rad)
-            half_c = c / 2
-            tie_a = half_c * math.tan(pitch_rad)
-            strut_b = half_c / math.cos(pitch_rad)
+            q.wall_plate_m = 2 * wall_plate_length # Usually 2 sides
 
-            q.ties_m = 2 * q.num_trusses * tie_a
-            q.struts_m = 2 * q.num_trusses * strut_b
+        # Purlins
+        num_purlin_rows = 2 if q.effective_span < 6 else 4
+        if self.roof_type == "lean-to":
+            q.purlins_m = (num_purlin_rows / 2) * q.effective_length
+        else:
+            q.purlins_m = num_purlin_rows * q.effective_length
 
-        # Purlins (2 per side)
-        q.purlins_m = 2 * q.effective_length
-
-        # Binders (if span > 2.4m)
-        if self.dims.building_width > 2.4:
-            q.binders_m = 2 * q.effective_length
-
-        # Ridge board
-        q.ridge_m = q.effective_length
-
-        # Hips (for hipped roofs)
-        if self.roof_type == "hipped":
-            hip_length = math.sqrt(
-                (q.effective_length / 2) ** 2 + (q.effective_span / 2) ** 2
-            ) / math.cos(pitch_rad)
-            q.hips_m = 4 * hip_length
-
-        # Valleys
-        if self.has_valley:
-            q.valleys_m = self.valley_length
+        # Ridge board (except lean-to)
+        if self.roof_type != "lean-to":
+            q.ridge_m = q.effective_length
 
         # Covering calculations
         if self.covering:
@@ -223,6 +194,94 @@ class RoofCalculator:
 
         return q
 
+    def _calculate_gable(self, q: RoofQuantities, pitch_rad: float):
+        """Gable roof specifics"""
+        half_span = q.effective_span / 2
+        q.roof_height = half_span * math.tan(pitch_rad)
+        q.rafter_length = half_span / math.cos(pitch_rad)
+        
+        q.principal_rafter_m = 2 * q.num_trusses * q.rafter_length
+        q.common_rafter_m = 2 * (q.num_common_rafters if q.num_common_rafters > 0 else 0) * q.rafter_length
+        q.tie_beam_m = q.num_trusses * q.effective_span
+        
+        # Struts
+        if q.effective_span < 8:
+            q.struts_m = q.num_trusses * (q.roof_height - self.sizes.tie_beam[1])
+        else:
+            strut_height = q.roof_height * 0.6
+            q.ties_m = 2 * q.num_trusses * (q.roof_height * 0.4)
+            q.struts_m = 2 * q.num_trusses * math.sqrt(strut_height**2 + (q.effective_span/4)**2)
+
+    def _calculate_hipped(self, q: RoofQuantities, pitch_rad: float):
+        """Hipped roof specifics"""
+        self._calculate_gable(q, pitch_rad)
+        
+        # Adjust ridge for hips
+        ridge_length = q.effective_length - q.effective_span
+        if ridge_length < 0: ridge_length = 0
+        q.ridge_m = ridge_length
+        
+        # Hips
+        hip_h = q.roof_height
+        hip_base_diag = math.sqrt((q.effective_span/2)**2 + (q.effective_span/2)**2)
+        hip_len = math.sqrt(hip_h**2 + hip_base_diag**2)
+        q.hips_m = 4 * hip_len
+
+    def _calculate_lean_to(self, q: RoofQuantities, pitch_rad: float):
+        """Lean-to roof specifics"""
+        q.roof_height = q.effective_span * math.tan(pitch_rad)
+        q.rafter_length = q.effective_span / math.cos(pitch_rad)
+        
+        q.principal_rafter_m = q.num_trusses * q.rafter_length
+        q.common_rafter_m = (q.num_common_rafters if q.num_common_rafters > 0 else 0) * q.rafter_length
+        # No tie beam in basic lean-to usually, or it's a floor beam
+        q.tie_beam_m = 0 
+
+    def _calculate_gambrel(self, q: RoofQuantities, pitch_rad: float):
+        """Gambrel roof specifics (Two slopes per side)"""
+        # pitch_rad is the lower (steeper) slope
+        pitch2_rad = math.radians(self.dims.pitch_angle_2)
+        
+        half_span = q.effective_span / 2
+        break_w = half_span * self.dims.break_ratio
+        break_h = break_w * math.tan(pitch_rad)
+        
+        upper_w = half_span - break_w
+        upper_h = upper_w * math.tan(pitch2_rad)
+        
+        q.roof_height = break_h + upper_h
+        
+        lower_rafter = break_w / math.cos(pitch_rad)
+        upper_rafter = upper_w / math.cos(pitch2_rad)
+        q.rafter_length = lower_rafter + upper_rafter
+        
+        q.principal_rafter_m = 2 * q.num_trusses * q.rafter_length
+        q.common_rafter_m = 2 * q.num_common_rafters * q.rafter_length
+        q.tie_beam_m = q.num_trusses * q.effective_span
+        
+        # Extra strut for the break point
+        q.struts_m = q.num_trusses * (break_h * 2 + upper_h)
+
+    def _calculate_mansard(self, q: RoofQuantities, pitch_rad: float):
+        """Mansard roof specifics (Hipped gambrel)"""
+        self._calculate_gambrel(q, pitch_rad)
+        
+        # Adjust ridge
+        ridge_length = q.effective_length - q.effective_span
+        if ridge_length < 0: ridge_length = 0
+        q.ridge_m = ridge_length
+        
+        # Hips are segmented
+        lower_h = (q.effective_span/2 * self.dims.break_ratio) * math.tan(pitch_rad)
+        lower_diag = math.sqrt(2 * (q.effective_span/2 * self.dims.break_ratio)**2)
+        lower_hip = math.sqrt(lower_h**2 + lower_diag**2)
+        
+        upper_h = q.roof_height - lower_h
+        upper_diag = math.sqrt(2 * (q.effective_span/2 * (1 - self.dims.break_ratio))**2)
+        upper_hip = math.sqrt(upper_h**2 + upper_diag**2)
+        
+        q.hips_m = 4 * (lower_hip + upper_hip)
+
     def _calculate_covering(
         self, q: RoofQuantities, pitch_rad: float
     ) -> RoofQuantities:
@@ -232,11 +291,19 @@ class RoofCalculator:
         sec_pitch = 1 / math.cos(pitch_rad)
         q.covering_area_m2 = plan_area * sec_pitch
 
-        if self.covering.type in ["acSheets", "giSheets"]:
-            # Sheet covering
-            effective_width = self.covering.sheet_width - self.covering.side_overlap
-            effective_length = self.covering.sheet_length - self.covering.end_overlap
+        if self.covering.type in ["acSheets", "giSheets", "slate"]:
+            # Sheet or Slate covering
+            sw = self.covering.sheet_width or (0.9 if self.covering.type != "slate" else 0.3)
+            sl = self.covering.sheet_length or (3.0 if self.covering.type != "slate" else 0.6)
+            so = self.covering.side_overlap or 0.1
+            eo = self.covering.end_overlap or 0.15
+            
+            effective_width = sw - so
+            effective_length = sl - eo
             effective_area = effective_width * effective_length
+            
+            # Avoid division by zero
+            if effective_area <= 0: effective_area = 1.0
 
             q.num_covering_units = math.ceil(
                 q.covering_area_m2
@@ -245,8 +312,14 @@ class RoofCalculator:
             )
         elif self.covering.type == "tiles":
             # Tile covering
-            gauge = (self.covering.tile_length - self.covering.tile_lap) / 2
-            tiles_per_m2 = 1 / (gauge * self.covering.tile_width)
+            tl = self.covering.tile_length or 0.265
+            tw = self.covering.tile_width or 0.165
+            tlap = self.covering.tile_lap or 0.065
+            
+            gauge = (tl - tlap) / 2
+            if gauge <= 0: gauge = 0.1
+            
+            tiles_per_m2 = 1 / (gauge * tw)
 
             q.num_covering_units = math.ceil(
                 q.covering_area_m2

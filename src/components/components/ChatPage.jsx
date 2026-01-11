@@ -84,6 +84,7 @@ const ChatPage = ({ renderSearch, isDark }) => {
             { label: "Drainage", path: "/quantity/manual/drainage-taking-off" },
             { label: "Doors & Windows", path: "/quantity/manual/door_window" },
             { label: "Internal Finishes", path: "/quantity/manual/internal_finishes" },
+            { label: "Electrical & Plumbing", path: "/quantity/manual/electrical_plumbing" },
             { label: "Underground Tank", path: "/quantity/manual/Underground_tank" },
             { label: "Basement", path: "/quantity/manual/basement-taking-off" },
             { label: "Stairs", path: "/quantity/manual/staircase_takeoff" },

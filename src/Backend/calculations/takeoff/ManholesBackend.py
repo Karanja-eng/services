@@ -287,8 +287,31 @@ def calculate_manhole_quantities(
     backfill_m3 = excav_pit_m3 - total_conc_vol
     backfill_m3 = max(0, backfill_m3)  # Ensure non-negative
 
+    # Dimensions for takeoff sheet
+    dimensions = {
+        "veg_excav": [{"number": mh.quantity, "length": ext_l if mh.type != "circ" else ext_diam, "width": ext_w if mh.type != "circ" else None, "height": veg_depth, "description": f"Excav veg soil {mh.id}"}],
+        "excav_stage1": [{"number": mh.quantity, "length": ext_l if mh.type != "circ" else ext_diam, "width": ext_w if mh.type != "circ" else None, "height": 1.5 if pit_depth > 1.5 else pit_depth, "description": f"Excav pit {mh.id} (stage 1)"}],
+        "excav_stage2": [{"number": mh.quantity, "length": ext_l if mh.type != "circ" else ext_diam, "width": ext_w if mh.type != "circ" else None, "height": pit_depth - 1.5, "description": f"Excav pit {mh.id} (stage 2)"}] if pit_depth > 1.5 else [],
+        "rock": [{"number": mh.quantity, "length": ext_l if mh.type != "circ" else ext_diam, "width": ext_w if mh.type != "circ" else None, "height": pit_depth - rock_start_depth, "description": f"Rock excav {mh.id}"}] if rock_m3 > 0 else [],
+        "blinding": [{"number": mh.quantity, "length": ext_l if mh.type != "circ" else ext_diam, "width": ext_w if mh.type != "circ" else None, "height": 0.05, "description": f"Blinding {mh.id}"}],
+        "conc_bed": [{"number": mh.quantity, "length": ext_l if mh.type != "circ" else ext_diam, "width": ext_w if mh.type != "circ" else None, "height": mh.bed_thickness, "description": f"Conc bed {mh.id}"}],
+        "wall_conc": [{"number": mh.quantity, "length": mean_girth, "width": wall_height, "height": None, "description": f"Conc walls {mh.id}"}] if wall_conc_m2 > 0 else [],
+        "wall_stone": [{"number": mh.quantity, "length": mean_girth, "width": wall_height, "height": None, "description": f"Stone walls {mh.id}"}] if wall_stone_m2 > 0 else [],
+        "precast_rings": [{"number": mh.quantity, "length": wall_height, "width": None, "height": None, "description": f"Precast rings {mh.id}"}] if precast_rings_m > 0 else [],
+        "formwork_walls": [{"number": mh.quantity * 2, "length": int_perim, "width": wall_height, "height": None, "description": f"Formwork walls {mh.id}"}] if formwork_walls_m2 > 0 else [],
+        "bench": [{"number": mh.quantity, "length": None, "width": None, "height": None, "description": f"Benching {mh.id}"}] if bench_nos > 0 else [],
+        "channel": [{"number": mh.quantity, "length": int_l if mh.type != "circ" else int_diam, "width": None, "height": None, "description": f"Channel {mh.id}"}] if channel_m > 0 else [],
+        "slab": [{"number": mh.quantity, "length": ext_l if mh.type != "circ" else ext_diam, "width": ext_w if mh.type != "circ" else None, "height": mh.slab_thickness, "description": f"Top slab {mh.id}"}],
+        "form_soffit": [{"number": mh.quantity, "length": int_l if mh.type != "circ" else int_diam, "width": int_w if mh.type != "circ" else None, "height": None, "description": f"Formwork soffit {mh.id}"}],
+        "form_edge": [{"number": mh.quantity, "length": edge_perim - cover_perim, "width": None, "height": None, "description": f"Formwork edges {mh.id}"}] if form_edge_m > 0 else [],
+        "plaster": [{"number": mh.quantity, "length": int_perim, "width": wall_height, "height": None, "description": f"Plaster walls {mh.id}"}] if plaster_m2 > 0 else [],
+        "step_irons": [{"number": step_irons_nos, "length": None, "width": None, "height": None, "description": f"Step irons {mh.id}"}] if step_irons_nos > 0 else [],
+        "covers": [{"number": mh.quantity, "length": mh.cover_length, "width": mh.cover_width, "height": None, "description": f"Cover & frame {mh.id}"}],
+        "backfill": [{"number": mh.quantity, "length": excav_area, "width": pit_depth, "height": None, "description": f"Backfill {mh.id}"}],
+    }
+
     return {
-        "manhole_id": mh.id,
+        "id": mh.id,
         "type": mh.type,
         "depth": depth_to_invert,
         "veg_excav_m2": round(veg_excav_m2, 3),
@@ -311,9 +334,25 @@ def calculate_manhole_quantities(
         "step_irons_nos": int(step_irons_nos),
         "covers_nos": int(covers_nos),
         "backfill_m3": round(backfill_m3, 3),
-        "position": {"x": mh.position_x, "y": mh.position_y},
+        "position_x": mh.position_x,
+        "position_y": mh.position_y,
         "ground_level": mh.ground_level,
         "invert_level": mh.invert_level,
+        "internal_length": mh.internal_length,
+        "internal_width": mh.internal_width,
+        "internal_diameter": mh.internal_diameter,
+        "wall_thickness": mh.wall_thickness,
+        "bed_thickness": mh.bed_thickness,
+        "slab_thickness": mh.slab_thickness,
+        "benching_avg_height": mh.benching_avg_height,
+        "has_benching": mh.has_benching,
+        "has_channel": mh.has_channel,
+        "channel_length": mh.channel_length,
+        "has_step_irons": mh.has_step_irons,
+        "projection_thickness": mh.projection_thickness,
+        "cover_length": mh.cover_length,
+        "cover_width": mh.cover_width,
+        "dimensions": dimensions,
     }
 
 
@@ -380,12 +419,22 @@ def calculate_pipe_quantities(
     backfill_m3 = trench_vol - bedding_m3 - pipe_vol
     backfill_m3 = max(0, backfill_m3)  # Ensure non-negative
 
+    # Dimensions for takeoff sheet
+    dimensions = {
+        "trench_stage1": [{"number": pipe.quantity, "length": pipe.length, "width": pipe.trench_width, "height": 1.5 if avg_depth > 1.5 else avg_depth, "description": f"Trench {pipe.id} (stage 1)"}],
+        "trench_stage2": [{"number": pipe.quantity, "length": pipe.length, "width": pipe.trench_width, "height": avg_depth - 1.5, "description": f"Trench {pipe.id} (stage 2)"}] if avg_depth > 1.5 else [],
+        "rock": [{"number": pipe.quantity, "length": pipe.length, "width": pipe.trench_width, "height": avg_depth - rock_start_depth, "description": f"Rock trench {pipe.id}"}] if rock_m3 > 0 else [],
+        "bedding": [{"number": pipe.quantity, "length": pipe.length, "width": pipe.trench_width, "height": 0.1 + diam + 0.15, "description": f"Bedding {pipe.id}"}] if bedding_m3 > 0 else [],
+        "pipe_length": [{"number": pipe.quantity, "length": pipe.length, "width": None, "height": None, "description": f"Pipe {pipe.id}"}],
+        "backfill": [{"number": pipe.quantity, "length": pipe.length, "width": pipe.trench_width, "height": avg_depth, "description": f"Backfill trench {pipe.id}"}],
+    }
+
     return {
-        "pipe_id": pipe.id,
-        "from": pipe.from_point,
-        "to": pipe.to_point,
+        "id": pipe.id,
+        "from_point": pipe.from_point,
+        "to_point": pipe.to_point,
         "diameter_mm": pipe.diameter_mm,
-        "material": pipe.pipe_material,
+        "pipe_material": pipe.pipe_material,
         "trench_stage1_m3": round(trench_stage1_m3, 3),
         "trench_stage2_m3": round(trench_stage2_m3, 3),
         "rock_m3": round(rock_m3, 3),
@@ -394,362 +443,142 @@ def calculate_pipe_quantities(
         "pipe_length_m": round(pipe_length, 3),
         "backfill_m3": round(backfill_m3, 3),
         "gradient": pipe.gradient,
+        "length": pipe.length,
+        "trench_width": pipe.trench_width,
+        "trench_depth_start": pipe.trench_depth_start,
+        "trench_depth_end": pipe.trench_depth_end,
         "avg_depth": round(avg_depth, 3),
+        "dimensions": dimensions,
     }
 
 
 def compile_boq_items(
-    total_mh_quantities: Dict, total_pipe_quantities: Dict, project: ProjectInput
+    manhole_results: List[Dict], pipe_results: List[Dict], project: ProjectInput
 ) -> List[Dict[str, Any]]:
     """
-    Compile Bill of Quantities items from calculated totals
+    Compile Bill of Quantities items from calculated results with dimensions
     """
     boq_items = []
 
+    def add_item(code, description, unit, quantity, dims):
+        if quantity > 0:
+            boq_items.append({
+                "code": code,
+                "name": code,
+                "description": description,
+                "unit": unit,
+                "quantity": round(quantity, 2),
+                "dimensions": dims
+            })
+
     # ========== SITE CLEARANCE ==========
     if project.site_clearance_area > 0:
-        boq_items.append(
-            {
-                "code": "A.1",
-                "description": "Site clearance including removal of vegetation",
-                "unit": "m²",
-                "quantity": round(project.site_clearance_area, 2),
-            }
-        )
+        add_item("A.1", "Site clearance including removal of vegetation", "m²", project.site_clearance_area, 
+                 [{"number": 1, "length": project.site_clearance_area, "width": None, "height": None, "description": "Site clearance"}])
 
-    # ========== MANHOLES - EXCAVATION ==========
-    if total_mh_quantities.get("veg_excav_m2", 0) > 0:
-        boq_items.append(
-            {
-                "code": "B.1.1",
-                "description": "Excavation veg soil (manholes)",
-                "unit": "m²",
-                "quantity": round(total_mh_quantities["veg_excav_m2"], 2),
-            }
-        )
+    # ========== MANHOLES ==========
+    mh_categories = [
+        ("B.1.1", "Excavation veg soil (manholes)", "m²", "veg_excav_m2", "veg_excav"),
+        ("B.1.2", "Excavation pits ≤1.5m depth", "m³", "excav_stage1_m3", "excav_stage1"),
+        ("B.1.3", "Extra over excavation >1.5m depth", "m³", "excav_stage2_m3", "excav_stage2"),
+        ("B.1.4", "Extra over rock excavation (manholes)", "m³", "rock_m3", "rock"),
+        ("D.1.1", "Plain concrete blinding 50mm thick", "m³", "blinding_m3", "blinding"),
+        ("D.1.2", "Reinforced concrete bed to manholes", "m³", "conc_bed_m3", "conc_bed"),
+        ("D.1.3", "Mass concrete walls to manholes", "m²", "wall_conc_m2", "wall_conc"),
+        ("D.1.3A", "Stone masonry walls to manholes", "m²", "wall_stone_m2", "wall_stone"),
+        ("D.1.3B", "Precast concrete manhole rings", "m", "precast_rings_m", "precast_rings"),
+        ("D.1.4", "Half-round channel in concrete", "m", "channel_m", "channel"),
+        ("D.1.5", "Benching to manholes", "No.", "bench_nos", "bench"),
+        ("D.1.6", "Reinforced concrete slab to manholes", "m³", "slab_m3", "slab"),
+        ("D.2.1", "Formwork to soffit of slabs", "m²", "form_soffit_m2", "form_soffit"),
+        ("D.2.2", "Formwork to edges of slabs", "m", "form_edge_m", "form_edge"),
+        ("D.2.3", "Formwork to faces of walls", "m²", "formwork_walls_m2", "formwork_walls"),
+        ("E.1", "Cement sand plaster 12mm thick", "m²", "plaster_m2", "plaster"),
+        ("F.1.1", "Manhole covers and frames", "No.", "covers_nos", "covers"),
+        ("F.2", "Step irons to manholes", "No.", "step_irons_nos", "step_irons"),
+    ]
 
-    if total_mh_quantities.get("excav_stage1_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "B.1.2",
-                "description": "Excavation pits ≤1.5m depth",
-                "unit": "m³",
-                "quantity": round(total_mh_quantities["excav_stage1_m3"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("excav_stage2_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "B.1.3",
-                "description": "Extra over excavation >1.5m depth",
-                "unit": "m³",
-                "quantity": round(total_mh_quantities["excav_stage2_m3"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("rock_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "B.1.4",
-                "description": "Extra over rock excavation (manholes)",
-                "unit": "m³",
-                "quantity": round(total_mh_quantities["rock_m3"], 2),
-            }
-        )
-
-    # ========== MANHOLES - CONCRETE WORK ==========
-    if total_mh_quantities.get("blinding_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.1.1",
-                "description": "Plain concrete blinding 50mm thick",
-                "unit": "m³",
-                "quantity": round(total_mh_quantities["blinding_m3"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("conc_bed_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.1.2",
-                "description": "Reinforced concrete bed to manholes",
-                "unit": "m³",
-                "quantity": round(total_mh_quantities["conc_bed_m3"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("wall_conc_m2", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.1.3",
-                "description": "Mass concrete walls to manholes",
-                "unit": "m²",
-                "quantity": round(total_mh_quantities["wall_conc_m2"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("wall_stone_m2", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.1.3A",
-                "description": "Stone masonry walls to manholes",
-                "unit": "m²",
-                "quantity": round(total_mh_quantities["wall_stone_m2"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("precast_rings_m", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.1.3B",
-                "description": "Precast concrete manhole rings",
-                "unit": "m",
-                "quantity": round(total_mh_quantities["precast_rings_m"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("channel_m", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.1.4",
-                "description": "Half-round channel in concrete",
-                "unit": "m",
-                "quantity": round(total_mh_quantities["channel_m"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("bench_nos", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.1.5",
-                "description": "Benching to manholes",
-                "unit": "No.",
-                "quantity": int(total_mh_quantities["bench_nos"]),
-            }
-        )
-
-    if total_mh_quantities.get("slab_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.1.6",
-                "description": "Reinforced concrete slab to manholes",
-                "unit": "m³",
-                "quantity": round(total_mh_quantities["slab_m3"], 2),
-            }
-        )
-
-    # ========== FORMWORK ==========
-    if total_mh_quantities.get("form_soffit_m2", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.2.1",
-                "description": "Formwork to soffit of slabs",
-                "unit": "m²",
-                "quantity": round(total_mh_quantities["form_soffit_m2"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("form_edge_m", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.2.2",
-                "description": "Formwork to edges of slabs",
-                "unit": "m",
-                "quantity": round(total_mh_quantities["form_edge_m"], 2),
-            }
-        )
-
-    if total_mh_quantities.get("formwork_walls_m2", 0) > 0:
-        boq_items.append(
-            {
-                "code": "D.2.3",
-                "description": "Formwork to faces of walls",
-                "unit": "m²",
-                "quantity": round(total_mh_quantities["formwork_walls_m2"], 2),
-            }
-        )
-
-    # ========== FINISHES ==========
-    if total_mh_quantities.get("plaster_m2", 0) > 0:
-        boq_items.append(
-            {
-                "code": "E.1",
-                "description": "Cement sand plaster 12mm thick",
-                "unit": "m²",
-                "quantity": round(total_mh_quantities["plaster_m2"], 2),
-            }
-        )
-
-    # ========== MANHOLE FITTINGS ==========
-    if total_mh_quantities.get("covers_nos", 0) > 0:
-        boq_items.append(
-            {
-                "code": "F.1.1",
-                "description": "Manhole covers and frames",
-                "unit": "No.",
-                "quantity": int(total_mh_quantities["covers_nos"]),
-            }
-        )
-
-    if total_mh_quantities.get("step_irons_nos", 0) > 0:
-        boq_items.append(
-            {
-                "code": "F.2",
-                "description": "Step irons to manholes",
-                "unit": "No.",
-                "quantity": int(total_mh_quantities["step_irons_nos"]),
-            }
-        )
-
-    # ========== PIPES - EXCAVATION ==========
-    if total_pipe_quantities.get("trench_stage1_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "B.2.1",
-                "description": "Trench excavation ≤1.5m depth",
-                "unit": "m³",
-                "quantity": round(total_pipe_quantities["trench_stage1_m3"], 2),
-            }
-        )
-
-    if total_pipe_quantities.get("trench_stage2_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "B.2.2",
-                "description": "Extra over trench excavation >1.5m",
-                "unit": "m³",
-                "quantity": round(total_pipe_quantities["trench_stage2_m3"], 2),
-            }
-        )
-
-    if total_pipe_quantities.get("rock_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "B.2.3",
-                "description": "Extra over rock excavation (trenches)",
-                "unit": "m³",
-                "quantity": round(total_pipe_quantities["rock_m3"], 2),
-            }
-        )
-
-    # ========== PIPE BEDDING ==========
-    if total_pipe_quantities.get("bedding_granular_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "G.2.1",
-                "description": "Granular bedding and surround to pipes",
-                "unit": "m³",
-                "quantity": round(total_pipe_quantities["bedding_granular_m3"], 2),
-            }
-        )
-
-    if total_pipe_quantities.get("bedding_sand_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "G.2.2",
-                "description": "Sand bedding to pipes",
-                "unit": "m³",
-                "quantity": round(total_pipe_quantities["bedding_sand_m3"], 2),
-            }
-        )
-
-    if total_pipe_quantities.get("bedding_concrete_m3", 0) > 0:
-        boq_items.append(
-            {
-                "code": "G.2.3",
-                "description": "Concrete bedding/surround to pipes",
-                "unit": "m³",
-                "quantity": round(total_pipe_quantities["bedding_concrete_m3"], 2),
-            }
-        )
+    for code, desc, unit, key, dim_key in mh_categories:
+        total_q = sum(mh.get(key, 0) for mh in manhole_results)
+        all_dims = []
+        for mh in manhole_results:
+            all_dims.extend(mh.get("dimensions", {}).get(dim_key, []))
+        add_item(code, desc, unit, total_q, all_dims)
 
     # ========== PIPES ==========
-    if total_pipe_quantities.get("pipe_upvc_m", 0) > 0:
-        boq_items.append(
-            {
-                "code": "G.1.1",
-                "description": "uPVC pipes including joints and testing",
-                "unit": "m",
-                "quantity": round(total_pipe_quantities["pipe_upvc_m"], 2),
-            }
-        )
+    pipe_categories = [
+        ("B.2.1", "Trench excavation ≤1.5m depth", "m³", "trench_stage1_m3", "trench_stage1"),
+        ("B.2.2", "Extra over trench excavation >1.5m", "m³", "trench_stage2_m3", "trench_stage2"),
+        ("B.2.3", "Extra over rock excavation (trenches)", "m³", "rock_m3", "rock"),
+    ]
 
-    if total_pipe_quantities.get("pipe_pcc_m", 0) > 0:
-        boq_items.append(
-            {
-                "code": "G.1.4",
-                "description": "Precast concrete pipes including joints",
-                "unit": "m",
-                "quantity": round(total_pipe_quantities["pipe_pcc_m"], 2),
-            }
-        )
+    for code, desc, unit, key, dim_key in pipe_categories:
+        total_q = sum(p.get(key, 0) for p in pipe_results)
+        all_dims = []
+        for p in pipe_results:
+            all_dims.extend(p.get("dimensions", {}).get(dim_key, []))
+        add_item(code, desc, unit, total_q, all_dims)
+
+    # Bedding by type
+    granular_q = sum(p["bedding_m3"] for p in pipe_results if p["bedding_type"] == "granular")
+    granular_dims = []
+    for p in [pr for pr in pipe_results if pr["bedding_type"] == "granular"]:
+        granular_dims.extend(p.get("dimensions", {}).get("bedding", []))
+    add_item("G.2.1", "Granular bedding and surround to pipes", "m³", granular_q, granular_dims)
+
+    sand_q = sum(p["bedding_m3"] for p in pipe_results if p["bedding_type"] == "sand")
+    sand_dims = []
+    for p in [pr for pr in pipe_results if pr["bedding_type"] == "sand"]:
+        sand_dims.extend(p.get("dimensions", {}).get("bedding", []))
+    add_item("G.2.2", "Sand bedding to pipes", "m³", sand_q, sand_dims)
+
+    concrete_q = sum(p["bedding_m3"] for p in pipe_results if p["bedding_type"] not in ["granular", "sand"])
+    concrete_dims = []
+    for p in [pr for pr in pipe_results if pr["bedding_type"] not in ["granular", "sand"]]:
+        concrete_dims.extend(p.get("dimensions", {}).get("bedding", []))
+    add_item("G.2.3", "Concrete bedding/surround to pipes", "m³", concrete_q, concrete_dims)
+
+    # Pipes by material
+    upvc_q = sum(p["pipe_length_m"] for p in pipe_results if "upvc" in p["pipe_material"].lower())
+    upvc_dims = []
+    for p in [pr for pr in pipe_results if "upvc" in pr["pipe_material"].lower()]:
+        upvc_dims.extend(p.get("dimensions", {}).get("pipe_length", []))
+    add_item("G.1.1", "uPVC pipes including joints and testing", "m", upvc_q, upvc_dims)
+
+    pcc_q = sum(p["pipe_length_m"] for p in pipe_results if "upvc" not in p["pipe_material"].lower() and "pvc" not in p["pipe_material"].lower())
+    pcc_dims = []
+    for p in [pr for pr in pipe_results if "upvc" not in pr["pipe_material"].lower() and "pvc" not in pr["pipe_material"].lower()]:
+        pcc_dims.extend(p.get("dimensions", {}).get("pipe_length", []))
+    add_item("G.1.4", "Precast concrete pipes including joints", "m", pcc_q, pcc_dims)
 
     # ========== BACKFILLING ==========
-    total_backfill = total_mh_quantities.get(
-        "backfill_m3", 0
-    ) + total_pipe_quantities.get("backfill_m3", 0)
-    if total_backfill > 0:
-        boq_items.append(
-            {
-                "code": "H.1",
-                "description": "Backfilling to excavations with selected material",
-                "unit": "m³",
-                "quantity": round(total_backfill, 2),
-            }
-        )
+    total_backfill = sum(mh.get("backfill_m3", 0) for mh in manhole_results) + sum(p.get("backfill_m3", 0) for p in pipe_results)
+    backfill_dims = []
+    for mh in manhole_results:
+        backfill_dims.extend(mh.get("dimensions", {}).get("backfill", []))
+    for p in pipe_results:
+        backfill_dims.extend(p.get("dimensions", {}).get("backfill", []))
+    add_item("H.1", "Backfilling to excavations with selected material", "m³", total_backfill, backfill_dims)
 
     # ========== ANCILLARY WORKS ==========
     if project.road_reinstatement_area > 0:
-        boq_items.append(
-            {
-                "code": "K.1.1",
-                "description": "Reinstatement of tarmac carriageway",
-                "unit": "m²",
-                "quantity": round(project.road_reinstatement_area, 2),
-            }
-        )
+        add_item("K.1.1", "Reinstatement of tarmac carriageway", "m²", project.road_reinstatement_area, 
+                 [{"number": 1, "length": project.road_reinstatement_area, "width": None, "height": None, "description": "Road reinstatement"}])
 
     if project.pavement_reinstatement_area > 0:
-        boq_items.append(
-            {
-                "code": "K.1.4",
-                "description": "Reinstatement of paved footway",
-                "unit": "m²",
-                "quantity": round(project.pavement_reinstatement_area, 2),
-            }
-        )
+        add_item("K.1.4", "Reinstatement of paved footway", "m²", project.pavement_reinstatement_area, 
+                 [{"number": 1, "length": project.pavement_reinstatement_area, "width": None, "height": None, "description": "Pavement reinstatement"}])
 
     if project.boundary_area > 0:
-        boq_items.append(
-            {
-                "code": "K.2.1",
-                "description": "Boundary fence reinstatement",
-                "unit": "m",
-                "quantity": round(project.boundary_area, 2),
-            }
-        )
+        add_item("K.2.1", "Boundary fence reinstatement", "m", project.boundary_area, 
+                 [{"number": 1, "length": project.boundary_area, "width": None, "height": None, "description": "Boundary reinstatement"}])
 
     # ========== PROVISIONAL ITEMS ==========
     if project.has_planking:
-        boq_items.append(
-            {
-                "code": "C.1",
-                "description": "Planking, strutting and timbering",
-                "unit": "Item",
-                "quantity": 1,
-            }
-        )
+        add_item("C.1", "Planking, strutting and timbering", "Item", 1, [{"number": 1, "length": None, "width": None, "height": None, "description": "Provisional"}])
 
     # ========== TESTING ==========
-    boq_items.append(
-        {
-            "code": "I.1",
-            "description": "Testing and commissioning of drainage system",
-            "unit": "Item",
-            "quantity": 1,
-        }
-    )
+    add_item("I.1", "Testing and commissioning of drainage system", "Item", 1, [{"number": 1, "length": None, "width": None, "height": None, "description": "Lump sum"}])
 
     return boq_items
 
@@ -870,7 +699,7 @@ def calculate_takeoff(project: ProjectInput):
                 total_pipe_quantities["bedding_concrete_m3"] += result["bedding_m3"]
 
             # Pipes by material
-            material = result["material"].lower()
+            material = result["pipe_material"].lower()
             if "upvc" in material:
                 total_pipe_quantities["pipe_upvc_m"] += result["pipe_length_m"]
             elif "pvc" in material:
@@ -880,7 +709,7 @@ def calculate_takeoff(project: ProjectInput):
 
         # Compile BOQ items
         boq_items = compile_boq_items(
-            total_mh_quantities, total_pipe_quantities, project
+            manhole_results, pipe_results, project
         )
 
         # Return complete results

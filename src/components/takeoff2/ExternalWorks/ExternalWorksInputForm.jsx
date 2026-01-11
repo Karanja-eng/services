@@ -1,130 +1,39 @@
 import React, { useState } from 'react';
 
-export default function ExternalWorksInputForm() {
-  const [formData, setFormData] = useState({
-    // Site Information
-    projectName: '',
-    projectLocation: '',
-    drawingNumber: '',
-
-    // Site Dimensions
-    siteLength: 50,
-    siteWidth: 40,
-
-    // Demolition & Site Clearance (Class D)
-    houseLength: 12,
-    houseWidth: 10,
-    buildingDemolitionVolume: 0,
-    pipelineRemovalLength: 0,
-    pipelineDiameter: 225,
-    treesSmall: 0, // 0.5-2m girth
-    treesLarge: 0, // >2m girth
-    stumps: 0, // <1m
-    vegetableSoilDepth: 0.15,
-
-    // Road Configuration
-    roadLength: 32,
-    roadWidth: 9,
-    roadType: 'bitumen', // bitumen or cabro
-
-    // Driveway Configuration
-    drivewayLength: 20,
-    drivewayWidth: 9,
-    drivewayType: 'bitumen',
-
-    // Parking Configuration
-    parkingLength: 25,
-    parkingWidth: 9,
-    parkingType: 'cabro',
-
-    // Bellmouth Configuration
-    bellmouthRadius1: 3.5,
-    bellmouthRadius2: 2.5,
-
-    // Pavement Layers Thickness (m)
-    bitumenThickness: 0.05,
-    bitumenMacadamBaseThickness: 0.15,
-    murramFillingDepth: 0.20,
-    hardcoreThickness: 0.20,
-    sandBedThickness: 0.15,
-
-    // Excavation
-    excavationDepthAfterVeg: 0.50,
-    backingAllowance: 0.10,
-
-    // Kerbs and Channels
-    kerbType: 'pcc', // pcc or precast
-    kerbStraightLength: 0,
-    kerbCurvedLength: 0,
-    channelStraightLength: 0,
-    channelCurvedLength: 0,
-
-    // Edgings (alternative to kerbs)
-    invertBlockLength: 0,
-    pccSlabLength: 0,
-    pccSlabWidth: 0.5,
-    pccSlabThickness: 0.05,
-
-    // Concrete Backing
-    concreteBackingThickness: 0.10,
-
-    // Landscaping (Class E)
-    grassSeedingArea: 0,
-    importedTopsoilThickness: 0.15,
-    mahoganyTrees: 0, // 1m high
-    ornamentalTrees: 0, // 10m c/c
-    euphorbiaPedgeLength: 0, // 0.5m high
-
-    // Fencing & Gates (Class X)
-    timberPostWireFenceLength: 0, // 2100mm high
-    fenceType1Length: 0, // 2-2.5m height
-    fenceType2Length: 0, // 1.5-2m height
-    metalGates: 0, // >5m span
-    normalGates: 0,
-
-    // Drainage
-    invertBlockCount: 0,
-    invertBlockSize: 0.35,
-    drainageChannelLength: 0,
-
-    // Additional Site Features
-    footpathLength: 0,
-    footpathWidth: 1.5,
-
-    // Unit Rates (for estimation)
-    includeRates: false,
-  });
-
+export default function ExternalWorksInputForm({ formData, setFormData, theme, handleCalculate }) {
   const [activeSection, setActiveSection] = useState('site');
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (section, field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
     }));
   };
 
   const calculateTotals = () => {
-    const clearArea = (formData.siteLength * formData.siteWidth) -
-      (formData.houseLength * formData.houseWidth);
+    const clearArea = (formData.siteData.siteLength * formData.siteData.siteWidth) -
+      (formData.demolition.houseLength * formData.demolition.houseWidth);
 
-    const vegSoilVolume = clearArea * formData.vegetableSoilDepth;
+    const vegSoilVolume = clearArea * formData.demolition.vegetableSoilDepth;
 
-    const roadArea = formData.roadLength * formData.roadWidth;
-    const drivewayArea = formData.drivewayLength * formData.drivewayWidth;
-    const parkingArea = formData.parkingLength * formData.parkingWidth;
+    const roadArea = formData.roadConfig.roadLength * formData.roadConfig.roadWidth;
+    const drivewayArea = formData.roadConfig.drivewayLength * formData.roadConfig.drivewayWidth;
+    const parkingArea = formData.roadConfig.parkingLength * formData.roadConfig.parkingWidth;
 
     const bellmouthArea = (3 / 14) * Math.PI *
-      (Math.pow(formData.bellmouthRadius1, 2) +
-        Math.pow(formData.bellmouthRadius2, 2));
+      (Math.pow(formData.roadConfig.bellmouthRadius1, 2) +
+        Math.pow(formData.roadConfig.bellmouthRadius2, 2));
 
     const totalPavedArea = roadArea + drivewayArea + parkingArea + bellmouthArea;
 
-    const excavationVolume = totalPavedArea * formData.excavationDepthAfterVeg;
+    const excavationVolume = totalPavedArea * formData.pavementLayers.excavationDepthAfterVeg;
 
-    const murramVolume = totalPavedArea * formData.murramFillingDepth;
-    const hardcoreVolume = totalPavedArea * formData.hardcoreThickness;
-    const bitumenVolume = totalPavedArea * formData.bitumenThickness;
+    const murramVolume = totalPavedArea * formData.pavementLayers.murramDepth;
+    const hardcoreVolume = totalPavedArea * formData.pavementLayers.hardcoreThickness;
+    const bitumenVolume = totalPavedArea * formData.pavementLayers.bitumenThickness;
 
     return {
       clearArea,
@@ -149,12 +58,8 @@ export default function ExternalWorksInputForm() {
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `external-works-${formData.projectName || 'project'}.json`;
+    link.download = `external-works-${formData.projectInfo.projectName || 'project'}.json`;
     link.click();
-  };
-
-  const handleCalculate = () => {
-    alert('Calculations completed! Check the summary section below.');
   };
 
   const sections = {
@@ -180,8 +85,8 @@ export default function ExternalWorksInputForm() {
                 <label>Project Name</label>
                 <input
                   type="text"
-                  value={formData.projectName}
-                  onChange={(e) => handleInputChange('projectName', e.target.value)}
+                  value={formData.projectInfo.projectName}
+                  onChange={(e) => handleInputChange('projectInfo', 'projectName', e.target.value)}
                   placeholder="Enter project name"
                 />
               </div>
@@ -189,8 +94,8 @@ export default function ExternalWorksInputForm() {
                 <label>Project Location</label>
                 <input
                   type="text"
-                  value={formData.projectLocation}
-                  onChange={(e) => handleInputChange('projectLocation', e.target.value)}
+                  value={formData.projectInfo.location}
+                  onChange={(e) => handleInputChange('projectInfo', 'location', e.target.value)}
                   placeholder="Enter location"
                 />
               </div>
@@ -198,8 +103,8 @@ export default function ExternalWorksInputForm() {
                 <label>Drawing Number</label>
                 <input
                   type="text"
-                  value={formData.drawingNumber}
-                  onChange={(e) => handleInputChange('drawingNumber', e.target.value)}
+                  value={formData.projectInfo.drawingNumber}
+                  onChange={(e) => handleInputChange('projectInfo', 'drawingNumber', e.target.value)}
                   placeholder="e.g., DRG No.01"
                 />
               </div>
@@ -207,8 +112,8 @@ export default function ExternalWorksInputForm() {
                 <label>Site Length (m)</label>
                 <input
                   type="number"
-                  value={formData.siteLength}
-                  onChange={(e) => handleInputChange('siteLength', parseFloat(e.target.value))}
+                  value={formData.siteData.siteLength}
+                  onChange={(e) => handleInputChange('siteData', 'siteLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -216,8 +121,8 @@ export default function ExternalWorksInputForm() {
                 <label>Site Width (m)</label>
                 <input
                   type="number"
-                  value={formData.siteWidth}
-                  onChange={(e) => handleInputChange('siteWidth', parseFloat(e.target.value))}
+                  value={formData.siteData.siteWidth}
+                  onChange={(e) => handleInputChange('siteData', 'siteWidth', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -234,8 +139,8 @@ export default function ExternalWorksInputForm() {
                 <label>Existing House Length (m)</label>
                 <input
                   type="number"
-                  value={formData.houseLength}
-                  onChange={(e) => handleInputChange('houseLength', parseFloat(e.target.value))}
+                  value={formData.demolition.houseLength}
+                  onChange={(e) => handleInputChange('demolition', 'houseLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -243,8 +148,8 @@ export default function ExternalWorksInputForm() {
                 <label>Existing House Width (m)</label>
                 <input
                   type="number"
-                  value={formData.houseWidth}
-                  onChange={(e) => handleInputChange('houseWidth', parseFloat(e.target.value))}
+                  value={formData.demolition.houseWidth}
+                  onChange={(e) => handleInputChange('demolition', 'houseWidth', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -252,8 +157,8 @@ export default function ExternalWorksInputForm() {
                 <label>Building Demolition Volume (m³)</label>
                 <input
                   type="number"
-                  value={formData.buildingDemolitionVolume}
-                  onChange={(e) => handleInputChange('buildingDemolitionVolume', parseFloat(e.target.value))}
+                  value={formData.demolition.buildingDemolitionVolume}
+                  onChange={(e) => handleInputChange('demolition', 'buildingDemolitionVolume', parseFloat(e.target.value))}
                   step="0.1"
                 />
               </div>
@@ -261,32 +166,32 @@ export default function ExternalWorksInputForm() {
                 <label>Trees Small (0.5-2m girth)</label>
                 <input
                   type="number"
-                  value={formData.treesSmall}
-                  onChange={(e) => handleInputChange('treesSmall', parseInt(e.target.value))}
+                  value={formData.demolition.treesSmall}
+                  onChange={(e) => handleInputChange('demolition', 'treesSmall', parseInt(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <label>Trees Large (less tha 2m girth)</label>
                 <input
                   type="number"
-                  value={formData.treesLarge}
-                  onChange={(e) => handleInputChange('treesLarge', parseInt(e.target.value))}
+                  value={formData.demolition.treesLarge}
+                  onChange={(e) => handleInputChange('demolition', 'treesLarge', parseInt(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <label>Stumps (greater than 1m)</label>
                 <input
                   type="number"
-                  value={formData.stumps}
-                  onChange={(e) => handleInputChange('stumps', parseInt(e.target.value))}
+                  value={formData.demolition.stumps}
+                  onChange={(e) => handleInputChange('demolition', 'stumps', parseInt(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <label>Pipeline Removal Length (m)</label>
                 <input
                   type="number"
-                  value={formData.pipelineRemovalLength}
-                  onChange={(e) => handleInputChange('pipelineRemovalLength', parseFloat(e.target.value))}
+                  value={formData.demolition.pipelineRemovalLength}
+                  onChange={(e) => handleInputChange('demolition', 'pipelineRemovalLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -294,16 +199,16 @@ export default function ExternalWorksInputForm() {
                 <label>Pipeline Diameter (mm)</label>
                 <input
                   type="number"
-                  value={formData.pipelineDiameter}
-                  onChange={(e) => handleInputChange('pipelineDiameter', parseInt(e.target.value))}
+                  value={formData.demolition.pipelineDiameter}
+                  onChange={(e) => handleInputChange('demolition', 'pipelineDiameter', parseInt(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <label>Vegetable Soil Depth (m)</label>
                 <input
                   type="number"
-                  value={formData.vegetableSoilDepth}
-                  onChange={(e) => handleInputChange('vegetableSoilDepth', parseFloat(e.target.value))}
+                  value={formData.demolition.vegetableSoilDepth}
+                  onChange={(e) => handleInputChange('demolition', 'vegetableSoilDepth', parseFloat(e.target.value))}
                   step="0.05"
                 />
               </div>
@@ -320,8 +225,8 @@ export default function ExternalWorksInputForm() {
                 <label>Road Length (m)</label>
                 <input
                   type="number"
-                  value={formData.roadLength}
-                  onChange={(e) => handleInputChange('roadLength', parseFloat(e.target.value))}
+                  value={formData.roadConfig.roadLength}
+                  onChange={(e) => handleInputChange('roadConfig', 'roadLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -329,16 +234,16 @@ export default function ExternalWorksInputForm() {
                 <label>Road Width (m)</label>
                 <input
                   type="number"
-                  value={formData.roadWidth}
-                  onChange={(e) => handleInputChange('roadWidth', parseFloat(e.target.value))}
+                  value={formData.roadConfig.roadWidth}
+                  onChange={(e) => handleInputChange('roadConfig', 'roadWidth', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
               <div className="form-group">
                 <label>Road Surface Type</label>
                 <select
-                  value={formData.roadType}
-                  onChange={(e) => handleInputChange('roadType', e.target.value)}
+                  value={formData.roadConfig.roadType}
+                  onChange={(e) => handleInputChange('roadConfig', 'roadType', e.target.value)}
                 >
                   <option value="bitumen">Bitumen Bound</option>
                   <option value="cabro">Cabro Blocks</option>
@@ -349,8 +254,8 @@ export default function ExternalWorksInputForm() {
                 <label>Bellmouth Radius 1 (m)</label>
                 <input
                   type="number"
-                  value={formData.bellmouthRadius1}
-                  onChange={(e) => handleInputChange('bellmouthRadius1', parseFloat(e.target.value))}
+                  value={formData.roadConfig.bellmouthRadius1}
+                  onChange={(e) => handleInputChange('roadConfig', 'bellmouthRadius1', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -358,8 +263,8 @@ export default function ExternalWorksInputForm() {
                 <label>Bellmouth Radius 2 (m)</label>
                 <input
                   type="number"
-                  value={formData.bellmouthRadius2}
-                  onChange={(e) => handleInputChange('bellmouthRadius2', parseFloat(e.target.value))}
+                  value={formData.roadConfig.bellmouthRadius2}
+                  onChange={(e) => handleInputChange('roadConfig', 'bellmouthRadius2', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -376,8 +281,8 @@ export default function ExternalWorksInputForm() {
                 <label>Driveway Length (m)</label>
                 <input
                   type="number"
-                  value={formData.drivewayLength}
-                  onChange={(e) => handleInputChange('drivewayLength', parseFloat(e.target.value))}
+                  value={formData.roadConfig.drivewayLength}
+                  onChange={(e) => handleInputChange('roadConfig', 'drivewayLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -385,16 +290,16 @@ export default function ExternalWorksInputForm() {
                 <label>Driveway Width (m)</label>
                 <input
                   type="number"
-                  value={formData.drivewayWidth}
-                  onChange={(e) => handleInputChange('drivewayWidth', parseFloat(e.target.value))}
+                  value={formData.roadConfig.drivewayWidth}
+                  onChange={(e) => handleInputChange('roadConfig', 'drivewayWidth', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
               <div className="form-group">
                 <label>Driveway Type</label>
                 <select
-                  value={formData.drivewayType}
-                  onChange={(e) => handleInputChange('drivewayType', e.target.value)}
+                  value={formData.roadConfig.drivewayType}
+                  onChange={(e) => handleInputChange('roadConfig', 'drivewayType', e.target.value)}
                 >
                   <option value="bitumen">Bitumen Bound</option>
                   <option value="cabro">Cabro Blocks</option>
@@ -405,8 +310,8 @@ export default function ExternalWorksInputForm() {
                 <label>Parking Length (m)</label>
                 <input
                   type="number"
-                  value={formData.parkingLength}
-                  onChange={(e) => handleInputChange('parkingLength', parseFloat(e.target.value))}
+                  value={formData.roadConfig.parkingLength}
+                  onChange={(e) => handleInputChange('roadConfig', 'parkingLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -414,16 +319,16 @@ export default function ExternalWorksInputForm() {
                 <label>Parking Width (m)</label>
                 <input
                   type="number"
-                  value={formData.parkingWidth}
-                  onChange={(e) => handleInputChange('parkingWidth', parseFloat(e.target.value))}
+                  value={formData.roadConfig.parkingWidth}
+                  onChange={(e) => handleInputChange('roadConfig', 'parkingWidth', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
               <div className="form-group">
                 <label>Parking Type</label>
                 <select
-                  value={formData.parkingType}
-                  onChange={(e) => handleInputChange('parkingType', e.target.value)}
+                  value={formData.roadConfig.parkingType}
+                  onChange={(e) => handleInputChange('roadConfig', 'parkingType', e.target.value)}
                 >
                   <option value="bitumen">Bitumen Bound</option>
                   <option value="cabro">Cabro Blocks</option>
@@ -443,8 +348,8 @@ export default function ExternalWorksInputForm() {
                 <label>Bitumen Premix (m)</label>
                 <input
                   type="number"
-                  value={formData.bitumenThickness}
-                  onChange={(e) => handleInputChange('bitumenThickness', parseFloat(e.target.value))}
+                  value={formData.pavementLayers.bitumenThickness}
+                  onChange={(e) => handleInputChange('pavementLayers', 'bitumenThickness', parseFloat(e.target.value))}
                   step="0.01"
                 />
               </div>
@@ -452,8 +357,8 @@ export default function ExternalWorksInputForm() {
                 <label>Bitumen Macadam Base (m)</label>
                 <input
                   type="number"
-                  value={formData.bitumenMacadamBaseThickness}
-                  onChange={(e) => handleInputChange('bitumenMacadamBaseThickness', parseFloat(e.target.value))}
+                  value={formData.pavementLayers.bitumenMacadamBase}
+                  onChange={(e) => handleInputChange('pavementLayers', 'bitumenMacadamBase', parseFloat(e.target.value))}
                   step="0.01"
                 />
               </div>
@@ -461,8 +366,8 @@ export default function ExternalWorksInputForm() {
                 <label>Murram Filling Depth (m)</label>
                 <input
                   type="number"
-                  value={formData.murramFillingDepth}
-                  onChange={(e) => handleInputChange('murramFillingDepth', parseFloat(e.target.value))}
+                  value={formData.pavementLayers.murramDepth}
+                  onChange={(e) => handleInputChange('pavementLayers', 'murramDepth', parseFloat(e.target.value))}
                   step="0.05"
                 />
               </div>
@@ -470,8 +375,8 @@ export default function ExternalWorksInputForm() {
                 <label>Hardcore Thickness (m)</label>
                 <input
                   type="number"
-                  value={formData.hardcoreThickness}
-                  onChange={(e) => handleInputChange('hardcoreThickness', parseFloat(e.target.value))}
+                  value={formData.pavementLayers.hardcoreThickness}
+                  onChange={(e) => handleInputChange('pavementLayers', 'hardcoreThickness', parseFloat(e.target.value))}
                   step="0.05"
                 />
               </div>
@@ -479,8 +384,8 @@ export default function ExternalWorksInputForm() {
                 <label>Sand Bed Thickness (m)</label>
                 <input
                   type="number"
-                  value={formData.sandBedThickness}
-                  onChange={(e) => handleInputChange('sandBedThickness', parseFloat(e.target.value))}
+                  value={formData.pavementLayers.sandBedThickness}
+                  onChange={(e) => handleInputChange('pavementLayers', 'sandBedThickness', parseFloat(e.target.value))}
                   step="0.05"
                 />
               </div>
@@ -488,8 +393,8 @@ export default function ExternalWorksInputForm() {
                 <label>Excavation Depth After Veg (m)</label>
                 <input
                   type="number"
-                  value={formData.excavationDepthAfterVeg}
-                  onChange={(e) => handleInputChange('excavationDepthAfterVeg', parseFloat(e.target.value))}
+                  value={formData.pavementLayers.excavationDepthAfterVeg}
+                  onChange={(e) => handleInputChange('pavementLayers', 'excavationDepthAfterVeg', parseFloat(e.target.value))}
                   step="0.05"
                 />
               </div>
@@ -497,8 +402,8 @@ export default function ExternalWorksInputForm() {
                 <label>Backing Allowance (m)</label>
                 <input
                   type="number"
-                  value={formData.backingAllowance}
-                  onChange={(e) => handleInputChange('backingAllowance', parseFloat(e.target.value))}
+                  value={formData.pavementLayers.backingAllowance}
+                  onChange={(e) => handleInputChange('pavementLayers', 'backingAllowance', parseFloat(e.target.value))}
                   step="0.05"
                 />
               </div>
@@ -506,8 +411,8 @@ export default function ExternalWorksInputForm() {
                 <label>Concrete Backing Thickness (m)</label>
                 <input
                   type="number"
-                  value={formData.concreteBackingThickness}
-                  onChange={(e) => handleInputChange('concreteBackingThickness', parseFloat(e.target.value))}
+                  value={formData.pavementLayers.concreteBackingThickness}
+                  onChange={(e) => handleInputChange('pavementLayers', 'concreteBackingThickness', parseFloat(e.target.value))}
                   step="0.01"
                 />
               </div>
@@ -523,8 +428,8 @@ export default function ExternalWorksInputForm() {
               <div className="form-group">
                 <label>Kerb Type</label>
                 <select
-                  value={formData.kerbType}
-                  onChange={(e) => handleInputChange('kerbType', e.target.value)}
+                  value={formData.kerbsChannels.kerbType}
+                  onChange={(e) => handleInputChange('kerbsChannels', 'kerbType', e.target.value)}
                 >
                   <option value="pcc">PCC Kerb 125x250mm</option>
                   <option value="precast">Precast Concrete</option>
@@ -534,8 +439,8 @@ export default function ExternalWorksInputForm() {
                 <label>Kerb Straight Length (m)</label>
                 <input
                   type="number"
-                  value={formData.kerbStraightLength}
-                  onChange={(e) => handleInputChange('kerbStraightLength', parseFloat(e.target.value))}
+                  value={formData.kerbsChannels.kerbStraightLength}
+                  onChange={(e) => handleInputChange('kerbsChannels', 'kerbStraightLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -543,8 +448,8 @@ export default function ExternalWorksInputForm() {
                 <label>Kerb Curved Length (m)</label>
                 <input
                   type="number"
-                  value={formData.kerbCurvedLength}
-                  onChange={(e) => handleInputChange('kerbCurvedLength', parseFloat(e.target.value))}
+                  value={formData.kerbsChannels.kerbCurvedLength}
+                  onChange={(e) => handleInputChange('kerbsChannels', 'kerbCurvedLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -552,8 +457,8 @@ export default function ExternalWorksInputForm() {
                 <label>Channel Straight Length (m)</label>
                 <input
                   type="number"
-                  value={formData.channelStraightLength}
-                  onChange={(e) => handleInputChange('channelStraightLength', parseFloat(e.target.value))}
+                  value={formData.kerbsChannels.channelStraightLength}
+                  onChange={(e) => handleInputChange('kerbsChannels', 'channelStraightLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -561,8 +466,8 @@ export default function ExternalWorksInputForm() {
                 <label>Channel Curved Length (m)</label>
                 <input
                   type="number"
-                  value={formData.channelCurvedLength}
-                  onChange={(e) => handleInputChange('channelCurvedLength', parseFloat(e.target.value))}
+                  value={formData.kerbsChannels.channelCurvedLength}
+                  onChange={(e) => handleInputChange('kerbsChannels', 'channelCurvedLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -579,16 +484,16 @@ export default function ExternalWorksInputForm() {
                 <label>Invert Block Count</label>
                 <input
                   type="number"
-                  value={formData.invertBlockCount}
-                  onChange={(e) => handleInputChange('invertBlockCount', parseInt(e.target.value))}
+                  value={formData.drainage.invertBlockCount}
+                  onChange={(e) => handleInputChange('drainage', 'invertBlockCount', parseInt(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <label>Invert Block Size (m)</label>
                 <input
                   type="number"
-                  value={formData.invertBlockSize}
-                  onChange={(e) => handleInputChange('invertBlockSize', parseFloat(e.target.value))}
+                  value={formData.drainage.invertBlockSize}
+                  onChange={(e) => handleInputChange('drainage', 'invertBlockSize', parseFloat(e.target.value))}
                   step="0.05"
                 />
               </div>
@@ -596,8 +501,8 @@ export default function ExternalWorksInputForm() {
                 <label>PCC Slab Length (m)</label>
                 <input
                   type="number"
-                  value={formData.pccSlabLength}
-                  onChange={(e) => handleInputChange('pccSlabLength', parseFloat(e.target.value))}
+                  value={formData.drainage.pccSlabLength}
+                  onChange={(e) => handleInputChange('drainage', 'pccSlabLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -605,8 +510,8 @@ export default function ExternalWorksInputForm() {
                 <label>PCC Slab Width (m)</label>
                 <input
                   type="number"
-                  value={formData.pccSlabWidth}
-                  onChange={(e) => handleInputChange('pccSlabWidth', parseFloat(e.target.value))}
+                  value={formData.drainage.pccSlabWidth}
+                  onChange={(e) => handleInputChange('drainage', 'pccSlabWidth', parseFloat(e.target.value))}
                   step="0.1"
                 />
               </div>
@@ -614,8 +519,8 @@ export default function ExternalWorksInputForm() {
                 <label>PCC Slab Thickness (m)</label>
                 <input
                   type="number"
-                  value={formData.pccSlabThickness}
-                  onChange={(e) => handleInputChange('pccSlabThickness', parseFloat(e.target.value))}
+                  value={formData.drainage.pccSlabThickness}
+                  onChange={(e) => handleInputChange('drainage', 'pccSlabThickness', parseFloat(e.target.value))}
                   step="0.01"
                 />
               </div>
@@ -623,8 +528,8 @@ export default function ExternalWorksInputForm() {
                 <label>Drainage Channel Length (m)</label>
                 <input
                   type="number"
-                  value={formData.drainageChannelLength}
-                  onChange={(e) => handleInputChange('drainageChannelLength', parseFloat(e.target.value))}
+                  value={formData.drainage.drainageChannelLength}
+                  onChange={(e) => handleInputChange('drainage', 'drainageChannelLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -641,8 +546,8 @@ export default function ExternalWorksInputForm() {
                 <label>Grass Seeding Area (m²)</label>
                 <input
                   type="number"
-                  value={formData.grassSeedingArea}
-                  onChange={(e) => handleInputChange('grassSeedingArea', parseFloat(e.target.value))}
+                  value={formData.landscaping.grassSeedingArea}
+                  onChange={(e) => handleInputChange('landscaping', 'grassSeedingArea', parseFloat(e.target.value))}
                   step="1"
                 />
               </div>
@@ -650,8 +555,8 @@ export default function ExternalWorksInputForm() {
                 <label>Imported Topsoil Thickness (m)</label>
                 <input
                   type="number"
-                  value={formData.importedTopsoilThickness}
-                  onChange={(e) => handleInputChange('importedTopsoilThickness', parseFloat(e.target.value))}
+                  value={formData.landscaping.importedTopsoilThickness}
+                  onChange={(e) => handleInputChange('landscaping', 'importedTopsoilThickness', parseFloat(e.target.value))}
                   step="0.05"
                 />
               </div>
@@ -659,24 +564,24 @@ export default function ExternalWorksInputForm() {
                 <label>Mahogany Trees (1m high)</label>
                 <input
                   type="number"
-                  value={formData.mahoganyTrees}
-                  onChange={(e) => handleInputChange('mahoganyTrees', parseInt(e.target.value))}
+                  value={formData.landscaping.mahoganyTrees}
+                  onChange={(e) => handleInputChange('landscaping', 'mahoganyTrees', parseInt(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <label>Ornamental Trees (10m c/c)</label>
                 <input
                   type="number"
-                  value={formData.ornamentalTrees}
-                  onChange={(e) => handleInputChange('ornamentalTrees', parseInt(e.target.value))}
+                  value={formData.landscaping.ornamentalTrees}
+                  onChange={(e) => handleInputChange('landscaping', 'ornamentalTrees', parseInt(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <label>Euphorbia Hedge Length (m)</label>
                 <input
                   type="number"
-                  value={formData.euphorbiaPedgeLength}
-                  onChange={(e) => handleInputChange('euphorbiaPedgeLength', parseFloat(e.target.value))}
+                  value={formData.landscaping.euphorbiaHedgeLength}
+                  onChange={(e) => handleInputChange('landscaping', 'euphorbiaHedgeLength', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -693,8 +598,8 @@ export default function ExternalWorksInputForm() {
                 <label>Timber Posts & Wire Fence (m)</label>
                 <input
                   type="number"
-                  value={formData.timberPostWireFenceLength}
-                  onChange={(e) => handleInputChange('timberPostWireFenceLength', parseFloat(e.target.value))}
+                  value={formData.fencing.timberPostWireFence}
+                  onChange={(e) => handleInputChange('fencing', 'timberPostWireFence', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -702,8 +607,8 @@ export default function ExternalWorksInputForm() {
                 <label>Fence Type 1 (2-2.5m) Length (m)</label>
                 <input
                   type="number"
-                  value={formData.fenceType1Length}
-                  onChange={(e) => handleInputChange('fenceType1Length', parseFloat(e.target.value))}
+                  value={formData.fencing.fenceType1Length}
+                  onChange={(e) => handleInputChange('fencing', 'fenceType1Length', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
@@ -711,25 +616,25 @@ export default function ExternalWorksInputForm() {
                 <label>Fence Type 2 (1.5-2m) Length (m)</label>
                 <input
                   type="number"
-                  value={formData.fenceType2Length}
-                  onChange={(e) => handleInputChange('fenceType2Length', parseFloat(e.target.value))}
+                  value={formData.fencing.fenceType2Length}
+                  onChange={(e) => handleInputChange('fencing', 'fenceType2Length', parseFloat(e.target.value))}
                   step="0.5"
                 />
               </div>
               <div className="form-group">
-                <label>Metal Gates (>5m span)</label>
+                <label>Metal Gates ({">"}5m span)</label>
                 <input
                   type="number"
-                  value={formData.metalGates}
-                  onChange={(e) => handleInputChange('metalGates', parseInt(e.target.value))}
+                  value={formData.fencing.metalGates}
+                  onChange={(e) => handleInputChange('fencing', 'metalGates', parseInt(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <label>Normal Gates</label>
                 <input
                   type="number"
-                  value={formData.normalGates}
-                  onChange={(e) => handleInputChange('normalGates', parseInt(e.target.value))}
+                  value={formData.fencing.normalGates}
+                  onChange={(e) => handleInputChange('fencing', 'normalGates', parseInt(e.target.value))}
                 />
               </div>
             </div>

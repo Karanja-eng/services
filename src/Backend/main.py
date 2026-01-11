@@ -164,8 +164,12 @@ app.include_router(rc_substructure_router, prefix="/rc_substructure_router", tag
 # from calculations.Atomationmodels.opencvmodel import router as open_cv_model_router
 # from calculations.Atomationmodels.phi_vision import router as phi_model_router
 from calculations.Atomationmodels.qwen_3_vl_4B import router as qwen_model_router, preload_model
+from calculations.Atomationmodels.arch_pro.main2 import router as architectural_automation_router
+from calculations.takeoff.electrical_plumbing_takeoff import router as electrical_plumbing_takeoff_router
 
-app.include_router(qwen_model_router, prefix="/qwen_model", tags=["qwen_model_router"])
+#app.include_router(qwen_model_router, prefix="/qwen_model", tags=["qwen_model_router"])
+app.include_router(architectural_automation_router, prefix="/arch_pro", tags=["architectural_automation"])
+app.include_router(electrical_plumbing_takeoff_router, prefix="/electrical_plumbing_takeoff", tags=["electrical_plumbing_takeoff"])
 
 # app.include_router(yolo_model_router, prefix="/yolo", tags=["Yolo_model"])
 # app.include_router(open_cv_model_router, prefix="/opencv", tags=["OpenCv_model"])

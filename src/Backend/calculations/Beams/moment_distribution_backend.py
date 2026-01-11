@@ -709,12 +709,8 @@ class MomentDistributionSolver:
 
 
 router = APIRouter()
-# # API Integration Functions
-# def add_moment_distribution_endpoints(app: FastAPI):
-#     """Add moment distribution endpoints to FastAPI app"""
 
-
-@router.post("/moment_distribution/analyze", response_model=MomentDistributionResponse)
+@router.post("/analyze", response_model=MomentDistributionResponse)
 async def analyze_moment_distribution(frame: FrameMD):
     """Analyze frame using Moment Distribution Method"""
     try:
@@ -724,7 +720,7 @@ async def analyze_moment_distribution(frame: FrameMD):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/moment_distribution/examples")
+@router.get("/examples")
 async def get_moment_distribution_examples():
     """Get example frame configurations"""
     examples = [
@@ -760,6 +756,16 @@ async def get_moment_distribution_examples():
                     "member_type": "Beam",
                     "start_joint_id": "A",
                     "end_joint_id": "B",
+                    "length": 6.0,
+                    "E": 200e9,
+                    "I": 8.33e-6,
+                    "loads": [{"load_type": "UDL", "magnitude": 15.0}],
+                },
+                {
+                    "member_id": "BC",
+                    "member_type": "Beam",
+                    "start_joint_id": "B",
+                    "end_joint_id": "C",
                     "length": 6.0,
                     "E": 200e9,
                     "I": 8.33e-6,
@@ -918,8 +924,6 @@ async def get_moment_distribution_examples():
     return examples
 
 
-
-
 def add_moment_distribution_endpoints(app: FastAPI):
     """Register moment-distribution endpoints on the provided FastAPI app."""
     app.include_router(router, prefix="/moment_distribution")
@@ -931,4 +935,5 @@ __all__ = [
     "FrameMD",
     "MomentDistributionResponse",
     "add_moment_distribution_endpoints",
+    "router"
 ]

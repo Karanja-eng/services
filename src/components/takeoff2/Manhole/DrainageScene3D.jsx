@@ -298,15 +298,15 @@ const DrainageScene3D = ({ projectData, calculationResults }) => {
 
     const length = Math.sqrt(
       Math.pow(endX - startX, 2) +
-        Math.pow(endY - startY, 2) +
-        Math.pow(endZ - startZ, 2)
+      Math.pow(endY - startY, 2) +
+      Math.pow(endZ - startZ, 2)
     );
 
-    const diam = pipe.diameter_mm / 1000;
+    const diam = (pipe.diameter_mm || 150) / 1000;
 
     // Create pipe
     const pipeGeom = new THREE.CylinderGeometry(diam / 2, diam / 2, length, 16);
-    const pipeColor = pipe.pipe_material.toLowerCase().includes("pvc")
+    const pipeColor = pipe.pipe_material?.toLowerCase().includes("pvc")
       ? colors.pipe_upvc
       : colors.pipe_pcc;
     const pipeMat = new THREE.MeshStandardMaterial({ color: pipeColor });
@@ -465,7 +465,7 @@ const DrainageScene3D = ({ projectData, calculationResults }) => {
 
     // Create house placeholders for pipes starting from houses
     const housePipes = pipes.filter((p) =>
-      p.from_point.toLowerCase().includes("house")
+      p.from_point?.toLowerCase().includes("house")
     );
     housePipes.forEach((pipe, idx) => {
       const toMH = manholes.find((m) => m.id === pipe.to_point);

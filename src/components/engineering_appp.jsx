@@ -66,6 +66,7 @@ import SuperstructureTakeoffApp from "./takeoff2/Superstructure/Superstructure_t
 import UnderGroundTankComponent from "./takeoff2/underground_tank";
 import SubstructureTakeoffApp from "./takeoff2/substructure_works";
 import StaircaseTakeoffApp from "./takeoff2/Stairs";
+import ElectricalPlumbingTakeoff from "./takeoff2/ElectricalPlumbingTakeoff";
 
 
 //////////////////////////TakingOff /////////////////////
@@ -715,6 +716,10 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             <Route
               path="/quantity/manual/internal_finishes"
               element={<InternalFinishesTakeoff isDark={isDark} />}
+            />
+            <Route
+              path="/quantity/manual/electrical_plumbing"
+              element={<ElectricalPlumbingTakeoff isDark={isDark} />}
             />
             <Route
               path="/quantity/manual/superstructure-takeoff"

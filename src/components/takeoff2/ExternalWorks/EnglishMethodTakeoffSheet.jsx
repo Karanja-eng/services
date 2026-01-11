@@ -66,6 +66,7 @@ const EditableDescription = ({ value, onChange, placeholder }) => {
           borderRadius: "4px",
           fontSize: "13px",
           fontFamily: "Arial, sans-serif",
+          color: "#000",
         }}
       />
       {showSuggestions && filteredSuggestions.length > 0 && (
@@ -509,6 +510,13 @@ export default function EnglishMethodTakeoffSheet({
         padding: "20px",
         maxWidth: "1400px",
         margin: "0 auto",
+        overflow: "auto",
+        maxHeight: "85vh",
+        border: "1px solid #eee",
+        borderRadius: "8px",
+        background: "white",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+        color: "#000"
       }}
     >
       <style>{`
@@ -530,19 +538,23 @@ export default function EnglishMethodTakeoffSheet({
           border: 1px solid #000;
           padding: 6px 8px;
           text-align: left;
+          color: #000;
         }
         .takeoff-table th {
           background: #f0f0f0;
           font-weight: bold;
           text-align: center;
+          color: #000;
         }
         .dim-cell {
           text-align: right;
           font-family: 'Courier New', monospace;
+          color: #000;
         }
         .header-row {
           background: #e8f4f8;
           font-weight: bold;
+          color: #000;
         }
         .header-row td {
           font-size: 12px;
@@ -562,6 +574,7 @@ export default function EnglishMethodTakeoffSheet({
           width: 100%;
           box-sizing: border-box;
           font-family: inherit;
+          color: #000;
         }
         input:focus {
           outline: 2px solid #2196F3;

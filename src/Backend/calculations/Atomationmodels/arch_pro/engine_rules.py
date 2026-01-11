@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List, Dict
-from models import Furniture, TechnicalPoint, Conduit, Wall
+from .models import Furniture, TechnicalPoint, Conduit, Wall
 
 class EngineeringEngine:
     def __init__(self, wall_height: float = 3.0):

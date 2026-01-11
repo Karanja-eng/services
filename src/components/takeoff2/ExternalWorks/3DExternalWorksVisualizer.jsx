@@ -108,52 +108,115 @@ function Channel({ start, end, width = 0.125, depth = 0.1 }) {
   );
 }
 
-// Bellmouth curve component
-function BellmouthCurve({ center, radius1, radius2, thickness, layerType }) {
-  const points = useMemo(() => {
-    const pts = [];
-    const segments = 32;
-    for (let i = 0; i <= segments; i++) {
-      const angle = (Math.PI / 2) * (i / segments);
-      pts.push(
-        new THREE.Vector3(
-          center[0] + Math.cos(angle) * radius1,
-          0,
-          center[2] + Math.sin(angle) * radius1
-        )
-      );
-    }
-    for (let i = segments; i >= 0; i--) {
-      const angle = (Math.PI / 2) * (i / segments);
-      pts.push(
-        new THREE.Vector3(
-          center[0] + Math.cos(angle) * radius2,
-          0,
-          center[2] + Math.sin(angle) * radius2
-        )
-      );
-    }
-    return pts;
-  }, [center, radius1, radius2]);
-
+// Bellmouth curve component for pavement layers
+function BellmouthCurve({ center, radius, thickness, color, startAngle = 0, endAngle = Math.PI / 2, yOffset = 0 }) {
   const shape = useMemo(() => {
     const shp = new THREE.Shape();
-    shp.moveTo(points[0].x, points[0].z);
-    points.forEach((pt) => shp.lineTo(pt.x, pt.z));
+    // Create a sector-like shape for the bellmouth pavement
+    shp.moveTo(center[0], center[2]);
+    const segments = 32;
+    for (let i = 0; i <= segments; i++) {
+      const angle = startAngle + (endAngle - startAngle) * (i / segments);
+      shp.lineTo(
+        center[0] + Math.cos(angle) * radius,
+        center[2] + Math.sin(angle) * radius
+      );
+    }
+    shp.lineTo(center[0], center[2]);
     shp.closePath();
     return shp;
-  }, [points]);
+  }, [center, radius, startAngle, endAngle]);
 
   return (
     <mesh
-      position={[0, thickness / 2, 0]}
+      position={[0, yOffset + thickness / 2, 0]}
       rotation={[-Math.PI / 2, 0, 0]}
       receiveShadow
     >
       <extrudeGeometry
         args={[shape, { depth: thickness, bevelEnabled: false }]}
       />
-      <meshStandardMaterial color={COLORS[layerType] || COLORS.bitumen} />
+      <meshStandardMaterial color={color} />
+    </mesh>
+  );
+}
+
+// Curved Kerb component
+function CurvedKerb({ center, radius, startAngle, endAngle, height = 0.25, width = 0.125 }) {
+  const points = useMemo(() => {
+    const pts = [];
+    const segments = 32;
+    for (let i = 0; i <= segments; i++) {
+      const angle = startAngle + (endAngle - startAngle) * (i / segments);
+      pts.push(new THREE.Vector2(
+        center[0] + Math.cos(angle) * (radius + width / 2),
+        center[2] + Math.sin(angle) * (radius + width / 2)
+      ));
+    }
+    return pts;
+  }, [center, radius, startAngle, endAngle, width]);
+
+  const shape = useMemo(() => {
+    const shp = new THREE.Shape();
+    shp.moveTo(points[0].x, points[0].y);
+    points.forEach(p => shp.lineTo(p.x, p.y));
+    // Narrow path for the kerb
+    for (let i = points.length - 1; i >= 0; i--) {
+      const angle = startAngle + (endAngle - startAngle) * (i / (points.length - 1));
+      shp.lineTo(
+        center[0] + Math.cos(angle) * (radius - width / 2),
+        center[2] + Math.sin(angle) * (radius - width / 2)
+      );
+    }
+    shp.closePath();
+    return shp;
+  }, [center, radius, startAngle, endAngle, points, width]);
+
+  return (
+    <mesh position={[0, height / 2, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+      <extrudeGeometry args={[shape, { depth: height, bevelEnabled: false }]} />
+      <meshStandardMaterial color={COLORS.kerb} roughness={0.8} />
+    </mesh>
+  );
+}
+
+// Curved Channel component
+function CurvedChannel({ center, radius, startAngle, endAngle, width = 0.2, depth = 0.1 }) {
+  // Similar to CurvedKerb but for the channel
+  const points = useMemo(() => {
+    const pts = [];
+    const segments = 32;
+    for (let i = 0; i <= segments; i++) {
+      const angle = startAngle + (endAngle - startAngle) * (i / segments);
+      pts.push(new THREE.Vector2(
+        center[0] + Math.cos(angle) * radius,
+        center[2] + Math.sin(angle) * radius
+      ));
+    }
+    return pts;
+  }, [center, radius, startAngle, endAngle]);
+
+  const geometry = useMemo(() => {
+    const curve = new THREE.CatmullRomCurve3(
+      points.map(p => new THREE.Vector3(p.x, 0, p.y))
+    );
+    // Create a V-shape cross section
+    const shape = new THREE.Shape();
+    shape.moveTo(-width / 2, 0);
+    shape.lineTo(0, -depth);
+    shape.lineTo(width / 2, 0);
+    shape.closePath();
+
+    return new THREE.ExtrudeGeometry(shape, {
+      steps: 32,
+      extrudePath: curve,
+      bevelEnabled: false
+    });
+  }, [points, width, depth]);
+
+  return (
+    <mesh geometry={geometry} castShadow>
+      <meshStandardMaterial color={COLORS.channel} />
     </mesh>
   );
 }
@@ -231,222 +294,259 @@ function ExternalWorksScene({ config }) {
   const {
     roadWidth,
     roadLength,
+    roadRotation = 0,
     parkingWidth,
     parkingLength,
+    parkingRotation = 90,
+    parkingPosX = 10,
+    parkingPosZ = 0,
     bellmouthRadius1,
     bellmouthRadius2,
-    drivewayWidth,
     showLayers,
     surfaceType,
   } = config;
 
-  // Calculate positions
-  const roadStartX = -roadLength / 2;
-  const parkingOffsetZ = roadWidth / 2 + parkingWidth / 2;
+  const degToRad = (deg) => (deg * Math.PI) / 180;
+
+  // Render logic for pavement layers
+  const renderPavement = (width, length, color, isParking = false) => (
+    <group>
+      {showLayers.subBase && (
+        <PavementLayer
+          geometry={[length, LAYER_THICKNESS.subBase, width]}
+          color={COLORS.subBase}
+          position={[0, -0.475, 0]}
+        />
+      )}
+      {showLayers.hardcore && (
+        <PavementLayer
+          geometry={[length, LAYER_THICKNESS.hardcore, width]}
+          color={COLORS.hardcore}
+          position={[0, -0.3, 0]}
+        />
+      )}
+      {!isParking && showLayers.baseCoarse && (
+        <PavementLayer
+          geometry={[length, LAYER_THICKNESS.baseCoarse, width]}
+          color={COLORS.baseCoarse}
+          position={[0, -0.125, 0]}
+        />
+      )}
+      {showLayers.bitumen && (
+        <PavementLayer
+          geometry={[length, LAYER_THICKNESS.bitumen, width]}
+          color={isParking ? COLORS.parking : (surfaceType === "bitumen" ? COLORS.bitumen : COLORS.cabro)}
+          position={[0, -0.025, 0]}
+        />
+      )}
+    </group>
+  );
 
   return (
     <>
-      {/* Ground plane */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.5, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[100, 100]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, 0]} receiveShadow>
+        <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color={COLORS.grass} />
       </mesh>
 
-      {/* Main road - layered construction */}
-      {showLayers.subBase && (
-        <PavementLayer
-          geometry={[roadLength, LAYER_THICKNESS.subBase, roadWidth]}
-          color={COLORS.subBase}
-          position={[0, -LAYER_THICKNESS.subBase / 2 - 0.4, 0]}
-        />
-      )}
+      {/* Main Road Group */}
+      <group rotation={[0, degToRad(roadRotation), 0]}>
+        {renderPavement(roadWidth, roadLength, COLORS.bitumen)}
 
-      {showLayers.hardcore && (
-        <PavementLayer
-          geometry={[roadLength, LAYER_THICKNESS.hardcore, roadWidth]}
-          color={COLORS.hardcore}
-          position={[0, -LAYER_THICKNESS.hardcore / 2 - 0.25, 0]}
-        />
-      )}
-
-      {showLayers.baseCoarse && (
-        <PavementLayer
-          geometry={[roadLength, LAYER_THICKNESS.baseCoarse, roadWidth]}
-          color={COLORS.baseCoarse}
-          position={[0, -LAYER_THICKNESS.baseCoarse / 2 - 0.1, 0]}
-        />
-      )}
-
-      {/* Surface layer - bitumen or cabro */}
-      {surfaceType === "bitumen" ? (
-        <>
-          {showLayers.bitumen && (
-            <PavementLayer
-              geometry={[roadLength, LAYER_THICKNESS.bitumen, roadWidth]}
-              color={COLORS.bitumen}
-              position={[0, 0, 0]}
-            />
-          )}
-          {/* Road markings */}
-          <RoadMarking
-            start={[roadStartX, 0, 0]}
-            end={[roadStartX + roadLength, 0, 0]}
-            dashed={true}
-          />
-          <RoadMarking
-            start={[roadStartX, 0, -roadWidth / 2 + 0.1]}
-            end={[roadStartX + roadLength, 0, -roadWidth / 2 + 0.1]}
-            width={0.15}
-          />
-          <RoadMarking
-            start={[roadStartX, 0, roadWidth / 2 - 0.1]}
-            end={[roadStartX + roadLength, 0, roadWidth / 2 - 0.1]}
-            width={0.15}
-          />
-        </>
-      ) : (
-        <PavementLayer
-          geometry={[roadLength, LAYER_THICKNESS.bitumen, roadWidth]}
-          color={COLORS.cabro}
-          position={[0, 0, 0]}
-        />
-      )}
-
-      {/* Kerbs */}
-      {showLayers.kerb && (
-        <>
-          <Kerb
-            start={[roadStartX, 0, -roadWidth / 2]}
-            end={[roadStartX + roadLength, 0, -roadWidth / 2]}
-          />
-          <Kerb
-            start={[roadStartX, 0, roadWidth / 2]}
-            end={[roadStartX + roadLength, 0, roadWidth / 2]}
-          />
-        </>
-      )}
-
-      {/* Channels */}
-      {showLayers.channel && (
-        <>
-          <Channel
-            start={[roadStartX, 0, -roadWidth / 2 - 0.2]}
-            end={[roadStartX + roadLength, 0, -roadWidth / 2 - 0.2]}
-          />
-          <Channel
-            start={[roadStartX, 0, roadWidth / 2 + 0.2]}
-            end={[roadStartX + roadLength, 0, roadWidth / 2 + 0.2]}
-          />
-        </>
-      )}
-
-      {/* Parking area */}
-      <group position={[parkingLength / 2 - 5, 0, parkingOffsetZ]}>
-        {showLayers.hardcore && (
-          <PavementLayer
-            geometry={[parkingLength, LAYER_THICKNESS.hardcore, parkingWidth]}
-            color={COLORS.hardcore}
-            position={[0, -LAYER_THICKNESS.hardcore / 2 - 0.25, 0]}
-          />
+        {/* Road markings */}
+        {surfaceType === "bitumen" && (
+          <group position={[0, 0.01, 0]}>
+            <RoadMarking start={[-roadLength / 2, 0, 0]} end={[roadLength / 2, 0, 0]} dashed={true} />
+            <RoadMarking start={[-roadLength / 2, 0, -roadWidth / 2 + 0.2]} end={[roadLength / 2, 0, -roadWidth / 2 + 0.2]} width={0.15} />
+            <RoadMarking start={[-roadLength / 2, 0, roadWidth / 2 - 0.2]} end={[roadLength / 2, 0, roadWidth / 2 - 0.2]} width={0.15} />
+          </group>
         )}
-        <PavementLayer
-          geometry={[parkingLength, LAYER_THICKNESS.bitumen, parkingWidth]}
-          color={COLORS.parking}
-          position={[0, 0, 0]}
-        />
-        {/* Parking bay lines */}
-        {Array.from({ length: 5 }).map((_, i) => (
-          <RoadMarking
-            key={i}
-            start={[-parkingLength / 2 + i * 5, 0, -parkingWidth / 2]}
-            end={[-parkingLength / 2 + i * 5, 0, parkingWidth / 2]}
-            width={0.1}
-          />
-        ))}
+
+        {/* Kerbs & Channels for Road */}
+        {showLayers.kerb && (
+          <>
+            <Kerb start={[-roadLength / 2, 0, -roadWidth / 2]} end={[roadLength / 2, 0, -roadWidth / 2]} />
+            <Kerb start={[-roadLength / 2, 0, roadWidth / 2]} end={[roadLength / 2, 0, roadWidth / 2]} />
+          </>
+        )}
       </group>
 
-      {/* Bellmouth curve */}
-      {showLayers.bellmouth && (
-        <BellmouthCurve
-          center={[5, 0, roadWidth / 2 + 2]}
-          radius1={bellmouthRadius1}
-          radius2={bellmouthRadius2}
-          thickness={LAYER_THICKNESS.bitumen}
-          layerType="bitumen"
-        />
-      )}
+      {/* Access Road / Parking Group */}
+      <group position={[parkingPosX, 0, parkingPosZ]} rotation={[0, degToRad(parkingRotation), 0]}>
+        {renderPavement(parkingWidth, parkingLength, COLORS.parking, true)}
 
-      {/* Ornamental trees */}
-      <Tree position={[-15, 0, 8]} />
-      <Tree position={[-10, 0, 8]} />
-      <Tree position={[-5, 0, 8]} />
-
-      {/* Invert blocks with PCC slabs (drainage) */}
-      {showLayers.invertBlock && (
-        <>
-          {Array.from({ length: 10 }).map((_, i) => (
-            <group
+        {/* Parking Bay Markings */}
+        <group position={[0, 0.01, 0]}>
+          {Array.from({ length: Math.max(1, Math.floor(parkingLength / 2.5)) }).map((_, i) => (
+            <RoadMarking
               key={i}
-              position={[roadStartX + i * 5, -0.3, roadWidth / 2 + 0.6]}
-            >
-              <mesh castShadow>
-                <boxGeometry args={[0.35, 0.35, 0.35]} />
-                <meshStandardMaterial color={COLORS.invertBlock} />
-              </mesh>
-              <mesh position={[0, 0.2, 0]}>
-                <boxGeometry args={[0.5, 0.05, 0.5]} />
-                <meshStandardMaterial color={COLORS.pccSlab} />
-              </mesh>
-            </group>
+              start={[-parkingLength / 2 + i * 2.5, 0, -parkingWidth / 2]}
+              end={[-parkingLength / 2 + i * 2.5, 0, parkingWidth / 2]}
+              width={0.1}
+            />
           ))}
-        </>
-      )}
+          {/* Central line for double-sided parking if wide enough */}
+          {parkingWidth > 10 && (
+            <RoadMarking start={[-parkingLength / 2, 0, 0]} end={[parkingLength / 2, 0, 0]} width={0.1} />
+          )}
+        </group>
 
-      {/* Grass areas */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[-10, 0.01, -10]}
-        receiveShadow
-      >
-        <planeGeometry args={[20, 15]} />
-        <meshStandardMaterial color={COLORS.grass} />
-      </mesh>
+        {/* Kerbs & Channels for Parking */}
+        {showLayers.kerb && (
+          <>
+            <Kerb start={[-parkingLength / 2, 0, -parkingWidth / 2]} end={[parkingLength / 2, 0, -parkingWidth / 2]} />
+            <Kerb start={[-parkingLength / 2, 0, parkingWidth / 2]} end={[parkingLength / 2, 0, parkingWidth / 2]} />
+            <Kerb start={[parkingLength / 2, 0, -parkingWidth / 2]} end={[parkingLength / 2, 0, parkingWidth / 2]} />
+          </>
+        )}
 
-      {/* Labels */}
-      <Text
-        position={[0, 2, -roadWidth / 2 - 1]}
-        rotation={[0, 0, 0]}
-        fontSize={0.5}
-        color="white"
-      >
-        Main Road {roadWidth.toFixed(1)}m x {roadLength.toFixed(1)}m
-      </Text>
-      <Text
-        position={[parkingLength / 2 - 5, 2, parkingOffsetZ]}
-        rotation={[0, 0, 0]}
-        fontSize={0.4}
-        color="white"
-      >
-        Parking {parkingWidth.toFixed(1)}m x {parkingLength.toFixed(1)}m
-      </Text>
+        {/* Bellmouth Junctions - Attached to the START of the parking road */}
+        {showLayers.bellmouth && (
+          <>
+            {/* Left Bellmouth Layers */}
+            {showLayers.subBase && (
+              <BellmouthCurve
+                center={[-parkingLength / 2, 0, -parkingWidth / 2 - bellmouthRadius1]}
+                radius={bellmouthRadius1}
+                thickness={LAYER_THICKNESS.subBase}
+                color={COLORS.subBase}
+                startAngle={0}
+                endAngle={Math.PI / 2}
+                yOffset={-0.55}
+              />
+            )}
+            {showLayers.hardcore && (
+              <BellmouthCurve
+                center={[-parkingLength / 2, 0, -parkingWidth / 2 - bellmouthRadius1]}
+                radius={bellmouthRadius1}
+                thickness={LAYER_THICKNESS.hardcore}
+                color={COLORS.hardcore}
+                startAngle={0}
+                endAngle={Math.PI / 2}
+                yOffset={-0.4}
+              />
+            )}
+            {showLayers.bitumen && (
+              <BellmouthCurve
+                center={[-parkingLength / 2, 0, -parkingWidth / 2 - bellmouthRadius1]}
+                radius={bellmouthRadius1}
+                thickness={LAYER_THICKNESS.bitumen}
+                color={COLORS.bitumen}
+                startAngle={0}
+                endAngle={Math.PI / 2}
+                yOffset={-0.05}
+              />
+            )}
+
+            {/* Right Bellmouth Layers */}
+            {showLayers.subBase && (
+              <BellmouthCurve
+                center={[-parkingLength / 2, 0, parkingWidth / 2 + bellmouthRadius2]}
+                radius={bellmouthRadius2}
+                thickness={LAYER_THICKNESS.subBase}
+                color={COLORS.subBase}
+                startAngle={-Math.PI / 2}
+                endAngle={0}
+                yOffset={-0.55}
+              />
+            )}
+            {showLayers.hardcore && (
+              <BellmouthCurve
+                center={[-parkingLength / 2, 0, parkingWidth / 2 + bellmouthRadius2]}
+                radius={bellmouthRadius2}
+                thickness={LAYER_THICKNESS.hardcore}
+                color={COLORS.hardcore}
+                startAngle={-Math.PI / 2}
+                endAngle={0}
+                yOffset={-0.4}
+              />
+            )}
+            {showLayers.bitumen && (
+              <BellmouthCurve
+                center={[-parkingLength / 2, 0, parkingWidth / 2 + bellmouthRadius2]}
+                radius={bellmouthRadius2}
+                thickness={LAYER_THICKNESS.bitumen}
+                color={COLORS.bitumen}
+                startAngle={-Math.PI / 2}
+                endAngle={0}
+                yOffset={-0.05}
+              />
+            )}
+
+            {/* Curved Kerbs for Bellmouth */}
+            {showLayers.kerb && (
+              <>
+                <CurvedKerb
+                  center={[-parkingLength / 2, 0, -parkingWidth / 2 - bellmouthRadius1]}
+                  radius={bellmouthRadius1}
+                  startAngle={0}
+                  endAngle={Math.PI / 2}
+                />
+                <CurvedKerb
+                  center={[-parkingLength / 2, 0, parkingWidth / 2 + bellmouthRadius2]}
+                  radius={bellmouthRadius2}
+                  startAngle={-Math.PI / 2}
+                  endAngle={0}
+                />
+              </>
+            )}
+          </>
+        )}
+      </group>
+
+
+      {/* Nature decoration */}
+      <Tree position={[25, 0, 15]} />
+      <Tree position={[-25, 0, -15]} />
+      <Tree position={[15, 0, -25]} />
     </>
   );
 }
 
+// Helper component for UI controls
+function ControlGroup({ label, value, onChange, type = "number", min, max, step = "0.5" }) {
+  return (
+    <label style={{ display: "block", marginBottom: "12px" }}>
+      <div style={{ fontSize: "12px", color: "#999", marginBottom: "4px" }}>{label}</div>
+      <input
+        type={type}
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        onChange={(e) => onChange(type === "number" || type === "range" ? parseFloat(e.target.value) || 0 : e.target.value)}
+        style={{
+          width: "100%",
+          padding: "8px",
+          background: "#2a2a2a",
+          border: "1px solid #444",
+          color: "white",
+          borderRadius: "6px",
+          fontSize: "13px",
+          outline: "none",
+          transition: "border-color 0.2s"
+        }}
+        onFocus={(e) => e.target.style.borderColor = "#14b8a6"}
+        onBlur={(e) => e.target.style.borderColor = "#444"}
+      />
+    </label>
+  );
+}
+
 // Main App Component
-export default function ExternalWorks3DVisualizer() {
-  const [config, setConfig] = useState({
+export default function ExternalWorks3DVisualizer({ config: propConfig, setConfig: propSetConfig, theme }) {
+  const [internalConfig, setInternalConfig] = useState({
     roadWidth: 9,
-    roadLength: 32,
-    parkingWidth: 9,
-    parkingLength: 25,
-    bellmouthRadius1: 3.5,
-    bellmouthRadius2: 2.5,
-    drivewayWidth: 9,
+    roadLength: 40,
+    roadRotation: 0,
+    parkingWidth: 10,
+    parkingLength: 20,
+    parkingRotation: 90,
+    parkingPosX: 10,
+    parkingPosZ: 0,
+    bellmouthRadius1: 6,
+    bellmouthRadius2: 6,
+    drivewayWidth: 6,
     surfaceType: "bitumen", // or 'cabro'
     showLayers: {
       subBase: true,
@@ -460,196 +560,105 @@ export default function ExternalWorks3DVisualizer() {
     },
   });
 
+  // Merge prop config with internal state if props exist
+  const config = useMemo(() => {
+    if (!propConfig) return internalConfig;
+    return {
+      ...internalConfig,
+      ...propConfig,
+      // Map roadType to surfaceType if needed
+      surfaceType: propConfig.roadType || internalConfig.surfaceType,
+    };
+  }, [propConfig, internalConfig]);
+
+  const setConfig = (newCfg) => {
+    if (propSetConfig) {
+      propSetConfig(newCfg);
+    } else {
+      setInternalConfig(newCfg);
+    }
+  };
+
   const toggleLayer = (layer) => {
-    setConfig((prev) => ({
-      ...prev,
+    setConfig({
+      ...config,
       showLayers: {
-        ...prev.showLayers,
-        [layer]: !prev.showLayers[layer],
+        ...config.showLayers,
+        [layer]: !config.showLayers[layer],
       },
-    }));
+    });
+  };
+
+  const handleInputChange = (field, value) => {
+    setConfig({
+      ...config,
+      [field]: value
+    });
   };
 
   return (
-    <div style={{ width: "100%", height: "100vh", background: "#1a1a1a" }}>
+    <div style={{ width: "100%", height: "100vh", background: "#1a1a1a", position: "relative" }}>
       {/* Control Panel */}
       <div
         style={{
           position: "absolute",
           top: 10,
           left: 10,
-          background: "rgba(0,0,0,0.8)",
-          padding: "15px",
-          borderRadius: "8px",
+          background: "rgba(0,0,0,0.85)",
+          padding: "20px",
+          borderRadius: "12px",
           color: "white",
           maxHeight: "90vh",
           overflowY: "auto",
           zIndex: 1000,
-          width: "280px",
+          width: "300px",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
         }}
       >
-        <h3 style={{ margin: "0 0 15px 0", fontSize: "18px" }}>
-          3D External Works
+        <h3 style={{ margin: "0 0 20px 0", fontSize: "20px", fontWeight: "700", borderBottom: "1px solid #444", paddingBottom: "10px" }}>
+          3D Road Engine
         </h3>
 
-        <div style={{ marginBottom: "15px" }}>
-          <h4 style={{ margin: "0 0 10px 0", fontSize: "14px" }}>
-            Dimensions (m)
+        <div style={{ marginBottom: "20px" }}>
+          <h4 style={{ margin: "0 0 15px 0", fontSize: "14px", textTransform: "uppercase", color: "#14b8a6", letterSpacing: "1px" }}>
+            Main Road
           </h4>
-          <label
-            style={{ display: "block", marginBottom: "8px", fontSize: "12px" }}
-          >
-            Road Width:
-            <input
-              type="number"
-              value={config.roadWidth}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  roadWidth: parseFloat(e.target.value) || 0,
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "4px",
-                marginTop: "4px",
-                background: "#333",
-                border: "1px solid #555",
-                color: "white",
-                borderRadius: "4px",
-              }}
-              step="0.5"
-            />
-          </label>
-          <label
-            style={{ display: "block", marginBottom: "8px", fontSize: "12px" }}
-          >
-            Road Length:
-            <input
-              type="number"
-              value={config.roadLength}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  roadLength: parseFloat(e.target.value) || 0,
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "4px",
-                marginTop: "4px",
-                background: "#333",
-                border: "1px solid #555",
-                color: "white",
-                borderRadius: "4px",
-              }}
-              step="0.5"
-            />
-          </label>
-          <label
-            style={{ display: "block", marginBottom: "8px", fontSize: "12px" }}
-          >
-            Parking Width:
-            <input
-              type="number"
-              value={config.parkingWidth}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  parkingWidth: parseFloat(e.target.value) || 0,
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "4px",
-                marginTop: "4px",
-                background: "#333",
-                border: "1px solid #555",
-                color: "white",
-                borderRadius: "4px",
-              }}
-              step="0.5"
-            />
-          </label>
-          <label
-            style={{ display: "block", marginBottom: "8px", fontSize: "12px" }}
-          >
-            Parking Length:
-            <input
-              type="number"
-              value={config.parkingLength}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  parkingLength: parseFloat(e.target.value) || 0,
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "4px",
-                marginTop: "4px",
-                background: "#333",
-                border: "1px solid #555",
-                color: "white",
-                borderRadius: "4px",
-              }}
-              step="0.5"
-            />
-          </label>
-          <label
-            style={{ display: "block", marginBottom: "8px", fontSize: "12px" }}
-          >
-            Bellmouth R1:
-            <input
-              type="number"
-              value={config.bellmouthRadius1}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  bellmouthRadius1: parseFloat(e.target.value) || 0,
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "4px",
-                marginTop: "4px",
-                background: "#333",
-                border: "1px solid #555",
-                color: "white",
-                borderRadius: "4px",
-              }}
-              step="0.5"
-            />
-          </label>
-          <label
-            style={{ display: "block", marginBottom: "8px", fontSize: "12px" }}
-          >
-            Bellmouth R2:
-            <input
-              type="number"
-              value={config.bellmouthRadius2}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  bellmouthRadius2: parseFloat(e.target.value) || 0,
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "4px",
-                marginTop: "4px",
-                background: "#333",
-                border: "1px solid #555",
-                color: "white",
-                borderRadius: "4px",
-              }}
-              step="0.5"
-            />
-          </label>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <ControlGroup label="Width" value={config.roadWidth} onChange={(v) => handleInputChange('roadWidth', v)} />
+            <ControlGroup label="Length" value={config.roadLength} onChange={(v) => handleInputChange('roadLength', v)} />
+          </div>
+          <ControlGroup label="Rotation" value={config.roadRotation} onChange={(v) => handleInputChange('roadRotation', v)} type="range" min={-180} max={180} />
         </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <h4 style={{ margin: "0 0 10px 0", fontSize: "14px" }}>
+        <div style={{ marginBottom: "20px" }}>
+          <h4 style={{ margin: "0 0 15px 0", fontSize: "14px", textTransform: "uppercase", color: "#14b8a6", letterSpacing: "1px" }}>
+            Access Road / Parking
+          </h4>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <ControlGroup label="Width" value={config.parkingWidth} onChange={(v) => handleInputChange('parkingWidth', v)} />
+            <ControlGroup label="Length" value={config.parkingLength} onChange={(v) => handleInputChange('parkingLength', v)} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <ControlGroup label="Pos X" value={config.parkingPosX} onChange={(v) => handleInputChange('parkingPosX', v)} />
+            <ControlGroup label="Pos Z" value={config.parkingPosZ} onChange={(v) => handleInputChange('parkingPosZ', v)} />
+          </div>
+          <ControlGroup label="Rotation" value={config.parkingRotation} onChange={(v) => handleInputChange('parkingRotation', v)} type="range" min={-180} max={180} />
+        </div>
+
+        <div style={{ marginBottom: "20px" }}>
+          <h4 style={{ margin: "0 0 15px 0", fontSize: "14px", textTransform: "uppercase", color: "#14b8a6", letterSpacing: "1px" }}>
+            Junction (Bellmouth)
+          </h4>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <ControlGroup label="Radius L" value={config.bellmouthRadius1} onChange={(v) => handleInputChange('bellmouthRadius1', v)} />
+            <ControlGroup label="Radius R" value={config.bellmouthRadius2} onChange={(v) => handleInputChange('bellmouthRadius2', v)} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "20px" }}>
+          <h4 style={{ margin: "0 0 15px 0", fontSize: "14px", textTransform: "uppercase", color: "#14b8a6", letterSpacing: "1px" }}>
             Surface Type
           </h4>
           <select
@@ -659,49 +668,53 @@ export default function ExternalWorks3DVisualizer() {
             }
             style={{
               width: "100%",
-              padding: "6px",
-              background: "#333",
-              border: "1px solid #555",
+              padding: "10px",
+              background: "#2a2a2a",
+              border: "1px solid #444",
               color: "white",
-              borderRadius: "4px",
+              borderRadius: "6px",
+              fontSize: "13px",
+              outline: "none"
             }}
           >
-            <option value="bitumen">Bitumen/Tar</option>
+            <option value="bitumen">Bitumen / Tar</option>
             <option value="cabro">Cabro Blocks</option>
           </select>
         </div>
 
-        <div>
-          <h4 style={{ margin: "0 0 10px 0", fontSize: "14px" }}>
-            Visible Layers
+        <div style={{ marginBottom: "20px" }}>
+          <h4 style={{ margin: "0 0 15px 0", fontSize: "14px", textTransform: "uppercase", color: "#14b8a6", letterSpacing: "1px" }}>
+            Layer Visibility
           </h4>
-          {Object.keys(config.showLayers).map((layer) => (
-            <label
-              key={layer}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "8px",
-                fontSize: "12px",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={config.showLayers[layer]}
-                onChange={() => toggleLayer(layer)}
-                style={{ marginRight: "8px" }}
-              />
-              {layer
-                .replace(/([A-Z])/g, " $1")
-                .replace(/^./, (str) => str.toUpperCase())}
-            </label>
-          ))}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            {Object.keys(config.showLayers).map((layer) => (
+              <button
+                key={layer}
+                onClick={() => toggleLayer(layer)}
+                style={{
+                  padding: "8px 4px",
+                  fontSize: "11px",
+                  background: config.showLayers[layer] ? "rgba(20, 184, 166, 0.15)" : "#222",
+                  border: `1px solid ${config.showLayers[layer] ? "#14b8a6" : "#444"}`,
+                  color: config.showLayers[layer] ? "#5eead4" : "#999",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  textAlign: "center"
+                }}
+              >
+                {layer.replace(/([A-Z])/g, " $1").trim()}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div style={{ marginTop: "15px", fontSize: "11px", color: "#aaa" }}>
-          <p style={{ margin: "5px 0" }}>Use mouse to rotate/zoom</p>
-          <p style={{ margin: "5px 0" }}>Right-click to pan</p>
+        <div style={{ borderTop: "1px solid #333", paddingTop: "15px", marginTop: "10px" }}>
+          <div style={{ fontSize: "11px", color: "#777", lineHeight: "1.6" }}>
+            <div>• Left Mouse: Rotate</div>
+            <div>• Right Mouse/Shift: Pan</div>
+            <div>• Scroll: Zoom</div>
+          </div>
         </div>
       </div>
 

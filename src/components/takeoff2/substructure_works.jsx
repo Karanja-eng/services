@@ -1,14 +1,22 @@
-import React, { useState } from "react";
 import {
   Calculator,
   FileText,
   Building2,
   ChevronDown,
   ChevronUp,
+  Upload,
+  Loader2,
+  Eye,
+  Box,
+  Settings as SettingsIcon
 } from "lucide-react";
 import axios from "axios";
+import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
+import Substructure3DScene from "./Substructure3DScene";
+
+const API_BASE = "http://localhost:8001";
 
 const SubstructureTakeoffApp = () => {
 
@@ -17,6 +25,67 @@ const SubstructureTakeoffApp = () => {
   const [editorKey, setEditorKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [calcSubTab, setCalcSubTab] = useState("automation");
+
+  // Automation State
+  const [buildingData, setBuildingData] = useState(null);
+  const [processing, setProcessing] = useState(false);
+  const [fileId, setFileId] = useState(null);
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setProcessing(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
+      const data = await res.json();
+      setFileId(data.file_id);
+      await processFloorplan(data.file_id);
+    } catch (err) { console.error(err); }
+    setProcessing(false);
+  };
+
+  const processFloorplan = async (fid) => {
+    const fd = new FormData();
+    fd.append("file_id", fid);
+    fd.append("use_yolo", "true");
+    try {
+      const res = await fetch(`${API_BASE}/arch_pro/api/process`, { method: "POST", body: fd });
+      const data = await res.json();
+      setBuildingData(data);
+      autoFillInputs(data);
+    } catch (err) { console.error(err); }
+  };
+
+  const autoFillInputs = (data) => {
+    if (!data || !data.floors[0]) return;
+    const floor = data.floors[0];
+
+    // 1. Walls Logic (Foundation Walls)
+    const totalWallLength = floor.walls.reduce((sum, w) => sum + w.length, 0);
+
+    // Estimate bounds for rectangular plan
+    const wallPoints = floor.walls.flatMap(w => [w.start, w.end]);
+    const xs = wallPoints.map(p => p[0]);
+    const ys = wallPoints.map(p => p[1]);
+    const width = Math.max(...xs) - Math.min(...xs);
+    const depth = Math.max(...ys) - Math.min(...ys);
+
+    setFormData(prev => ({
+      ...prev,
+      ext_length: width.toFixed(2),
+      ext_width: depth.toFixed(2),
+      int_wall_len: (totalWallLength - (2 * (width + depth))).toFixed(2),
+      has_columns: floor.columns.length > 0,
+      num_columns: floor.columns.length,
+      col_size: floor.columns[0]?.size || 0.2,
+      col_base_size: 0.8 / (floor.columns[0]?.size || 0.2) > 2 ? 0.8 : 1.2, // Heuristic
+      col_excav_depth: 1.5,
+      wall_thick: data.wallThickness || 0.2,
+    }));
+  };
 
   const [formData, setFormData] = useState({
     plan_type: "rectangle",
@@ -234,7 +303,7 @@ const SubstructureTakeoffApp = () => {
         <UniversalTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+          tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
         />
       </div>
 
@@ -244,9 +313,44 @@ const SubstructureTakeoffApp = () => {
             {/* Inputs */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex border-b border-gray-200 bg-gray-50 mb-4 rounded-t-lg">
+                  {["automation", "params"].map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setCalcSubTab(tab)}
+                      className={`px-6 py-3 text-sm font-medium transition-colors ${calcSubTab === tab ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      {tab === "automation" ? "AI Substructure" : "Manual Params"}
+                    </button>
+                  ))}
+                </div>
+
+                {calcSubTab === "automation" && (
+                  <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-xl space-y-4 mb-6">
+                    {processing ? (
+                      <div className="flex flex-col items-center space-y-3">
+                        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                        <p className="text-sm font-medium text-gray-700">Analyzing Substructure Geometry...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-12 h-12 text-blue-800" />
+                        <div className="text-center">
+                          <h3 className="font-bold text-gray-900">AI Substructure Setup</h3>
+                          <p className="text-xs text-gray-500">Auto-detect foundation walls, column bases, and excavation depths.</p>
+                        </div>
+                        <input type="file" id="sub-upload" className="hidden" onChange={handleUpload} />
+                        <label htmlFor="sub-upload" className="cursor-pointer bg-gray-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition-all shadow-lg">
+                          Upload Foundation Plan
+                        </label>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <Calculator className="w-6 h-6" />
-                  Input Parameters
+                  Foundation Parameters
                 </h2>
 
                 <div className="space-y-3">
@@ -324,6 +428,40 @@ const SubstructureTakeoffApp = () => {
         {activeTab === 'boq' && (
           <div className="h-full">
             <UniversalBOQ items={takeoffData} />
+          </div>
+        )}
+
+        {activeTab === '3d-view' && (
+          <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative border border-slate-800 shadow-2xl">
+            {buildingData ? (
+              <>
+                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                  <div className="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 flex items-center gap-2 shadow-lg">
+                    <Box className="w-4 h-4 text-orange-400" />
+                    <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Foundation & Substructure</span>
+                  </div>
+                </div>
+                <Canvas shadows dpr={[1, 2]}>
+                  <Suspense fallback={null}>
+                    <Substructure3DScene buildingData={buildingData} />
+                  </Suspense>
+                </Canvas>
+              </>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
+                <Box className="w-16 h-16 opacity-20" />
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-slate-200">No Foundation Visual</h3>
+                  <p className="text-sm">Upload a foundation plan to see excavations and bases.</p>
+                </div>
+                <button
+                  onClick={() => { setActiveTab('calculator'); setCalcSubTab('automation'); }}
+                  className="px-6 py-2 bg-slate-800 text-slate-200 rounded-lg text-sm font-bold border border-slate-700"
+                >
+                  Go to Upload
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

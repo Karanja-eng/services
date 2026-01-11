@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from typing import List, Dict, Tuple
 from ultralytics import YOLO
-from models import Opening, Room, Furniture, TechnicalPoint
+from .models import Opening, Room, Furniture, TechnicalPoint
 
 class YOLODetector:
     def __init__(self, layout_model_path: str, furniture_model_path: str, ppm: float = 100):

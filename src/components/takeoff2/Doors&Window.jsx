@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Calculator, Download, Plus, Trash2, FileText, DoorOpen } from 'lucide-react';
+import { Calculator, Download, Plus, Trash2, FileText, DoorOpen, Upload, Loader2, Eye, Box } from 'lucide-react';
 import axios from "axios";
+import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
+import DoorWindow3DScene from "./DoorWindow3DScene";
+
+const API_BASE = "http://localhost:8001";
 import descriptionsData from "./descriptions";
 
 const DoorWindowTakeoff = () => {
@@ -49,6 +52,48 @@ const DoorWindowTakeoff = () => {
     const [takeoffData, setTakeoffData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [editorKey, setEditorKey] = useState(0);
+    const [calcSubTab, setCalcSubTab] = useState("automation");
+
+    // Automation State
+    const [buildingData, setBuildingData] = useState(null);
+    const [processing, setProcessing] = useState(false);
+
+    const handleUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setProcessing(true);
+        const fd = new FormData();
+        fd.append("file", file);
+        try {
+            const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
+            const data = await res.json();
+            await processFloorplan(data.file_id);
+        } catch (err) { console.error(err); }
+        setProcessing(false);
+    };
+
+    const processFloorplan = async (fid) => {
+        const fd = new FormData();
+        fd.append("file_id", fid);
+        fd.append("use_yolo", "true");
+        try {
+            const res = await fetch(`${API_BASE}/arch_pro/api/process`, { method: "POST", body: fd });
+            const data = await res.json();
+            setBuildingData(data);
+            // After process, we could pre-fill the first door/window
+        } catch (err) { console.error(err); }
+    };
+
+    const selectExtractedItem = (item, type) => {
+        setItemType(type);
+        setFormData(prev => ({
+            ...prev,
+            opening_W: item.width.toFixed(2),
+            opening_H: item.height.toFixed(2),
+            [type === 'door' ? 'num_doors' : 'num_windows']: 1,
+            leaf_material: item.type || prev.leaf_material
+        }));
+    };
 
     const [descriptions, setDescriptions] = useState([
         { id: 1, text: 'Supply, cut, prepare and fix' },
@@ -161,7 +206,7 @@ const DoorWindowTakeoff = () => {
                 <UniversalTabs
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
-                    tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+                    tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
                 />
             </div>
 
@@ -170,6 +215,63 @@ const DoorWindowTakeoff = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Configuration */}
                         <div className="lg:col-span-1 space-y-6">
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+                                <div className="flex border-b border-gray-200 bg-gray-50">
+                                    {["automation", "params"].map(tab => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setCalcSubTab(tab)}
+                                            className={`flex-1 py-3 text-sm font-medium transition-colors ${calcSubTab === tab ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
+                                        >
+                                            {tab === 'automation' ? 'AI Detection' : 'Manual Settings'}
+                                        </button>
+                                    ))}
+                                </div>
+                                {calcSubTab === "automation" && (
+                                    <div className="p-4 space-y-4">
+                                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
+                                            {processing ? (
+                                                <div className="flex flex-col items-center py-4">
+                                                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
+                                                    <span className="text-xs text-gray-500 font-medium">Extracting Openings...</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center">
+                                                    <Upload className="w-8 h-8 text-blue-400 mb-2" />
+                                                    <p className="text-xs text-gray-500 mb-3">Upload plan to list all doors & windows</p>
+                                                    <input type="file" id="dw-upload" className="hidden" onChange={handleUpload} />
+                                                    <label htmlFor="dw-upload" className="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold cursor-pointer hover:bg-blue-700">Upload Plan</label>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {buildingData && (
+                                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Detected Items</h3>
+                                                {buildingData.floors[0].doors.map((d, i) => (
+                                                    <div key={`d-${i}`} onClick={() => selectExtractedItem(d, 'door')} className="flex items-center justify-between p-2 bg-orange-50 rounded border border-orange-100 cursor-pointer hover:bg-orange-100 transition-colors">
+                                                        <div className="flex items-center gap-2">
+                                                            <DoorOpen className="w-3 h-3 text-orange-600" />
+                                                            <span className="text-[11px] font-medium">Door {i + 1} ({d.width.toFixed(1)}x{d.height.toFixed(1)}m)</span>
+                                                        </div>
+                                                        <span className="text-[10px] bg-orange-200 text-orange-700 px-1.5 rounded italic">Pick</span>
+                                                    </div>
+                                                ))}
+                                                {buildingData.floors[0].windows.map((w, i) => (
+                                                    <div key={`w-${i}`} onClick={() => selectExtractedItem(w, 'window')} className="flex items-center justify-between p-2 bg-blue-50 rounded border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors">
+                                                        <div className="flex items-center gap-2">
+                                                            <Box className="w-3 h-3 text-blue-600" />
+                                                            <span className="text-[11px] font-medium">Window {i + 1} ({w.width.toFixed(1)}x{w.height.toFixed(1)}m)</span>
+                                                        </div>
+                                                        <span className="text-[10px] bg-blue-200 text-blue-700 px-1.5 rounded italic">Pick</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
                                 <h2 className="font-bold text-gray-800 mb-3 border-b pb-1">Select Type</h2>
                                 <div className="flex gap-2">
@@ -306,6 +408,32 @@ const DoorWindowTakeoff = () => {
                 {activeTab === 'boq' && (
                     <div className="h-full">
                         <UniversalBOQ items={takeoffData} />
+                    </div>
+                )}
+
+                {activeTab === '3d-view' && (
+                    <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative border border-slate-800 shadow-2xl">
+                        {buildingData ? (
+                            <Canvas shadows dpr={[1, 2]}>
+                                <Suspense fallback={null}>
+                                    <DoorWindow3DScene buildingData={buildingData} />
+                                </Suspense>
+                            </Canvas>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
+                                <DoorOpen className="w-16 h-16 opacity-20" />
+                                <div className="text-center">
+                                    <h3 className="text-xl font-bold text-slate-200">No Openings Visual</h3>
+                                    <p className="text-sm">Upload a plan to see all doors and windows in 3D.</p>
+                                </div>
+                                <button
+                                    onClick={() => { setActiveTab('calculator'); setCalcSubTab('automation'); }}
+                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold"
+                                >
+                                    Start Detection
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </main>
