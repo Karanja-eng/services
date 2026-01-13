@@ -1530,23 +1530,14 @@ const MomentDistributionCalculator = ({ onAnalysisComplete }) => {
           </div>
         )}
 
-
+        {/* 
         {activeTab === "design-config" && (
           <div className="text-center text-gray-500 py-8">
             <p>Design configuration removed. Use RCBeamDesigner component for design.</p>
           </div>
-        )}
+        )} */}
 
-        {/* Footer */}
-        <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>
-            Moment Distribution Method (Hardy Cross) with BS 8110 Reinforced
-            Concrete Design
-          </p>
-          <p className="mt-1">
-            © 2024 - Advanced Structural Analysis & Design Suite
-          </p>
-        </div>
+
       </div>
     </div>
   );

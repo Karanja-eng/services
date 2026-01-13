@@ -6,6 +6,11 @@ import {
   Plus,
   Trash2,
   Building,
+  Upload,
+  Loader2,
+  Eye,
+  Layers,
+  X,
 } from "lucide-react";
 import axios from "axios";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
@@ -38,6 +43,15 @@ const RCCSuperstructureApp = () => {
   const [takeoffData, setTakeoffData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
+
+  // Automation State
+  const [calcSubTab, setCalcSubTab] = useState("automation");
+  const [processing, setProcessing] = useState(false);
+  const [fileId, setFileId] = useState(null);
+  const [buildingData, setBuildingData] = useState(null);
+  const [planImageUrl, setPlanImageUrl] = useState(null);
+  const [activeSegment, setActiveSegment] = useState("all");
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
     calculateTakeoff();
@@ -117,6 +131,73 @@ const RCCSuperstructureApp = () => {
     );
   };
 
+  const API_BASE = `http://${window.location.hostname}:8001`;
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Immediate local preview
+    setPlanImageUrl(URL.createObjectURL(file));
+    setProcessing(true);
+
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
+      const data = await res.json();
+      setFileId(data.file_id);
+      await processFloorplan(data.file_id);
+    } catch (err) { console.error(err); }
+    setProcessing(false);
+  };
+
+  const processFloorplan = async (fid) => {
+    const fd = new FormData();
+    fd.append("file_id", fid);
+    fd.append("use_yolo", "true");
+    try {
+      const res = await fetch(`${API_BASE}/arch_pro/api/process`, { method: "POST", body: fd });
+      const data = await res.json();
+      setBuildingData(data);
+      autoFillRCInputs(data);
+    } catch (err) { console.error(err); }
+  };
+
+  const autoFillRCInputs = (data) => {
+    if (!data || !data.floors[0]) return;
+    const floor = data.floors[0];
+
+    if (floor.columns && floor.columns.length > 0) {
+      setColumns(floor.columns.map((c, i) => ({
+        id: c.id || Date.now() + i,
+        width: c.size || 0.3,
+        depth: c.size || 0.3,
+        height: 3.0,
+        mark: c.mark || `C${i + 1}`,
+      })));
+    }
+
+    if (floor.beams && floor.beams.length > 0) {
+      setBeams(floor.beams.map((b, i) => ({
+        id: b.id || Date.now() + i + 100,
+        length: b.length || 5.0,
+        width: b.width || 0.2,
+        depth: b.depth || 0.45,
+        mark: b.mark || `B${i + 1}`,
+      })));
+    }
+
+    if (floor.slabs && floor.slabs.length > 0) {
+      setSlabs(floor.slabs.map((s, i) => ({
+        id: s.id || Date.now() + i + 200,
+        area: s.area || 25.0,
+        thickness: s.thickness || 0.15,
+        mark: s.mark || `S${i + 1}`,
+      })));
+    }
+  };
+
   const calculateTakeoff = async () => {
     setLoading(true);
     try {
@@ -154,7 +235,7 @@ const RCCSuperstructureApp = () => {
         }
       };
 
-      const response = await axios.post("http://localhost:8001/rc_superstructure_router/api/calculate-superstructure", payload);
+      const response = await axios.post(`${API_BASE}/rc_superstructure_router/api/calculate-superstructure`, payload);
       const data = response.data;
 
       const items = [
@@ -300,16 +381,76 @@ const RCCSuperstructureApp = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Input Panel */}
             <div className="lg:col-span-1 space-y-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex border-b border-gray-200 bg-gray-50 mb-4 rounded-t-lg">
+                  {["automation", "manual"].map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setCalcSubTab(tab)}
+                      className={`flex-1 px-4 py-2 text-xs font-bold transition-colors ${calcSubTab === tab ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      {tab === "automation" ? "AI AUTOMATION" : "MANUAL LISTS"}
+                    </button>
+                  ))}
+                </div>
+
+                {calcSubTab === "automation" ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl space-y-3">
+                      {processing ? (
+                        <div className="flex flex-col items-center space-y-2">
+                          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                          <p className="text-xs font-bold text-gray-700">Detecting Structural Elements...</p>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="w-8 h-8 text-blue-400" />
+                          <div className="text-center">
+                            <h3 className="text-sm font-bold text-gray-900">RC Analysis</h3>
+                            <p className="text-[10px] text-gray-500">Upload plan to auto-detect columns, beams and slabs.</p>
+                          </div>
+                          <input type="file" id="rc-upload" className="hidden" onChange={handleUpload} />
+                          <label htmlFor="rc-upload" className="cursor-pointer bg-blue-600 text-white px-4 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-all text-xs">
+                            Select Plan
+                          </label>
+                        </>
+                      )}
+                    </div>
+
+                    {buildingData && (
+                      <div className="bg-green-50 p-3 rounded-lg border border-green-200 text-green-700 text-xs font-bold flex items-center gap-2">
+                        <Layers className="w-3 h-3" /> Architecture analysis complete. Verify elements below.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-center text-gray-500 py-4 italic">Use the sections below to manage your RC elements list manually.</p>
+                )}
+              </div>
+
               {/* Columns Section */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3 border-b pb-2">
                   <h3 className="font-semibold text-gray-900">Columns</h3>
-                  <button
-                    onClick={addColumn}
-                    className="text-gray-600 hover:text-gray-900"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
+                  <div className="flex gap-2">
+                    {buildingData && (
+                      <button
+                        onClick={() => {
+                          const next = activeSegment === 'columns' ? 'all' : 'columns';
+                          setActiveSegment(next);
+                          if (next === 'columns') setShowPlanModal(true);
+                        }}
+                        className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'columns' ? 'bg-magenta-600 text-white border-magenta-600' : 'bg-white text-gray-600 border-gray-200 hover:border-magenta-400 font-black'}`}>
+                        {activeSegment === 'columns' ? 'Hide' : 'Show AI'}
+                      </button>
+                    )}
+                    <button
+                      onClick={addColumn}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                   {columns.length === 0 && <p className="text-sm text-gray-500 italic">No columns added</p>}
@@ -370,14 +511,27 @@ const RCCSuperstructureApp = () => {
 
               {/* Beams Section */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3 border-b pb-2">
                   <h3 className="font-semibold text-gray-900">Beams</h3>
-                  <button
-                    onClick={addBeam}
-                    className="text-gray-600 hover:text-gray-900"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
+                  <div className="flex gap-2">
+                    {buildingData && (
+                      <button
+                        onClick={() => {
+                          const next = activeSegment === 'beams' ? 'all' : 'beams';
+                          setActiveSegment(next);
+                          if (next === 'beams') setShowPlanModal(true);
+                        }}
+                        className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'beams' ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-gray-600 border-gray-200 hover:border-orange-400 font-black'}`}>
+                        {activeSegment === 'beams' ? 'Hide' : 'Show AI'}
+                      </button>
+                    )}
+                    <button
+                      onClick={addBeam}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                   {beams.length === 0 && <p className="text-sm text-gray-500 italic">No beams added</p>}
@@ -438,14 +592,38 @@ const RCCSuperstructureApp = () => {
 
               {/* Slabs Section */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-gray-900">Slabs</h3>
-                  <button
-                    onClick={addSlab}
-                    className="text-gray-600 hover:text-gray-900"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
+                <div className="flex items-center justify-between mb-3 border-b pb-2">
+                  <h3 className="font-semibold text-gray-900 uppercase tracking-tighter text-xs">Slabs & Walls</h3>
+                  <div className="flex gap-2">
+                    {buildingData && (
+                      <>
+                        <button
+                          onClick={() => {
+                            const next = activeSegment === 'slabs' ? 'all' : 'slabs';
+                            setActiveSegment(next);
+                            if (next === 'slabs') setShowPlanModal(true);
+                          }}
+                          className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'slabs' ? 'bg-yellow-500 text-white border-yellow-500' : 'bg-white text-gray-600 border-gray-200 hover:border-yellow-400 font-black'}`}>
+                          {activeSegment === 'slabs' ? 'Hide Slabs' : 'Show Slabs'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            const next = activeSegment === 'walls' ? 'all' : 'walls';
+                            setActiveSegment(next);
+                            if (next === 'walls') setShowPlanModal(true);
+                          }}
+                          className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'walls' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 font-black'}`}>
+                          {activeSegment === 'walls' ? 'Hide Walls' : 'Show Walls'}
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={addSlab}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                   {slabs.length === 0 && <p className="text-sm text-gray-500 italic">No slabs added</p>}
@@ -533,27 +711,55 @@ const RCCSuperstructureApp = () => {
 
             {/* Info Panel */}
             <div className="lg:col-span-2">
-              <div className="bg-blue-50 p-6 rounded-lg border border-blue-100 flex flex-col h-full">
-                <h3 className="text-lg font-bold text-blue-900 mb-2">Instructions</h3>
-                <ul className="list-disc pl-5 text-sm text-blue-800 space-y-1 mb-6">
-                  <li>Add Columns, Beams, and Slabs using the + buttons.</li>
-                  <li>Enter dimensions for each element.</li>
-                  <li>Adjust settings if needed (grades, wastage).</li>
-                  <li>Click Calculate to generate BOQ.</li>
-                  <li>Check the <strong>Takeoff</strong> tab for detailed breakdown.</li>
-                </ul>
-
-                {takeoffData.length > 0 && (
-                  <div className="bg-white p-4 rounded shadow-sm border">
-                    <h4 className="font-bold text-gray-800 mb-2">Quick Summary</h4>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span>Total Items:</span>
-                        <span className="font-mono">{takeoffData.length}</span>
-                      </div>
+              <div className="bg-blue-50 p-6 rounded-lg border border-blue-100 flex flex-col h-full relative overflow-hidden">
+                {planImageUrl ? (
+                  <div className="absolute inset-0 bg-white">
+                    <img
+                      src={planImageUrl}
+                      className={`absolute inset-0 w-full h-full object-contain transition-all duration-500 ${buildingData?.metadata?.segmented_urls && activeSegment !== 'all' ? 'opacity-40 grayscale-[50%]' : 'opacity-100'}`}
+                      alt="Base Plan"
+                    />
+                    {buildingData?.metadata?.segmented_urls && activeSegment !== 'all' && (
+                      <img
+                        src={`${API_BASE}${buildingData.metadata.segmented_urls[activeSegment]}`}
+                        className="absolute inset-0 w-full h-full object-contain pointer-events-none mix-blend-multiply transition-all duration-300"
+                        alt="Segment Mask"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    )}
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <button
+                        onClick={() => setPlanImageUrl(null)}
+                        className="bg-white/90 p-2 shadow rounded-full hover:bg-white text-red-500"
+                        title="Clear Image"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                )}
+                ) : null}
+
+                <div className="relative z-10 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-sm border border-blue-100/50 max-w-md">
+                  <h3 className="text-lg font-bold text-blue-900 mb-2">Instructions</h3>
+                  <ul className="list-disc pl-5 text-sm text-blue-800 space-y-1 mb-6">
+                    <li>Use <strong>AI Automation</strong> to scan your floor plan for faster takeoff.</li>
+                    <li>Add or refine Columns, Beams, and Slabs manually using the + buttons.</li>
+                    <li>Adjust concrete grades and reinforcement densities in Settings.</li>
+                    <li>Click Calculate to generate BOQ and detailed takeoff.</li>
+                  </ul>
+
+                  {takeoffData.length > 0 && (
+                    <div className="bg-white p-4 rounded shadow-sm border">
+                      <h4 className="font-bold text-gray-800 mb-2">Quick Summary</h4>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Verified Items:</span>
+                          <span className="font-mono font-bold text-blue-600">{takeoffData.length}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -565,6 +771,8 @@ const RCCSuperstructureApp = () => {
               key={editorKey}
               initialItems={takeoffData}
               onChange={setTakeoffData}
+              planImageUrl={planImageUrl}
+              buildingData={buildingData}
               projectInfo={{
                 projectName: "RCC Superstructure",
                 clientName: "Client Name",
@@ -586,7 +794,69 @@ const RCCSuperstructureApp = () => {
           </div>
         )}
       </div>
-    </div>
+      {/* Plan Image Modal */}
+      {showPlanModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Floor Plan Reference</h3>
+                <p className="text-sm text-gray-500">Scale: {buildingData?.metadata?.ppm || 100} pixels/meter</p>
+              </div>
+              <button onClick={() => setShowPlanModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X size={24} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto bg-gray-100 p-8 flex items-center justify-center relative min-h-[500px]">
+              <div className="relative inline-block border-4 border-white shadow-2xl rounded-lg overflow-hidden">
+                <img
+                  src={planImageUrl}
+                  alt="Floor Plan"
+                  className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
+                />
+                {activeSegment !== 'all' && (
+                  <img
+                    src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}
+                    alt={`${activeSegment} Layer`}
+                    className="absolute inset-0 w-full h-full object-contain pointer-events-none mix-blend-multiply transition-all duration-300 contrast-125 brightness-110"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                )}
+              </div>
+            </div>
+            <div className="p-4 bg-gray-50 border-t flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">Layer Switcher:</span>
+                {[
+                  { id: 'all', label: 'Plan', color: 'bg-gray-600' },
+                  { id: 'rooms', label: 'Rooms', color: 'bg-gradient-to-r from-red-500 via-green-500 to-blue-500' },
+                  { id: 'walls', label: 'Walls', color: 'bg-black' },
+                  { id: 'slabs', label: 'Slabs', color: 'bg-black' },
+                  { id: 'beams', label: 'Beams', color: 'bg-black' },
+                  { id: 'columns', label: 'Columns', color: 'bg-black' },
+                  { id: 'contours', label: 'Contours', color: 'bg-black' }
+                ].map(layer => (
+                  <button
+                    key={layer.id}
+                    onClick={() => setActiveSegment(layer.id)}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5 ${activeSegment === layer.id ? `${layer.color} text-white shadow-lg scale-105` : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-300'}`}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${activeSegment === layer.id ? 'bg-white animate-pulse' : layer.color}`} />
+                    {layer.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowPlanModal(false)}
+                className="px-6 py-2 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-800 transition-colors text-xs uppercase tracking-widest"
+              >
+                Exit View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div >
   );
 };
 

@@ -75,10 +75,19 @@ class FloorPlan(BaseModel):
     conduits: List[Conduit] = []
     stairs: List[dict] = []
     columns: List[dict] = []
+    beams: List[dict] = []
+    slabs: List[dict] = []
+    railings: List[dict] = []
+    dimensions: Dict = {}
 
 class BuildingModel(BaseModel):
-    project_id: str
+    project_id: Optional[str] = None
     floors: List[FloorPlan]
     totalFloors: int
     totalHeight: float = 0.0
     metadata: Dict = {}
+    # Blender generation fields
+    wallHeight: Optional[float] = 3.0
+    wallThickness: Optional[float] = 0.15
+    scaleFactor: Optional[float] = 1.0
+    detectedScale: Optional[bool] = False

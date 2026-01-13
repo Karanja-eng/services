@@ -174,8 +174,8 @@ export const UniversalBOQ = ({ items, projectInfo = {} }) => {
         );
     }
 
-    // Filter out empty items or invalid ones, but keep headers
-    const validItems = items.filter(item => item.isHeader || (item.description && (item.quantity || item.amount)));
+    // Filter out empty items or invalid ones, but keep headers and items with descriptions
+    const validItems = items.filter(item => item.isHeader || (item.description && (item.quantity !== undefined || item.amount !== undefined)));
 
     const totalAmount = validItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
@@ -183,7 +183,7 @@ export const UniversalBOQ = ({ items, projectInfo = {} }) => {
         <div className="bg-white rounded-lg shadow p-6 h-full overflow-auto">
             <div className="mb-6">
                 <h3 className="text-xl font-bold border-b border-gray-800 pb-2">BILL OF QUANTITIES</h3>
-                <div className="mt-2 text-sm text-gray-600 grid grid-cols-2 gap-4">
+                <div className="mt-2 text-sm text-gray-900 grid grid-cols-2 gap-4">
                     <p><strong>Project:</strong> {projectInfo.projectName || 'N/A'}</p>
                     <p><strong>Client:</strong> {projectInfo.clientName || 'N/A'}</p>
                     <p><strong>Date:</strong> {projectInfo.date || new Date().toLocaleDateString()}</p>
@@ -206,20 +206,20 @@ export const UniversalBOQ = ({ items, projectInfo = {} }) => {
                     {validItems.map((item, index) => {
                         if (item.isHeader) {
                             return (
-                                <tr key={item.id || index} className="bg-gray-100 font-bold">
+                                <tr key={item.id || index} className="bg-gray-100 font-bold text-black text-lg">
                                     <td className="p-3 border border-gray-300">{item.billNo}</td>
                                     <td className="p-3 border border-gray-300 uppercase" colSpan={5}>{item.description}</td>
                                 </tr>
                             );
                         }
                         return (
-                            <tr key={item.id || index} className="border-b hover:bg-gray-50">
-                                <td className="p-3 border border-gray-300 text-gray-600">{item.itemNo || item.billNo}</td>
-                                <td className="p-3 border border-gray-300">{item.description}</td>
+                            <tr key={item.id || index} className="border-b hover:bg-gray-50 text-black">
+                                <td className="p-3 border border-gray-300 text-gray-900">{item.itemNo || item.billNo}</td>
+                                <td className="p-3 border border-gray-300 font-medium">{item.description}</td>
                                 <td className="p-3 border border-gray-300 text-center">{item.unit}</td>
-                                <td className="p-3 border border-gray-300 text-right font-mono">{item.quantity ? parseFloat(item.quantity).toFixed(2) : '-'}</td>
+                                <td className="p-3 border border-gray-300 text-right font-mono font-bold">{item.quantity ? parseFloat(item.quantity).toFixed(2) : '-'}</td>
                                 <td className="p-3 border border-gray-300 text-right font-mono">{item.rate ? parseFloat(item.rate).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</td>
-                                <td className="p-3 border border-gray-300 text-right font-bold font-mono">
+                                <td className="p-3 border border-gray-300 text-right font-bold font-mono text-blue-900">
                                     {item.amount ? parseFloat(item.amount).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                 </td>
                             </tr>

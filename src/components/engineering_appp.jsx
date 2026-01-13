@@ -25,7 +25,7 @@ import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
 import ChatPage from "./components/ChatPage"; // Home Page
 import SurveyingApp from "./Surveying/surveying_app";
-import ArchitecturalCAD from "./takeoff2/Superstructure/Superstructure_takeoff";
+import CadDrawer from "./Drawings/cad_drawing";
 import StructuralVisualizationComponent from "./Drawings/visualise_component";
 
 import StructuralEngineeeringSuite from "./ReinforcedConcrete/Beams/StructuralEngineeeringSuite";
@@ -291,6 +291,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
   const [isAiLive, setIsAiLive] = useState(false);
   const timerRef = useRef(null);
 
+  /*
   // Check AI Status every 30 seconds
   useEffect(() => {
     const checkStatus = async () => {
@@ -305,6 +306,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
     const interval = setInterval(checkStatus, 30000);
     return () => clearInterval(interval);
   }, []);
+  */
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -622,7 +624,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             />
             <Route
               path="/drawing"
-              element={<ArchitecturalCAD isDark={isDark} />}
+              element={<CadDrawer isDark={isDark} />}
             />
 
             <Route

@@ -239,7 +239,7 @@ export default function CadDrawer() {
   // ============ WEBSOCKET CONNECTION ============
   useEffect(() => {
     const connectWebSocket = () => {
-      const ws = new WebSocket(`ws://localhost:8000/ws/drawing/${projectId}`);
+      const ws = new WebSocket(`ws://localhost:8001/ws/drawing/${projectId}`);
 
       ws.onopen = () => {
         console.log("WebSocket connected");
@@ -314,13 +314,13 @@ export default function CadDrawer() {
     const camera =
       mode === "2D"
         ? new THREE.OrthographicCamera(
-            -10 * aspect,
-            10 * aspect,
-            10,
-            -10,
-            0.1,
-            1000
-          )
+          -10 * aspect,
+          10 * aspect,
+          10,
+          -10,
+          0.1,
+          1000
+        )
         : new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
 
     camera.position.set(
@@ -401,7 +401,7 @@ export default function CadDrawer() {
       if (canvasRef.current && renderer.domElement) {
         try {
           canvasRef.current.removeChild(renderer.domElement);
-        } catch (e) {}
+        } catch (e) { }
       }
       renderer.dispose();
     };
@@ -1677,11 +1677,10 @@ export default function CadDrawer() {
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTool("line")}
-            className={`px-2 py-1 rounded ${
-              activeTool === "line"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`px-2 py-1 rounded ${activeTool === "line"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
           >
             Line
           </button>
@@ -1690,21 +1689,19 @@ export default function CadDrawer() {
               setActiveTool("polyline");
               setPolylinePoints([]);
             }}
-            className={`px-2 py-1 rounded ${
-              activeTool === "polyline"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`px-2 py-1 rounded ${activeTool === "polyline"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
           >
             PLine
           </button>
           <button
             onClick={() => setActiveTool("circle")}
-            className={`px-2 py-1 rounded ${
-              activeTool === "circle"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`px-2 py-1 rounded ${activeTool === "circle"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
           >
             Circle
           </button>
@@ -1713,21 +1710,19 @@ export default function CadDrawer() {
               setActiveTool("arc");
               setArcPoints([]);
             }}
-            className={`px-2 py-1 rounded ${
-              activeTool === "arc"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`px-2 py-1 rounded ${activeTool === "arc"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
           >
             Arc
           </button>
           <button
             onClick={() => setActiveTool("ellipse")}
-            className={`px-2 py-1 rounded ${
-              activeTool === "ellipse"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`px-2 py-1 rounded ${activeTool === "ellipse"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
           >
             Ellipse
           </button>
@@ -1736,31 +1731,28 @@ export default function CadDrawer() {
               setActiveTool("spline");
               setPolylinePoints([]);
             }}
-            className={`px-2 py-1 rounded ${
-              activeTool === "spline"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`px-2 py-1 rounded ${activeTool === "spline"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
           >
             Spline
           </button>
           <button
             onClick={() => setActiveTool("rectangle")}
-            className={`px-2 py-1 rounded ${
-              activeTool === "rectangle"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`px-2 py-1 rounded ${activeTool === "rectangle"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
           >
             Rect
           </button>
           <button
             onClick={() => setShowHatchMenu(!showHatchMenu)}
-            className={`px-2 py-1 rounded ${
-              activeTool === "hatch"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`px-2 py-1 rounded ${activeTool === "hatch"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
           >
             Hatch
           </button>
@@ -1826,22 +1818,20 @@ export default function CadDrawer() {
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTool("dimension")}
-            className={`p-2 rounded ${
-              activeTool === "dimension"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`p-2 rounded ${activeTool === "dimension"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
             title="Dimension"
           >
             <Ruler size={16} />
           </button>
           <button
             onClick={() => setActiveTool("text")}
-            className={`p-2 rounded ${
-              activeTool === "text"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`p-2 rounded ${activeTool === "text"
+              ? "bg-blue-600"
+              : "bg-gray-700 hover:bg-gray-600"
+              }`}
             title="Text"
           >
             <Type size={16} />
@@ -1855,11 +1845,10 @@ export default function CadDrawer() {
           {mode === "3D" && (
             <button
               onClick={() => setActiveTool("box")}
-              className={`px-2 py-1 rounded ${
-                activeTool === "box"
-                  ? "bg-blue-600"
-                  : "bg-gray-700 hover:bg-gray-600"
-              }`}
+              className={`px-2 py-1 rounded ${activeTool === "box"
+                ? "bg-blue-600"
+                : "bg-gray-700 hover:bg-gray-600"
+                }`}
             >
               Box
             </button>
@@ -1892,27 +1881,24 @@ export default function CadDrawer() {
           </button>
           <button
             onClick={() => setGridVisible(!gridVisible)}
-            className={`p-2 rounded ${
-              gridVisible ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`p-2 rounded ${gridVisible ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
+              }`}
             title="Grid"
           >
             <Grid3X3 size={16} />
           </button>
           <button
             onClick={() => setOrthoMode(!orthoMode)}
-            className={`p-2 rounded ${
-              orthoMode ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`p-2 rounded ${orthoMode ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
+              }`}
             title="Ortho"
           >
             <Zap size={16} />
           </button>
           <button
             onClick={() => setShowDimensions(!showDimensions)}
-            className={`p-2 rounded ${
-              showDimensions ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
-            }`}
+            className={`p-2 rounded ${showDimensions ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
+              }`}
             title="Dimensions"
           >
             <Ruler size={16} />
@@ -1942,11 +1928,10 @@ export default function CadDrawer() {
                   setActiveTool("hatch");
                   setShowHatchMenu(false);
                 }}
-                className={`p-2 rounded border-2 ${
-                  selectedHatch === p.id
-                    ? "border-blue-500 bg-gray-700"
-                    : "border-gray-600 hover:border-gray-500"
-                }`}
+                className={`p-2 rounded border-2 ${selectedHatch === p.id
+                  ? "border-blue-500 bg-gray-700"
+                  : "border-gray-600 hover:border-gray-500"
+                  }`}
               >
                 <div className="text-2xl">{p.symbol}</div>
                 <div className="text-xs mt-1">{p.name}</div>
@@ -1975,11 +1960,10 @@ export default function CadDrawer() {
               <div
                 key={layer.id}
                 onClick={() => !layer.locked && setActiveLayerId(layer.id)}
-                className={`p-3 border-b border-gray-700 cursor-pointer ${
-                  activeLayerId === layer.id
-                    ? "bg-blue-900"
-                    : "hover:bg-gray-700"
-                } ${layer.locked ? "opacity-60" : ""}`}
+                className={`p-3 border-b border-gray-700 cursor-pointer ${activeLayerId === layer.id
+                  ? "bg-blue-900"
+                  : "hover:bg-gray-700"
+                  } ${layer.locked ? "opacity-60" : ""}`}
               >
                 <div className="flex items-center gap-2">
                   <div
@@ -2099,16 +2083,14 @@ export default function CadDrawer() {
               <div
                 className="absolute w-3 h-3 border-2 border-yellow-400 pointer-events-none rounded-full"
                 style={{
-                  left: `${
-                    (((snapPoint.x - panOffset.x) * zoomLevel + 10) *
-                      canvasRef.current?.clientWidth) /
+                  left: `${(((snapPoint.x - panOffset.x) * zoomLevel + 10) *
+                    canvasRef.current?.clientWidth) /
                     20
-                  }px`,
-                  top: `${
-                    (((-snapPoint.y + panOffset.y) * zoomLevel + 10) *
-                      canvasRef.current?.clientHeight) /
+                    }px`,
+                  top: `${(((-snapPoint.y + panOffset.y) * zoomLevel + 10) *
+                    canvasRef.current?.clientHeight) /
                     20
-                  }px`,
+                    }px`,
                   transform: "translate(-50%, -50%)",
                 }}
               >
@@ -2197,11 +2179,10 @@ export default function CadDrawer() {
                 <button
                   key={tab.id}
                   onClick={() => setCopilotTab(tab.id)}
-                  className={`flex-1 p-2 text-xs flex items-center justify-center gap-1 ${
-                    copilotTab === tab.id
-                      ? "text-blue-400 border-b-2 border-blue-400"
-                      : "text-gray-400 hover:text-gray-300"
-                  }`}
+                  className={`flex-1 p-2 text-xs flex items-center justify-center gap-1 ${copilotTab === tab.id
+                    ? "text-blue-400 border-b-2 border-blue-400"
+                    : "text-gray-400 hover:text-gray-300"
+                    }`}
                 >
                   <tab.icon size={14} />
                   {tab.label}
@@ -2217,11 +2198,10 @@ export default function CadDrawer() {
                     {aiMessages.map((msg, idx) => (
                       <div
                         key={idx}
-                        className={`text-sm p-2 rounded ${
-                          msg.type === "user"
-                            ? "bg-blue-900 text-blue-100 ml-4"
-                            : "bg-gray-700 text-gray-200 mr-4"
-                        }`}
+                        className={`text-sm p-2 rounded ${msg.type === "user"
+                          ? "bg-blue-900 text-blue-100 ml-4"
+                          : "bg-gray-700 text-gray-200 mr-4"
+                          }`}
                       >
                         {msg.text}
                       </div>
@@ -2328,11 +2308,10 @@ export default function CadDrawer() {
                           setHistoryIndex(idx);
                           setObjects(JSON.parse(JSON.stringify(state)));
                         }}
-                        className={`p-2 rounded text-xs cursor-pointer ${
-                          idx === historyIndex
-                            ? "bg-blue-900 text-blue-100"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                        }`}
+                        className={`p-2 rounded text-xs cursor-pointer ${idx === historyIndex
+                          ? "bg-blue-900 text-blue-100"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          }`}
                       >
                         Step {idx + 1}: {state.length} objects
                       </div>
@@ -2384,11 +2363,10 @@ export default function CadDrawer() {
               onClick={() =>
                 setSnapSettings((prev) => ({ ...prev, [value]: !prev[value] }))
               }
-              className={`px-2 py-1 rounded text-xs font-semibold ${
-                snapSettings[value]
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-700 text-gray-400 hover:bg-gray-600"
-              }`}
+              className={`px-2 py-1 rounded text-xs font-semibold ${snapSettings[value]
+                ? "bg-green-600 text-white"
+                : "bg-gray-700 text-gray-400 hover:bg-gray-600"
+                }`}
               title={key}
             >
               {key.slice(0, 3)}

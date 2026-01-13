@@ -1,4 +1,5 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
+
 import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 

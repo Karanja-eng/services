@@ -1095,17 +1095,7 @@ const SteelDesignApp = ({ isDark = false }) => {
         </main>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-6 mt-12">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm">
-            Professional Steel Design Software | BS 5950:2000 Compliant
-          </p>
-          <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
-            For structural engineering use only. Verify all calculations independently.
-          </p>
-        </div>
-      </footer>
+
     </div>
   );
 };

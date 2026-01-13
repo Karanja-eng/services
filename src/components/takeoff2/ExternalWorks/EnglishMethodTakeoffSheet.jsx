@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Download, Printer, Plus, Trash2, Edit2, Copy } from "lucide-react";
+import { Download, Printer, Plus, Trash2, Edit2, Copy, Eye, X } from "lucide-react";
 import descriptionsData from "../../takeoff2/descriptions";
 
 // Flatten descriptions for auto-complete
@@ -234,7 +234,10 @@ const DEFAULT_ITEMS = [
 export default function EnglishMethodTakeoffSheet({
   initialItems = DEFAULT_ITEMS,
   onChange,
+  planImageUrl,
+  buildingData,
 }) {
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const [projectInfo, setProjectInfo] = useState({
     projectName: "PROPOSED EXTERNAL WORKS",
     location: "Sample Site",
@@ -253,6 +256,13 @@ export default function EnglishMethodTakeoffSheet({
       onChange(takeoffItems);
     }
   }, [takeoffItems, onChange]);
+
+  // Sync internal state if initialItems prop changes
+  useEffect(() => {
+    if (initialItems && initialItems !== takeoffItems) {
+      setTakeoffItems(initialItems);
+    }
+  }, [initialItems]);
 
   const calculateDimensionTotal = (dimensions) => {
     if (!dimensions || dimensions.length === 0) return 0;
@@ -503,6 +513,9 @@ export default function EnglishMethodTakeoffSheet({
       .reduce((sum, item) => sum + (item.amount || 0), 0);
   };
 
+  const [activeSegment, setActiveSegment] = useState("all");
+  const API_BASE = `http://${window.location.hostname}:8001`;
+
   return (
     <div
       style={{
@@ -688,9 +701,163 @@ export default function EnglishMethodTakeoffSheet({
             >
               <Download size={16} /> XML
             </button>
+            {planImageUrl && (
+              <button
+                onClick={() => setShowPlanModal(true)}
+                style={{
+                  padding: "10px 20px",
+                  background: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
+              >
+                <Eye size={16} /> View Plan
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Plan Image Modal */}
+      {showPlanModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1000,
+            backgroundColor: "rgba(0,0,0,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "1100px",
+              maxHeight: "95vh",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "20px",
+                borderBottom: "1px solid #eee"
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "900" }}>Detection Verification</h3>
+                <p style={{ margin: "4px 0 0 0", fontSize: "0.875rem", color: "#666" }}>
+                  Toggle layers to verify AI detections on the floor plan
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPlanModal(false)}
+                style={{
+                  background: "#f5f5f5",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "10px",
+                  borderRadius: "12px",
+                }}
+              >
+                <X size={24} color="#000" />
+              </button>
+            </div>
+
+            {/* Layer Controls */}
+            <div style={{ padding: "12px 20px", background: "#fcfcfc", borderBottom: "1px solid #eee", display: "flex", gap: "8px", overflowX: "auto" }}>
+              {['all', 'rooms', 'walls', 'beams', 'slabs', 'columns', 'stairs', 'contours'].map(seg => (
+                <button
+                  key={seg}
+                  onClick={() => setActiveSegment(seg)}
+                  style={{
+                    padding: "6px 16px",
+                    borderRadius: "8px",
+                    fontSize: "11px",
+                    fontWeight: "900",
+                    textTransform: "uppercase",
+                    border: activeSegment === seg ? "2px solid #000" : "1px solid #ddd",
+                    backgroundColor: activeSegment === seg ? "#000" : "#fff",
+                    color: activeSegment === seg ? "#fff" : "#666",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  {seg}
+                </button>
+              ))}
+            </div>
+
+            <div
+              style={{
+                flex: 1,
+                overflow: "auto",
+                backgroundColor: "#f0f0f0",
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "20px"
+              }}
+            >
+              <img
+                src={planImageUrl}
+                alt="Floor Plan"
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                  opacity: activeSegment === 'all' ? 1 : 0,
+                  filter: activeSegment === 'all' ? "none" : "grayscale(100%)",
+                  transition: "all 0.3s"
+                }}
+              />
+              {activeSegment !== 'all' && (
+                <img
+                  src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply" }}
+                  alt="Layer Overlay"
+                  onError={(e) => e.target.style.display = 'none'}
+                />
+              )}
+            </div>
+            <div style={{ padding: "16px", backgroundColor: "#fff", borderTop: "1px solid #eee", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setShowPlanModal(false)}
+                style={{
+                  padding: "10px 30px",
+                  backgroundColor: "#000",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "12px",
+                  fontWeight: "900",
+                  textTransform: "uppercase",
+                  fontSize: "12px",
+                  cursor: "pointer"
+                }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Project Information Header */}
       <div
@@ -827,7 +994,12 @@ export default function EnglishMethodTakeoffSheet({
               );
             }
 
-            const dimensionRows = item.dimensions || [];
+            // Ensure we at least show one row if there are no dimensions but there is a quantity
+            const dimensionRows =
+              item.dimensions && item.dimensions.length > 0
+                ? item.dimensions
+                : [{ id: `empty-${item.id}`, number: "", length: "", width: "", height: "" }];
+
             return (
               <React.Fragment key={item.id}>
                 {dimensionRows.map((dim, dimIndex) => (

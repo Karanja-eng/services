@@ -1,4 +1,7 @@
-import { Calculator, Download, Plus, Trash2, FileText, DoorOpen, Upload, Loader2, Eye, Box } from 'lucide-react';
+import { Calculator, Download, Plus, Trash2, FileText, DoorOpen, Upload, Loader2, Eye, Box, X, Layers } from 'lucide-react';
+import React, { Suspense, useState, useEffect } from "react";
+import descriptionsData from "./descriptions";
+
 import axios from "axios";
 import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
@@ -6,7 +9,7 @@ import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_compone
 import DoorWindow3DScene from "./DoorWindow3DScene";
 
 const API_BASE = "http://localhost:8001";
-import descriptionsData from "./descriptions";
+
 
 const DoorWindowTakeoff = () => {
     const [itemType, setItemType] = useState('door');
@@ -57,6 +60,9 @@ const DoorWindowTakeoff = () => {
     // Automation State
     const [buildingData, setBuildingData] = useState(null);
     const [processing, setProcessing] = useState(false);
+    const [showPlanModal, setShowPlanModal] = useState(false);
+    const [planImageUrl, setPlanImageUrl] = useState("");
+    const [activeSegment, setActiveSegment] = useState("all");
 
     const handleUpload = async (e) => {
         const file = e.target.files[0];
@@ -67,6 +73,7 @@ const DoorWindowTakeoff = () => {
         try {
             const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
             const data = await res.json();
+            setPlanImageUrl(`${API_BASE}/uploads/${data.filename}`);
             await processFloorplan(data.file_id);
         } catch (err) { console.error(err); }
         setProcessing(false);
@@ -241,6 +248,15 @@ const DoorWindowTakeoff = () => {
                                                     <p className="text-xs text-gray-500 mb-3">Upload plan to list all doors & windows</p>
                                                     <input type="file" id="dw-upload" className="hidden" onChange={handleUpload} />
                                                     <label htmlFor="dw-upload" className="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold cursor-pointer hover:bg-blue-700">Upload Plan</label>
+                                                    {buildingData && (
+                                                        <button
+                                                            onClick={() => setShowPlanModal(true)}
+                                                            className="flex items-center gap-2 px-4 py-1.5 bg-slate-800 text-white rounded text-xs font-bold hover:bg-black transition-colors shadow-md mt-2"
+                                                        >
+                                                            <Eye size={14} />
+                                                            View Plan
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -437,7 +453,78 @@ const DoorWindowTakeoff = () => {
                     </div>
                 )}
             </main>
-        </div>
+
+            {/* Plan Image Modal */}
+            {
+                showPlanModal && (
+                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-10">
+                        <div className="bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+                            <div className="p-4 border-b flex items-center justify-between bg-white">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-blue-600 p-2 rounded-lg">
+                                        <Layers className="text-white w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm">Opening Detection Visualization</h3>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none">AutoCAD Standard Layer Inspection</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowPlanModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
+                                    <X size={24} />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-auto bg-gray-100 p-8 flex items-center justify-center relative min-h-[500px]">
+                                <div className="relative inline-block border-4 border-white shadow-2xl rounded-lg overflow-hidden">
+                                    <img
+                                        src={planImageUrl}
+                                        alt="Floor Plan"
+                                        className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
+                                    />
+                                    {activeSegment !== 'all' && (
+                                        <img
+                                            src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}
+                                            alt={`${activeSegment} Layer`}
+                                            className="absolute inset-0 w-full h-full object-contain pointer-events-none mix-blend-multiply transition-all duration-300 contrast-125 brightness-110"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                            <div className="p-4 bg-gray-50 border-t flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">Layer Switcher:</span>
+                                    {[
+                                        { id: 'all', label: 'Plan', color: 'bg-gray-600' },
+                                        { id: 'rooms', label: 'Rooms (Heatmap)', color: 'bg-gradient-to-r from-red-500 via-green-500 to-blue-500' },
+                                        { id: 'walls', label: 'Walls', color: 'bg-black' },
+                                        { id: 'slabs', label: 'Slab Contours', color: 'bg-black' },
+                                        { id: 'beams', label: 'Beams', color: 'bg-black' },
+                                        { id: 'columns', label: 'Columns', color: 'bg-black' },
+                                        { id: 'stairs', label: 'Stairs', color: 'bg-black' },
+                                        { id: 'contours', label: 'Structural Contours', color: 'bg-black' }
+                                    ].map(layer => (
+                                        <button
+                                            key={layer.id}
+                                            onClick={() => setActiveSegment(layer.id)}
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5 ${activeSegment === layer.id ? `${layer.color} text-white shadow-lg scale-105` : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-300'}`}
+                                        >
+                                            <div className={`w-2 h-2 rounded-full ${activeSegment === layer.id ? 'bg-white animate-pulse' : layer.color}`} />
+                                            {layer.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => setShowPlanModal(false)}
+                                    className="px-6 py-2 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-800 transition-colors text-xs uppercase tracking-widest"
+                                >
+                                    Exit View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

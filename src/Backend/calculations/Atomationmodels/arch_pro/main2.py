@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import List, Optional, Dict, Tuple
 import numpy as np
 import cv2
+from skimage.morphology import skeletonize
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from fastapi.responses import JSONResponse
 import trimesh
@@ -20,6 +21,16 @@ from shapely.geometry import LineString, Point
 from .models import BuildingModel, FloorPlan, Wall, Opening, Room, Furniture, TechnicalPoint, Conduit, WallSegment
 from .detectors import YOLODetector
 from .engine_rules import EngineeringEngine
+
+# Proven CV utilities
+try:
+    from ..utils.FloorplanToBlenderLib import detect
+    F2B_OK = True
+except ImportError:
+    # Fallback or diagnostic
+    import sys
+    print(f"DEBUG: sys.path: {sys.path}")
+    F2B_OK = False
 
 # Optional YOLO
 try:
@@ -87,10 +98,15 @@ class OpenCVProcessor:
         return binary
 
     def wall_filter(self, img: np.ndarray) -> np.ndarray:
-        """
-        Filter out walls from an image.
-        Adapted from 2D_FloorPlan_to_3D_CubiCasa_ftb.ipynb (detect.py).
-        """
+        """Filter out walls using proven F2B logic."""
+        if F2B_OK:
+            if len(img.shape) == 3:
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = img.copy()
+            return detect.wall_filter(gray)
+        
+        # Original fallback
         if len(img.shape) == 3:
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         else:
@@ -228,18 +244,64 @@ class OpenCVProcessor:
                 length = float(np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
 
                 if length > MIN_WALL_LENGTH:
+                    wall_id = f"wall_{len(walls)}"
+                    # Classify as external if thickness is >= 0.2m
+                    is_ext = DEFAULT_WALL_THICKNESS >= 0.2
                     walls.append(
                         Wall(
+                            id=wall_id,
                             start=[round(x1, 2), round(y1, 2)],
                             end=[round(x2, 2), round(y2, 2)],
                             thickness=DEFAULT_WALL_THICKNESS,
                             length=round(length, 2),
+                            is_external=is_ext
                         )
                     )
 
         return walls
 
     def detect_rooms(self, img: np.ndarray) -> List[Room]:
+        """Detect rooms using proven F2B logic."""
+        if F2B_OK:
+            if len(img.shape) == 3:
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = img.copy()
+            
+            wall_filtered = detect.wall_filter(gray)
+            inv = ~wall_filtered
+            room_blobs, colored_rooms = detect.find_rooms(inv.copy())
+            
+            gray_rooms = cv2.cvtColor(colored_rooms, cv2.COLOR_BGR2GRAY)
+            boxes, _ = detect.detectPreciseBoxes(gray_rooms, gray_rooms)
+            
+            rooms = []
+            for i, box in enumerate(boxes):
+                pts = np.array(box, dtype=np.int32)
+                area_px = cv2.contourArea(pts)
+                area_m2 = area_px / (self.ppm ** 2)
+                
+                # Simple centroid
+                M = cv2.moments(pts)
+                if M["m00"] != 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                else:
+                    # Fallback if moment is zero (e.g., single point contour)
+                    cx, cy = pts[0][0][0], pts[0][0][1] if pts.size > 0 else (0,0)
+                
+                rooms.append(Room(
+                    id=f"room_{i}",
+                    name=f"Room {i+1}",
+                    center=[round(cx/self.ppm, 2), round(cy/self.ppm, 2)],
+                    type="room",
+                    area=round(area_m2, 2),
+                    polygon=[[round(float(pt[0][0])/self.ppm, 2), round(float(pt[0][1])/self.ppm, 2)] for pt in box],
+                    confidence=1.0
+                ))
+            return rooms
+
+        # Fallback to original logic
         """
         Detect rooms using either advanced segmentation or fallback to contours.
         """
@@ -306,6 +368,7 @@ class OpenCVProcessor:
 
             rooms.append(
                 Room(
+                    id=f"room_{room_id}",
                     name=name,
                     center=[round(cx, 2), round(cy, 2)],
                     type=room_type,
@@ -317,6 +380,85 @@ class OpenCVProcessor:
             room_id += 1
 
         return rooms
+
+    def detect_beams(self, img: np.ndarray) -> List[Dict]:
+        """Detect beams by finding centerlines of walls."""
+        wall_mask = self.wall_filter(img)
+        if wall_mask is None: return []
+        
+        # Close small gaps
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+        wall_closed = cv2.morphologyEx(wall_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+        
+        # Skeletonize
+        bin_mask = (wall_closed > 0).astype(np.uint8)
+        sk = skeletonize(bin_mask > 0)
+        sk_uint8 = (sk.astype(np.uint8) * 255).astype(np.uint8)
+        
+        # Hough Lines
+        lines = cv2.HoughLinesP(sk_uint8, 1, np.pi/180, threshold=20, minLineLength=20, maxLineGap=10)
+        
+        beams = []
+        if lines is not None:
+            for i, l in enumerate(lines):
+                x1, y1, x2, y2 = l[0]
+                lx, ly = float(x1)/self.ppm, float(y1)/self.ppm
+                rx, ry = float(x2)/self.ppm, float(y2)/self.ppm
+                length = np.sqrt((rx-lx)**2 + (ry-ly)**2)
+                
+                beams.append({
+                    "id": f"beam_cv_{i}",
+                    "start": [round(lx, 2), round(ly, 2)],
+                    "end": [round(rx, 2), round(ry, 2)],
+                    "length": round(length, 2),
+                    "width": DEFAULT_WALL_THICKNESS,
+                    "depth": 0.45, # Default beam depth
+                    "mark": f"B{i+1}"
+                })
+        return beams
+
+    def detect_slabs(self, img: np.ndarray) -> List[Dict]:
+        """Detect slabs based on room areas."""
+        room_masks = []
+        try:
+            room_masks = self.find_rooms_advanced(img)
+        except:
+            binary = self.preprocess(img)
+            inverted = cv2.bitwise_not(binary)
+            contours, _ = cv2.findContours(inverted, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for c in contours:
+                if cv2.contourArea(c) > 5000:
+                    m = np.zeros_like(inverted)
+                    cv2.fillPoly(m, [c], 255)
+                    room_masks.append(m)
+
+        slabs = []
+        for i, mask in enumerate(room_masks):
+            cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if not cnts: continue
+            c = max(cnts, key=cv2.contourArea)
+            area_px = cv2.contourArea(c)
+            area_m2 = float(area_px / (self.ppm**2))
+            
+            if area_m2 < 2.0: continue # Too small
+            
+            # Classification (Commented out text per user request)
+            # x, y, bw, bh = cv2.boundingRect(c)
+            # ratio = max(bw, bh) / min(bw, bh) if min(bw, bh) > 0 else 1.0
+            # slab_type = "One-way" if ratio >= 2 else "Two-way"
+            
+            slabs.append({
+                "id": f"slab_cv_{i}",
+                "area": round(area_m2, 2),
+                "thickness": 0.15,
+                "mark": f"S{i+1}",
+                "polygon": [[float(pt[0][0]/self.ppm), float(pt[0][1]/self.ppm)] for pt in c]
+            })
+        return slabs
+
+    def detect_columns_cv(self, img: np.ndarray) -> List[Dict]:
+        """Detect columns integration placeholder."""
+        return []
 
     def detect_openings(
         self, binary: np.ndarray
@@ -337,6 +479,7 @@ class OpenCVProcessor:
                 if 0.7 < max(width, height) < 1.2 and 1.8 < min(width, height) < 2.3:
                     doors.append(
                         Opening(
+                            id=f"door_cv_{len(doors)}",
                             position=[round(cx, 2), round(cy, 2)],
                             width=round(max(width, height), 2),
                             height=2.1,
@@ -348,6 +491,7 @@ class OpenCVProcessor:
                 elif 0.6 < max(width, height) < 2.0 and 0.8 < min(width, height) < 1.5:
                     windows.append(
                         Opening(
+                            id=f"window_cv_{len(windows)}",
                             position=[round(cx, 2), round(cy, 2)],
                             width=round(max(width, height), 2),
                             height=1.2,
@@ -362,9 +506,9 @@ class OpenCVProcessor:
 
 
 # ============================================================================
-# YOLO DETECTOR
+# INTERNAL YOLO DETECTOR
 # ============================================================================
-class YOLODetector:
+class InternalYOLODetector:
     def __init__(self, model, pixels_per_meter: float = 100):
         self.model = model
         self.ppm = pixels_per_meter
@@ -917,7 +1061,7 @@ router = APIRouter()
 
 uploaded_files = {}
 opencv_proc = OpenCVProcessor()
-yolo_det = YOLODetector(yolo_model) if yolo_model else None
+yolo_det = InternalYOLODetector(yolo_model) if yolo_model else None
 
 
 @router.get("/")
@@ -1004,6 +1148,7 @@ async def process(
         # YOLO detection
         doors, windows, rooms = doors_cv, windows_cv, rooms_cv
         stairs, columns, furniture, railings = [], [], [], []
+        electrical, plumbing, conduits, pipes = [], [], [], []
 
         if use_yolo and detector:
             det_data = detector.detect_all(img)
@@ -1023,6 +1168,13 @@ async def process(
             electrical.extend(rule_points)
             conduits = engine.generate_conduits(electrical, db_pt)
             pipes = engine.generate_plumbing_pipes(furniture)
+
+        # Advanced structural detection
+        beams = opencv_proc.detect_beams(img)
+        slabs = opencv_proc.detect_slabs(img)
+        
+        # Segmented Image Generation moved to opencvmodel.py
+        segmented_urls = {}
 
         # Post-process walls to include segments for frontend & generate IDs
         for i, wall in enumerate(walls):
@@ -1046,6 +1198,8 @@ async def process(
                     conduits=conduits + pipes,
                     stairs=stairs,
                     columns=columns,
+                    beams=beams,
+                    slabs=slabs,
                     railings=railings
                 )
             )
@@ -1055,7 +1209,12 @@ async def process(
             floors=floors,
             totalFloors=num_floors,
             totalHeight=num_floors * wall_height,
-            metadata={"yolo_used": True, "electrical_count": len(electrical), "plumbing_count": len(plumbing)},
+            metadata={
+                "yolo_used": True, 
+                "electrical_count": len(electrical), 
+                "plumbing_count": len(plumbing),
+                "segmented_urls": segmented_urls
+            },
         )
 
     except Exception as e:
@@ -1160,20 +1319,3 @@ async def delete_file(file_id: str):
     raise HTTPException(404, "File not found")
 
 
-if __name__ == "__main__":
-    import uvicorn
-
-    print("\n" + "=" * 70)
-    print("ArchCAD Pro - Enhanced Hybrid System")
-    print("=" * 70)
-    print(f"YOLO: {'✓ Available' if yolo_model else '✗ Not available'}")
-    print(f"OpenCV: ✓ Available")
-    print("=" * 70 + "\n")
-    # reload=True is removed because it requires string import, which is failing due to path issues
-    from fastapi import FastAPI
-    from fastapi.staticfiles import StaticFiles
-    app = FastAPI()
-    app.include_router(router)
-    # mount static files if we still want them standalone
-    app.mount("/generated", StaticFiles(directory=str(GENERATED)), name="generated")
-    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info")

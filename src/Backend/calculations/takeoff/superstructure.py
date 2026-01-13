@@ -1,34 +1,34 @@
 from fastapi import FastAPI, HTTPException,APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Union
 import math
 
 router = APIRouter()
 
 class Column(BaseModel):
     """Column element definition"""
-    id: int
-    width: float = Field(gt=0, description="Column width in meters")
-    depth: float = Field(gt=0, description="Column depth in meters")
-    height: float = Field(gt=0, description="Column height in meters")
+    id: Union[str, int]
+    width: float = Field(description="Column width in meters")
+    depth: float = Field(description="Column depth in meters")
+    height: float = Field(description="Column height in meters")
     mark: str = Field(default="C1", description="Column reference mark")
 
 
 class Beam(BaseModel):
     """Beam element definition"""
-    id: int
-    length: float = Field(gt=0, description="Beam length in meters")
-    width: float = Field(gt=0, description="Beam width in meters")
-    depth: float = Field(gt=0, description="Beam depth in meters")
+    id: Union[str, int]
+    length: float = Field(description="Beam length in meters")
+    width: float = Field(description="Beam width in meters")
+    depth: float = Field(description="Beam depth in meters")
     mark: str = Field(default="B1", description="Beam reference mark")
 
 
 class Slab(BaseModel):
     """Slab element definition"""
-    id: int
-    area: float = Field(gt=0, description="Slab area in square meters")
-    thickness: float = Field(gt=0, description="Slab thickness in meters")
+    id: Union[str, int]
+    area: float = Field(description="Slab area in square meters")
+    thickness: float = Field(description="Slab thickness in meters")
     mark: str = Field(default="S1", description="Slab reference mark")
 
 
@@ -36,11 +36,11 @@ class Settings(BaseModel):
     """Calculation settings"""
     conc_grade: str = Field(default="1:1.5:3", description="Concrete mix ratio")
     conc_grade_name: str = Field(default="C25", description="Concrete grade name")
-    reinf_density: float = Field(default=120, gt=0, description="Reinforcement density in kg/m³")
+    reinf_density: float = Field(default=120, description="Reinforcement density in kg/m³")
     form_type: str = Field(default="F3", description="Formwork type (F1-F5)")
     include_wastage: bool = Field(default=True, description="Include material wastage")
-    conc_wastage: float = Field(default=5.0, ge=0, le=20, description="Concrete wastage percentage")
-    reinf_wastage: float = Field(default=2.5, ge=0, le=10, description="Reinforcement wastage percentage")
+    conc_wastage: float = Field(default=5.0, description="Concrete wastage percentage")
+    reinf_wastage: float = Field(default=2.5, description="Reinforcement wastage percentage")
     cover: float = Field(default=25, description="Concrete cover in mm")
     bar_spacing: float = Field(default=150, description="Reinforcement bar spacing in mm")
 
@@ -272,4 +272,3 @@ def get_concrete_grades():
         "C35": "1:1:1.5",
         "C40": "Design mix"
     }
-

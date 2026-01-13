@@ -1,12 +1,13 @@
 import React, { useState, Suspense } from "react";
-import { Calculator, FileText, Plus, Trash2, Building, Upload, Loader2, Eye, Box, Settings as SettingsIcon } from "lucide-react";
+import { Calculator, FileText, Plus, Trash2, Building, Upload, Loader2, Eye, Box, Settings as SettingsIcon, X, Layers } from "lucide-react";
 import axios from "axios";
 import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import Superstructure3DScene from "./Superstructure3DScene";
 
-const API_BASE = "http://localhost:8001";
+const API_BASE = `http://${window.location.hostname}:8001`;
+console.log("🚀 API BASE URL:", API_BASE);
 
 const SuperstructureTakeoffApp = () => {
   // Main UI Tabs (Calculator, Takeoff, Sheet, BOQ)
@@ -23,6 +24,9 @@ const SuperstructureTakeoffApp = () => {
   const [processing, setProcessing] = useState(false);
   const [fileId, setFileId] = useState(null);
   const [selectedElement, setSelectedElement] = useState(null);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const [activeSegment, setActiveSegment] = useState("all");
 
   // State for all inputs
   const [projectInfo, setProjectInfo] = useState({
@@ -122,6 +126,12 @@ const SuperstructureTakeoffApp = () => {
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // LOCAL PREVIEW (Foolproof & "Simple")
+    const localUrl = URL.createObjectURL(file);
+    setUploadedImageUrl(localUrl);
+    console.log("📸 Local Preview created:", localUrl);
+
     setProcessing(true);
     const fd = new FormData();
     fd.append("file", file);
@@ -129,9 +139,14 @@ const SuperstructureTakeoffApp = () => {
       const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
       const data = await res.json();
       setFileId(data.file_id);
+
+      console.log("✅ Upload successful, File ID:", data.file_id);
       await processFloorplan(data.file_id);
-    } catch (err) { console.error(err); }
-    setProcessing(false);
+    } catch (err) {
+      console.error("❌ Upload failed:", err);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const processFloorplan = async (fid) => {
@@ -153,6 +168,10 @@ const SuperstructureTakeoffApp = () => {
     // 1. Walls Logic
     const totalWallLength = floor.walls.reduce((sum, w) => sum + w.length, 0);
 
+    // Calculate Openings Widths for Beam Continuity
+    const totalDoorWidth = floor.doors.reduce((sum, d) => sum + d.width, 0);
+    const totalWindowWidth = floor.windows.reduce((sum, w) => sum + w.width, 0);
+
     setWallData(prev => ({
       ...prev,
       externalLength: (totalWallLength * 0.4).toFixed(2), // Heuristic split
@@ -167,11 +186,13 @@ const SuperstructureTakeoffApp = () => {
       windowHeight: floor.windows[0]?.height?.toFixed(2) || "1.2",
     }));
 
-    // 2. Beams Logic: All walls above them, no deductions
-    // Using total wall length as beam length
+    // 2. Beams Logic: Continuous over walls AND openings
+    // Beam Length = Net Wall Length + Door Widths + Window Widths
+    const continuousBeamLength = totalWallLength + totalDoorWidth + totalWindowWidth;
+
     setBeams([{
       id: 1,
-      length: totalWallLength.toFixed(2),
+      length: continuousBeamLength.toFixed(2),
       width: "0.20",
       depth: "0.45",
       count: 1
@@ -197,10 +218,10 @@ const SuperstructureTakeoffApp = () => {
     // 4. Columns Logic
     if (floor.columns && floor.columns.length > 0) {
       setColumns(floor.columns.map((c, i) => ({
-        id: i,
+        id: c.id || Date.now() + i,
         width: c.size || 0.2,
         depth: c.size || 0.2,
-        height: data.wallHeight,
+        height: data.wallHeight || 3.0,
         count: 1
       })));
     }
@@ -209,90 +230,111 @@ const SuperstructureTakeoffApp = () => {
   const calculateQuantities = async () => {
     setLoading(true);
     try {
+      // Map frontend state to backend model 'SuperstructureInput'
+      // Model expects: { columns: [], beams: [], slabs: [], settings: {} }
+      // Expand items based on count (Backend sums list items)
+      const explodedColumns = [];
+      columns.forEach(c => {
+        const count = parseInt(c.count) || 0;
+        for (let i = 0; i < count; i++) {
+          explodedColumns.push({
+            id: parseInt(c.id) + i,
+            width: parseFloat(c.width) || 0.2,
+            depth: parseFloat(c.depth) || 0.2,
+            height: parseFloat(c.height) || 3.0,
+            mark: "C1"
+          });
+        }
+      });
+
+      const explodedBeams = [];
+      beams.forEach(b => {
+        const count = parseInt(b.count) || 0;
+        for (let i = 0; i < count; i++) {
+          explodedBeams.push({
+            id: parseInt(b.id) + i,
+            length: parseFloat(b.length) || 1.0,
+            width: parseFloat(b.width) || 0.2,
+            depth: parseFloat(b.depth) || 0.4,
+            mark: "B1" // TODO: Add mark input
+          });
+        }
+      });
+
       const payload = {
-        project_info: {
-          project_name: projectInfo.projectName || "Superstructure",
-          project_location: projectInfo.projectLocation || "Unknown",
-          date: projectInfo.date
-        },
-        wall_data: {
-          external_length: parseFloat(wallData.externalLength) || 0,
-          external_width: parseFloat(wallData.externalWidth) || 0,
-          wall_height: parseFloat(wallData.wallHeight) || 0,
-          wall_thickness: parseFloat(wallData.wallThickness) || 0.2,
-          internal_wall_length: parseFloat(wallData.internalWallLength) || 0,
-          num_doors: parseInt(wallData.numDoors) || 0,
-          door_width: parseFloat(wallData.doorWidth) || 0.9,
-          door_height: parseFloat(wallData.doorHeight) || 2.1,
-          num_windows: parseInt(wallData.numWindows) || 0,
-          window_width: parseFloat(wallData.windowWidth) || 1.5,
-          window_height: parseFloat(wallData.windowHeight) || 1.2,
-          mortar_ratio: wallData.mortarRatio,
-          block_type: wallData.blockType
-        },
-        columns: columns.filter(c => c.count).map(c => ({
-          width: parseFloat(c.width) || 0,
-          depth: parseFloat(c.depth) || 0,
-          height: parseFloat(c.height) || 0,
-          count: parseInt(c.count) || 0
-        })),
-        beams: beams.filter(b => b.count).map(b => ({
-          length: parseFloat(b.length) || 0,
-          width: parseFloat(b.width) || 0,
-          depth: parseFloat(b.depth) || 0,
-          count: parseInt(b.count) || 0
-        })),
+        columns: explodedColumns,
+        beams: explodedBeams,
+        // Slabs usually count=1 per entry in this logic
         slabs: slabs.filter(s => s.area).map(s => ({
-          area: parseFloat(s.area) || 0,
-          thickness: parseFloat(s.thickness) || 0.15
+          id: parseInt(s.id) || 1,
+          area: parseFloat(s.area) || 10.0,
+          thickness: parseFloat(s.thickness) || 0.15,
+          mark: s.mark || "S1"
         })),
-        parapet: {
-          has_parapet: parapet.hasParapet,
-          girth: parseFloat(parapet.girth) || 0,
-          height: parseFloat(parapet.height) || 0,
-          thickness: parseFloat(parapet.thickness) || 0,
-          has_coping: parapet.hasCoping,
-          coping_width: parseFloat(parapet.copingWidth) || 0,
-          coping_thickness: parseFloat(parapet.copingThickness) || 0
-        },
-        rainwater: {
-          has_rainwater: rainwater.hasRainwater,
-          downpipe_length: parseFloat(rainwater.downpipeLength) || 0,
-          num_downpipes: parseInt(rainwater.numDownpipes) || 0,
-          diameter: rainwater.diameter,
-          has_shoe: rainwater.hasShoe,
-          shoe_length: parseFloat(rainwater.shoeLength) || 0
-        },
-        common_data: {
-          concrete_grade: commonData.concreteGrade,
+        settings: {
+          conc_grade: (commonData.concreteGrade && commonData.concreteGrade.includes(":")) ? commonData.concreteGrade.split("(")[1].replace(")", "") : "1:1.5:3",
+          conc_grade_name: (commonData.concreteGrade && commonData.concreteGrade.split(" ")[0]) || "C25",
           reinf_density: parseFloat(commonData.reinfDensity) || 120,
-          formwork_type: commonData.formworkType,
-          wastage: parseFloat(commonData.wastage) || 5
+          form_type: (commonData.formworkType && commonData.formworkType.split(" ")[0]) || "F3",
+          include_wastage: true,
+          conc_wastage: Math.min(parseFloat(commonData.wastage) || 5, 20), // Cap at 20%
+          reinf_wastage: 2.5,
+          cover: 25,
+          bar_spacing: 150
         }
       };
 
-      const response = await axios.post("http://localhost:8001/superstructure_router/api/calculate", payload);
+      const response = await axios.post(`${API_BASE}/rc_superstructure_router/api/calculate-superstructure`, payload);
       const data = response.data;
 
-      if (data.success && data.boq_items) {
-        const items = data.boq_items.map((item, index) => ({
-          id: index + 1,
-          billNo: item.item,
-          itemNo: (index + 1).toString(),
-          description: item.description,
-          unit: item.unit,
-          quantity: parseFloat(item.quantity) || 0,
-          rate: 0,
-          amount: 0,
-          dimensions: [],
-          isHeader: false
-        }));
+      // Map SuperstructureResults to BOQ items
+      if (data && data.total_conc_m3 !== undefined) {
+        const items = [
+          // Concrete
+          {
+            id: 'conc-1',
+            billNo: 'F',
+            itemNo: 'F10',
+            description: `Providing and placing ${data.settings?.conc_grade_name || 'C25'} concrete in columns, beams, and slabs.`,
+            unit: 'm³',
+            quantity: data.total_conc_with_wastage,
+            rate: 0,
+            amount: 0
+          },
+          // Formwork
+          {
+            id: 'form-1',
+            billNo: 'F',
+            itemNo: 'F20',
+            description: `Centering and shuttering (Formwork) including strutting, propping etc. and removal of formwork.`,
+            unit: 'm²',
+            quantity: data.total_form_m2,
+            rate: 0,
+            amount: 0
+          },
+          // Reinforcement
+          {
+            id: 'reinf-1',
+            billNo: 'G',
+            itemNo: 'G10',
+            description: `Supply and fix High Yield Strength Deformed (HYSD) bars for reinforcement including cutting, bending, binding etc.`,
+            unit: 'kg',
+            quantity: data.total_reinf_kg,
+            rate: 0,
+            amount: 0
+          }
+        ];
         setTakeoffData(items);
         setEditorKey(prev => prev + 1);
+        setActiveTab("takeoff"); // Switch to takeoff to see results
       }
     } catch (err) {
       console.error(err);
-      alert("Calculation failed. Backend might be offline.");
+      if (err.response && err.response.data && err.response.data.detail) {
+        alert("Calculation Error: " + JSON.stringify(err.response.data.detail));
+      } else {
+        alert("Calculation failed. Backend might be offline.");
+      }
     } finally {
       setLoading(false);
     }
@@ -356,8 +398,10 @@ const SuperstructureTakeoffApp = () => {
                         Select Plan Image
                       </label>
                       {buildingData && (
-                        <div className="mt-4 p-3 bg-green-50 text-green-700 text-sm rounded-lg flex items-center gap-2">
-                          <Box size={16} /> Successfully extracted {buildingData.floors[0].walls.length} walls and {buildingData.floors[0].doors.length} doors.
+                        <div className="mt-4 flex flex-col items-center gap-3 w-full">
+                          <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg flex items-center gap-2">
+                            <Box size={16} /> Successfully extracted {buildingData.floors[0].walls.length} walls and {buildingData.floors[0].doors.length} doors.
+                          </div>
                         </div>
                       )}
                     </>
@@ -368,7 +412,37 @@ const SuperstructureTakeoffApp = () => {
               {/* Walls Sub-Tab */}
               {calcSubTab === "walls" && (
                 <div className="space-y-6 max-w-3xl">
-                  <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Wall Dimensions</h3>
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h3 className="text-lg font-bold text-gray-800">Wall Dimensions</h3>
+                    {buildingData && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            if (activeSegment === 'walls') {
+                              setActiveSegment('all');
+                            } else {
+                              setActiveSegment('walls');
+                              setShowPlanModal(true);
+                            }
+                          }}
+                          className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'walls' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'}`}>
+                          {activeSegment === 'walls' ? 'Hide Walls' : 'Show Walls'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (activeSegment === 'openings') {
+                              setActiveSegment('all');
+                            } else {
+                              setActiveSegment('openings');
+                              setShowPlanModal(true);
+                            }
+                          }}
+                          className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'openings' ? 'bg-cyan-600 text-white border-cyan-600' : 'bg-white text-gray-600 border-gray-200 hover:border-cyan-400'}`}>
+                          {activeSegment === 'openings' ? 'Hide Openings' : 'Show Openings'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div><label className="text-sm text-gray-600">Ext. Length (m)</label><input type="number" value={wallData.externalLength} onChange={e => setWallData({ ...wallData, externalLength: e.target.value })} className="w-full border rounded px-3 py-2" /></div>
                     <div><label className="text-sm text-gray-600">Ext. Width (m)</label><input type="number" value={wallData.externalWidth} onChange={e => setWallData({ ...wallData, externalWidth: e.target.value })} className="w-full border rounded px-3 py-2" /></div>
@@ -393,9 +467,25 @@ const SuperstructureTakeoffApp = () => {
               {/* Columns Sub-Tab */}
               {calcSubTab === "columns" && (
                 <div className="space-y-4">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center border-b pb-2">
                     <h3 className="text-lg font-bold text-gray-800">Columns</h3>
-                    <button onClick={() => addItem('column')} className="text-sm bg-gray-800 text-white px-3 py-1 rounded flex items-center gap-1"><Plus className="w-4 h-4" /> Add Type</button>
+                    <div className="flex gap-2">
+                      {buildingData && (
+                        <button
+                          onClick={() => {
+                            if (activeSegment === 'columns') {
+                              setActiveSegment('all');
+                            } else {
+                              setActiveSegment('columns');
+                              setShowPlanModal(true);
+                            }
+                          }}
+                          className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'columns' ? 'bg-magenta-600 text-white border-magenta-600' : 'bg-white text-gray-600 border-gray-200 hover:border-magenta-400'}`}>
+                          {activeSegment === 'columns' ? 'Hide Columns' : 'Show Columns'}
+                        </button>
+                      )}
+                      <button onClick={() => addItem('column')} className="text-sm bg-gray-800 text-white px-3 py-1 rounded flex items-center gap-1"><Plus className="w-4 h-4" /> Add Type</button>
+                    </div>
                   </div>
                   {columns.map((col, idx) => (
                     <div key={col.id} className="grid grid-cols-5 gap-4 bg-gray-50 p-3 rounded border">
@@ -412,9 +502,25 @@ const SuperstructureTakeoffApp = () => {
               {/* Beams Sub-Tab */}
               {calcSubTab === "beams" && (
                 <div className="space-y-4">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center border-b pb-2">
                     <h3 className="text-lg font-bold text-gray-800">Beams</h3>
-                    <button onClick={() => addItem('beam')} className="text-sm bg-gray-800 text-white px-3 py-1 rounded flex items-center gap-1"><Plus className="w-4 h-4" /> Add Type</button>
+                    <div className="flex gap-2">
+                      {buildingData && (
+                        <button
+                          onClick={() => {
+                            if (activeSegment === 'beams') {
+                              setActiveSegment('all');
+                            } else {
+                              setActiveSegment('beams');
+                              setShowPlanModal(true);
+                            }
+                          }}
+                          className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'beams' ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-gray-600 border-gray-200 hover:border-orange-400'}`}>
+                          {activeSegment === 'beams' ? 'Hide Beams' : 'Show Beams'}
+                        </button>
+                      )}
+                      <button onClick={() => addItem('beam')} className="text-sm bg-gray-800 text-white px-3 py-1 rounded flex items-center gap-1"><Plus className="w-4 h-4" /> Add Type</button>
+                    </div>
                   </div>
                   {beams.map((beam, idx) => (
                     <div key={beam.id} className="grid grid-cols-5 gap-4 bg-gray-50 p-3 rounded border">
@@ -431,9 +537,25 @@ const SuperstructureTakeoffApp = () => {
               {/* Slabs Sub-Tab */}
               {calcSubTab === "slabs" && (
                 <div className="space-y-4">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center border-b pb-2">
                     <h3 className="text-lg font-bold text-gray-800">Slabs</h3>
-                    <button onClick={() => addItem('slab')} className="text-sm bg-gray-800 text-white px-3 py-1 rounded flex items-center gap-1"><Plus className="w-4 h-4" /> Add Type</button>
+                    <div className="flex gap-2">
+                      {buildingData && (
+                        <button
+                          onClick={() => {
+                            if (activeSegment === 'slabs') {
+                              setActiveSegment('all');
+                            } else {
+                              setActiveSegment('slabs');
+                              setShowPlanModal(true);
+                            }
+                          }}
+                          className={`px-3 py-1 text-[10px] font-bold rounded uppercase border transition-all ${activeSegment === 'slabs' ? 'bg-yellow-500 text-white border-yellow-500' : 'bg-white text-gray-600 border-gray-200 hover:border-yellow-400'}`}>
+                          {activeSegment === 'slabs' ? 'Hide Slabs' : 'Show Slabs'}
+                        </button>
+                      )}
+                      <button onClick={() => addItem('slab')} className="text-sm bg-gray-800 text-white px-3 py-1 rounded flex items-center gap-1"><Plus className="w-4 h-4" /> Add Type</button>
+                    </div>
                   </div>
                   {slabs.map((slab, idx) => (
                     <div key={slab.id} className="grid grid-cols-4 gap-4 bg-gray-50 p-3 rounded border">
@@ -470,91 +592,178 @@ const SuperstructureTakeoffApp = () => {
               {takeoffData.length > 0 && <p className="text-center text-xs text-gray-500 mt-2">See Takeoff tab for results</p>}
             </div>
           </div>
-        )}
+        )
+        }
 
-        {activeTab === 'takeoff' && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden">
-            <EnglishMethodTakeoffSheet
-              key={editorKey}
-              initialItems={takeoffData}
-              onChange={setTakeoffData}
-              projectInfo={{
-                projectName: projectInfo.projectName || "Superstructure",
-                clientName: "",
-                projectDate: projectInfo.date
-              }}
-            />
-          </div>
-        )}
+        {
+          activeTab === 'takeoff' && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden">
+              <EnglishMethodTakeoffSheet
+                key={editorKey}
+                initialItems={takeoffData}
+                onChange={setTakeoffData}
+                planImageUrl={uploadedImageUrl}
+                buildingData={buildingData}
+                projectInfo={{
+                  projectName: projectInfo.projectName || "Superstructure",
+                  clientName: "",
+                  projectDate: projectInfo.date
+                }}
+              />
+            </div>
+          )
+        }
 
-        {activeTab === 'sheet' && (
-          <div className="h-full">
-            <UniversalSheet items={takeoffData} />
-          </div>
-        )}
+        {
+          activeTab === 'sheet' && (
+            <div className="h-full">
+              <UniversalSheet items={takeoffData} />
+            </div>
+          )
+        }
 
-        {activeTab === 'boq' && (
-          <div className="h-full">
-            <UniversalBOQ items={takeoffData} />
-          </div>
-        )}
+        {
+          activeTab === 'boq' && (
+            <div className="h-full">
+              <UniversalBOQ items={takeoffData} />
+            </div>
+          )
+        }
 
-        {activeTab === '3d-view' && (
-          <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative border border-slate-800 shadow-2xl">
-            {buildingData ? (
-              <>
-                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                  <div className="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 flex items-center gap-2 shadow-lg">
-                    <Box className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Superstructure Model</span>
+        {
+          activeTab === '3d-view' && (
+            <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative border border-slate-800 shadow-2xl">
+              {buildingData ? (
+                <>
+                  <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                    <div className="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 flex items-center gap-2 shadow-lg">
+                      <Box className="w-4 h-4 text-blue-400" />
+                      <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Superstructure Model</span>
+                    </div>
+                    <div className="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 flex items-center gap-2 shadow-lg">
+                      <SettingsIcon className="w-4 h-4 text-slate-400" />
+                      <span className="text-[10px] text-slate-400 font-mono">Height: {buildingData.wallHeight}m</span>
+                    </div>
                   </div>
-                  <div className="bg-slate-800/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 flex items-center gap-2 shadow-lg">
-                    <SettingsIcon className="w-4 h-4 text-slate-400" />
-                    <span className="text-[10px] text-slate-400 font-mono">Height: {buildingData.wallHeight}m</span>
-                  </div>
-                </div>
 
-                <div className="absolute bottom-4 right-4 z-10">
+                  <div className="absolute bottom-4 right-4 z-10">
+                    <button
+                      onClick={() => setActiveTab('calculator')}
+                      className="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 font-bold text-sm"
+                    >
+                      <Calculator size={18} />
+                      Edit Dimensions
+                    </button>
+                  </div>
+
+                  <Canvas shadows dpr={[1, 2]}>
+                    <Suspense fallback={null}>
+                      <Superstructure3DScene
+                        buildingData={buildingData}
+                        selectedId={selectedElement?.id}
+                        onSelect={setSelectedElement}
+                      />
+                    </Suspense>
+                  </Canvas>
+                </>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
+                  <div className="p-6 bg-slate-800 rounded-full">
+                    <Eye className="w-16 h-16 opacity-20" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold text-slate-200">No 3D Model Data</h3>
+                    <p className="text-sm max-w-xs">Upload a plan in the Calculator tab to generate the 3D visualization.</p>
+                  </div>
                   <button
-                    onClick={() => setActiveTab('calculator')}
-                    className="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 font-bold text-sm"
+                    onClick={() => { setActiveTab('calculator'); setCalcSubTab('automation'); }}
+                    className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition-colors border border-slate-700"
                   >
-                    <Calculator size={18} />
-                    Edit Dimensions
+                    Go to Upload
                   </button>
                 </div>
+              )}
+            </div>
+          )
+        }
+      </main >
 
-                <Canvas shadows dpr={[1, 2]}>
-                  <Suspense fallback={null}>
-                    <Superstructure3DScene
-                      buildingData={buildingData}
-                      selectedId={selectedElement?.id}
-                      onSelect={setSelectedElement}
-                    />
-                  </Suspense>
-                </Canvas>
-              </>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
-                <div className="p-6 bg-slate-800 rounded-full">
-                  <Eye className="w-16 h-16 opacity-20" />
-                </div>
-                <div className="text-center">
-                  <h3 className="text-xl font-bold text-slate-200">No 3D Model Data</h3>
-                  <p className="text-sm max-w-xs">Upload a plan in the Calculator tab to generate the 3D visualization.</p>
+      {/* Plan Image Modal */}
+      {
+        showPlanModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Floor Plan Reference</h3>
+                  <p className="text-sm text-gray-500">Scale: {buildingData?.metadata?.ppm || 100} pixels/meter</p>
                 </div>
                 <button
-                  onClick={() => { setActiveTab('calculator'); setCalcSubTab('automation'); }}
-                  className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition-colors border border-slate-700"
+                  onClick={() => setShowPlanModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  Go to Upload
+                  <X size={24} className="text-gray-500" />
                 </button>
               </div>
-            )}
+              <div className="flex-1 overflow-auto bg-gray-100 p-8 flex items-center justify-center relative min-h-[500px]">
+                <div className="relative inline-block border-4 border-white shadow-2xl rounded-lg overflow-hidden">
+                  <img
+                    src={uploadedImageUrl}
+                    alt="Floor Plan"
+                    className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
+                    onLoad={() => console.log("✅ Image loaded successfully:", uploadedImageUrl)}
+                  />
+                  {activeSegment !== 'all' && (
+                    <img
+                      src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}
+                      alt={`${activeSegment} Layer`}
+                      className="absolute inset-0 w-full h-full object-contain pointer-events-none mix-blend-multiply transition-all duration-300 contrast-125 brightness-110"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  )}
+                </div>
+                {!uploadedImageUrl && (
+                  <div className="text-center text-gray-400">
+                    <Eye size={48} className="mx-auto mb-2 opacity-20" />
+                    <p>Image URL is missing</p>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">Layer Switcher:</span>
+                {[
+                  { id: 'all', label: 'Plan', color: 'bg-gray-600' },
+                  { id: 'rooms', label: 'Rooms', color: 'bg-gradient-to-r from-red-500 via-green-500 to-blue-500' },
+                  { id: 'walls', label: 'Walls', color: 'bg-black' },
+                  { id: 'slabs', label: 'Slabs', color: 'bg-black' },
+                  { id: 'beams', label: 'Beams', color: 'bg-black' },
+                  { id: 'columns', label: 'Columns', color: 'bg-black' },
+                  { id: 'stairs', label: 'Stairs', color: 'bg-black' },
+                  { id: 'contours', label: 'Contours', color: 'bg-black' }
+                ].map(layer => (
+                  <button
+                    key={layer.id}
+                    onClick={() => setActiveSegment(layer.id)}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5 ${activeSegment === layer.id ? `${layer.color} text-white shadow-lg scale-105` : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-300'}`}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${activeSegment === layer.id ? 'bg-white animate-pulse' : layer.color}`} />
+                    {layer.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-end mt-2">
+                <button
+                  onClick={() => setShowPlanModal(false)}
+                  className="px-6 py-2 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
+                >
+                  Exit View
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-      </main>
-    </div>
+        )
+      }
+    </div >
   );
 };
 

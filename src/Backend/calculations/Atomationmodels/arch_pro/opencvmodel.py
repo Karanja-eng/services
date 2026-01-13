@@ -13,7 +13,12 @@ import concurrent.futures
 import asyncio
 from skimage.morphology import skeletonize
 
+from pathlib import Path
+
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024  # 8 MB - adjust to your server capacity
+BASE_DIR = Path(__file__).parent
+UPLOADS = BASE_DIR / "uploads"
+UPLOADS.mkdir(exist_ok=True)
 
 # ThreadPool for CPU-bound heavy work
 EXEC = concurrent.futures.ThreadPoolExecutor(max_workers=2)
@@ -121,18 +126,42 @@ def safe_run(fn):
     return wrapper
 
 
+async def load_image(file: UploadFile = None, file_id: str = None) -> np.ndarray:
+    if file:
+        data = await file.read()
+        arr = np.frombuffer(data, dtype=np.uint8)
+        img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        return img
+    elif file_id:
+        # Search for any file starting with file_id
+        # main2.py saves as f"{file_id}_{filename}"
+        if UPLOADS.exists():
+            for path in UPLOADS.iterdir():
+                if path.name.startswith(file_id) and path.suffix.lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
+                    img = cv2.imread(str(path))
+                    if img is not None:
+                        return img
+                    
+        # Fallback legacy check
+        for ext in ['.png', '.jpg', '.jpeg', '.pdf.png']:
+            path = UPLOADS / f"{file_id}{ext}"
+            if path.exists():
+                img = cv2.imread(str(path))
+                return img
+    raise HTTPException(status_code=400, detail=f"Missing file or valid file_id: {file_id}")
+
+
 # ---------- Endpoints ----------
 @router.post("/contours")
-async def contours_endpoint(file: UploadFile = File(...)):
+@router.get("/contours")
+async def contours_endpoint(file: UploadFile = File(None), file_id: str = Query(None)):
     if not UTIL_OK:
         return Response(
             content=error_image_bytes("utils import failed: " + UTIL_IMPORT_ERR),
             media_type="image/png",
         )
 
-    data = await file.read()
-    arr = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = await load_image(file, file_id)
     if img is None:
         return Response(
             content=error_image_bytes("Failed to read image"), media_type="image/png"
@@ -141,24 +170,18 @@ async def contours_endpoint(file: UploadFile = File(...)):
     @safe_run
     def process(img):
         h, w = img.shape[:2]
-        blank = np.ones((h, w, 3), np.uint8) * 255
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        contours, _ = detect.detectOuterContours(gray, blank.copy(), color=(0, 0, 0))
+        contours, _ = detect.detectOuterContours(gray, np.zeros((h, w, 3), np.uint8), color=(255, 255, 255))
         if not isinstance(contours, list):
             contours = [contours]
 
         mask = np.zeros((h, w), np.uint8)
         cv2.drawContours(mask, contours, -1, 255, thickness=-1)
 
-        stroke = 10
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (stroke, stroke))
-        eroded = cv2.erode(mask, kernel)
-        outline = cv2.subtract(mask, eroded)
-
         result = np.ones((h, w, 3), np.uint8) * 255
-        ys, xs = np.where(outline == 255)
-        result[ys, xs] = (0, 0, 0)
+        # AutoCAD Black for contours
+        result[mask == 255] = (0, 0, 0) 
         return npimg_to_png_bytes(result)
 
     png = process(img)
@@ -166,16 +189,15 @@ async def contours_endpoint(file: UploadFile = File(...)):
 
 
 @router.post("/rooms")
-async def rooms_endpoint(file: UploadFile = File(...)):
+@router.get("/rooms")
+async def rooms_endpoint(file: UploadFile = File(None), file_id: str = Query(None)):
     if not UTIL_OK:
         return Response(
             content=error_image_bytes("utils import failed: " + UTIL_IMPORT_ERR),
             media_type="image/png",
         )
 
-    data = await file.read()
-    arr = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = await load_image(file, file_id)
     if img is None:
         return Response(
             content=error_image_bytes("Failed to read image"), media_type="image/png"
@@ -197,11 +219,14 @@ async def rooms_endpoint(file: UploadFile = File(...)):
         gray_rooms = cv2.cvtColor(colored_rooms, cv2.COLOR_BGR2GRAY)
         boxes, _ = detect.detectPreciseBoxes(gray_rooms, gray_rooms)
 
-        # draw all room boxes on one canvas
+        # draw all room boxes (multi-colored for differentiation)
         canvas = np.ones((h, w, 3), np.uint8) * 255
+        import random
         for box in boxes:
             pts = np.array(box, dtype=np.int32).reshape(-1, 1, 2)
-            cv2.polylines(canvas, [pts], True, (0, 0, 0), thickness=3)
+            # Generate a distinct random color
+            color = (random.randint(50, 200), random.randint(50, 200), random.randint(50, 200))
+            cv2.fillPoly(canvas, [pts], color) 
 
         return npimg_to_png_bytes(canvas)
 
@@ -210,16 +235,15 @@ async def rooms_endpoint(file: UploadFile = File(...)):
 
 
 @router.post("/walls")
-async def walls_endpoint(file: UploadFile = File(...)):
+@router.get("/walls")
+async def walls_endpoint(file: UploadFile = File(None), file_id: str = Query(None)):
     if not UTIL_OK:
         return Response(
             content=error_image_bytes("utils import failed: " + UTIL_IMPORT_ERR),
             media_type="image/png",
         )
 
-    data = await file.read()
-    arr = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = await load_image(file, file_id)
     if img is None:
         return Response(
             content=error_image_bytes("Failed to read image"), media_type="image/png"
@@ -231,27 +255,14 @@ async def walls_endpoint(file: UploadFile = File(...)):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         wall_img = detect.wall_filter(gray)
-        wall_inv = cv2.bitwise_not(wall_img)
-
-        boxes, _ = detect.detectPreciseBoxes(wall_inv)
-
+        
+        # AutoCAD Black for walls (Neat lines)
         canvas = np.ones((h, w, 3), np.uint8) * 255
         if wall_img is not None:
-            if wall_img.ndim == 2:
-                ys, xs = np.where(wall_img > 0)
-                canvas[ys, xs] = (0, 0, 0)
-            else:
-                mask = cv2.cvtColor(wall_img, cv2.COLOR_BGR2GRAY)
-                ys, xs = np.where(mask > 0)
-                canvas[ys, xs] = (0, 0, 0)
-
-        for box in boxes:
-            pts = np.array(box, dtype=np.int32)
-            if pts.ndim == 2:
-                pts_draw = pts.reshape(-1, 1, 2)
-            else:
-                pts_draw = pts
-            cv2.polylines(canvas, [pts_draw], True, (0, 0, 0), thickness=3)
+            # Dilate slightly for better visibility if it's too thin
+            kernel = np.ones((2,2), np.uint8)
+            wall_neat = cv2.dilate(wall_img, kernel, iterations=1)
+            canvas[wall_neat > 0] = (0, 0, 0) # Black
 
         return npimg_to_png_bytes(canvas)
 
@@ -260,16 +271,15 @@ async def walls_endpoint(file: UploadFile = File(...)):
 
 
 @router.post("/slabs")
-async def slabs_endpoint(file: UploadFile = File(...), scale: float = Query(0.01)):
+@router.get("/slabs")
+async def slabs_endpoint(file: UploadFile = File(None), file_id: str = Query(None), scale: float = Query(0.01)):
     if not UTIL_OK:
         return Response(
             content=error_image_bytes("utils import failed: " + UTIL_IMPORT_ERR),
             media_type="image/png",
         )
 
-    data = await file.read()
-    arr = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = await load_image(file, file_id)
     if img is None:
         return Response(
             content=error_image_bytes("Failed to read image"), media_type="image/png"
@@ -287,27 +297,12 @@ async def slabs_endpoint(file: UploadFile = File(...), scale: float = Query(0.01
         gray_rooms = cv2.cvtColor(colored_rooms, cv2.COLOR_BGR2GRAY)
         boxes, _ = detect.detectPreciseBoxes(gray_rooms, gray_rooms)
 
+        # AutoCAD Black for slab contours (Room boundaries)
         canvas = np.ones((h, w, 3), np.uint8) * 255
         for box in boxes:
-            pts = np.array(box, dtype=np.int32).reshape(-1, 1, 2)
-            cv2.polylines(canvas, [pts], True, (0, 0, 0), thickness=2)
-
-            # decide slab type from bounding box
-            x, y, bw, bh = cv2.boundingRect(pts)
-            lx, ly = max(bw, bh) * scale, min(bw, bh) * scale
-            slab_type = (
-                "One-way slab" if (ly > 0 and (lx / ly) >= 2) else "Two-way slab"
-            )
-            cv2.putText(
-                canvas,
-                slab_type,
-                (x, y - 6),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 0, 0),
-                2,
-            )
-
+            pts = np.array(box, dtype=np.int32).reshape((-1, 1, 2))
+            cv2.polylines(canvas, [pts], isClosed=True, color=(0, 0, 0), thickness=3) 
+            
         return npimg_to_png_bytes(canvas)
 
     png = process(img)
@@ -345,8 +340,10 @@ def extract_beam_lines_from_wall_mask(wall_mask):
 
 
 @router.post("/beams")
+@router.get("/beams")
 async def beams_endpoint(
-    file: UploadFile = File(...),
+    file: UploadFile = File(None),
+    file_id: str = Query(None),
     scale: float = Query(0.01),
     json_out: bool = Query(False),
 ):
@@ -355,10 +352,7 @@ async def beams_endpoint(
             content=error_image_bytes("utils import failed: " + UTIL_IMPORT_ERR),
             media_type="image/png",
         )
-    data = await file.read()
-    ensure_size_ok(data)
-    arr = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = await load_image(file, file_id)
     if img is None:
         return Response(
             content=error_image_bytes("Failed to read image"), media_type="image/png"
@@ -381,23 +375,15 @@ async def beams_endpoint(
         wall_closed_inv = cv2.bitwise_not(wall_closed)
         boxes, _ = detect.detectPreciseBoxes(wall_closed_inv)
 
-        # 4) draw canvas
+        # draw canvas (AutoCAD Black for Beams)
         canvas = np.ones((h, w, 3), np.uint8) * 255
-        ys, xs = np.where(wall_closed > 0)
-        if ys.size > 0:
-            canvas[ys, xs] = (0, 0, 0)
-
-        for box in boxes:
-            pts = np.array(box, dtype=np.int32)
-            pts_draw = pts.reshape(-1, 1, 2) if pts.ndim == 2 else pts
-            cv2.polylines(canvas, [pts_draw], True, (0, 0, 0), thickness=3)
-
+        
         # 5) extract beam center lines from the cleaned wall mask
         midlines = extract_beam_lines_from_wall_mask(wall_closed)
 
-        # draw midlines over canvas (thin red)
+        # draw midlines over canvas
         for x1, y1, x2, y2 in midlines:
-            cv2.line(canvas, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            cv2.line(canvas, (x1, y1), (x2, y2), (0, 0, 0), thickness=max(3, int(0.15 * 100))) 
 
         if json_out:
             # prepare JSON output with scaled coordinates (optional)
@@ -470,62 +456,10 @@ async def ocr_endpoint(file: UploadFile = File(...)):
 
 
 @router.post("/columns")
+@router.get("/columns")
 async def columns_endpoint(
-    file: UploadFile = File(...), confidence: float = Query(0.5)
-):
-    if YOLO_MODEL is None:
-        if not YOLO_OK:
-            return Response(
-                content=error_image_bytes("ultralytics YOLO not installed"),
-                media_type="image/png",
-            )
-        return Response(
-            content=error_image_bytes(
-                "YOLO model file (best.pt) not found or failed to load"
-            ),
-            media_type="image/png",
-        )
-
-    data = await file.read()
-    arr = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    if img is None:
-        return Response(
-            content=error_image_bytes("Failed to read image"), media_type="image/png"
-        )
-
-    @safe_run
-    def process(img):
-        pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-        results = YOLO_MODEL.predict(pil, conf=confidence)
-        det = results[0]
-        h, w = img.shape[:2]
-
-        canvas = np.ones((h, w, 3), np.uint8) * 255
-        for box in det.boxes:
-            cls_name = YOLO_MODEL.names[int(box.cls)]
-            if cls_name.lower() == "column":
-                xy = box.xyxy[0].cpu().numpy().astype(int)
-                x1, y1, x2, y2 = int(xy[0]), int(xy[1]), int(xy[2]), int(xy[3])
-                cv2.rectangle(canvas, (x1, y1), (x2, y2), (0, 0, 0), thickness=3)
-                cv2.putText(
-                    canvas,
-                    "Column",
-                    (x1, y1 - 6),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (0, 0, 0),
-                    2,
-                )
-        return npimg_to_png_bytes(canvas)
-
-    png = process(img)
-    return Response(content=png, media_type="image/png")
-
-
-@router.post("/columns")
-async def columns_endpoint(
-    file: UploadFile = File(...),
+    file: UploadFile = File(None),
+    file_id: str = Query(None),
     confidence: float = Query(0.5),
     json_out: bool = Query(False),
 ):
@@ -542,10 +476,7 @@ async def columns_endpoint(
             media_type="image/png",
         )
 
-    data = await file.read()
-    ensure_size_ok(data)
-    arr = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = await load_image(file, file_id)
     if img is None:
         return Response(
             content=error_image_bytes("Failed to read image"), media_type="image/png"
@@ -592,16 +523,8 @@ async def columns_endpoint(
                 else (box.conf.cpu().numpy()[0] if hasattr(box.conf, "cpu") else 0.0)
             )
             if cls_name.lower() == "column":
-                cv2.rectangle(canvas, (x1, y1), (x2, y2), (0, 0, 0), thickness=3)
-                cv2.putText(
-                    canvas,
-                    "Column",
-                    (x1, y1 - 6),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (0, 0, 0),
-                    2,
-                )
+                # AutoCAD Black for Columns
+                cv2.rectangle(canvas, (x1, y1), (x2, y2), (0, 0, 0), thickness=-1)
             detections.append(
                 {"class": cls_name, "conf": conf_val, "bbox": [x1, y1, x2, y2]}
             )

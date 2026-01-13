@@ -1,49 +1,15 @@
 import React, { useState } from "react";
 import { Waves, Calculator, AlertCircle } from "lucide-react";
+import Pool2DDrawing from "./Pool2_D";
+import Pool3DVisualization from "./Pool3_D";
+import {
+  UniversalTabs,
+  UniversalSheet,
+  UniversalBOQ
+} from '../universal_component';
 
 // Mock components for demonstration (replace with actual imports in your project)
-const EnglishMethodTakeoffSheet = ({ initialItems }) => (
-  <div className="p-4 bg-white">Takeoff Sheet: {initialItems.length} items</div>
-);
-const UniversalTabs = ({ activeTab, setActiveTab, tabs }) => (
-  <div className="flex gap-2 border-b">
-    {tabs.map(tab => (
-      <button
-        key={tab}
-        onClick={() => setActiveTab(tab)}
-        className={`px-4 py-2 ${activeTab === tab ? 'border-b-2 border-blue-600 font-bold' : ''}`}
-      >
-        {tab.toUpperCase().replace('-', ' ')}
-      </button>
-    ))}
-  </div>
-);
-const UniversalSheet = ({ items }) => (
-  <div className="p-4 bg-white">Sheet View: {items.length} items</div>
-);
-const UniversalBOQ = ({ items }) => (
-  <div className="p-4 bg-white">BOQ View: {items.length} items</div>
-);
-const Pool2DDrawing = ({ poolData }) => (
-  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-    <div className="text-center">
-      <h3 className="text-xl font-bold mb-2">2D CAD Drawing</h3>
-      <p className="text-gray-600">Pool: {poolData.int_l}m × {poolData.int_w}m</p>
-      <p className="text-gray-600">Shape: {poolData.pool_shape}</p>
-      <p className="text-sm text-gray-500 mt-2">Import the Pool2DDrawing component here</p>
-    </div>
-  </div>
-);
-const Pool3DVisualization = ({ poolData }) => (
-  <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-    <div className="text-center text-white">
-      <h3 className="text-xl font-bold mb-2">3D Visualization</h3>
-      <p className="text-gray-300">Pool: {poolData.int_l}m × {poolData.int_w}m × {poolData.deep_depth}m</p>
-      <p className="text-gray-300">Shape: {poolData.pool_shape}</p>
-      <p className="text-sm text-gray-400 mt-2">Import the Pool3DVisualization component here</p>
-    </div>
-  </div>
-);
+import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 
 const InputField = ({ label, name, value, onChange, type = "number", step = "0.01" }) => (
   <div>

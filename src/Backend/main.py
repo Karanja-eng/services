@@ -1,7 +1,11 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
+import os
+from pathlib import Path
 
 # Database imports
 from Databases import init_db, check_db_connection, get_db
@@ -20,6 +24,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Static files paths
+BASE_DIR = Path(__file__).resolve().parent
+ARCH_PRO_DIR = BASE_DIR / "calculations" / "Atomationmodels" / "arch_pro"
+UPLOADS_DIR = ARCH_PRO_DIR / "uploads"
+GENERATED_DIR = ARCH_PRO_DIR / "generated"
+
+# Ensure directories exist
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+GENERATED_DIR.mkdir(parents=True, exist_ok=True)
+
+# Manual serving with logging/CORS
+@app.get("/uploads/{filename}", tags=["Static"])
+async def serve_upload(filename: str):
+    file_path = UPLOADS_DIR / filename
+    print(f"📂 Serving upload: {file_path}")
+    if not file_path.exists():
+        print(f"❌ File not found: {file_path}")
+        return {"error": "File not found"}
+    return FileResponse(file_path, headers={"Access-Control-Allow-Origin": "*"})
+
+@app.get("/generated/{filename}", tags=["Static"])
+async def serve_generated(filename: str):
+    file_path = GENERATED_DIR / filename
+    print(f"📂 Serving generated: {file_path}")
+    if not file_path.exists():
+        print(f"❌ File not found: {file_path}")
+        return {"error": "File not found"}
+    return FileResponse(file_path, headers={"Access-Control-Allow-Origin": "*"})
+
+# Optional: keep StaticFiles as fallback
+app.mount("/static_uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads_static")
+app.mount("/static_generated", StaticFiles(directory=str(GENERATED_DIR)), name="generated_static")
+
 
 # Database initialization on startup
 @app.on_event("startup")
@@ -27,6 +64,9 @@ async def startup_event():
     """Initialize database on application startup"""
     print("\n" + "="*60)
     print("Starting Fundi API")
+    print("="*60)
+    print(f"📡 UPLOADS DIR: {UPLOADS_DIR}")
+    print(f"📡 GENERATED DIR: {GENERATED_DIR}")
     print("="*60)
     
     # Check database connection
@@ -161,7 +201,7 @@ app.include_router(rc_substructure_router, prefix="/rc_substructure_router", tag
 
 ##Ai models
 # from calculations.Atomationmodels.yolomodel import router as yolo_model_router
-# from calculations.Atomationmodels.opencvmodel import router as open_cv_model_router
+from calculations.Atomationmodels.arch_pro.opencvmodel import router as open_cv_model_router
 # from calculations.Atomationmodels.phi_vision import router as phi_model_router
 from calculations.Atomationmodels.qwen_3_vl_4B import router as qwen_model_router, preload_model
 from calculations.Atomationmodels.arch_pro.main2 import router as architectural_automation_router
@@ -172,7 +212,7 @@ app.include_router(architectural_automation_router, prefix="/arch_pro", tags=["a
 app.include_router(electrical_plumbing_takeoff_router, prefix="/electrical_plumbing_takeoff", tags=["electrical_plumbing_takeoff"])
 
 # app.include_router(yolo_model_router, prefix="/yolo", tags=["Yolo_model"])
-# app.include_router(open_cv_model_router, prefix="/opencv", tags=["OpenCv_model"])
+app.include_router(open_cv_model_router, prefix="/opencv", tags=["OpenCv_model"])
 # app.include_router(phi_model_router, prefix="/phi_model", tags=["phi_model_router"])
 
 ################## Steel ###########################
@@ -311,6 +351,16 @@ app.include_router(
 app.include_router(slab_backend_router, prefix="/slab_backend", tags=["slabs_backend"])
 
 ##################################
+
+
+###################   Drawers ########################
+
+from calculations.drawings.drawing_api import router as cad_drawer
+
+app.include_router(cad_drawer)
+
+
+###################   Drawers ########################
 
 
 if __name__ == "__main__":
