@@ -11,134 +11,7 @@ import {
   Scatter,
 } from "recharts";
 import Column3DVisualization from "../../components/column_3d_helper";
-
-function ColumnSection({ b, h, cover, tieDia, barDia, numBars }) {
-  if (!b || !h || !numBars) return null;
-
-  const widthPx = 300;
-  const heightPx = 300;
-  const margin = 40;
-
-  // scaling mm → px
-  const sx = (val) => (val / b) * (widthPx - 2 * margin);
-  const sy = (val) => (val / h) * (heightPx - 2 * margin);
-
-  // tie rectangle
-  const tieRect = {
-    x: margin + sx(cover + tieDia),
-    y: margin + sy(cover + tieDia),
-    w: sx(b - 2 * (cover + tieDia)),
-    h: sy(h - 2 * (cover + tieDia)),
-  };
-
-  // -------------------
-  // ✅ BAR DISTRIBUTION
-  // -------------------
-  const bars = [];
-  const barRadiusPx = Math.max(2, sx(barDia / 2));
-
-  // always place 4 corner bars
-  const corners = [
-    { x: cover, y: cover },
-    { x: b - cover, y: cover },
-    { x: cover, y: h - cover },
-    { x: b - cover, y: h - cover },
-  ];
-  corners.forEach((c) => bars.push(c));
-
-  // remaining bars
-  let remaining = numBars - 4;
-  const sides = ["top", "bottom", "left", "right"];
-  let sideIdx = 0;
-
-  while (remaining > 0) {
-    const side = sides[sideIdx % 4];
-    sideIdx++;
-
-    if (side === "top") {
-      const x =
-        cover +
-        (bars.filter((p) => p.y === cover).length * (b - 2 * cover)) /
-          (remaining + 1);
-      bars.push({ x, y: cover });
-    }
-    if (side === "bottom") {
-      const x =
-        cover +
-        (bars.filter((p) => p.y === h - cover).length * (b - 2 * cover)) /
-          (remaining + 1);
-      bars.push({ x, y: h - cover });
-    }
-    if (side === "left") {
-      const y =
-        cover +
-        (bars.filter((p) => p.x === cover).length * (h - 2 * cover)) /
-          (remaining + 1);
-      bars.push({ x: cover, y });
-    }
-    if (side === "right") {
-      const y =
-        cover +
-        (bars.filter((p) => p.x === b - cover).length * (h - 2 * cover)) /
-          (remaining + 1);
-      bars.push({ x: b - cover, y });
-    }
-
-    remaining--;
-  }
-
-  return (
-    <svg
-      width={widthPx}
-      height={heightPx}
-      style={{ border: "1px solid #ccc", background: "#fff" }}
-    >
-      {/* column outline */}
-      <rect
-        x={margin}
-        y={margin}
-        width={sx(b)}
-        height={sy(h)}
-        stroke="#333"
-        fill="#f8f8f8"
-      />
-
-      {/* tie rectangle */}
-      <rect
-        x={tieRect.x}
-        y={tieRect.y}
-        width={tieRect.w}
-        height={tieRect.h}
-        stroke="#666"
-        strokeDasharray="6 4"
-        fill="none"
-      />
-
-      {/* bars */}
-      {bars.map((p, i) => (
-        <circle
-          key={i}
-          cx={sx(p.x) + margin}
-          cy={sy(p.y) + margin}
-          r={barRadiusPx}
-          fill="red"
-          stroke="darkred"
-        />
-      ))}
-
-      {/* labels */}
-      <text x={8} y={14} fontSize="12" fill="#333">
-        b={b}mm, h={h}mm
-      </text>
-      <text x={8} y={30} fontSize="12" fill="#333">
-        cover={cover}mm, tie Ø{tieDia}mm, bar Ø{barDia}mm
-      </text>
-      <text x={8} y={46} fontSize="12" fill="#333">
-        bars drawn: {bars.length} (expected {numBars})
-      </text>
-    </svg>
-  );
-}
+import ColumnDrawer from "./ColumnDrawer";
 
 const ColumnApp = () => {
   // geometry / loads
@@ -174,46 +47,52 @@ const ColumnApp = () => {
     const payload =
       mode === "uniaxial"
         ? {
-            mode,
-            b,
-            h,
-            N: N,
-            M: M,
-            cover,
-            tie_dia: tieDia,
-            max_agg: maxAgg,
-            bar_diameter: barDiameter,
-          }
+          mode,
+          b,
+          h,
+          N: N,
+          M: M,
+          cover,
+          tie_dia: tieDia,
+          max_agg: maxAgg,
+          bar_diameter: barDiameter,
+        }
         : {
-            mode,
-            b,
-            h,
-            N: N,
-            Mx: Mx,
-            My: My,
-            alpha,
-            cover,
-            tie_dia: tieDia,
-            max_agg: maxAgg,
-            bar_diameter: barDiameter,
-          };
+          mode,
+          b,
+          h,
+          N: N,
+          Mx: Mx,
+          My: My,
+          alpha,
+          cover,
+          tie_dia: tieDia,
+          max_agg: maxAgg,
+          bar_diameter: barDiameter,
+        };
 
-    const res = await fetch(`${API}/design-column`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    console.log("API ->", data);
-    setResult(data);
-    setChartVisible(false);
-  };
+    try {
+      const res = await fetch(`${API}/design-column`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      console.log("API ->", data);
+      setResult(data);
 
-  const fetchChart = async () => {
-    const res = await fetch(`${API}/get-interaction-data`);
-    const data = await res.json();
-    setChartData(data.data || []);
-    setChartVisible(true);
+      // Chart data is now included in the response
+      if (data.chart_data) {
+        setChartData(data.chart_data);
+      } else {
+        setChartData([]);
+      }
+
+      setChartVisible(false);
+    } catch (err) {
+      console.error("API Error:", err);
+      setResult({ status: "error", message: "Failed to connect to design API" });
+    }
   };
 
   const randColor = () =>
@@ -310,20 +189,20 @@ const ColumnApp = () => {
   const barSel = getBarSelection(result);
   const serverNumBars = barSel
     ? barSel.num_bars ??
-      barSel.numBars ??
-      barSel.num_bars ??
-      barSel.num_bars ??
-      null
+    barSel.numBars ??
+    barSel.num_bars ??
+    barSel.num_bars ??
+    null
     : null;
   const serverDia = barSel
     ? barSel.bar_dia ?? barSel.barDia ?? barSel.diameter ?? barSel.diam ?? null
     : null;
   const serverTotalArea = barSel
     ? barSel.total_area ??
-      barSel.totalArea ??
-      barSel.total_area ??
-      barSel.provided_area ??
-      null
+    barSel.totalArea ??
+    barSel.total_area ??
+    barSel.provided_area ??
+    null
     : null;
   const serverDistribution = barSel
     ? barSel.distribution ?? barSel.dist ?? null
@@ -359,7 +238,7 @@ const ColumnApp = () => {
             </TabButton>
             <TabButton
               active={chartVisible}
-              onClick={() => fetchChart()}
+              onClick={() => setChartVisible(true)}
               icon={<FileText className="w-5 h-5" />}
               disabled={!result}
             >
@@ -547,11 +426,10 @@ const ColumnApp = () => {
             {result ? (
               <>
                 <div
-                  className={`p-4 rounded-lg mb-4 ${
-                    result.status === "success"
-                      ? "bg-green-50 text-green-800"
-                      : "bg-red-50 text-red-800"
-                  }`}
+                  className={`p-4 rounded-lg mb-4 ${result.status === "success"
+                    ? "bg-green-50 text-green-800"
+                    : "bg-red-50 text-red-800"
+                    }`}
                 >
                   <p className="font-medium">Status: {result.status}</p>
                 </div>
@@ -610,30 +488,32 @@ const ColumnApp = () => {
                         <p className="text-sm text-gray-600 mt-1">
                           Total area: {serverTotalArea ?? "-"} mm²
                         </p>
-                        <div className="mt-4">
-                          <ColumnSection
-                            b={b}
-                            h={h}
-                            barDia={serverDia ?? barDiameter}
-                            numBars={serverNumBars ?? 4}
-                            distribution={serverDistribution}
-                            cover={cover}
-                            tieDia={tieDia}
-                          />
-                        </div>
                       </div>
                     )}
 
-                    <div className="flex justify-end gap-3">
+                    {/* 2D Column Visualization */}
+                    <div className="mt-6">
+                      <ColumnDrawer
+                        width={b}
+                        depth={h}
+                        cover={cover}
+                        barDia={serverDia ?? barDiameter}
+                        numBars={serverNumBars ?? 4}
+                        tieDia={tieDia}
+                        scale={0.8}
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-4">
                       <button
-                        onClick={fetchChart}
-                        disabled={chartVisible}
+                        onClick={() => setChartVisible(!chartVisible)}
+                        disabled={!chartData || chartData.length === 0}
                         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:bg-gray-400"
                       >
                         {chartVisible ? (
                           <>
                             <FileText className="w-4 h-4" />
-                            Chart Visible
+                            Hide Interaction Diagram
                           </>
                         ) : (
                           <>
@@ -726,11 +606,10 @@ const TabButton = ({ active, onClick, children, icon, disabled }) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${
-      active
-        ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-        : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-    } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+    className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${active
+      ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
+      : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
   >
     {icon}
     {children}

@@ -88,7 +88,12 @@ const SubstructureTakeoffApp = () => {
       has_columns: floor.columns.length > 0,
       num_columns: floor.columns.length,
       col_size: floor.columns[0]?.size || 0.2,
-      col_base_size: 0.8 / (floor.columns[0]?.size || 0.2) > 2 ? 0.8 : 1.2, // Heuristic
+      col_base_size: 0.8 / (floor.columns[0]?.size || 0.2) > 2 ? 0.8 : 1.2, // Legacy
+      // New Defaults
+      strip_width: ((data.wallThickness || 0.2) + 0.4).toFixed(2), // Wall + 200mm each side
+      col_base_length: 1.2,
+      col_base_width: 1.2,
+      col_base_depth: 0.3,
       col_excav_depth: 1.5,
       wall_thick: data.wallThickness || 0.2,
     }));
@@ -103,7 +108,10 @@ const SubstructureTakeoffApp = () => {
     has_columns: false,
     num_columns: "",
     col_size: "",
-    col_base_size: "",
+    col_base_size: "", // can keep for calc compatibility
+    col_base_length: "", // NEW
+    col_base_width: "", // NEW
+    col_base_depth: "", // NEW
     col_excav_depth: "",
     has_recess: false,
     recess_type: "corner",
@@ -112,6 +120,7 @@ const SubstructureTakeoffApp = () => {
     has_cavity_wall: false,
     cavity_thick: "",
     wall_thick: 0.2,
+    strip_width: 0.6, // NEW
     veg_depth: 0.15,
     trench_depth: 1.0,
     reduce_level_depth: 0.2,
@@ -379,6 +388,10 @@ const SubstructureTakeoffApp = () => {
                         <InputField label="Ext. Length (m)" name="ext_length" />
                         <InputField label="Ext. Width (m)" name="ext_width" />
                         <InputField label="Internal Wall Len (m)" name="int_wall_len" />
+                        <InputField label="Column Count" name="num_columns" type="number" step="1" />
+                        <InputField label="Col. Base Length (m)" name="col_base_length" />
+                        <InputField label="Col. Base Width (m)" name="col_base_width" />
+                        <InputField label="Col. Base Depth (m)" name="col_base_depth" />
                       </div>
                     )}
                   </div>
@@ -389,8 +402,9 @@ const SubstructureTakeoffApp = () => {
                     {expandedSections.walls && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                         <InputField label="Wall Thickness (m)" name="wall_thick" />
+                        <InputField label="Strip Fdn Width (m)" name="strip_width" />
+                        <InputField label="Strip Conc Depth (m)" name="conc_thick_strip" />
                         <InputField label="Trench Depth (m)" name="trench_depth" />
-                        <InputField label="Strip Conc Thk (m)" name="conc_thick_strip" />
                         <InputField label="Veg Soil Depth (m)" name="veg_depth" />
                         <InputField label="Hardcore Thk (m)" name="hardcore_thick" />
                         <InputField label="Ex. Clearance (m)" name="clear_extra" />
@@ -459,7 +473,7 @@ const SubstructureTakeoffApp = () => {
                 </div>
                 <Canvas shadows dpr={[1, 2]}>
                   <Suspense fallback={null}>
-                    <Substructure3DScene buildingData={buildingData} />
+                    <Substructure3DScene buildingData={buildingData} parameters={formData} />
                   </Suspense>
                 </Canvas>
               </>

@@ -21,6 +21,22 @@ import ElectricalPlumbing3DScene from "./ElectricalPlumbing3DScene";
 
 const API_BASE = "http://localhost:8001";
 
+// Ray-casting algorithm for point in polygon
+function isPointInPoly(pt, poly) {
+    if (!poly || poly.length < 3) return false;
+    let x = pt[0], y = pt[1];
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        let xi = poly[i][0], yi = poly[i][1];
+        let xj = poly[j][0], yj = poly[j][1];
+        let intersect = ((yi > y) !== (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+
 const ElectricalPlumbingTakeoff = () => {
     const [activeTab, setActiveTab] = useState("calculator");
     const [calcSubTab, setCalcSubTab] = useState("params");
@@ -62,14 +78,84 @@ const ElectricalPlumbingTakeoff = () => {
     const calculateQuantities = async (floorData) => {
         try {
             const payload = {
-                electrical_points: floorData.electrical,
-                plumbing_points: floorData.plumbing,
-                conduits: floorData.conduits,
-                wall_height: floorData.height || 3.0
+                rooms: floorData.rooms ? floorData.rooms.map(r => ({
+                    name: r.name,
+                    room_type: r.type,
+                    polygon: r.polygon,
+                    detected_objects: floorData.furniture ? floorData.furniture.filter(f => isPointInPoly(f.position, r.polygon)).map(f => ({
+                        class_name: f.type,
+                        confidence: f.confidence || 1.0,
+                        centroid: f.position,
+                        bbox: [f.position[0] - 0.5, f.position[1] - 0.5, f.position[0] + 0.5, f.position[1] + 0.5] // Dummy bbox if missing
+                    })) : []
+                })) : [],
+                walls: floorData.walls ? floorData.walls.map(w => ({
+                    start: w.start,
+                    end: w.end,
+                    thickness: w.thickness,
+                    type: w.is_external ? "external" : "internal"
+                })) : [],
+                doors: floorData.doors ? floorData.doors.map(d => ({
+                    class_name: "door",
+                    centroid: d.position,
+                    bbox: [d.position[0] - d.width / 2, d.position[1] - 0.1, d.position[0] + d.width / 2, d.position[1] + 0.1]
+                })) : [],
+                windows: floorData.windows ? floorData.windows.map(w => ({
+                    class_name: "window",
+                    centroid: w.position,
+                    bbox: [w.position[0] - w.width / 2, w.position[1] - 0.1, w.position[0] + w.width / 2, w.position[1] + 0.1]
+                })) : [],
+                global_objects: floorData.furniture ? floorData.furniture.map(f => ({
+                    class_name: f.type,
+                    centroid: f.position,
+                    bbox: [f.position[0] - f.size[0] / 2, f.position[1] - f.size[1] / 2, f.position[0] + f.size[0] / 2, f.position[1] + f.size[1] / 2]
+                })) : [],
+                level_height: floorData.height || 3.0
             };
             const res = await axios.post(`${API_BASE}/electrical_plumbing_takeoff/api/calculate`, payload);
             setTakeoffData(res.data.items);
-        } catch (err) { console.error("Calculation error:", err); }
+
+            // Update 3D Visualization Data
+            if (res.data.visualization && buildingData) {
+                const viz = res.data.visualization;
+                const newFloor = { ...buildingData.floors[0] };
+
+                // Map generated points to scene format
+                const newElec = [];
+                const newPlumb = [];
+
+                if (viz.points) {
+                    viz.points.forEach((p, i) => {
+                        const pointObj = {
+                            id: `gen_${i}`,
+                            position: [p.pos.x, p.pos.y],
+                            height: p.pos.z,
+                            type: p.type
+                        };
+
+                        if (["sink", "shower", "water", "drain"].some(k => p.type.includes(k))) {
+                            newPlumb.push(pointObj);
+                        } else {
+                            newElec.push(pointObj);
+                        }
+                    });
+                }
+
+                newFloor.electrical = newElec;
+                newFloor.plumbing = newPlumb;
+
+                // Map generated lines
+                if (viz.lines) {
+                    newFloor.conduits = viz.lines.map((l, i) => ({
+                        id: `gen_line_${i}`,
+                        type: (l.type.includes("water") || l.type.includes("plumb")) ? "plumbing" : "electrical",
+                        path: l.path // Expecting [[x,y,z], ...]
+                    }));
+                }
+
+                setBuildingData({ ...buildingData, floors: [newFloor] });
+            }
+        } catch (err) { console.error("Calculation error:", err); } // Added basic error logging recovery
     };
 
     return (

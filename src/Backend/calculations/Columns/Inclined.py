@@ -1,4 +1,5 @@
 # design_logic.py
+#inclined columns
 import math
 
 

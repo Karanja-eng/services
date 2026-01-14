@@ -65,7 +65,7 @@ import InternalFinishesTakeoff from "./takeoff2/internal_finishes";
 import SuperstructureTakeoffApp from "./takeoff2/Superstructure/Superstructure_takeoff";
 import UnderGroundTankComponent from "./takeoff2/underground_tank";
 import SubstructureTakeoffApp from "./takeoff2/substructure_works";
-import StaircaseTakeoffApp from "./takeoff2/Stairs";
+import StaircaseTakeoffApp from "./takeoff2/Stairs/Enhanced_Stairs";
 import ElectricalPlumbingTakeoff from "./takeoff2/ElectricalPlumbingTakeoff";
 
 

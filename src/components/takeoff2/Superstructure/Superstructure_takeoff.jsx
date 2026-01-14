@@ -286,54 +286,59 @@ const SuperstructureTakeoffApp = () => {
 
       const response = await axios.post(`${API_BASE}/rc_superstructure_router/api/calculate-superstructure`, payload);
       const data = response.data;
+      
+      console.log("API Response:", data); // Debug log
 
       // Map SuperstructureResults to BOQ items
       if (data && data.total_conc_m3 !== undefined) {
-        const items = [
-          // Concrete
-          {
-            id: 'conc-1',
-            billNo: 'F',
-            itemNo: 'F10',
-            description: `Providing and placing ${data.settings?.conc_grade_name || 'C25'} concrete in columns, beams, and slabs.`,
-            unit: 'm³',
-            quantity: data.total_conc_with_wastage,
-            rate: 0,
-            amount: 0
-          },
-          // Formwork
-          {
-            id: 'form-1',
-            billNo: 'F',
-            itemNo: 'F20',
-            description: `Centering and shuttering (Formwork) including strutting, propping etc. and removal of formwork.`,
-            unit: 'm²',
-            quantity: data.total_form_m2,
-            rate: 0,
-            amount: 0
-          },
-          // Reinforcement
-          {
-            id: 'reinf-1',
-            billNo: 'G',
-            itemNo: 'G10',
-            description: `Supply and fix High Yield Strength Deformed (HYSD) bars for reinforcement including cutting, bending, binding etc.`,
-            unit: 'kg',
-            quantity: data.total_reinf_kg,
-            rate: 0,
-            amount: 0
-          }
-        ];
+         // Success
+         const items = [
+            // Concrete
+            {
+                id: 'conc-1',
+                billNo: 'F',
+                itemNo: 'F10',
+                description: `Providing and placing C25 concrete in columns, beams, and slabs.`,
+                unit: 'm³',
+                quantity: data.total_conc_with_wastage,
+                rate: 0,
+                amount: 0
+            },
+             // Formwork
+             {
+                id: 'form-1',
+                billNo: 'F',
+                itemNo: 'F20',
+                description: `Centering and shuttering (Formwork) including strutting, propping etc. and removal of formwork.`,
+                unit: 'm²',
+                quantity: data.total_form_m2,
+                rate: 0,
+                amount: 0
+            },
+             // Reinforcement
+             {
+                id: 'reinf-1',
+                billNo: 'G',
+                itemNo: 'G10',
+                description: `Supply and fix High Yield Strength Deformed (HYSD) bars for reinforcement including cutting, bending, binding etc.`,
+                unit: 'kg',
+                quantity: data.total_reinf_kg,
+                rate: 0,
+                amount: 0
+            }
+         ];
         setTakeoffData(items);
         setEditorKey(prev => prev + 1);
         setActiveTab("takeoff"); // Switch to takeoff to see results
+      } else {
+        alert("Received unexpected response from server: " + JSON.stringify(data));
       }
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.detail) {
         alert("Calculation Error: " + JSON.stringify(err.response.data.detail));
       } else {
-        alert("Calculation failed. Backend might be offline.");
+        alert("Calculation failed. Backend might be offline. Error: " + err.message);
       }
     } finally {
       setLoading(false);

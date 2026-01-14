@@ -168,9 +168,12 @@ const RCCSuperstructureApp = () => {
     if (!data || !data.floors[0]) return;
     const floor = data.floors[0];
 
+    // 1. Columns: Map directly (assuming CV returns individual columns)
     if (floor.columns && floor.columns.length > 0) {
       setColumns(floor.columns.map((c, i) => ({
         id: c.id || Date.now() + i,
+        // Default to a standard count of 1 if not provided
+        count: 1,
         width: c.size || 0.3,
         depth: c.size || 0.3,
         height: 3.0,
@@ -178,87 +181,180 @@ const RCCSuperstructureApp = () => {
       })));
     }
 
-    if (floor.beams && floor.beams.length > 0) {
-      setBeams(floor.beams.map((b, i) => ({
-        id: b.id || Date.now() + i + 100,
-        length: b.length || 5.0,
-        width: b.width || 0.2,
-        depth: b.depth || 0.45,
-        mark: b.mark || `B${i + 1}`,
-      })));
+    // 2. Beams: Continuous logic (Total Wall Length + Openings)
+    // Calculate total linear length of walls
+    let totalWallLen = 0;
+    if (floor.walls) {
+      totalWallLen = floor.walls.reduce((sum, w) => sum + (parseFloat(w.length) || 0), 0);
+    }
+    // Add openings to make it "continuous" (over doors/windows)
+    let totalDoorWidth = 0;
+    if (floor.doors) {
+      totalDoorWidth = floor.doors.reduce((sum, d) => sum + (parseFloat(d.width) || 0), 0);
+    }
+    let totalWindowWidth = 0;
+    if (floor.windows) {
+      totalWindowWidth = floor.windows.reduce((sum, w) => sum + (parseFloat(w.width) || 0), 0);
     }
 
-    if (floor.slabs && floor.slabs.length > 0) {
-      setSlabs(floor.slabs.map((s, i) => ({
-        id: s.id || Date.now() + i + 200,
-        area: s.area || 25.0,
-        thickness: s.thickness || 0.15,
-        mark: s.mark || `S${i + 1}`,
-      })));
+    const continuousBeamLength = totalWallLen + totalDoorWidth + totalWindowWidth;
+
+    // Create one "Total Beam Run" item, or split if needed. 
+    // Here we create one consolidated item as per user preference for simplicity in takeoff
+    if (continuousBeamLength > 0) {
+      setBeams([{
+        id: Date.now() + 500,
+        count: 1,
+        length: parseFloat(continuousBeamLength.toFixed(2)),
+        width: 0.2, // Default
+        depth: 0.45, // Default
+        mark: "B1 (Total Run)",
+      }]);
+    }
+
+    // 3. Slabs: Single Slab Logic (Bounding Box)
+    // Find min/max X and Y from walls to estimate building footprint
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    let found = false;
+
+    if (floor.walls) {
+      floor.walls.forEach(w => {
+        const vals = [w.start_x, w.end_x, w.start_y, w.end_y].map(v => parseFloat(v));
+        // Check for valid numbers
+        if (!vals.some(isNaN)) {
+          minX = Math.min(minX, vals[0], vals[1]);
+          maxX = Math.max(maxX, vals[0], vals[1]);
+          minY = Math.min(minY, vals[2], vals[3]);
+          maxY = Math.max(maxY, vals[2], vals[3]);
+          found = true;
+        }
+      });
+    }
+
+    if (found) {
+      const width = maxX - minX;
+      const depth = maxY - minY;
+      const totalArea = width * depth;
+
+      if (totalArea > 0) {
+        setSlabs([{
+          id: Date.now() + 600,
+          area: parseFloat(totalArea.toFixed(2)),
+          thickness: 0.15,
+          mark: "S1 (Main Slab)"
+        }]);
+      }
+    } else if (floor.slabs && floor.slabs.length > 0) {
+      // Fallback to CV slabs if no walls? Or just use CV slabs logic if preferred?
+      // User requested single slab, so if walls fail, maybe try summing CV slab areas
+      const totalSlabArea = floor.slabs.reduce((sum, s) => sum + (parseFloat(s.area) || 0), 0);
+      setSlabs([{
+        id: Date.now() + 600,
+        area: parseFloat(totalSlabArea.toFixed(2)),
+        thickness: 0.15,
+        mark: "S1 (Total Area)"
+      }]);
     }
   };
 
   const calculateTakeoff = async () => {
     setLoading(true);
     try {
+      // Explode items based on 'count' for the backend
+      const explodedColumns = [];
+      columns.forEach(c => {
+        const count = parseInt(c.count) || 1;
+        for (let i = 0; i < count; i++) {
+          explodedColumns.push({
+            id: `${c.id}_${i}`, // Unique ID for backend
+            width: parseFloat(c.width) || 0.1, // Safe default
+            depth: parseFloat(c.depth) || 0.1,
+            height: parseFloat(c.height) || 0.1,
+            mark: c.mark
+          });
+        }
+      });
+
+      const explodedBeams = [];
+      beams.forEach(b => {
+        const count = parseInt(b.count) || 1;
+        for (let i = 0; i < count; i++) {
+          explodedBeams.push({
+            id: `${b.id}_${i}`,
+            length: parseFloat(b.length) || 0.1,
+            width: parseFloat(b.width) || 0.1,
+            depth: parseFloat(b.depth) || 0.1,
+            mark: b.mark
+          });
+        }
+      });
+
+      // Slabs usually don't have a 'count' field in this UI, but if they did:
+      // (The UI code shows slabs don't have count input, just area/thickness)
+      const finalSlabs = slabs.map(s => ({
+        id: s.id,
+        area: parseFloat(s.area) || 0.1,
+        thickness: parseFloat(s.thickness) || 0.1,
+        mark: s.mark
+      }));
+
       const payload = {
-        columns: columns.map(c => ({
-          id: c.id,
-          width: c.width,
-          depth: c.depth,
-          height: c.height,
-          mark: c.mark
-        })),
-        beams: beams.map(b => ({
-          id: b.id,
-          length: b.length,
-          width: b.width,
-          depth: b.depth,
-          mark: b.mark
-        })),
-        slabs: slabs.map(s => ({
-          id: s.id,
-          area: s.area,
-          thickness: s.thickness,
-          mark: s.mark
-        })),
+        columns: explodedColumns,
+        beams: explodedBeams,
+        slabs: finalSlabs,
         settings: {
-          conc_grade: settings.conc_grade,
-          conc_grade_name: settings.conc_grade_name,
-          reinf_density: settings.reinf_density,
-          form_type: settings.form_type,
+          conc_grade: settings.conc_grade || "1:1.5:3",
+          conc_grade_name: settings.conc_grade_name || "C25",
+          reinf_density: parseFloat(settings.reinf_density) || 120,
+          form_type: settings.form_type || "F3",
           include_wastage: settings.include_wastage,
-          conc_wastage: settings.conc_wastage,
-          reinf_wastage: settings.reinf_wastage,
-          cover: settings.cover,
-          bar_spacing: settings.bar_spacing
+          conc_wastage: parseFloat(settings.conc_wastage) || 5, // Remove hard validation cap if desired, relying on backend
+          reinf_wastage: parseFloat(settings.reinf_wastage) || 2.5,
+          cover: parseFloat(settings.cover) || 25,
+          bar_spacing: parseFloat(settings.bar_spacing) || 150
         }
       };
 
+      console.log("Sending Payload:", payload); // Debug
+
       const response = await axios.post(`${API_BASE}/rc_superstructure_router/api/calculate-superstructure`, payload);
       const data = response.data;
+      console.log("API Response:", data);
 
-      const items = [
-        { id: 1, billNo: "1", itemNo: "1", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in columns`, unit: "m³", quantity: data.col_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 2, billNo: "2", itemNo: "2", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in beams`, unit: "m³", quantity: data.beam_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 3, billNo: "3", itemNo: "3", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in slabs`, unit: "m³", quantity: data.slab_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 4, billNo: "4", itemNo: "4", description: "High tensile steel reinforcement bars to BS 4449 in columns", unit: "kg", quantity: data.col_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 5, billNo: "5", itemNo: "5", description: "High tensile steel reinforcement bars to BS 4449 in beams", unit: "kg", quantity: data.beam_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 6, billNo: "6", itemNo: "6", description: "High tensile steel reinforcement bars to BS 4449 in slabs", unit: "kg", quantity: data.slab_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 7, billNo: "7", itemNo: "7", description: `Formwork type ${settings.form_type} to columns including props and supports`, unit: "m²", quantity: data.col_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 8, billNo: "8", itemNo: "8", description: `Formwork type ${settings.form_type} to beams including soffit and sides`, unit: "m²", quantity: data.beam_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 9, billNo: "9", itemNo: "9", description: `Formwork type ${settings.form_type} to slabs including soffit and edges`, unit: "m²", quantity: data.slab_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 10, billNo: "10", itemNo: "10", description: "Curing of concrete for 7 days with hessian and polythene", unit: "m²", quantity: data.total_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 11, billNo: "11", itemNo: "11", description: "Testing of concrete including cube samples at 7, 14, and 28 days", unit: "Item", quantity: 1, rate: 0, amount: 0, dimensions: [], isHeader: false },
-        { id: 12, billNo: "12", itemNo: "12", description: "Striking and cleaning formwork and storage", unit: "m²", quantity: data.total_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
-      ].filter(item => item.quantity > 0);
+      if (data) {
+        const items = [
+          { id: 1, billNo: "1", itemNo: "1", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in columns`, unit: "m³", quantity: data.col_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 2, billNo: "2", itemNo: "2", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in beams`, unit: "m³", quantity: data.beam_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 3, billNo: "3", itemNo: "3", description: `Reinforced concrete grade ${settings.conc_grade_name} (${settings.conc_grade}) in slabs`, unit: "m³", quantity: data.slab_conc_with_wastage, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 4, billNo: "4", itemNo: "4", description: "High tensile steel reinforcement bars to BS 4449 in columns", unit: "kg", quantity: data.col_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 5, billNo: "5", itemNo: "5", description: "High tensile steel reinforcement bars to BS 4449 in beams", unit: "kg", quantity: data.beam_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 6, billNo: "6", itemNo: "6", description: "High tensile steel reinforcement bars to BS 4449 in slabs", unit: "kg", quantity: data.slab_reinf_kg, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 7, billNo: "7", itemNo: "7", description: `Formwork type ${settings.form_type} to columns including props and supports`, unit: "m²", quantity: data.col_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 8, billNo: "8", itemNo: "8", description: `Formwork type ${settings.form_type} to beams including soffit and sides`, unit: "m²", quantity: data.beam_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 9, billNo: "9", itemNo: "9", description: `Formwork type ${settings.form_type} to slabs including soffit and edges`, unit: "m²", quantity: data.slab_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 10, billNo: "10", itemNo: "10", description: "Curing of concrete for 7 days with hessian and polythene", unit: "m²", quantity: data.total_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 11, billNo: "11", itemNo: "11", description: "Testing of concrete including cube samples at 7, 14, and 28 days", unit: "Item", quantity: 1, rate: 0, amount: 0, dimensions: [], isHeader: false },
+          { id: 12, billNo: "12", itemNo: "12", description: "Striking and cleaning formwork and storage", unit: "m²", quantity: data.total_form_m2, rate: 0, amount: 0, dimensions: [], isHeader: false },
+        ].filter(item => item.quantity > 0);
 
-      setTakeoffData(items);
-      setEditorKey(prev => prev + 1);
+        setTakeoffData(items);
+        setEditorKey(prev => prev + 1);
+        // Only switch tab if we have data to show
+        if (items.length > 0) {
+          setActiveTab("takeoff");
+        } else {
+          alert("Calculation completed but yielded 0 quantities. Please check your inputs.");
+        }
+      }
 
     } catch (err) {
       console.error(err);
-      alert("Calculation failed. Backend might be offline.");
+      if (err.response && err.response.data && err.response.data.detail) {
+        // Detailed backend error
+        alert("Calculation Error: " + JSON.stringify(err.response.data.detail));
+      } else {
+        alert("Calculation failed. Backend might be offline or unreachable.");
+      }
     } finally {
       setLoading(false);
     }

@@ -156,7 +156,7 @@ from calculations.takeoff.Door_window import router as Door_window_router
 from calculations.takeoff.underground_tank_router import (
     router as underground_tank_router,
 )
-from calculations.takeoff.stairs import router as stairs_router
+from calculations.takeoff.enhanced_stairs import router as stairs_router
 from calculations.takeoff.internal_finishes import router as internal_finishes_router
 from calculations.takeoff.Superstructure_takeoff import router as superstructure_router
 from calculations.takeoff.superstructure import router as rc_superstructure_router
