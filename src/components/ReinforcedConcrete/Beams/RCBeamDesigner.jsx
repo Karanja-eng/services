@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Shield,
@@ -30,6 +31,7 @@ const RCBeamDesigner = ({
   isDark = false,
   onBack // Function to go back to analysis
 }) => {
+  const navigate = useNavigate();
   const API_BASE_URL = "http://localhost:8001/beam_analysis/rc_design";
 
   const [designResults, setDesignResults] = useState(null);
@@ -432,7 +434,24 @@ const RCBeamDesigner = ({
             <div className="p-6 overflow-y-auto space-y-12">
               {designResults.span_designs.map((span, idx) => (
                 <div key={idx} className="border rounded-xl p-4 shadow-sm">
-                  <h4 className="font-bold text-lg mb-4 text-center bg-gray-100 py-2 rounded">Span {idx + 1} ({span.span_length}m)</h4>
+                  <div className="flex justify-between items-center mb-4 bg-gray-100 py-2 px-4 rounded">
+                    <h4 className="font-bold text-lg">Span {idx + 1} ({span.span_length}m)</h4>
+                    <button
+                      onClick={() => {
+                        const memberData = {
+                          memberType: "beam",
+                          config: get2DConfig(span, idx),
+                          x: 0,
+                          y: 0
+                        };
+                        window.CAD_PENDING_MEMBER = memberData;
+                        navigate("/drawing");
+                      }}
+                      className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                    >
+                      Send to CAD
+                    </button>
+                  </div>
                   <BeamColumnDrawer
                     config={get2DConfig(span, idx)}
                     section="both"

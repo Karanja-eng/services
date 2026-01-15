@@ -6,8 +6,6 @@ All endpoints, WebSocket, DXF/DWG import/export, Blender integration
 
 from fastapi import (
     APIRouter,
-    WebSocket,
-    WebSocketDisconnect,
     UploadFile,
     File,
     HTTPException,
@@ -134,8 +132,17 @@ class AIGenerateRequest(BaseModel):
 
 
 # ============ IN-MEMORY STORAGE ============
-projects: Dict[str, Project] = {}
-active_websockets: List[WebSocket] = []
+projects: Dict[str, Project] = {
+    "default": Project(
+        id="default",
+        name="Default Project",
+        created_at=datetime.now().isoformat(),
+        modified_at=datetime.now().isoformat(),
+        layers=[
+            Layer(id="1", name="Layer 0", color="#FFFFFF", visible=True, locked=False)
+        ],
+    )
+}
 
 # ============ UTILITY FUNCTIONS ============
 
@@ -433,21 +440,19 @@ async def root():
             "dwg_import": "partial",
             "blender_export": check_blender_installed(),
             "measurements": True,
-            "websocket": True,
             "ai_integration": "placeholder",
         },
         "endpoints": {
-            "health": "/api/health",
-            "projects": "/api/projects",
-            "objects": "/api/projects/{id}/objects",
-            "layers": "/api/projects/{id}/layers",
-            "extrude": "/api/projects/{id}/extrude",
-            "revolve": "/api/projects/{id}/revolve",
-            "import_dxf": "/api/projects/{id}/import/dxf",
-            "export_dxf": "/api/projects/{id}/export/dxf",
-            "export_blender": "/api/projects/{id}/export/blender",
-            "measure": "/api/projects/{id}/measure",
-            "websocket": "/ws/drawing/{id}",
+            "health": "/drawings/health",
+            "projects": "/drawings/projects",
+            "objects": "/drawings/projects/{id}/objects",
+            "layers": "/drawings/projects/{id}/layers",
+            "extrude": "/drawings/projects/{id}/extrude",
+            "revolve": "/drawings/projects/{id}/revolve",
+            "import_dxf": "/drawings/projects/{id}/import/dxf",
+            "export_dxf": "/drawings/projects/{id}/export/dxf",
+            "export_blender": "/drawings/projects/{id}/export/blender",
+            "measure": "/drawings/projects/{id}/measure",
         },
     }
 
@@ -460,7 +465,6 @@ async def health_check():
         "timestamp": datetime.now().isoformat(),
         "blender_available": check_blender_installed(),
         "active_projects": len(projects),
-        "active_websockets": len(active_websockets),
     }
 
 
@@ -484,7 +488,7 @@ async def create_project(name: str = Query("Untitled Project")):
     return {"project": project, "message": "Project created successfully"}
 
 
-@router.get("/api/projects/{project_id}")
+@router.get("/projects/{project_id}")
 async def get_project(project_id: str):
     """Get project by ID"""
     if project_id not in projects:
@@ -492,7 +496,7 @@ async def get_project(project_id: str):
     return {"project": projects[project_id]}
 
 
-@router.get("/api/projects")
+@router.get("/projects")
 async def list_projects(page: int = 1, limit: int = 20):
     """List all projects with pagination"""
     start = (page - 1) * limit
@@ -506,7 +510,7 @@ async def list_projects(page: int = 1, limit: int = 20):
     }
 
 
-@router.put("/api/projects/{project_id}")
+@router.put("/projects/{project_id}")
 async def update_project(project_id: str, updates: Dict[str, Any]):
     """Update project"""
     if project_id not in projects:
@@ -524,7 +528,7 @@ async def update_project(project_id: str, updates: Dict[str, Any]):
     return {"project": project, "message": "Project updated"}
 
 
-@router.delete("/api/projects/{project_id}")
+@router.delete("/projects/{project_id}")
 async def delete_project(project_id: str):
     """Delete project"""
     if project_id not in projects:
@@ -537,7 +541,7 @@ async def delete_project(project_id: str):
 # ============ OBJECT ENDPOINTS ============
 
 
-@router.post("/api/projects/{project_id}/objects")
+@router.post("/projects/{project_id}/objects")
 async def add_object(project_id: str, obj: DrawingObject):
     """Add object to project"""
     if project_id not in projects:
@@ -546,18 +550,10 @@ async def add_object(project_id: str, obj: DrawingObject):
     projects[project_id].objects.append(obj)
     projects[project_id].modified_at = datetime.now().isoformat()
 
-    await broadcast(
-        {
-            "type": "object_added",
-            "project_id": project_id,
-            "object": obj.dict(by_alias=True),
-        }
-    )
-
     return {"status": "success", "object": obj}
 
 
-@router.post("/api/projects/{project_id}/objects/batch")
+@router.post("/projects/{project_id}/objects/batch")
 async def batch_add_objects(project_id: str, request: Dict[str, List[Dict]]):
     """Batch add objects"""
     if project_id not in projects:
@@ -571,7 +567,7 @@ async def batch_add_objects(project_id: str, request: Dict[str, List[Dict]]):
     return {"status": "success", "objects": new_objects, "count": len(new_objects)}
 
 
-@router.put("/api/projects/{project_id}/objects/{object_id}")
+@router.put("/projects/{project_id}/objects/{object_id}")
 async def update_object(project_id: str, object_id: str, obj: DrawingObject):
     """Update an object"""
     if project_id not in projects:
@@ -582,20 +578,12 @@ async def update_object(project_id: str, object_id: str, obj: DrawingObject):
             projects[project_id].objects[i] = obj
             projects[project_id].modified_at = datetime.now().isoformat()
 
-            await broadcast(
-                {
-                    "type": "object_updated",
-                    "project_id": project_id,
-                    "object": obj.dict(by_alias=True),
-                }
-            )
-
             return {"status": "success", "object": obj}
 
     raise HTTPException(status_code=404, detail="Object not found")
 
 
-@router.delete("/api/projects/{project_id}/objects/{object_id}")
+@router.delete("/projects/{project_id}/objects/{object_id}")
 async def delete_object(project_id: str, object_id: str):
     """Delete an object"""
     if project_id not in projects:
@@ -606,14 +594,10 @@ async def delete_object(project_id: str, object_id: str):
     ]
     projects[project_id].modified_at = datetime.now().isoformat()
 
-    await broadcast(
-        {"type": "object_deleted", "project_id": project_id, "object_id": object_id}
-    )
-
     return {"status": "success"}
 
 
-@router.post("/api/projects/{project_id}/objects/batch-delete")
+@router.post("/projects/{project_id}/objects/batch-delete")
 async def batch_delete_objects(project_id: str, request: Dict[str, List[str]]):
     """Batch delete objects"""
     if project_id not in projects:
@@ -631,7 +615,7 @@ async def batch_delete_objects(project_id: str, request: Dict[str, List[str]]):
 # ============ LAYER ENDPOINTS ============
 
 
-@router.post("/api/projects/{project_id}/layers")
+@router.post("/projects/{project_id}/layers")
 async def add_layer(project_id: str, layer: Layer):
     """Add layer to project"""
     if project_id not in projects:
@@ -643,7 +627,7 @@ async def add_layer(project_id: str, layer: Layer):
     return {"status": "success", "layer": layer}
 
 
-@router.put("/api/projects/{project_id}/layers/{layer_id}")
+@router.put("/projects/{project_id}/layers/{layer_id}")
 async def update_layer(project_id: str, layer_id: str, updates: Dict[str, Any]):
     """Update layer"""
     if project_id not in projects:
@@ -667,7 +651,7 @@ async def update_layer(project_id: str, layer_id: str, updates: Dict[str, Any]):
     raise HTTPException(status_code=404, detail="Layer not found")
 
 
-@router.delete("/api/projects/{project_id}/layers/{layer_id}")
+@router.delete("/projects/{project_id}/layers/{layer_id}")
 async def delete_layer(project_id: str, layer_id: str):
     """Delete layer"""
     if project_id not in projects:
@@ -684,7 +668,7 @@ async def delete_layer(project_id: str, layer_id: str):
 # ============ 3D OPERATIONS ============
 
 
-@router.post("/api/projects/{project_id}/extrude")
+@router.post("/projects/{project_id}/extrude")
 async def extrude_objects(project_id: str, request: ExtrudeRequest):
     """Extrude 2D objects to 3D"""
     if project_id not in projects:
@@ -757,7 +741,7 @@ async def extrude_objects(project_id: str, request: ExtrudeRequest):
     return {"status": "success", "objects": new_objects, "count": len(new_objects)}
 
 
-@router.post("/api/projects/{project_id}/revolve")
+@router.post("/projects/{project_id}/revolve")
 async def revolve_objects(project_id: str, request: RevolveRequest):
     """Revolve profile around axis"""
     if project_id not in projects:
@@ -799,7 +783,7 @@ async def revolve_objects(project_id: str, request: RevolveRequest):
 # ============ MEASUREMENT ENDPOINTS ============
 
 
-@router.post("/api/projects/{project_id}/measure")
+@router.post("/projects/{project_id}/measure")
 async def measure_objects(project_id: str, object_ids: List[str]):
     """Calculate measurements for objects"""
     if project_id not in projects:
@@ -835,7 +819,7 @@ async def measure_objects(project_id: str, object_ids: List[str]):
                     Point(obj.start.x, obj.start.y, obj.start.z),
                     Point(obj.end.x, obj.end.y, obj.end.z),
                 )
-                from geometry import rectangle_area, rectangle_perimeter
+                from .geometry_utils import rectangle_area, rectangle_perimeter
 
                 total_area += rectangle_area(rect)
                 total_perimeter += rectangle_perimeter(rect)

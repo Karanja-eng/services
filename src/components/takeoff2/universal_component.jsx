@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FileText, List, Grid, Calculator, Box } from 'lucide-react';
 
 // Universal Tab Navigation

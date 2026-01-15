@@ -1,36 +1,27 @@
-# main.py
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
+# tall_framed_backend.py
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
-import uvicorn
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 import math
 import numpy as np
+from .fem_solver import FEM2DSolver
+from .load_standards import BS6399
 
-app = FastAPI(
-    title="RC Structural Design API",
-    description="BS Code Compliant Structural Engineering Calculations",
-    version="1.0.0"
-)
-
-# CORS Configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+router = APIRouter(
+    tags=["Start Code Design"]
 )
 
 # ============================================================================
-# PYDANTIC MODELS (Request/Response Schemas)
+# PYDANTIC MODELS
 # ============================================================================
 
 class LoadCombinationRequest(BaseModel):
     dead_load: float = Field(..., description="Dead load in kN/m²")
-    imposed_load: float = Field(..., description="Imposed load in kN/m²")
-    wind_load: float = Field(0, description="Wind load in kN/m²")
+    imposed_load: Optional[float] = Field(None, description="Imposed load in kN/m²")
+    wind_load: Optional[float] = Field(None, description="Wind load in kN/m²")
+    category: Optional[str] = Field(None, description="Usage category for auto-imposed load")
+    wind_params: Optional[Dict] = Field(None, description="Params for auto-wind: speed, alt, height, sea_dist, town")
     combination_type: str = Field("uls", description="uls or sls")
 
 class LoadCombinationResponse(BaseModel):
@@ -48,9 +39,9 @@ class TieDesignRequest(BaseModel):
     floor_area: Optional[float] = Field(None, description="Floor area in m²")
 
 class TieDesignResponse(BaseModel):
-    tie_force: float
-    required_area: float
-    bar_size: str
+    tieForce: float
+    requiredArea: float
+    barSize: str
     spacing: str
     number_of_bars: int
     design_checks: Dict[str, bool]
@@ -66,10 +57,10 @@ class FrameAnalysisRequest(BaseModel):
 
 class FrameAnalysisResponse(BaseModel):
     method_used: str
-    shear_per_column: List[float]
-    moments: List[float]
-    axial_forces: List[float]
-    inflection_points: List[float]
+    shearPerColumn: List[float]
+    moment: List[float]
+    axialForce: List[float]
+    inflectionPoint: List[float]
     max_drift: float
     base_shear: float
 
@@ -118,9 +109,10 @@ class BeamDesignRequest(BaseModel):
     cover: float = Field(25, description="Concrete cover in mm")
 
 class BeamDesignResponse(BaseModel):
-    flexural_reinforcement: Dict[str, float]
-    shear_reinforcement: Dict[str, float]
-    deflection_check: Dict[str, any]
+    status: str = "OK"
+    reinforcement: Dict[str, Any]
+    shear_check: Dict[str, Any]
+    deflection_check: Dict[str, Any]
     crack_width: float
     design_summary: str
 
@@ -135,10 +127,10 @@ class ColumnDesignRequest(BaseModel):
     effective_length: Optional[float] = Field(None, description="Effective length in meters")
 
 class ColumnDesignResponse(BaseModel):
-    reinforcement_area: float
-    number_of_bars: int
-    bar_size: str
-    links: Dict[str, any]
+    status: str = "OK"
+    reinforcement: Dict[str, Any]
+    capacity: Dict[str, Any]
+    links: Dict[str, Any]
     slenderness_ratio: float
     additional_moment: float
     capacity_check: Dict[str, bool]
@@ -190,28 +182,49 @@ class BSCodeTables:
 # LOAD COMBINATION CALCULATIONS
 # ============================================================================
 
-@app.post("/api/loads/combinations", response_model=LoadCombinationResponse)
+@router.post("/api/loads/combinations", response_model=LoadCombinationResponse)
 async def calculate_load_combinations(request: LoadCombinationRequest):
-    """Calculate load combinations according to BS 8110"""
+    """Calculate load combinations according to BS 8110 with BS 6399 auto-loading"""
     
     gk = request.dead_load
-    qk = request.imposed_load
-    wk = request.wind_load
+    
+    # Auto-resolve Imposed Load
+    if request.imposed_load is not None:
+        qk = request.imposed_load
+    elif request.category:
+        qk = BS6399.get_imposed_load(request.category)
+    else:
+        qk = 0.0
+
+    # Auto-resolve Wind Load
+    if request.wind_load is not None:
+        wk = request.wind_load
+    elif request.wind_params:
+        wp = request.wind_params
+        wk = BS6399.calculate_wind_load(
+            wp.get("speed", 25), 
+            wp.get("alt", 0), 
+            wp.get("height", 10), 
+            wp.get("sea_dist", 100), 
+            wp.get("in_town", True)
+        )
+    else:
+        wk = 0.0
     
     # Ultimate Limit State Combinations
     uls = {
-        "combo1_dead_imposed": 1.4 * gk + 1.6 * qk,
-        "combo2_dead_imposed_wind": 1.2 * gk + 1.2 * qk + 1.2 * wk,
-        "combo3_dead_wind": 1.0 * gk + 1.4 * wk,
-        "combo4_all_loads": 1.2 * gk + 1.2 * qk + 1.2 * wk,
+        "combo1": round(1.4 * gk + 1.6 * qk, 3),
+        "combo2": round(1.2 * gk + 1.2 * qk + 1.2 * wk, 3),
+        "combo3": round(1.0 * gk + 1.4 * wk, 3),
+        "combo4": round(1.2 * gk + 1.2 * qk + 1.2 * wk, 3),
     }
     
     # Serviceability Limit State
     sls = {
-        "characteristic": gk + qk,
-        "quasi_permanent": gk + 0.3 * qk,
-        "frequent": gk + 0.5 * qk,
-        "rare": gk + qk + 0.6 * wk
+        "characteristic": round(gk + qk, 3),
+        "quasi_permanent": round(gk + 0.3 * qk, 3),
+        "frequent": round(gk + 0.5 * qk, 3),
+        "rare": round(gk + qk + 0.6 * wk, 3)
     }
     
     # Determine critical combination
@@ -229,7 +242,7 @@ async def calculate_load_combinations(request: LoadCombinationRequest):
 # TIE DESIGN CALCULATIONS
 # ============================================================================
 
-@app.post("/api/design/ties", response_model=TieDesignResponse)
+@router.post("/api/design/ties", response_model=TieDesignResponse)
 async def design_ties(request: TieDesignRequest):
     """Design ties according to BS 8110 Section 3.12"""
     
@@ -297,9 +310,9 @@ async def design_ties(request: TieDesignRequest):
     }
     
     return TieDesignResponse(
-        tie_force=round(tie_force, 2),
-        required_area=round(required_area, 2),
-        bar_size=bar_size,
+        tieForce=round(tie_force, 2),
+        requiredArea=round(required_area, 2),
+        barSize=bar_size,
         spacing=spacing,
         number_of_bars=number_of_bars,
         design_checks=design_checks
@@ -309,121 +322,125 @@ async def design_ties(request: TieDesignRequest):
 # FRAME ANALYSIS
 # ============================================================================
 
-@app.post("/api/analysis/frame", response_model=FrameAnalysisResponse)
+
+@router.post("/api/analysis/frame", response_model=FrameAnalysisResponse)
 async def analyze_frame(request: FrameAnalysisRequest):
-    """Analyze frame using portal or cantilever method"""
+    """Analyze frame. Uses FEM Stiffness method for robust results."""
     
     floors = request.floors
     bays = request.bays
-    height = request.story_height
-    width = request.bay_width
-    lateral_load = request.lateral_load
-    method = request.method
+    h = request.story_height
+    w = request.bay_width
+    lateral = request.lateral_load
+    vertical = request.vertical_load or 0
     
-    shear_per_column = []
-    moments = []
-    axial_forces = []
-    inflection_points = []
+    # FEM-based solution
+    solver = FEM2DSolver()
     
-    if method == "portal":
-        # Portal Frame Method (assumes inflection at mid-height and mid-span)
-        # Exterior columns take V/2, interior columns take V
-        total_columns = bays + 1
+    # Mesh generation
+    node_id = 1
+    elem_id = 1
+    
+    # Grid of nodes: rows (0 to floors), cols (0 to bays)
+    node_map = {} # (row, col) -> id
+    
+    for row in range(floors + 1):
+        for col in range(bays + 1):
+            x = col * w
+            y = row * h
+            
+            # Fixity: Ground (row 0) is fixed [True, True, True]
+            fixity = [True, True, True] if row == 0 else [False, False, False]
+            solver.add_node(node_id, x, y, fixity)
+            node_map[(row, col)] = node_id
+            node_id += 1
+            
+    # Elements (Columns and Beams)
+    # Props (simplified concrete square sections for analysis)
+    E = 30e6 # 30 GPa (kNm2)
+    A_col = 0.5 * 0.5
+    I_col = 0.5 * 0.5**3 / 12
+    A_beam = 0.4 * 0.6
+    I_beam = 0.4 * 0.6**3 / 12
+    
+    for row in range(floors):
+        # Columns (vertical)
+        for col in range(bays + 1):
+            n1 = node_map[(row, col)]
+            n2 = node_map[(row+1, col)]
+            solver.add_element(elem_id, n1, n2, E, A_col, I_col)
+            elem_id += 1
+            
+        # Beams (horizontal, at floor levels > 0)
+        target_row = row + 1
+        for col in range(bays):
+            n1 = node_map[(target_row, col)]
+            n2 = node_map[(target_row, col+1)]
+            solver.add_element(elem_id, n1, n2, E, A_beam, I_beam)
+            # Apply Vertical UDL to beams
+            if vertical > 0:
+                 solver.add_udl(elem_id, -vertical) # -y direction
+            elem_id += 1
+            
+        # Lateral Load
+        floor_load = lateral / floors
+        n_lat = node_map[(row+1, 0)] # Apply at left-most node
+        solver.add_nodal_load(n_lat, fx=floor_load)
         
-        # Load distribution to each story
-        load_per_story = lateral_load / floors
+    # Solve
+    results = solver.solve()
+    
+    if not results:
+         raise HTTPException(status_code=500, detail="Matrix singular - unstable structure")
+         
+    # Extract Results for Response
+    shear_per_column_data = []
+    moments_data = []
+    axial_forces_data = []
+    inflection_points_data = []
+    
+    cols_per_floor = bays + 1
+    beams_per_floor = bays
+    
+    current_elem_id = 1
+    for f in range(floors):
+        # Columns for this floor
+        floor_cols = []
+        for _ in range(cols_per_floor):
+            floor_cols.append(current_elem_id)
+            current_elem_id += 1
+            
+        # Beams for this floor
+        for _ in range(beams_per_floor):
+            current_elem_id += 1
         
-        for floor in range(floors):
-            # Shear distribution (exterior: V/2, interior: V)
-            shear_exterior = load_per_story / (2 * bays + 2)
-            shear_interior = 2 * shear_exterior
-            
-            # Moments at column bases (M = V * h/2)
-            moment_exterior = shear_exterior * (height / 2)
-            moment_interior = shear_interior * (height / 2)
-            
-            # Axial forces in columns (from moments in beams)
-            axial_exterior = moment_exterior / width
-            axial_interior = moment_interior / width
-            
-            shear_per_column.append({
-                "floor": floor + 1,
-                "exterior": round(shear_exterior, 2),
-                "interior": round(shear_interior, 2)
-            })
-            
-            moments.append({
-                "floor": floor + 1,
-                "exterior": round(moment_exterior, 2),
-                "interior": round(moment_interior, 2)
-            })
-            
-            axial_forces.append({
-                "floor": floor + 1,
-                "exterior": round(axial_exterior, 2),
-                "interior": round(axial_interior, 2)
-            })
-            
-            inflection_points.append(round(height / 2, 2))
-    
-    elif method == "cantilever":
-        # Cantilever Method (assumes inflection at mid-span, axial force proportional to distance from centroid)
-        load_per_story = lateral_load / floors
+        # Aggregate Column Results
+        shears = []
+        moments_cols = []
+        axials = []
         
-        # Distance from centroid for each column
-        total_width = bays * width
+        for eid in floor_cols:
+            res = results["elements"][eid]
+            shears.append(round(res["V_i"], 2))
+            moments_cols.append(round(res["M_i"], 2))
+            axials.append(round(res["N_i"], 2))
         
-        for floor in range(floors):
-            story_shear = load_per_story * (floors - floor)
-            
-            # Axial force proportional to distance from centroid
-            sum_distances_squared = sum([(i * width - total_width/2)**2 for i in range(bays + 1)])
-            
-            column_axials = []
-            for i in range(bays + 1):
-                distance = i * width - total_width / 2
-                axial = (story_shear * height / 2) * distance / sum_distances_squared if sum_distances_squared > 0 else 0
-                column_axials.append(round(axial, 2))
-            
-            axial_forces.append({
-                "floor": floor + 1,
-                "columns": column_axials
-            })
-            
-            # Moment calculation
-            moment = story_shear * (height / 2)
-            moments.append({"floor": floor + 1, "max_moment": round(moment, 2)})
-            
-            shear_per_column.append({"floor": floor + 1, "shear": round(story_shear / (bays + 1), 2)})
-            inflection_points.append(round(height / 2, 2))
-    
-    else:  # Simple method (BS 8110)
-        # Simplified analysis for braced frames
-        for floor in range(floors):
-            load_above = lateral_load * (floors - floor) / floors
-            shear = load_above / (bays + 1)
-            moment = shear * height * 0.5
-            
-            shear_per_column.append(round(shear, 2))
-            moments.append(round(moment, 2))
-            axial_forces.append(round(moment / width, 2))
-            inflection_points.append(round(height / 2, 2))
-    
-    # Calculate drift (simplified)
-    total_height = floors * height
-    # Assume lateral stiffness k = EI/h³
-    max_drift = (lateral_load * total_height**3) / (3 * 200000 * 1e6 * 0.001)  # Simplified
-    max_drift = round(max_drift, 3)
-    
-    base_shear = lateral_load
-    
+        shear_per_column_data.append({"values": shears, "exterior": shears[0]})
+        moments_data.append({"values": moments_cols, "exterior": moments_cols[0]})
+        axial_forces_data.append({"values": axials, "exterior": axials[0]})
+        inflection_points_data.append(round(h/2, 2))
+        
+    base_cols_res = [results["elements"][eid]["V_i"] for eid in range(1, cols_per_floor+1)]
+    base_shear = round(sum(base_cols_res), 2)
+    max_disp = round(results["max_disp"], 4)
+
     return FrameAnalysisResponse(
-        method_used=method,
-        shear_per_column=shear_per_column,
-        moments=moments,
-        axial_forces=axial_forces,
-        inflection_points=inflection_points,
-        max_drift=max_drift,
+        method_used="stiffness_matrix",
+        shearPerColumn=[d["exterior"] for d in shear_per_column_data],
+        moment=[d["exterior"] for d in moments_data],
+        axialForce=[d["exterior"] for d in axial_forces_data],
+        inflectionPoint=inflection_points_data,
+        max_drift=max_disp,
         base_shear=base_shear
     )
 
@@ -431,7 +448,7 @@ async def analyze_frame(request: FrameAnalysisRequest):
 # STRUCTURAL SYSTEMS ANALYSIS
 # ============================================================================
 
-@app.post("/api/analysis/structural-system", response_model=StructuralSystemResponse)
+@router.post("/api/analysis/structural-system", response_model=StructuralSystemResponse)
 async def analyze_structural_system(request: StructuralSystemRequest):
     """Analyze tall building structural systems"""
     
@@ -528,7 +545,7 @@ async def analyze_structural_system(request: StructuralSystemRequest):
 # COMPUTER MODELING
 # ============================================================================
 
-@app.post("/api/analysis/computer-model", response_model=ComputerModelResponse)
+@router.post("/api/analysis/computer-model", response_model=ComputerModelResponse)
 async def analyze_computer_model(request: ComputerModelRequest):
     """Analyze structural model by category"""
     
@@ -604,7 +621,7 @@ async def analyze_computer_model(request: ComputerModelRequest):
 # BEAM DESIGN
 # ============================================================================
 
-@app.post("/api/design/beam", response_model=BeamDesignResponse)
+@router.post("/api/design/beam", response_model=BeamDesignResponse)
 async def design_beam(request: BeamDesignRequest):
     """Design reinforced concrete beam according to BS 8110"""
     
@@ -670,22 +687,28 @@ async def design_beam(request: BeamDesignRequest):
     crack_width = min(crack_width, 0.3)  # Limit
     
     return BeamDesignResponse(
-        flexural_reinforcement={
-            "tension_steel_required": round(As_required, 2),
-            "tension_bars": tension_bars,
-            "compression_steel": round(compression_steel, 2),
+        status="OK",
+        reinforcement={
+            "tension_bars": {
+                "area_required": As_required,
+                "area_provided": tension_bars["area_provided"],
+                "bar_size": tension_bars["bar_size"],
+                "number": tension_bars["number"],
+                "description": tension_bars["description"]
+            },
+            "compression_steel": compression_steel,
             "design_type": design_type
         },
-        shear_reinforcement={
-            "shear_stress": round(v, 2),
-            "concrete_capacity": round(vc, 2),
+        shear_check={
+            "shear_stress": v,
+            "concrete_capacity": vc,
             "link_size": link_size,
             "spacing": link_spacing,
-            "design": shear_design
+            "status": shear_design
         },
         deflection_check={
-            "allowable_ratio": round(allowable_ratio, 2),
-            "actual_ratio": round(actual_ratio, 2),
+            "allowable_ratio": allowable_ratio,
+            "actual_ratio": actual_ratio,
             "ok": deflection_ok
         },
         crack_width=round(crack_width, 3),
@@ -696,7 +719,7 @@ async def design_beam(request: BeamDesignRequest):
 # COLUMN DESIGN
 # ============================================================================
 
-@app.post("/api/design/column", response_model=ColumnDesignResponse)
+@router.post("/api/design/column", response_model=ColumnDesignResponse)
 async def design_column(request: ColumnDesignRequest):
     """Design reinforced concrete column according to BS 8110"""
     
@@ -784,9 +807,17 @@ async def design_column(request: ColumnDesignRequest):
     }
     
     return ColumnDesignResponse(
-        reinforcement_area=round(Asc, 2),
-        number_of_bars=bar_arrangement['number'],
-        bar_size=bar_arrangement['bar_size'],
+        status="OK" if all(capacity_check.values()) else "FAIL",
+        reinforcement={
+             "number_of_bars": bar_arrangement['number'],
+             "bar_size": bar_arrangement['bar_size'],
+             "total_area": bar_arrangement['total_area'],
+             "arrangement": bar_arrangement['arrangement']
+        },
+        capacity={
+             "axial": N_capacity / 1000,
+             "moment": M_capacity / 1e6
+        },
         links={
             "size": link_size,
             "spacing": f"{link_spacing:.0f}mm",
@@ -881,12 +912,12 @@ class SlabDesignRequest(BaseModel):
 
 class SlabDesignResponse(BaseModel):
     design_moments: Dict[str, float]
-    reinforcement: Dict[str, any]
-    deflection_check: Dict[str, any]
-    punching_shear: Optional[Dict[str, any]]
+    reinforcement: Dict[str, Any]
+    deflection_check: Dict[str, Any]
+    punching_shear: Optional[Dict[str, Any]]
     design_summary: str
 
-@app.post("/api/design/slab", response_model=SlabDesignResponse)
+@router.post("/api/design/slab", response_model=SlabDesignResponse)
 async def design_slab(request: SlabDesignRequest):
     """Design reinforced concrete slab according to BS 8110"""
     
@@ -1036,11 +1067,11 @@ class FootingDesignRequest(BaseModel):
 class FootingDesignResponse(BaseModel):
     footing_dimensions: Dict[str, float]
     base_pressure: float
-    bending_reinforcement: Dict[str, any]
-    shear_check: Dict[str, any]
+    bending_reinforcement: Dict[str, Any]
+    shear_check: Dict[str, Any]
     design_summary: str
 
-@app.post("/api/design/footing", response_model=FootingDesignResponse)
+@router.post("/api/design/footing", response_model=FootingDesignResponse)
 async def design_footing(request: FootingDesignRequest):
     """Design foundation according to BS 8110"""
     
@@ -1150,11 +1181,11 @@ class RetainingWallRequest(BaseModel):
 class RetainingWallResponse(BaseModel):
     wall_dimensions: Dict[str, float]
     earth_pressure: Dict[str, float]
-    stability_checks: Dict[str, any]
-    reinforcement: Dict[str, any]
+    stability_checks: Dict[str, Any]
+    reinforcement: Dict[str, Any]
     design_summary: str
 
-@app.post("/api/design/retaining-wall", response_model=RetainingWallResponse)
+@router.post("/api/design/retaining-wall", response_model=RetainingWallResponse)
 async def design_retaining_wall(request: RetainingWallRequest):
     """Design cantilever retaining wall according to BS 8002"""
     
@@ -1274,7 +1305,7 @@ class Project(BaseModel):
 # In-memory storage (replace with database in production)
 projects_db = {}
 
-@app.post("/api/projects/create")
+@router.post("/api/projects/create")
 async def create_project(project: Project):
     """Create a new project"""
     project_id = f"PROJ_{len(projects_db) + 1:04d}"
@@ -1283,19 +1314,19 @@ async def create_project(project: Project):
     projects_db[project_id] = project.dict()
     return {"status": "success", "project_id": project_id, "project": project}
 
-@app.get("/api/projects/list")
+@router.get("/api/projects/list")
 async def list_projects():
     """List all projects"""
     return {"projects": list(projects_db.values())}
 
-@app.get("/api/projects/{project_id}")
+@router.get("/api/projects/{project_id}")
 async def get_project(project_id: str):
     """Get project by ID"""
     if project_id not in projects_db:
         raise HTTPException(status_code=404, detail="Project not found")
     return projects_db[project_id]
 
-@app.post("/api/projects/{project_id}/add-calculation")
+@router.post("/api/projects/{project_id}/add-calculation")
 async def add_calculation(project_id: str, calculation: Dict):
     """Add calculation to project"""
     if project_id not in projects_db:
@@ -1311,7 +1342,7 @@ async def add_calculation(project_id: str, calculation: Dict):
 # REPORT GENERATION
 # ============================================================================
 
-@app.get("/api/reports/project/{project_id}")
+@router.get("/api/reports/project/{project_id}")
 async def generate_project_report(project_id: str):
     """Generate comprehensive project report"""
     if project_id not in projects_db:
@@ -1346,7 +1377,7 @@ async def generate_project_report(project_id: str):
 # HEALTH CHECK AND INFO
 # ============================================================================
 
-@app.get("/")
+@router.get("/")
 async def root():
     """API root endpoint"""
     return {
@@ -1369,12 +1400,12 @@ async def root():
         }
     }
 
-@app.get("/api/health")
+@router.get("/api/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/codes/tables")
+@router.get("/api/codes/tables")
 async def get_code_tables():
     """Get BS Code reference tables"""
     return {
@@ -1407,7 +1438,7 @@ class WindLoadResponse(BaseModel):
     overturning_moment: float
     design_summary: str
 
-@app.post("/api/analysis/wind-load", response_model=WindLoadResponse)
+@router.post("/api/analysis/wind-load", response_model=WindLoadResponse)
 async def calculate_wind_load(request: WindLoadRequest):
     """Calculate wind loads according to BS 6399-2"""
     
@@ -1504,13 +1535,13 @@ class SeismicAnalysisRequest(BaseModel):
     importance_factor: float = Field(1.0, description="Importance factor")
 
 class SeismicAnalysisResponse(BaseModel):
-    design_spectrum: Dict[str, any]
+    design_spectrum: Dict[str, Any]
     base_shear: float
     story_forces: List[Dict[str, float]]
-    design_checks: Dict[str, any]
+    design_checks: Dict[str, Any]
     design_summary: str
 
-@app.post("/api/analysis/seismic", response_model=SeismicAnalysisResponse)
+@router.post("/api/analysis/seismic", response_model=SeismicAnalysisResponse)
 async def analyze_seismic(request: SeismicAnalysisRequest):
     """Simplified seismic analysis according to BS EN 1998"""
     
@@ -1625,7 +1656,7 @@ class DeflectionResponse(BaseModel):
     deflection_location: str
     design_summary: str
 
-@app.post("/api/analysis/deflection", response_model=DeflectionResponse)
+@router.post("/api/analysis/deflection", response_model=DeflectionResponse)
 async def calculate_deflection(request: DeflectionRequest):
     """Calculate deflection of structural members"""
     
@@ -1701,7 +1732,7 @@ class CrackWidthResponse(BaseModel):
     crack_width_ok: bool
     design_summary: str
 
-@app.post("/api/analysis/crack-width", response_model=CrackWidthResponse)
+@router.post("/api/analysis/crack-width", response_model=CrackWidthResponse)
 async def calculate_crack_width(request: CrackWidthRequest):
     """Calculate crack width according to BS EN 1992"""
     
@@ -1760,7 +1791,7 @@ class PunchingShearResponse(BaseModel):
     shear_reinforcement_required: bool
     design_summary: str
 
-@app.post("/api/analysis/punching-shear", response_model=PunchingShearResponse)
+@router.post("/api/analysis/punching-shear", response_model=PunchingShearResponse)
 async def calculate_punching_shear(request: PunchingShearRequest):
     """Calculate punching shear capacity for flat slabs"""
     
@@ -1808,7 +1839,7 @@ async def calculate_punching_shear(request: PunchingShearRequest):
 # MATERIAL PROPERTIES
 # ============================================================================
 
-@app.get("/api/materials/concrete/{grade}")
+@router.get("/api/materials/concrete/{grade}")
 async def get_concrete_properties(grade: str):
     """Get concrete material properties"""
     if grade not in BSCodeTables.CONCRETE_GRADES:
@@ -1825,7 +1856,7 @@ async def get_concrete_properties(grade: str):
         "thermal_expansion": 10e-6  # per °C
     }
 
-@app.get("/api/materials/steel/{grade}")
+@router.get("/api/materials/steel/{grade}")
 async def get_steel_properties(grade: int):
     """Get steel material properties"""
     if grade not in BSCodeTables.STEEL_GRADES:
@@ -1844,12 +1875,3 @@ async def get_steel_properties(grade: int):
 # ============================================================================
 # RUN SERVER
 # ============================================================================
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
-    )

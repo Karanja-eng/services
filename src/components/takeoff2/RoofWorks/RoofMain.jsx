@@ -7,7 +7,7 @@ import {
 } from '../universal_component';
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import RoofForm from "./RoofForm";
-import Roof3DVisualizer from "./Roof3DVisualizer";
+import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 
 export default function RoofComponent({ isDark = false }) {
   const [activeTab, setActiveTab] = useState("config");
@@ -160,7 +160,13 @@ export default function RoofComponent({ isDark = false }) {
 
           {activeTab === "3d" && (
             <div className="h-full relative">
-              <Roof3DVisualizer config={roofConfig} />
+              <StructuralVisualizationComponent
+                componentType="roof"
+                componentData={{
+                  roofConfig: roofConfig,
+                }}
+                theme={isDark ? "dark" : "light"}
+              />
             </div>
           )}
 

@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Calculator, FileText, Download, AlertCircle, Settings, Box, Layers } from "lucide-react";
 import axios from "axios";
 import { SepticSystem2DDrawings } from "./TwoD";
-import { SepticSystem3DView } from "./ThreeD";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
+import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 
 const InputField = ({ label, name, value, onChange, type = "number", step = "0.01", min = "0" }) => (
   <div>
@@ -260,8 +260,11 @@ export default function EnhancedSepticTakeoffApp({ isDark = false }) {
           )}
 
           {activeTab === "3d" && (
-            <div className="h-full bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
-              <SepticSystem3DView config={visualConfig} darkMode={isDark} />
+            <div className="h-full bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden relative">
+              <StructuralVisualizationComponent
+                componentType="septic"
+                buildingData={visualConfig}
+              />
             </div>
           )}
         </div>

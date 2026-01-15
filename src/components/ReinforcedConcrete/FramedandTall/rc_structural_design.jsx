@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight, Columns } from 'lucide-react';
 import * as THREE from 'three';
-
+import GridApp from './GridCode/MainGrid';
+import StructuralVisualizationComponent from '../../Drawings/visualise_component';
+import { SectionView } from './SectionView';
 // Theme Context
 const ThemeContext = React.createContext();
 
@@ -60,6 +62,20 @@ const RCStructuralDesign = () => {
     bents: '',
     symmetry: 'symmetric',
     load: ''
+  });
+
+  // Beam Design State
+  const [beamData, setBeamData] = useState({
+    span: '', width: '300', depth: '500',
+    concreteGrade: 'C30', steelGrade: '500',
+    moment: '', shear: '', cover: '25'
+  });
+
+  // Column Design State
+  const [columnData, setColumnData] = useState({
+    height: '', width: '300', depth: '300',
+    concreteGrade: 'C30', steelGrade: '500',
+    axialLoad: '', moment: '', effectiveLength: ''
   });
 
   const [results, setResults] = useState(null);
@@ -269,89 +285,142 @@ const RCStructuralDesign = () => {
     };
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     let calculationResults = {};
+    const API_BASE = 'http://localhost:8001/api/framed/api';
 
-    switch (activeModule) {
-      case 'loads':
-        calculationResults = calculateLoadCombinations();
-        break;
-      case 'ties':
-        calculationResults = calculateTieForces();
-        break;
-      case 'frame':
-        calculationResults = analyzePortalFrame();
-        break;
-      case 'systems':
-        calculationResults = analyzeStructuralSystem();
-        break;
-      case 'modeling':
-        calculationResults = analyzeComputerModel();
-        break;
-      default:
-        calculationResults = {};
+    try {
+      switch (activeModule) {
+        case 'loads':
+          const loadPayload = {
+            dead_load: parseFloat(loadData.deadLoad) || 0,
+            imposed_load: parseFloat(loadData.imposedLoad) || 0,
+            wind_load: parseFloat(loadData.windLoad) || 0,
+            combination_type: loadData.combination
+          };
+          const loadRes = await fetch(`${API_BASE}/loads/combinations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(loadPayload)
+          });
+          calculationResults = await loadRes.json();
+          break;
+
+        case 'ties':
+          const tiePayload = {
+            tie_type: tieData.tieType,
+            span: parseFloat(tieData.span) || 0,
+            load_per_meter: parseFloat(tieData.loadPerMeter) || 0,
+            concrete_grade: tieData.concreteGrade,
+            steel_grade: parseInt(tieData.steelGrade),
+            floor_area: null
+          };
+          const tieRes = await fetch(`${API_BASE}/design/ties`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tiePayload)
+          });
+          calculationResults = await tieRes.json();
+          break;
+
+        case 'frame':
+          const framePayload = {
+            method: frameData.method,
+            floors: parseInt(frameData.floors) || 0,
+            bays: parseInt(frameData.bays) || 0,
+            story_height: parseFloat(frameData.storyHeight) || 0,
+            bay_width: parseFloat(frameData.bayWidth) || 0,
+            lateral_load: parseFloat(frameData.lateralLoad) || 0
+          };
+          const frameRes = await fetch(`${API_BASE}/analysis/frame`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(framePayload)
+          });
+          calculationResults = await frameRes.json();
+          break;
+
+        case 'systems':
+          const systemPayload = {
+            system_type: systemData.type,
+            height: parseFloat(systemData.height) || 0,
+            width: parseFloat(systemData.width) || 0,
+            depth: parseFloat(systemData.depth) || 0,
+            core_size: parseFloat(systemData.coreSize) || 0,
+            wind_pressure: 1.5 // Default or add input
+          };
+          const sysRes = await fetch(`${API_BASE}/analysis/structural-system`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(systemPayload)
+          });
+          calculationResults = await sysRes.json();
+          break;
+
+        case 'modeling':
+          const modelPayload = {
+            category: modelData.category,
+            bents: parseInt(modelData.bents) || 0,
+            load: parseFloat(modelData.load) || 0,
+            symmetry: modelData.symmetry
+          };
+          const modelRes = await fetch(`${API_BASE}/analysis/computer-model`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(modelPayload)
+          });
+          calculationResults = await modelRes.json();
+          break;
+
+        case 'beam':
+          const beamPayload = {
+            span: parseFloat(beamData.span) || 0,
+            width: parseFloat(beamData.width) || 300,
+            depth: parseFloat(beamData.depth) || 500,
+            concrete_grade: beamData.concreteGrade,
+            steel_grade: parseInt(beamData.steelGrade),
+            moment: parseFloat(beamData.moment) || 0,
+            shear: parseFloat(beamData.shear) || 0,
+            cover: parseFloat(beamData.cover) || 25
+          };
+          const beamRes = await fetch(`${API_BASE}/design/beam`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(beamPayload)
+          });
+          calculationResults = await beamRes.json();
+          break;
+
+        case 'column':
+          const colPayload = {
+            height: parseFloat(columnData.height) || 0,
+            width: parseFloat(columnData.width) || 300,
+            depth: parseFloat(columnData.depth) || 300,
+            concrete_grade: columnData.concreteGrade,
+            steel_grade: parseInt(columnData.steelGrade),
+            axial_load: parseFloat(columnData.axialLoad) || 0,
+            moment: parseFloat(columnData.moment) || 0,
+            effective_length: columnData.effectiveLength ? parseFloat(columnData.effectiveLength) : null
+          };
+          const colRes = await fetch(`${API_BASE}/design/column`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(colPayload)
+          });
+          calculationResults = await colRes.json();
+          break;
+
+        default:
+          calculationResults = {};
+      }
+      setResults(calculationResults);
+    } catch (error) {
+      console.error("Calculation failed:", error);
+      alert("Failed to connect to calculation server");
     }
-
-    setResults(calculationResults);
   };
 
-  // 3D Visualization
-  useEffect(() => {
-    if (!canvasRef.current || activeModule !== 'visualization') return;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, canvasRef.current.clientWidth / canvasRef.current.clientHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
-
-    renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
-    renderer.setClearColor(theme === 'dark' ? 0x1f2937 : 0xf3f4f6);
-
-    // Create building frame
-    const floors = parseInt(frameData.floors) || 5;
-    const bays = parseInt(frameData.bays) || 3;
-    const height = parseFloat(frameData.storyHeight) || 3;
-    const width = parseFloat(frameData.bayWidth) || 5;
-
-    const columnMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
-    const beamMaterial = new THREE.MeshPhongMaterial({ color: 0x999999 });
-
-    for (let f = 0; f <= floors; f++) {
-      for (let b = 0; b <= bays; b++) {
-        if (f < floors) {
-          const columnGeom = new THREE.BoxGeometry(0.3, height, 0.3);
-          const column = new THREE.Mesh(columnGeom, columnMaterial);
-          column.position.set(b * width - (bays * width) / 2, f * height + height / 2, 0);
-          scene.add(column);
-        }
-
-        if (b < bays) {
-          const beamGeom = new THREE.BoxGeometry(width, 0.3, 0.3);
-          const beam = new THREE.Mesh(beamGeom, beamMaterial);
-          beam.position.set(b * width + width / 2 - (bays * width) / 2, (f + 1) * height, 0);
-          scene.add(beam);
-        }
-      }
-    }
-
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 5);
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
-
-    camera.position.set(15, 10, 15);
-    camera.lookAt(0, floors * height / 2, 0);
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      scene.rotation.y += 0.002;
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      renderer.dispose();
-    };
-  }, [activeModule, frameData, theme]);
+  // 3D Visualization Effect removed - replaced by StructuralVisualizationComponent
 
   const bgColor = theme === 'dark' ? 'bg-gray-900' : 'bg-white';
   const textColor = theme === 'dark' ? 'text-gray-100' : 'text-gray-900';
@@ -364,8 +433,12 @@ const RCStructuralDesign = () => {
     { id: 'ties', icon: Layers, label: 'Tie Design', section: 'ties' },
     { id: 'frame', icon: Frame, label: 'Frame Analysis', section: 'analysis' },
     { id: 'systems', icon: Building2, label: 'Structural Systems', section: 'systems' },
+    { id: 'beam', icon: Box, label: 'Beam Design', section: 'members' },
+    { id: 'column', icon: Columns, label: 'Column Design', section: 'members' },
     { id: 'modeling', icon: Box, label: 'Computer Modeling', section: 'modeling' },
-    { id: 'visualization', icon: Ruler, label: '3D Visualization', section: 'modeling' }
+    { id: 'visualization', icon: Ruler, label: '3D Visualization', section: 'modeling' },
+    { id: 'Grid', icon: Ruler, label: 'Frame Grid', section: 'Geid' },
+
   ];
 
   return (
@@ -417,17 +490,37 @@ const RCStructuralDesign = () => {
               <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Calculator size={24} className="text-blue-600" />
-                  Load Combinations (BS 8110 / Eurocode)
+                  Load Combinations (BS 8110)
                 </h2>
                 <div className="grid md:grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Core Size (m)</label>
+                    <label className="block text-sm font-medium mb-2">Dead Load (Gk) kN/m²</label>
                     <input
                       type="number"
-                      value={systemData.coreSize}
-                      onChange={(e) => setSystemData({ ...systemData, coreSize: e.target.value })}
+                      value={loadData.deadLoad}
+                      onChange={(e) => setLoadData({ ...loadData, deadLoad: e.target.value })}
                       className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Enter core size"
+                      placeholder="Gk"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Imposed Load (Qk) kN/m²</label>
+                    <input
+                      type="number"
+                      value={loadData.imposedLoad}
+                      onChange={(e) => setLoadData({ ...loadData, imposedLoad: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Qk"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Wind Load (Wk) kN/m²</label>
+                    <input
+                      type="number"
+                      value={loadData.windLoad}
+                      onChange={(e) => setLoadData({ ...loadData, windLoad: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Wk"
                     />
                   </div>
                 </div>
@@ -435,10 +528,217 @@ const RCStructuralDesign = () => {
                   onClick={handleCalculate}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 >
-                  Analyze Structural System
+                  Calculate Combinations
                 </button>
               </div>
             )}
+
+            {/* Tie Design Module */}
+            {activeModule === 'ties' && (
+              <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Layers size={24} className="text-blue-600" />
+                  Tie Design (BS 8110)
+                </h2>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Tie Type</label>
+                    <select
+                      value={tieData.tieType}
+                      onChange={(e) => setTieData({ ...tieData, tieType: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                    >
+                      <option value="internal">Internal Tie</option>
+                      <option value="peripheral">Peripheral Tie</option>
+                      <option value="column">Column/Wall Tie</option>
+                      <option value="corner">Corner Column Tie</option>
+                      <option value="vertical">Vertical Tie</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Span (m)</label>
+                    <input
+                      type="number"
+                      value={tieData.span}
+                      onChange={(e) => setTieData({ ...tieData, span: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Enter span"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Load per Meter (kN/m)</label>
+                    <input
+                      type="number"
+                      value={tieData.loadPerMeter}
+                      onChange={(e) => setTieData({ ...tieData, loadPerMeter: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Enter load"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleCalculate}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Design Ties
+                </button>
+              </div>
+            )}
+
+            {/* Frame Analysis Module */}
+            {activeModule === 'frame' && (
+              <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Frame size={24} className="text-blue-600" />
+                  Frame Analysis
+                </h2>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Method</label>
+                    <select
+                      value={frameData.method}
+                      onChange={(e) => setFrameData({ ...frameData, method: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                    >
+                      <option value="portal">Portal Method</option>
+                      <option value="cantilever">Cantilever Method</option>
+                      <option value="simple">Simple Method</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Number of Floors</label>
+                    <input
+                      type="number"
+                      value={frameData.floors}
+                      onChange={(e) => setFrameData({ ...frameData, floors: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Floors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Number of Bays</label>
+                    <input
+                      type="number"
+                      value={frameData.bays}
+                      onChange={(e) => setFrameData({ ...frameData, bays: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Bays"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Story Height (m)</label>
+                    <input
+                      type="number"
+                      value={frameData.storyHeight}
+                      onChange={(e) => setFrameData({ ...frameData, storyHeight: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Height"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Bay Width (m)</label>
+                    <input
+                      type="number"
+                      value={frameData.bayWidth}
+                      onChange={(e) => setFrameData({ ...frameData, bayWidth: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Width"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Lateral Load (kN)</label>
+                    <input
+                      type="number"
+                      value={frameData.lateralLoad}
+                      onChange={(e) => setFrameData({ ...frameData, lateralLoad: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Load"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleCalculate}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Analyze Frame
+                </button>
+              </div>
+            )}
+
+            {/* Structural Systems Module */}
+            {activeModule === 'systems' && (
+              <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Building2 size={24} className="text-blue-600" />
+                  Structural Systems
+                </h2>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-2">System Type</label>
+                    <select
+                      value={systemData.type}
+                      onChange={(e) => setSystemData({ ...systemData, type: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                    >
+                      <option value="rigid_frame">Rigid Frame</option>
+                      <option value="braced_frame">Braced Frame</option>
+                      <option value="shear_wall">Shear Wall</option>
+                      <option value="coupled_wall">Coupled Wall</option>
+                      <option value="framed_tube">Framed Tube</option>
+                      <option value="tube_in_tube">Tube-in-Tube</option>
+                      <option value="outrigger">Outrigger System</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Building Height (m)</label>
+                    <input
+                      type="number"
+                      value={systemData.height}
+                      onChange={(e) => setSystemData({ ...systemData, height: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Height"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Building Width (m)</label>
+                    <input
+                      type="number"
+                      value={systemData.width}
+                      onChange={(e) => setSystemData({ ...systemData, width: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Width"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Building Depth (m)</label>
+                    <input
+                      type="number"
+                      value={systemData.depth}
+                      onChange={(e) => setSystemData({ ...systemData, depth: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Depth"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Core Size (m)</label>
+                    <input
+                      type="number"
+                      value={systemData.coreSize}
+                      onChange={(e) => setSystemData({ ...systemData, coreSize: e.target.value })}
+                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
+                      placeholder="Core Size"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleCalculate}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Check Suitability
+                </button>
+              </div>
+            )}
+
 
             {/* Computer Modeling Module */}
             {activeModule === 'modeling' && (
@@ -501,25 +801,101 @@ const RCStructuralDesign = () => {
               </div>
             )}
 
-            {/* 3D Visualization */}
-            {activeModule === 'visualization' && (
+            {/* Beam Design Module */}
+            {activeModule === 'beam' && (
               <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Ruler size={24} className="text-blue-600" />
-                  3D Frame Visualization
+                  <Box size={24} className="text-blue-600" />
+                  RC Beam Design (BS 8110)
                 </h2>
-                <p className="text-sm opacity-70 mb-4">
-                  Interactive 3D visualization of structural frame based on frame analysis parameters
-                </p>
-                <canvas
-                  ref={canvasRef}
-                  className={`w-full h-96 rounded-lg ${inputBg} border ${borderColor}`}
-                />
-                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-                  <p className="text-sm">
-                    <strong>Note:</strong> Adjust frame parameters in the Frame Analysis module to update the 3D model
-                  </p>
+                <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Span (m)</label>
+                    <input type="number" value={beamData.span} onChange={(e) => setBeamData({ ...beamData, span: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Width (mm)</label>
+                    <input type="number" value={beamData.width} onChange={(e) => setBeamData({ ...beamData, width: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Depth (mm)</label>
+                    <input type="number" value={beamData.depth} onChange={(e) => setBeamData({ ...beamData, depth: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Design Moment (kNm)</label>
+                    <input type="number" value={beamData.moment} onChange={(e) => setBeamData({ ...beamData, moment: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Design Shear (kN)</label>
+                    <input type="number" value={beamData.shear} onChange={(e) => setBeamData({ ...beamData, shear: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Cover (mm)</label>
+                    <input type="number" value={beamData.cover} onChange={(e) => setBeamData({ ...beamData, cover: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
                 </div>
+                <button onClick={handleCalculate} className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                  Design Beam
+                </button>
+              </div>
+            )}
+
+            {/* Column Design Module */}
+            {activeModule === 'column' && (
+              <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Columns size={24} className="text-blue-600" />
+                  RC Column Design (BS 8110)
+                </h2>
+                <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Height (m)</label>
+                    <input type="number" value={columnData.height} onChange={(e) => setColumnData({ ...columnData, height: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Width (mm)</label>
+                    <input type="number" value={columnData.width} onChange={(e) => setColumnData({ ...columnData, width: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Depth (mm)</label>
+                    <input type="number" value={columnData.depth} onChange={(e) => setColumnData({ ...columnData, depth: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Axial Load (kN)</label>
+                    <input type="number" value={columnData.axialLoad} onChange={(e) => setColumnData({ ...columnData, axialLoad: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Design Moment (kNm)</label>
+                    <input type="number" value={columnData.moment} onChange={(e) => setColumnData({ ...columnData, moment: e.target.value })} className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`} />
+                  </div>
+                </div>
+                <button onClick={handleCalculate} className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                  Design Column
+                </button>
+              </div>
+            )}
+
+            {/* Framed Grid */}
+            {activeModule === 'Grid' &&
+              <GridApp />
+            }
+
+
+            {/* 3D Visualization */}
+            {/* 3D Visualization */}
+            {activeModule === 'visualization' && (
+              <div className="h-[600px] w-full rounded-lg overflow-hidden border border-gray-200 relative">
+                <StructuralVisualizationComponent
+                  theme={theme}
+                  componentType="tall_framed_analysis"
+                  componentData={{
+                    floors: parseInt(frameData.floors) || 1,
+                    bays: parseInt(frameData.bays) || 1,
+                    story_height: parseFloat(frameData.storyHeight) || 3,
+                    bay_width: parseFloat(frameData.bayWidth) || 5,
+                    results: results
+                  }}
+                />
               </div>
             )}
 
@@ -538,19 +914,19 @@ const RCStructuralDesign = () => {
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className={`p-4 ${inputBg} rounded-lg`}>
                           <p className="text-sm opacity-70">Combination 1: 1.4Gk + 1.6Qk</p>
-                          <p className="text-2xl font-bold text-blue-600">{results.uls?.combo1.toFixed(2)} kN/m²</p>
+                          <p className="text-2xl font-bold text-blue-600">{results.uls?.combo1?.toFixed(2)} kN/m²</p>
                         </div>
                         <div className={`p-4 ${inputBg} rounded-lg`}>
                           <p className="text-sm opacity-70">Combination 2: 1.4Gk + 1.6Qk + 1.2Wk</p>
-                          <p className="text-2xl font-bold text-blue-600">{results.uls?.combo2.toFixed(2)} kN/m²</p>
+                          <p className="text-2xl font-bold text-blue-600">{results.uls?.combo2?.toFixed(2)} kN/m²</p>
                         </div>
                         <div className={`p-4 ${inputBg} rounded-lg`}>
                           <p className="text-sm opacity-70">Combination 3: 1.0Gk + 1.4Wk</p>
-                          <p className="text-2xl font-bold text-blue-600">{results.uls?.combo3.toFixed(2)} kN/m²</p>
+                          <p className="text-2xl font-bold text-blue-600">{results.uls?.combo3?.toFixed(2)} kN/m²</p>
                         </div>
                         <div className={`p-4 ${inputBg} rounded-lg`}>
                           <p className="text-sm opacity-70">Combination 4: 1.2Gk + 1.2Qk + 1.2Wk</p>
-                          <p className="text-2xl font-bold text-blue-600">{results.uls?.combo4.toFixed(2)} kN/m²</p>
+                          <p className="text-2xl font-bold text-blue-600">{results.uls?.combo4?.toFixed(2)} kN/m²</p>
                         </div>
                       </div>
                     </div>
@@ -559,15 +935,15 @@ const RCStructuralDesign = () => {
                       <div className="grid md:grid-cols-3 gap-4">
                         <div className={`p-4 ${inputBg} rounded-lg`}>
                           <p className="text-sm opacity-70">Characteristic</p>
-                          <p className="text-xl font-bold text-green-600">{results.sls?.characteristic.toFixed(2)} kN/m²</p>
+                          <p className="text-xl font-bold text-green-600">{results.sls?.characteristic?.toFixed(2)} kN/m²</p>
                         </div>
                         <div className={`p-4 ${inputBg} rounded-lg`}>
                           <p className="text-sm opacity-70">Quasi-Permanent</p>
-                          <p className="text-xl font-bold text-green-600">{results.sls?.quasi_permanent.toFixed(2)} kN/m²</p>
+                          <p className="text-xl font-bold text-green-600">{results.sls?.quasi_permanent?.toFixed(2)} kN/m²</p>
                         </div>
                         <div className={`p-4 ${inputBg} rounded-lg`}>
                           <p className="text-sm opacity-70">Frequent</p>
-                          <p className="text-xl font-bold text-green-600">{results.sls?.frequent.toFixed(2)} kN/m²</p>
+                          <p className="text-xl font-bold text-green-600">{results.sls?.frequent?.toFixed(2)} kN/m²</p>
                         </div>
                       </div>
                     </div>
@@ -670,6 +1046,56 @@ const RCStructuralDesign = () => {
                     <div className={`p-4 ${inputBg} rounded-lg`}>
                       <p className="text-sm opacity-70 mb-2">Analysis Approach</p>
                       <p className="text-sm">{results.analysis}</p>
+                    </div>
+                  </div>
+                )}
+
+                {activeModule === 'beam' && results.reinforcement && (
+                  <div className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className={`${inputBg} p-4 rounded-lg`}>
+                        <h3 className="font-bold mb-4">Design Summary</h3>
+                        <div className="space-y-2">
+                          <p className="flex justify-between"><span>Status:</span> <span className={results.status === 'OK' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{results.status}</span></p>
+                          <p className="flex justify-between"><span>Required Steel (As):</span> <span>{results.reinforcement?.tension_bars?.area_required?.toFixed(0)} mm²</span></p>
+                          <p className="flex justify-between"><span>Provided Steel (As,prov):</span> <span>{results.reinforcement?.tension_bars?.area_provided?.toFixed(0)} mm²</span></p>
+                          <p className="flex justify-between"><span>Start/End Shear:</span> <span>{results.shear_check?.shear_stress?.toFixed(2)} N/mm²</span></p>
+                        </div>
+                      </div>
+                      <div className="flex justify-center">
+                        <SectionView
+                          type="beam"
+                          width={parseFloat(beamData.width)}
+                          depth={parseFloat(beamData.depth)}
+                          cover={parseFloat(beamData.cover)}
+                          reinforcement={results.reinforcement}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeModule === 'column' && results.reinforcement && (
+                  <div className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className={`${inputBg} p-4 rounded-lg`}>
+                        <h3 className="font-bold mb-4">Design Summary</h3>
+                        <div className="space-y-2">
+                          <p className="flex justify-between"><span>Status:</span> <span className={results.status === 'OK' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{results.status}</span></p>
+                          <p className="flex justify-between"><span>Axial Capacity (N):</span> <span>{results.capacity?.axial?.toFixed(0)} kN</span></p>
+                          <p className="flex justify-between"><span>Moment Capacity (M):</span> <span>{results.capacity?.moment?.toFixed(0)} kNm</span></p>
+                          <p className="flex justify-between"><span>Main Bars:</span> <span>{results.reinforcement.number_of_bars} {results.reinforcement.bar_size}</span></p>
+                        </div>
+                      </div>
+                      <div className="flex justify-center">
+                        <SectionView
+                          type="column"
+                          width={parseFloat(columnData.width)}
+                          depth={parseFloat(columnData.depth)}
+                          cover={40} // Default for columns usually higher
+                          reinforcement={results.reinforcement}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

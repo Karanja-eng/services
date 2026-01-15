@@ -6,7 +6,7 @@ import axios from "axios";
 import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
-import DoorWindow3DScene from "./DoorWindow3DScene";
+import StructuralVisualizationComponent from '../Drawings/visualise_component';
 
 const API_BASE = "http://localhost:8001";
 
@@ -430,11 +430,10 @@ const DoorWindowTakeoff = () => {
                 {activeTab === '3d-view' && (
                     <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative border border-slate-800 shadow-2xl">
                         {buildingData ? (
-                            <Canvas shadows dpr={[1, 2]}>
-                                <Suspense fallback={null}>
-                                    <DoorWindow3DScene buildingData={buildingData} />
-                                </Suspense>
-                            </Canvas>
+                            <StructuralVisualizationComponent
+                                componentType="doorWindow"
+                                buildingData={buildingData}
+                            />
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
                                 <DoorOpen className="w-16 h-16 opacity-20" />

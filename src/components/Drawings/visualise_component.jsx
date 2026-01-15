@@ -2,6 +2,7 @@ import React, { Suspense, useState, useRef, useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
+import CadObjects3D from "./CadObjects3D";
 import {
   Camera,
   Grid3x3,
@@ -32,12 +33,22 @@ import {
 } from "lucide-react";
 import * as THREE_CONST from "three";
 
+// Component Registry - Universal system for RC and QS components
+import {
+  getComponentConfig,
+  isQSComponent,
+  isRCComponent,
+  COMPONENT_TYPES
+} from "./componentRegistry";
+
+// RC Settings Component
+import RCSettings from "./RCSettings";
+
+// Legacy imports for backward compatibility (will be removed after full migration)
 import {
   DrawStairsMST1,
   DrawStairsMST2,
-} from "../ReinforcedConcrete/Stairs/Stairs_Three"; // add at top of file with other imports
-
-// Beam / Column / Slab / Foundation / Wall / Retaining visualizers
+} from "../ReinforcedConcrete/Stairs/Stairs_Three";
 import {
   MultiSpanBeam3D,
 } from "../ReinforcedConcrete/Beams/Beam_THree";
@@ -47,7 +58,6 @@ import {
   DrawColumnMC3,
   DrawColumnMC4,
   DrawColumnMC5,
-  //DrawColumnMC6,
 } from "../ReinforcedConcrete/Columns/Columns_THree";
 import {
   DrawPadFootingMF1,
@@ -68,40 +78,30 @@ import {
 } from "../ReinforcedConcrete/Slabs/slab_THReeD";
 import { DrawRetainingWallMRW1 } from "../ReinforcedConcrete/Rwall/Retaining_Three";
 
+// Legacy ELEMENT_COMPONENTS - kept for backward compatibility
+// New components should use the COMPONENT_REGISTRY instead
 const ELEMENT_COMPONENTS = {
   stair_MST1: DrawStairsMST1,
   stair_MST2: DrawStairsMST2,
-  // Beams (All mapped to MultiSpanBeam3D)
   beam_MB1: MultiSpanBeam3D,
   beam_MB2: MultiSpanBeam3D,
   beam_MB3: MultiSpanBeam3D,
-
-  // Columns
   column_MC1: DrawColumnMC1,
   column_MC2: DrawColumnMC2,
   column_MC3: DrawColumnMC3,
   column_MC4: DrawColumnMC4,
   column_MC5: DrawColumnMC5,
-  //column_MC6: DrawColumnMC6,
-
-  // Foundations
   foundation_MF1: DrawPadFootingMF1,
   foundation_MF2: DrawPileCapMF2,
   foundation_MF3: DrawMultiColumnBaseMF3,
   foundation_MF4: DrawGroundSlabBeamMF4,
-
-  // Walls
   wall_MW1: DrawWallMW1,
   wall_MW2: DrawWallMW2,
   wall_MW3: DrawWallMW3,
   wall_MW4: DrawWallMW4,
-
-  // Slabs
   slab_MS1: DrawSlabMS1,
   slab_MS2: DrawSlabMS2,
   slab_MS3: DrawSlabMS3,
-
-  // Retaining
   retaining_MRW1: DrawRetainingWallMRW1,
 };
 // ============================================================================
@@ -309,21 +309,42 @@ function MeasurementGrid({
 
 export default function StructuralVisualizationComponent({
   theme = "light",
-
-  elementType = null, // e.g., "stair_MST1", "beam_RC1", etc.
-  elementData = null, // all input + result data from UI
+  componentType = null, // e.g., "pool", "column_MC1", etc.
+  componentData = null, // Component-specific data
+  elementType = null, // Legacy prop for backward compatibility
+  elementData = null, // Legacy prop for backward compatibility
   onExport,
   onPrint,
   onMeasure,
-  visible = true, // optional, controlled by parent popup
-  onClose = () => { }, // called by popup back button or internal close
-  stairProps = null, // the props object coming from UI (mapped from inputs)
+  visible = true,
+  onClose = () => { },
+  stairProps = null,
 }) {
   const isDark = theme === "dark";
 
-  const Element3DComponent = elementType
-    ? ELEMENT_COMPONENTS[elementType]
-    : null;
+  // Get component configuration from registry
+  const actualComponentType = componentType || elementType;
+  const actualComponentData = componentData || elementData;
+  const componentConfig = getComponentConfig(actualComponentType);
+
+  // Determine if this is a QS or RC component
+  const isQS = isQSComponent(actualComponentType);
+  const isRC = isRCComponent(actualComponentType);
+
+  // Get the appropriate component/scene
+  let Element3DComponent = null;
+  let QSScene = null;
+  let QSSettingsComponent = null;
+
+  if (isQS && componentConfig) {
+    QSScene = componentConfig.Scene;
+    QSSettingsComponent = componentConfig.Settings;
+  } else if (isRC && componentConfig) {
+    Element3DComponent = componentConfig.Component;
+  } else if (actualComponentType) {
+    // Fallback to legacy ELEMENT_COMPONENTS
+    Element3DComponent = ELEMENT_COMPONENTS[actualComponentType];
+  }
 
   // Converts object keys into clean, readable labels
   const formatLabel = (label) => {
@@ -396,7 +417,7 @@ export default function StructuralVisualizationComponent({
   const [viewMode, setViewMode] = useState("perspective");
   const [resetTrigger, setResetTrigger] = useState(0);
 
-  // Display controls
+  // Display controls (RC-specific)
   const [showConcrete, setShowConcrete] = useState(true);
   const [showRebar, setShowRebar] = useState(true);
   const [showGrid, setShowGrid] = useState(false);
@@ -404,7 +425,7 @@ export default function StructuralVisualizationComponent({
   const [showDimensions, setShowDimensions] = useState(true);
   const [showAnnotations, setShowAnnotations] = useState(false);
 
-  // Member and colors
+  // Member and colors (RC-specific)
   const [memberType, setMemberType] = useState();
   const [colors, setColors] = useState(DEFAULT_COLORS);
 
@@ -419,6 +440,14 @@ export default function StructuralVisualizationComponent({
 
   const [ambientIntensity, setAmbientIntensity] = useState(0.5);
   const [directionalIntensity, setDirectionalIntensity] = useState(1.0);
+
+  // QS Component Settings - initialized from component config
+  const [qsSettings, setQsSettings] = useState(() => {
+    if (isQS && componentConfig?.defaultSettings) {
+      return componentConfig.defaultSettings;
+    }
+    return {};
+  });
 
   // ========== HANDLERS ==========
   const handleResetView = () => {
@@ -519,229 +548,58 @@ export default function StructuralVisualizationComponent({
 
             {/* Sidebar Content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Member Type Section */}
-
-              {/* Visibility Controls */}
-              <section
-                className={`p-3 rounded ${isDark ? "bg-gray-750" : "bg-gray-50"
-                  }`}
-              >
-                <h3 className="text-sm font-semibold mb-3 flex items-center">
-                  <Eye className="w-4 h-4 mr-2" />
-                  Display Options
-                </h3>
-                <div className="space-y-2">
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Concrete</span>
-                    <input
-                      type="checkbox"
-                      checked={showConcrete}
-                      onChange={(e) => setShowConcrete(e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-600"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Reinforcement</span>
-                    <input
-                      type="checkbox"
-                      checked={showRebar}
-                      onChange={(e) => setShowRebar(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Grid</span>
-                    <input
-                      type="checkbox"
-                      checked={showGrid}
-                      onChange={(e) => setShowGrid(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Axis</span>
-                    <input
-                      type="checkbox"
-                      checked={showAxis}
-                      onChange={(e) => setShowAxis(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Dimensions</span>
-                    <input
-                      type="checkbox"
-                      checked={showDimensions}
-                      onChange={(e) => setShowDimensions(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Annotations</span>
-                    <input
-                      type="checkbox"
-                      checked={showAnnotations}
-                      onChange={(e) => setShowAnnotations(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                </div>
-              </section>
-
-              {/* Color Customization */}
-              <section>
-                <h3 className="text-sm font-semibold mb-3 flex items-center">
-                  <Tag className="w-4 h-4 mr-2" />
-                  Material Colors
-                </h3>
-                <div className="space-y-3">
-                  {Object.entries(colors).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="flex items-center justify-between"
-                    >
-                      <label className="text-xs capitalize">
-                        {key.replace(/([A-Z])/g, " $1").trim()}
-                      </label>
-                      <input
-                        type="color"
-                        value={value}
-                        onChange={(e) => handleColorChange(key, e.target.value)}
-                        className="w-10 h-8 rounded cursor-pointer border border-gray-600"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Rendering Options */}
-              <section
-                className={`p-3 rounded ${isDark ? "bg-gray-750" : "bg-gray-50"
-                  }`}
-              >
-                <h3 className="text-sm font-semibold mb-3 flex items-center">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Rendering
-                </h3>
-                <div className="space-y-2">
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Wireframe</span>
-                    <input
-                      type="checkbox"
-                      checked={wireframe}
-                      onChange={(e) => setWireframe(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Shadows</span>
-                    <input
-                      type="checkbox"
-                      checked={shadows}
-                      onChange={(e) => setShadows(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Anti-aliasing</span>
-                    <input
-                      type="checkbox"
-                      checked={antialiasing}
-                      onChange={(e) => setAntialiasing(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm">Snap to Grid</span>
-                    <input
-                      type="checkbox"
-                      checked={snapToGrid}
-                      onChange={(e) => setSnapToGrid(e.target.checked)}
-                      className="w-4 h-4 rounded"
-                    />
-                  </label>
-                </div>
-              </section>
-
-              {/* Lighting Controls */}
-              <section>
-                <h3 className="text-sm font-semibold mb-3 flex items-center">
-                  <Sun className="w-4 h-4 mr-2" />
-                  Lighting
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs block mb-1">
-                      Ambient: {ambientIntensity.toFixed(2)}
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={ambientIntensity}
-                      onChange={(e) =>
-                        setAmbientIntensity(parseFloat(e.target.value))
-                      }
-                      className="w-full"
-                    />
+              {/* Component Info Banner */}
+              {componentConfig && (
+                <div className={`p-3 rounded ${isDark ? 'bg-blue-900 bg-opacity-20' : 'bg-blue-50'} border ${isDark ? 'border-blue-800' : 'border-blue-200'}`}>
+                  <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                    {componentConfig.category}
                   </div>
-                  <div>
-                    <label className="text-xs block mb-1">
-                      Directional: {directionalIntensity.toFixed(2)}
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="2"
-                      step="0.1"
-                      value={directionalIntensity}
-                      onChange={(e) =>
-                        setDirectionalIntensity(parseFloat(e.target.value))
-                      }
-                      className="w-full"
-                    />
+                  <div className="text-sm font-bold">
+                    {componentConfig.name}
                   </div>
                 </div>
-              </section>
+              )}
 
-              {/* Color Legend */}
-              <section
-                className={`p-3 rounded ${isDark ? "bg-blue-900 bg-opacity-20" : "bg-blue-50"
-                  }`}
-              >
-                <h3 className="text-sm font-semibold mb-2">Color Legend</h3>
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex items-center">
-                    <div
-                      className="w-4 h-4 rounded mr-2"
-                      style={{ backgroundColor: colors.mainRebar }}
-                    ></div>
-                    <span>Main Reinforcement</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div
-                      className="w-4 h-4 rounded mr-2"
-                      style={{ backgroundColor: colors.stirrups }}
-                    ></div>
-                    <span>Stirrups/Links</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div
-                      className="w-4 h-4 rounded mr-2"
-                      style={{ backgroundColor: colors.distributionBars }}
-                    ></div>
-                    <span>Distribution Bars</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div
-                      className="w-4 h-4 rounded mr-2 border"
-                      style={{ backgroundColor: colors.concrete }}
-                    ></div>
-                    <span>Concrete</span>
-                  </div>
-                </div>
-              </section>
+              {/* Dynamic Settings based on component type */}
+              {isQS && QSSettingsComponent ? (
+                // Render QS-specific settings
+                <QSSettingsComponent
+                  settings={qsSettings}
+                  onSettingsChange={setQsSettings}
+                  isDark={isDark}
+                />
+              ) : (
+                // Render RC settings
+                <RCSettings
+                  showConcrete={showConcrete}
+                  setShowConcrete={setShowConcrete}
+                  showRebar={showRebar}
+                  setShowRebar={setShowRebar}
+                  showGrid={showGrid}
+                  setShowGrid={setShowGrid}
+                  showAxis={showAxis}
+                  setShowAxis={setShowAxis}
+                  showDimensions={showDimensions}
+                  setShowDimensions={setShowDimensions}
+                  showAnnotations={showAnnotations}
+                  setShowAnnotations={setShowAnnotations}
+                  colors={colors}
+                  handleColorChange={handleColorChange}
+                  wireframe={wireframe}
+                  setWireframe={setWireframe}
+                  shadows={shadows}
+                  setShadows={setShadows}
+                  antialiasing={antialiasing}
+                  setAntialiasing={setAntialiasing}
+                  snapToGrid={snapToGrid}
+                  setSnapToGrid={setSnapToGrid}
+                  ambientIntensity={ambientIntensity}
+                  setAmbientIntensity={setAmbientIntensity}
+                  directionalIntensity={directionalIntensity}
+                  setDirectionalIntensity={setDirectionalIntensity}
+                  isDark={isDark}
+                />
+              )}
             </div>
 
             {/* Sidebar Footer */}
@@ -899,10 +757,23 @@ export default function StructuralVisualizationComponent({
 
               {/* ...#######################Render Sample Members ############    */}
 
-              {Element3DComponent ? (
-                <Element3DComponent {...elementData} {...sharedProps} />
-              ) : (
-                <></>
+              {/* Render QS Component Scene */}
+              {isQS && QSScene && (
+                <QSScene
+                  poolData={actualComponentData} // Specific prop name for Pool
+                  settings={qsSettings}          // QS specific settings
+                  {...actualComponentData}       // Spread all data for other components
+                />
+              )}
+
+              {/* Render RC Component */}
+              {Element3DComponent && (
+                <Element3DComponent {...actualComponentData} {...sharedProps} />
+              )}
+
+              {/* Render CAD Objects if provided */}
+              {actualComponentData?.objects && (
+                <CadObjects3D objects={actualComponentData.objects} showDimensions={showDimensions} />
               )}
 
               {/* ...#######################Render Sample Members ############    */}

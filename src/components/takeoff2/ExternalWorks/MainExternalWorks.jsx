@@ -7,7 +7,7 @@ import {
   Calculator,
 } from "lucide-react";
 import axios from "axios";
-import ExternalWorks3DVisualizer from "./3DExternalWorksVisualizer";
+import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 import ExternalWorksInputForm from "./ExternalWorksInputForm";
 import EnglishMethodTakeoffSheet from "./EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
@@ -289,10 +289,13 @@ export default function ExternalWorksComponent({ isDark = false }) {
           )}
 
           {activeTab === "3d" && (
-            <ExternalWorks3DVisualizer
-              theme={{ bg: isDark ? "#0f172a" : "#f8fafc" }}
-              config={formData.roadConfig}
-              setConfig={(cfg) => setFormData({ ...formData, roadConfig: cfg })}
+            <StructuralVisualizationComponent
+              componentType="externalWorks"
+              componentData={{
+                settings: formData.roadConfig,
+              }}
+              onSettingsChange={(newSettings) => setFormData({ ...formData, roadConfig: newSettings })}
+              theme={isDark ? "dark" : "light"}
             />
           )}
 

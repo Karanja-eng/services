@@ -14,10 +14,9 @@ import {
 } from "lucide-react";
 import React, { Suspense, useState } from "react";
 import axios from "axios";
-import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
-import Substructure3DScene from "./Substructure3DScene";
+import StructuralVisualizationComponent from '../Drawings/visualise_component';
 
 const API_BASE = "http://localhost:8001";
 
@@ -471,11 +470,11 @@ const SubstructureTakeoffApp = () => {
                     <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Foundation & Substructure</span>
                   </div>
                 </div>
-                <Canvas shadows dpr={[1, 2]}>
-                  <Suspense fallback={null}>
-                    <Substructure3DScene buildingData={buildingData} parameters={formData} />
-                  </Suspense>
-                </Canvas>
+                <StructuralVisualizationComponent
+                  componentType="substructure"
+                  buildingData={buildingData}
+                  parameters={formData}
+                />
               </>
             ) : (
               <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Waves, Calculator, AlertCircle } from "lucide-react";
 import Pool2DDrawing from "./Pool2_D";
-import Pool3DVisualization from "./Pool3_D";
+import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 import {
   UniversalTabs,
   UniversalSheet,
@@ -316,15 +316,19 @@ export default function SwimmingPoolTakeoffApp() {
 
         {activeTab === "3d-view" && (
           <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 h-[800px] overflow-hidden">
-            <Pool3DVisualization poolData={{
-              int_l: formData.intL,
-              int_w: formData.intW,
-              shallow_depth: formData.shallowDepth,
-              deep_depth: formData.deepDepth,
-              wall_thick: formData.wallThick,
-              bed_thick: formData.bedThick,
-              pool_shape: formData.poolShape,
-            }} />
+            <StructuralVisualizationComponent
+              componentType="pool"
+              componentData={{
+                int_l: formData.intL,
+                int_w: formData.intW,
+                shallow_depth: formData.shallowDepth,
+                deep_depth: formData.deepDepth,
+                wall_thick: formData.wallThick,
+                bed_thick: formData.bedThick,
+                pool_shape: formData.poolShape,
+              }}
+              theme="dark"
+            />
           </div>
         )}
 

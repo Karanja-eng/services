@@ -17,7 +17,7 @@ import axios from "axios";
 import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
-import ElectricalPlumbing3DScene from "./ElectricalPlumbing3DScene";
+import StructuralVisualizationComponent from '../Drawings/visualise_component';
 
 const API_BASE = "http://localhost:8001";
 
@@ -331,11 +331,10 @@ const ElectricalPlumbingTakeoff = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <Canvas shadows dpr={[1, 2]}>
-                                        <Suspense fallback={null}>
-                                            <ElectricalPlumbing3DScene buildingData={buildingData} />
-                                        </Suspense>
-                                    </Canvas>
+                                    <StructuralVisualizationComponent
+                                        componentType="electricalPlumbing"
+                                        buildingData={buildingData}
+                                    />
                                 </>
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center space-y-6 text-slate-500">

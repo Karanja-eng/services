@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Calculator, Box, Eye, FileText, Settings, Download, Edit3, Table } from 'lucide-react';
-import Staircase3DViewer from './3DViewer';
 import Staircase2DViewer from './2DViewer';
 import EnglishMethodTakeoffSheet from '../ExternalWorks/EnglishMethodTakeoffSheet';
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 
 const EnhancedStaircaseApp = () => {
     const [activeTab, setActiveTab] = useState("config");
@@ -357,8 +357,11 @@ const EnhancedStaircaseApp = () => {
                     )}
 
                     {activeTab === "3d" && (
-                        <div className="p-4 h-[700px]">
-                            <Staircase3DViewer staircaseData={{ staircase_type: staircaseType, ...inputs }} />
+                        <div className="h-[700px] bg-slate-900 rounded-2xl overflow-hidden relative border border-slate-800 shadow-2xl">
+                            <StructuralVisualizationComponent
+                                componentType="staircase"
+                                buildingData={{ staircase_type: staircaseType, ...inputs }}
+                            />
                         </div>
                     )}
 

@@ -1,6 +1,7 @@
+```
 import React, { useRef, useState, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Grid, Text, Line, Box, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, Grid, Line, Box, PerspectiveCamera, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { Eye, Rotate3D, Home } from 'lucide-react';
 
@@ -179,33 +180,21 @@ function PoolStructure({ poolData }) {
                 lineWidth={2}
             />
 
-            <Text
-                position={[0, 0.5, 0]}
-                fontSize={0.5}
-                color="#003d7a"
-                anchorX="center"
-                anchorY="middle"
-            >
-                {`${int_l}m × ${int_w}m`}
-            </Text>
-            <Text
-                position={[-int_l / 2 - 1, -shallow_depth / 2, 0]}
-                fontSize={0.4}
-                color="#0066cc"
-                anchorX="center"
-                anchorY="middle"
-            >
-                {`${shallow_depth}m`}
-            </Text>
-            <Text
-                position={[int_l / 2 + 1, -deep_depth / 2, 0]}
-                fontSize={0.4}
-                color="#0066cc"
-                anchorX="center"
-                anchorY="middle"
-            >
-                {`${deep_depth}m`}
-            </Text>
+            <Html position={[0, 0.5, 0]} center>
+                <div style={{ color: '#003d7a', fontSize: '16px', fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+                    {`${ int_l } m × ${ int_w } m`}
+                </div>
+            </Html>
+            <Html position={[-int_l / 2 - 1, -shallow_depth / 2, 0]} center>
+                <div style={{ color: '#0066cc', fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+                    {`${ shallow_depth } m`}
+                </div>
+            </Html>
+            <Html position={[int_l / 2 + 1, -deep_depth / 2, 0]} center>
+                <div style={{ color: '#0066cc', fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+                    {`${ deep_depth } m`}
+                </div>
+            </Html>
         </group>
     );
 }
@@ -264,20 +253,22 @@ export default function Pool3DVisualization({ poolData = {} }) {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setViewMode('perspective')}
-                        className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${viewMode === 'perspective'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                            }`}
+                        className={`px - 4 py - 2 rounded text - sm font - medium transition - colors flex items - center gap - 2 ${
+    viewMode === 'perspective'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+} `}
                     >
                         <Rotate3D className="w-4 h-4" />
                         3D View
                     </button>
                     <button
                         onClick={() => setViewMode('top')}
-                        className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${viewMode === 'top'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                            }`}
+                        className={`px - 4 py - 2 rounded text - sm font - medium transition - colors flex items - center gap - 2 ${
+    viewMode === 'top'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+} `}
                     >
                         <Eye className="w-4 h-4" />
                         Top View

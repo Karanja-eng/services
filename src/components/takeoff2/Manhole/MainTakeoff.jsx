@@ -6,7 +6,7 @@ import { Settings } from "lucide-react";
 import DrainageTakeoffForm from "./DrainageTakeoffForm";
 // import TakeoffSheet from "./TakeoffSheet"; // Replaced by Universal Components
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
-import DrainageScene3D from "./DrainageScene3D";
+import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 import descriptions from "../descriptions";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 
@@ -116,20 +116,14 @@ const DrainageComponenet = () => {
             {activeTab === "3d" && (
               <div className="h-full w-full relative">
                 {calculationResults ? (
-                  <>
-                    <div className="absolute top-0 left-0 p-4 z-10 bg-black/50 text-white w-full">
-                      <h2 className="text-xl font-bold">3D Visualization</h2>
-                      <p className="text-sm text-gray-200">Use mouse to rotate, zoom, and pan</p>
-                    </div>
-                    <Canvas>
-                      <PerspectiveCamera makeDefault position={[30, 25, 30]} />
-                      <OrbitControls />
-                      <DrainageScene3D
-                        projectData={calculationResults}
-                        calculationResults={calculationResults}
-                      />
-                    </Canvas>
-                  </>
+                  <StructuralVisualizationComponent
+                    componentType="drainage"
+                    componentData={{
+                      projectData: calculationResults,
+                      calculationResults: calculationResults
+                    }}
+                    theme="dark"
+                  />
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-500">
                     Please perform a calculation to view the 3D model.

@@ -66,7 +66,16 @@ export default function Column3DVisualization({
                 visible={show3D}
                 onClose={handleClose}
                 elementType="column_MC1"
-                elementData={{ inputs, results }}
+                elementData={{
+                  columnWidth: inputs.b / 1000,
+                  columnDepth: inputs.h / 1000,
+                  barCount: results?.bar_selection?.num_bars || 4,
+                  barDiameter: (results?.bar_selection?.bar_dia || 16) / 1000,
+                  linkDiameter: (results?.bar_selection?.links_dia || 8) / 1000,
+                  linkSpacing: (results?.bar_selection?.links_spacing || 200) / 1000,
+                  cover: (results?.dimensions?.cover || inputs.cover || 40) / 1000,
+                  firstLiftHeight: (inputs.lo || 3500) / 1000,
+                }}
               />
             </div>
           </div>

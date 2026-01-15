@@ -40,9 +40,12 @@ import {
   Sparkles,
   MessageCircle,
   ChevronRight,
-  Menu,
   File,
 } from "lucide-react";
+import { Stage, Layer, Line as KonvaLine, Circle as KonvaCircle, Rect as KonvaRect, Text as KonvaText, Group as KonvaGroup, Transformer } from 'react-konva';
+import StructuralVisualizationComponent from "./visualise_component";
+import { BeamKonvaGroup, getBeamCADPrimitives } from "../ReinforcedConcrete/Beams/BeamDrawer";
+import { ColumnKonvaGroup, getColumnCADPrimitives } from "../ReinforcedConcrete/Columns/ColumnDrawer";
 
 // ============ SNAP MODES ============
 const SNAP_MODES = {
@@ -57,7 +60,7 @@ const SNAP_MODES = {
   NEAREST: "nearest",
 };
 
-export default function CadDrawer() {
+export default function CadDrawer({ isDark }) {
   // ============ STATE MANAGEMENT ============
   const [projectId] = useState(Date.now().toString());
   const [projectName, setProjectName] = useState("Untitled Project");
@@ -104,6 +107,7 @@ export default function CadDrawer() {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
   // UI State
+  const [leftPanelVisible, setLeftPanelVisible] = useState(true);
   const [copilotOpen, setCopilotOpen] = useState(true);
   const [copilotTab, setCopilotTab] = useState("ai"); // ai, properties, history, commands
   const [showProperties, setShowProperties] = useState(false);
@@ -116,10 +120,9 @@ export default function CadDrawer() {
   const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
 
   // Drawing State
-  const canvasRef = useRef(null);
-  const sceneRef = useRef(null);
-  const cameraRef = useRef(null);
-  const rendererRef = useRef(null);
+  const stageRef = useRef(null);
+  const transformerRef = useRef(null);
+  const layerRef = useRef(null);
   const [drawing, setDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState(null);
   const [currentPoint, setCurrentPoint] = useState(null);
@@ -137,9 +140,8 @@ export default function CadDrawer() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiProcessing, setAiProcessing] = useState(false);
 
-  // WebSocket
-  const wsRef = useRef(null);
-  const [wsConnected, setWsConnected] = useState(false);
+  // API Persistence
+  const [apiConnected, setApiConnected] = useState(false);
 
   // ============ HATCH PATTERNS ============
   const hatchPatterns = [
@@ -236,481 +238,178 @@ export default function CadDrawer() {
     REV: { action: "revolve", name: "REVOLVE" },
   };
 
-  // ============ WEBSOCKET CONNECTION ============
+  // ============ API PERSISTENCE ============
   useEffect(() => {
-    const connectWebSocket = () => {
-      const ws = new WebSocket(`ws://localhost:8001/ws/drawing/${projectId}`);
-
-      ws.onopen = () => {
-        console.log("WebSocket connected");
-        setWsConnected(true);
-      };
-
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        handleWebSocketMessage(data);
-      };
-
-      ws.onerror = () => {
-        console.log("WebSocket error");
-        setWsConnected(false);
-      };
-
-      ws.onclose = () => {
-        console.log("WebSocket closed");
-        setWsConnected(false);
-        setTimeout(connectWebSocket, 5000);
-      };
-
-      wsRef.current = ws;
+    const checkBackend = async () => {
+      try {
+        const response = await fetch("http://localhost:8001/drawings/health");
+        if (response.ok) setApiConnected(true);
+      } catch (e) {
+        setApiConnected(false);
+      }
     };
+    checkBackend();
+  }, []);
 
-    connectWebSocket();
-
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-    };
-  }, [projectId]);
-
-  const handleWebSocketMessage = (data) => {
-    switch (data.type) {
-      case "object_added":
-        setObjects((prev) => [...prev, data.object]);
-        break;
-      case "object_updated":
-        setObjects((prev) =>
-          prev.map((o) => (o.id === data.object.id ? data.object : o))
-        );
-        break;
-      case "object_deleted":
-        setObjects((prev) => prev.filter((o) => o.id !== data.object_id));
-        break;
-      case "ai_drawing_update":
-        if (data.objects) {
-          setObjects((prev) => [...prev, ...data.objects]);
-        }
-        break;
+  const saveToBackend = async (newObjects) => {
+    try {
+      await fetch(`http://localhost:8001/drawings/projects/default/objects/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ objects: newObjects })
+      });
+    } catch (e) {
+      console.error("Failed to save to backend", e);
     }
   };
 
-  const broadcastChange = (type, data) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({ type, ...data, project_id: projectId })
-      );
+  // ============ NAVIGATION ENHANCEMENTS ============
+  const handleWheel = (e) => {
+    e.evt.preventDefault();
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    const speed = 1.1;
+    const newScale = e.evt.deltaY > 0 ? oldScale / speed : oldScale * speed;
+
+    setZoomLevel(newScale);
+    setPanOffset({
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    });
+  };
+
+  const handleZoom = (delta) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const oldScale = stage.scaleX();
+    const centerX = stage.width() / 2;
+    const centerY = stage.height() / 2;
+
+    const mousePointTo = {
+      x: (centerX - stage.x()) / oldScale,
+      y: (centerY - stage.y()) / oldScale,
+    };
+
+    const newScale = Math.max(0.05, Math.min(20, oldScale + delta));
+
+    setZoomLevel(newScale);
+    setPanOffset({
+      x: centerX - mousePointTo.x * newScale,
+      y: centerY - mousePointTo.y * newScale,
+    });
+  };
+
+  const [isPanning, setIsPanning] = useState(false);
+  const handleStageDragStart = (e) => {
+    if (e.evt.button === 1 || e.evt.button === 2 || e.evt.spaceKey) {
+      setIsPanning(true);
     }
   };
 
-  // ============ THREE.JS INITIALIZATION ============
-  useEffect(() => {
-    if (!canvasRef.current) return;
+  const handleStageDragEnd = () => {
+    setIsPanning(false);
+  };
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a1a);
-    sceneRef.current = scene;
-
-    const aspect =
-      canvasRef.current.clientWidth / canvasRef.current.clientHeight;
-    const camera =
-      mode === "2D"
-        ? new THREE.OrthographicCamera(
-          -10 * aspect,
-          10 * aspect,
-          10,
-          -10,
-          0.1,
-          1000
-        )
-        : new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-
-    camera.position.set(
-      panOffset.x,
-      panOffset.y,
-      mode === "2D" ? 20 / zoomLevel : 30
-    );
-    if (mode === "3D") camera.position.set(15, 15, 15);
-    camera.lookAt(0, 0, 0);
-    camera.zoom = zoomLevel;
-    camera.updateProjectionMatrix();
-    cameraRef.current = camera;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(
-      canvasRef.current.clientWidth,
-      canvasRef.current.clientHeight
-    );
-    renderer.setPixelRatio(window.devicePixelRatio);
-    canvasRef.current.innerHTML = "";
-    canvasRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
-
-    // Grid
-    if (gridVisible) {
-      const size = 100;
-      const divisions = size / gridSpacing;
-      const gridHelper = new THREE.GridHelper(
-        size,
-        divisions,
-        0x444444,
-        0x222222
-      );
-      gridHelper.rotation.x = mode === "2D" ? Math.PI / 2 : 0;
-      gridHelper.position.z = mode === "2D" ? -0.01 : 0;
-      scene.add(gridHelper);
-    }
-
-    // Lights for 3D
-    if (mode === "3D") {
-      const light1 = new THREE.DirectionalLight(0xffffff, 0.8);
-      light1.position.set(10, 10, 10);
-      scene.add(light1);
-
-      const light2 = new THREE.DirectionalLight(0xffffff, 0.4);
-      light2.position.set(-10, -10, -10);
-      scene.add(light2);
-
-      scene.add(new THREE.AmbientLight(0x404040, 0.5));
-    }
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const handleResize = () => {
-      const width = canvasRef.current.clientWidth;
-      const height = canvasRef.current.clientHeight;
-      const aspect = width / height;
-
-      if (mode === "2D") {
-        camera.left = -10 * aspect;
-        camera.right = 10 * aspect;
-        camera.top = 10;
-        camera.bottom = -10;
-      } else {
-        camera.aspect = aspect;
-      }
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (canvasRef.current && renderer.domElement) {
-        try {
-          canvasRef.current.removeChild(renderer.domElement);
-        } catch (e) { }
-      }
-      renderer.dispose();
-    };
-  }, [mode, gridVisible, gridSpacing, zoomLevel, panOffset]);
-
-  // ============ RENDER OBJECTS ============
-  useEffect(() => {
-    if (!sceneRef.current) return;
-
-    // Clear scene
-    while (sceneRef.current.children.length > 0) {
-      const obj = sceneRef.current.children[0];
-      if (obj.geometry) obj.geometry.dispose();
-      if (obj.material) {
-        if (Array.isArray(obj.material)) {
-          obj.material.forEach((m) => m.dispose());
-        } else {
-          obj.material.dispose();
-        }
-      }
-      sceneRef.current.remove(obj);
-    }
-
-    // Re-add grid
-    if (gridVisible) {
-      const size = 100;
-      const divisions = size / gridSpacing;
-      const gridHelper = new THREE.GridHelper(
-        size,
-        divisions,
-        0x444444,
-        0x222222
-      );
-      gridHelper.rotation.x = mode === "2D" ? Math.PI / 2 : 0;
-      gridHelper.position.z = mode === "2D" ? -0.01 : 0;
-      sceneRef.current.add(gridHelper);
-    }
-
-    // Re-add lights
-    if (mode === "3D") {
-      const light1 = new THREE.DirectionalLight(0xffffff, 0.8);
-      light1.position.set(10, 10, 10);
-      sceneRef.current.add(light1);
-
-      const light2 = new THREE.DirectionalLight(0xffffff, 0.4);
-      light2.position.set(-10, -10, -10);
-      sceneRef.current.add(light2);
-
-      sceneRef.current.add(new THREE.AmbientLight(0x404040, 0.5));
-    }
-
-    // Render objects
-    objects.forEach((obj) => {
+  // ============ RENDER KONVA OBJECTS ============
+  const renderKonvaObjects = () => {
+    return objects.map((obj) => {
       const layer = layers.find((l) => l.id === obj.layerId);
-      if (!layer?.visible) return;
+      if (!layer?.visible) return null;
 
-      let mesh;
-      const color = new THREE.Color(obj.color);
-      const lineWidth = obj.lineWidth || 2;
+      const color = obj.color || "#FFFFFF";
+      const strokeWidth = obj.lineWidth || 2;
 
       switch (obj.type) {
-        default:
-          break;
         case "line":
-          const lineGeom = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(obj.start.x, obj.start.y, obj.start.z || 0),
-            new THREE.Vector3(obj.end.x, obj.end.y, obj.end.z || 0),
-          ]);
-          mesh = new THREE.Line(
-            lineGeom,
-            new THREE.LineBasicMaterial({
-              color,
-              linewidth: lineWidth,
-              linecap: "round",
-              linejoin: "round",
-            })
+          return (
+            <KonvaLine
+              key={obj.id}
+              points={[obj.start.x, obj.start.y, obj.end.x, obj.end.y]}
+              stroke={color}
+              strokeWidth={strokeWidth}
+              draggable={!layer.locked}
+            />
           );
-          break;
-
-        case "polyline":
-          if (obj.points && obj.points.length > 1) {
-            const points = obj.points.map(
-              (p) => new THREE.Vector3(p.x, p.y, p.z || 0)
-            );
-            const polyGeom = new THREE.BufferGeometry().setFromPoints(points);
-            mesh = new THREE.Line(
-              polyGeom,
-              new THREE.LineBasicMaterial({ color, linewidth: lineWidth })
-            );
-          }
-          break;
-
-        case "circle":
-          const circleGeom = new THREE.CircleGeometry(obj.radius, 64);
-          mesh = new THREE.Line(
-            new THREE.EdgesGeometry(circleGeom),
-            new THREE.LineBasicMaterial({ color, linewidth: lineWidth })
-          );
-          mesh.position.set(obj.center.x, obj.center.y, obj.center.z || 0);
-          break;
-
-        case "arc":
-          if (obj.startAngle !== undefined && obj.endAngle !== undefined) {
-            const arcGeom = new THREE.CircleGeometry(
-              obj.radius,
-              64,
-              obj.startAngle,
-              obj.endAngle - obj.startAngle
-            );
-            mesh = new THREE.Line(
-              new THREE.EdgesGeometry(arcGeom),
-              new THREE.LineBasicMaterial({ color, linewidth: lineWidth })
-            );
-            mesh.position.set(obj.center.x, obj.center.y, obj.center.z || 0);
-          }
-          break;
-
-        case "ellipse":
-          const ellipseGeom = new THREE.BufferGeometry();
-          const ellipsePoints = [];
-          for (let i = 0; i <= 64; i++) {
-            const angle = (i / 64) * Math.PI * 2;
-            ellipsePoints.push(
-              new THREE.Vector3(
-                Math.cos(angle) * obj.radiusX,
-                Math.sin(angle) * obj.radiusY,
-                0
-              )
-            );
-          }
-          ellipseGeom.setFromPoints(ellipsePoints);
-          mesh = new THREE.Line(
-            ellipseGeom,
-            new THREE.LineBasicMaterial({ color, linewidth: lineWidth })
-          );
-          mesh.position.set(obj.center.x, obj.center.y, obj.center.z || 0);
-          break;
-
-        case "spline":
-          if (obj.points && obj.points.length > 2) {
-            const curve = new THREE.CatmullRomCurve3(
-              obj.points.map((p) => new THREE.Vector3(p.x, p.y, p.z || 0)),
-              obj.closed || false,
-              "catmullrom",
-              0.5
-            );
-            const splinePoints = curve.getPoints(100);
-            const splineGeom = new THREE.BufferGeometry().setFromPoints(
-              splinePoints
-            );
-            mesh = new THREE.Line(
-              splineGeom,
-              new THREE.LineBasicMaterial({ color, linewidth: lineWidth })
-            );
-          }
-          break;
-
         case "rectangle":
-          const width = Math.abs(obj.end.x - obj.start.x);
-          const height = Math.abs(obj.end.y - obj.start.y);
-          const rectGeom = new THREE.PlaneGeometry(width, height);
-          mesh = new THREE.Line(
-            new THREE.EdgesGeometry(rectGeom),
-            new THREE.LineBasicMaterial({ color, linewidth: lineWidth })
+          return (
+            <KonvaRect
+              key={obj.id}
+              x={Math.min(obj.start.x, obj.end.x)}
+              y={Math.min(obj.start.y, obj.end.y)}
+              width={Math.abs(obj.end.x - obj.start.x)}
+              height={Math.abs(obj.end.y - obj.start.y)}
+              stroke={color}
+              strokeWidth={strokeWidth}
+              draggable={!layer.locked}
+            />
           );
-          mesh.position.set(
-            (obj.start.x + obj.end.x) / 2,
-            (obj.start.y + obj.end.y) / 2,
-            0
+        case "circle":
+          return (
+            <KonvaCircle
+              key={obj.id}
+              x={obj.center.x}
+              y={obj.center.y}
+              radius={obj.radius}
+              stroke={color}
+              strokeWidth={strokeWidth}
+              draggable={!layer.locked}
+            />
           );
-          break;
-
-        case "hatch":
-          const hatchWidth = Math.abs(obj.end.x - obj.start.x);
-          const hatchHeight = Math.abs(obj.end.y - obj.start.y);
-          const hatchGeom = new THREE.PlaneGeometry(hatchWidth, hatchHeight);
-          const hatchPattern = hatchPatterns.find((p) => p.id === obj.pattern);
-          mesh = new THREE.Mesh(
-            hatchGeom,
-            new THREE.MeshBasicMaterial({
-              color: new THREE.Color(hatchPattern?.color || obj.color),
-              transparent: true,
-              opacity: obj.opacity || 0.5,
-              side: THREE.DoubleSide,
-            })
-          );
-          mesh.position.set(
-            (obj.start.x + obj.end.x) / 2,
-            (obj.start.y + obj.end.y) / 2,
-            -0.05
-          );
-          break;
-
-        case "dimension":
-          if (showDimensions) {
-            const dimLineGeom = new THREE.BufferGeometry().setFromPoints([
-              new THREE.Vector3(obj.start.x, obj.start.y, 0.1),
-              new THREE.Vector3(obj.end.x, obj.end.y, 0.1),
-            ]);
-            mesh = new THREE.Line(
-              dimLineGeom,
-              new THREE.LineBasicMaterial({
-                color: 0x00ff00,
-                linewidth: 2,
-              })
-            );
-          }
-          break;
-
         case "text":
-          const textGeom = new THREE.PlaneGeometry(
-            (obj.text?.length || 5) * (obj.size || 1) * 0.6,
-            obj.size || 1
+          return (
+            <KonvaText
+              key={obj.id}
+              x={obj.position.x}
+              y={obj.position.y}
+              text={obj.text}
+              fontSize={obj.size * 10 || 16}
+              fill={color}
+              draggable={!layer.locked}
+            />
           );
-          mesh = new THREE.Mesh(
-            textGeom,
-            new THREE.MeshBasicMaterial({
-              color,
-              transparent: true,
-              opacity: 0.8,
-              side: THREE.DoubleSide,
-            })
-          );
-          mesh.position.set(obj.position.x, obj.position.y, 0.1);
-          if (obj.rotation) mesh.rotation.z = (obj.rotation * Math.PI) / 180;
-          break;
-
-        case "box":
-          const boxGeom = new THREE.BoxGeometry(
-            obj.width,
-            obj.height,
-            obj.depth
-          );
-          mesh = new THREE.Mesh(
-            boxGeom,
-            new THREE.MeshStandardMaterial({
-              color,
-              metalness: 0.3,
-              roughness: 0.7,
-            })
-          );
-          mesh.position.set(obj.position.x, obj.position.y, obj.position.z);
-          break;
-
-        case "extrusion":
-          if (obj.points && obj.points.length > 2) {
-            const shape = new THREE.Shape();
-            obj.points.forEach((p, i) => {
-              if (i === 0) shape.moveTo(p.x, p.y);
-              else shape.lineTo(p.x, p.y);
-            });
-            shape.closePath();
-            const extrudeSettings = {
-              depth: obj.depth,
-              bevelEnabled: false,
-            };
-            const extrudeGeom = new THREE.ExtrudeGeometry(
-              shape,
-              extrudeSettings
+        case "member":
+          if (obj.memberType === "beam") {
+            return (
+              <BeamKonvaGroup
+                key={obj.id}
+                config={obj.config}
+                section={obj.section || "midspan"}
+                x={obj.x}
+                y={obj.y}
+                scale={obj.scale || 0.4}
+              />
             );
-            mesh = new THREE.Mesh(
-              extrudeGeom,
-              new THREE.MeshStandardMaterial({ color })
+          } else if (obj.memberType === "column") {
+            return (
+              <ColumnKonvaGroup
+                key={obj.id}
+                width={obj.width}
+                depth={obj.depth}
+                numBars={obj.numBars}
+                barDia={obj.barDia}
+                x={obj.x}
+                y={obj.y}
+                scale={obj.scale || 0.8}
+              />
             );
           }
-          break;
-
-        case "revolve":
-          if (obj.points && obj.points.length > 1) {
-            const points2D = obj.points.map(
-              (p) => new THREE.Vector2(Math.abs(p.x), p.y)
-            );
-            const revolveGeom = new THREE.LatheGeometry(
-              points2D,
-              obj.segments || 32
-            );
-            mesh = new THREE.Mesh(
-              revolveGeom,
-              new THREE.MeshStandardMaterial({ color })
-            );
-            mesh.position.set(
-              obj.position?.x || 0,
-              obj.position?.y || 0,
-              obj.position?.z || 0
-            );
-          }
-          break;
-      }
-
-      if (mesh) {
-        mesh.userData = { id: obj.id, type: obj.type };
-        if (selectedIds.includes(obj.id)) {
-          if (mesh.material && mesh.material.emissive) {
-            mesh.material.emissive = new THREE.Color(0x00ff00);
-          }
-        }
-        sceneRef.current.add(mesh);
+          return null;
+        default:
+          return null;
       }
     });
-  }, [
-    objects,
-    selectedIds,
-    layers,
-    mode,
-    gridVisible,
-    gridSpacing,
-    showDimensions,
-    zoomLevel,
-  ]);
+  };
+
 
   // ============ HISTORY MANAGEMENT ============
   const addToHistory = useCallback(
@@ -720,6 +419,7 @@ export default function CadDrawer() {
       setHistory(newHistory);
       setHistoryIndex(newHistory.length - 1);
       setObjects(newObjects);
+      saveToBackend(newObjects);
     },
     [history, historyIndex]
   );
@@ -740,15 +440,18 @@ export default function CadDrawer() {
     }
   }, [history, historyIndex]);
 
-  // ============ COORDINATE CONVERSION ============
-  const getWorldCoords = useCallback(
+  // ============ COORDINATE CONVERSION (Konva) ============
+  const getKonvaCoords = useCallback(
     (e) => {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 20 - 10;
-      const y = -((e.clientY - rect.top) / rect.height) * 20 + 10;
+      const stage = e.target.getStage();
+      const pointer = stage.getPointerPosition();
 
-      let finalX = x / zoomLevel + panOffset.x;
-      let finalY = y / zoomLevel + panOffset.y;
+      // Convert pointer to world space
+      const x = (pointer.x - stage.x()) / stage.scaleX();
+      const y = (pointer.y - stage.y()) / stage.scaleY();
+
+      let finalX = x;
+      let finalY = y;
 
       // Grid snap
       if (snapSettings[SNAP_MODES.GRID]) {
@@ -758,7 +461,7 @@ export default function CadDrawer() {
 
       return { x: finalX, y: finalY, z: 0 };
     },
-    [zoomLevel, panOffset, snapSettings, gridSpacing]
+    [snapSettings, gridSpacing]
   );
 
   // ============ SNAP POINT DETECTION ============
@@ -850,82 +553,59 @@ export default function CadDrawer() {
 
   // ============ MOUSE HANDLERS ============
   const handleCanvasMouseDown = (e) => {
+    if (mode === "3D") return;
+    const point = getKonvaCoords(e);
+
+    // Selection mode
     if (!activeTool) {
-      // Selection mode
-      const point = getWorldCoords(e);
-      // TODO: Implement object selection by clicking
+      const clickedOnEmpty = e.target === e.target.getStage();
+      if (clickedOnEmpty) {
+        setSelectedIds([]);
+        transformerRef.current?.nodes([]);
+      } else {
+        const id = e.target.id();
+        if (id) {
+          const isSelected = selectedIds.includes(id);
+          if (e.evt.shiftKey) {
+            setSelectedIds(prev => isSelected ? prev.filter(i => i !== id) : [...prev, id]);
+          } else {
+            setSelectedIds([id]);
+          }
+          transformerRef.current?.nodes([e.target]);
+        }
+      }
       return;
     }
 
-    const point = snapPoint || getWorldCoords(e);
+    setDrawing(true);
+    setStartPoint(point);
+    setCurrentPoint(point);
 
     if (activeTool === "polyline") {
       setPolylinePoints([...polylinePoints, point]);
-      if (!drawing) setDrawing(true);
-      return;
-    }
-
-    if (activeTool === "arc") {
+    } else if (activeTool === "arc") {
       setArcPoints([...arcPoints, point]);
-      if (arcPoints.length === 2) {
-        createArc();
-        return;
-      }
-      if (!drawing) setDrawing(true);
-      return;
-    }
-
-    if (activeTool === "spline") {
+    } else if (activeTool === "spline") {
       setPolylinePoints([...polylinePoints, point]);
-      if (!drawing) setDrawing(true);
-      return;
     }
-
-    if (orthoMode && startPoint) {
-      const dx = Math.abs(point.x - startPoint.x);
-      const dy = Math.abs(point.y - startPoint.y);
-      if (dx > dy) {
-        point.y = startPoint.y;
-      } else {
-        point.x = startPoint.x;
-      }
-    }
-
-    setStartPoint(point);
-    setDrawing(true);
   };
 
   const handleCanvasMouseMove = (e) => {
-    const point = getWorldCoords(e);
+    if (mode === "3D") return;
+    const point = getKonvaCoords(e);
 
     // Find snap point
     const snap = findSnapPoint(point);
     setSnapPoint(snap);
 
-    if (!drawing || !startPoint) {
-      setCurrentPoint(point);
-      return;
-    }
-
-    let finalPoint = snap || point;
-
-    if (orthoMode && startPoint) {
-      const dx = Math.abs(finalPoint.x - startPoint.x);
-      const dy = Math.abs(finalPoint.y - startPoint.y);
-      if (dx > dy) {
-        finalPoint.y = startPoint.y;
-      } else {
-        finalPoint.x = startPoint.x;
-      }
-    }
-
-    setCurrentPoint(finalPoint);
+    setCurrentPoint(snap || point);
   };
 
   const handleCanvasMouseUp = (e) => {
+    if (mode === "3D") return;
     if (!drawing || !activeTool || !startPoint) return;
 
-    const endPoint = snapPoint || currentPoint || getWorldCoords(e);
+    const endPoint = snapPoint || currentPoint || getKonvaCoords(e);
     const layer = layers.find((l) => l.id === activeLayerId);
     let newObj = null;
 
@@ -1055,7 +735,6 @@ export default function CadDrawer() {
     if (newObj) {
       const updated = [...objects, newObj];
       addToHistory(updated);
-      broadcastChange("object_added", { object: newObj });
     }
 
     if (
@@ -1083,7 +762,6 @@ export default function CadDrawer() {
       };
       const updated = [...objects, newObj];
       addToHistory(updated);
-      broadcastChange("object_added", { object: newObj });
       setPolylinePoints([]);
       setDrawing(false);
       setActiveTool(null);
@@ -1101,7 +779,6 @@ export default function CadDrawer() {
       };
       const updated = [...objects, newObj];
       addToHistory(updated);
-      broadcastChange("object_added", { object: newObj });
       setPolylinePoints([]);
       setDrawing(false);
       setActiveTool(null);
@@ -1131,25 +808,11 @@ export default function CadDrawer() {
 
     const updated = [...objects, newObj];
     addToHistory(updated);
-    broadcastChange("object_added", { object: newObj });
     setArcPoints([]);
     setDrawing(false);
     setActiveTool(null);
   };
 
-  // ============ ZOOM & PAN ============
-  const handleZoom = (delta) => {
-    setZoomLevel((prev) => Math.max(0.1, Math.min(10, prev + delta)));
-  };
-
-  const handlePan = (dx, dy) => {
-    setPanOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-  };
-
-  const handleWheel = (e) => {
-    e.preventDefault();
-    handleZoom(e.deltaY > 0 ? -0.1 : 0.1);
-  };
 
   // ============ 3D OPERATIONS ============
   const handleExtrude = () => {
@@ -1244,6 +907,8 @@ export default function CadDrawer() {
     const copies = selected.map((obj) => ({
       ...JSON.parse(JSON.stringify(obj)),
       id: Date.now().toString() + Math.random(),
+      x: obj.x !== undefined ? obj.x + 2 : undefined,
+      y: obj.y !== undefined ? obj.y + 2 : undefined,
       start: obj.start ? { ...obj.start, x: obj.start.x + 2 } : undefined,
       end: obj.end ? { ...obj.end, x: obj.end.x + 2 } : undefined,
       center: obj.center ? { ...obj.center, x: obj.center.x + 2 } : undefined,
@@ -1261,11 +926,8 @@ export default function CadDrawer() {
   const handleDelete = useCallback(() => {
     const filtered = objects.filter((o) => !selectedIds.includes(o.id));
     addToHistory(filtered);
-    selectedIds.forEach((id) =>
-      broadcastChange("object_deleted", { object_id: id })
-    );
     setSelectedIds([]);
-  }, [objects, selectedIds, addToHistory, broadcastChange]);
+  }, [objects, selectedIds, addToHistory]);
 
   const handleMove = () => {
     const dx = parseFloat(prompt("Move X distance:", "0")) || 0;
@@ -1275,6 +937,8 @@ export default function CadDrawer() {
       if (!selectedIds.includes(obj.id)) return obj;
 
       const moved = { ...obj };
+      if (moved.x !== undefined) moved.x += dx;
+      if (moved.y !== undefined) moved.y += dy;
       if (moved.start)
         moved.start = {
           ...moved.start,
@@ -1330,6 +994,11 @@ export default function CadDrawer() {
       };
 
       const rotated = { ...obj };
+      if (rotated.x !== undefined && rotated.y !== undefined) {
+        const p = rotatePoint({ x: rotated.x, y: rotated.y });
+        rotated.x = p.x;
+        rotated.y = p.y;
+      }
       if (rotated.start) rotated.start = rotatePoint(rotated.start);
       if (rotated.end) rotated.end = rotatePoint(rotated.end);
       if (rotated.center) rotated.center = rotatePoint(rotated.center);
@@ -1402,6 +1071,65 @@ export default function CadDrawer() {
 
     addToHistory(updated);
   };
+
+  const handleExplode = () => {
+    const selected = objects.filter(o => selectedIds.includes(o.id) && o.memberType);
+    if (selected.length === 0) return alert("Select a structural member to explode");
+
+    let newObjects = [...objects.filter(o => !selectedIds.includes(o.id))];
+
+    selected.forEach(member => {
+      let parts = [];
+      if (member.memberType === "beam") {
+        parts = getBeamCADPrimitives(member.config, member.x, member.y, member.scale);
+      } else if (member.memberType === "column") {
+        parts = getColumnCADPrimitives(member.config, member.x, member.y, member.scale);
+      }
+      newObjects.push(...parts);
+    });
+
+    addToHistory(newObjects);
+    setSelectedIds([]);
+  };
+
+  // ============ GLOBAL EVENT LISTENER ============
+  useEffect(() => {
+    const handleAddMember = (e) => {
+      const { memberType, config, x, y } = e.detail;
+      const newObj = {
+        id: "MEMBER_" + Date.now(),
+        type: "member",
+        memberType,
+        config,
+        x: x || 0,
+        y: y || 0,
+        scale: 0.5,
+        layerId: activeLayerId
+      };
+      addToHistory([...objects, newObj]);
+    };
+
+    window.addEventListener("CAD_ADD_MEMBER", handleAddMember);
+
+    // Also check for pending member from navigation
+    if (window.CAD_PENDING_MEMBER) {
+      const { memberType, config, x, y } = window.CAD_PENDING_MEMBER;
+      const newObj = {
+        id: "MEMBER_" + Date.now(),
+        type: "member",
+        memberType,
+        config,
+        x: x || 0,
+        y: y || 0,
+        scale: 0.5,
+        layerId: activeLayerId
+      };
+      addToHistory([...objects, newObj]);
+      window.CAD_PENDING_MEMBER = null; // Clear it
+    }
+
+    return () => window.removeEventListener("CAD_ADD_MEMBER", handleAddMember);
+  }, [objects, activeLayerId]);
 
   // ============ LAYER MANAGEMENT ============
   const addLayer = () => {
@@ -1616,39 +1344,50 @@ export default function CadDrawer() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
+    <div className={`flex flex-col h-screen ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"}`}>
       {/* Top Toolbar */}
-      <div className="bg-gray-800 border-b border-gray-700 px-3 py-2 flex items-center gap-2 overflow-x-auto text-xs">
-        <div className="flex gap-1">
+      <div className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-b h-14 flex items-center px-4 gap-4 z-40`}>
+        <div className="flex items-center gap-2 mr-4">
           <button
-            onClick={() => alert("New Project")}
-            className="p-2 hover:bg-gray-700 rounded"
-            title="New"
+            onClick={() => setLeftPanelVisible(!leftPanelVisible)}
+            className={`p-2 rounded ${isDark ? "hover:bg-gray-700 text-gray-300" : "hover:bg-gray-100 text-gray-600"}`}
+            title="Toggle Layers"
           >
-            <Plus size={16} />
+            {leftPanelVisible ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
           </button>
-          <button
-            onClick={() => alert("Save")}
-            className="p-2 hover:bg-gray-700 rounded"
-            title="Save"
-          >
-            <Save size={16} />
-          </button>
-          <button
-            onClick={() => alert("Open")}
-            className="p-2 hover:bg-gray-700 rounded"
-            title="Open"
-          >
-            <Upload size={16} />
-          </button>
-          <button
-            onClick={() => alert("Export")}
-            className="p-2 hover:bg-gray-700 rounded"
-            title="Export"
-          >
-            <Download size={16} />
-          </button>
+          <div className="font-bold flex items-center gap-2">
+            <Maximize size={20} className="text-blue-500" />
+            <span className="hidden md:inline">Universal CAD</span>
+          </div>
         </div>
+        <button
+          onClick={() => alert("Save")}
+          className="p-2 hover:bg-gray-700 rounded"
+          title="Save"
+        >
+          <Save size={16} />
+        </button>
+        <button
+          onClick={() => alert("Open")}
+          className="p-2 hover:bg-gray-700 rounded"
+          title="Open"
+        >
+          <Upload size={16} />
+        </button>
+        <button
+          onClick={() => alert("Export")}
+          className="p-2 hover:bg-gray-700 rounded"
+          title="Export"
+        >
+          <Download size={16} />
+        </button>
+        <button
+          onClick={() => alert("Save")}
+          className="p-2 hover:bg-gray-700 rounded"
+          title="Save As"
+        >
+          <Save size={16} />
+        </button>
 
         <div className="w-px h-6 bg-gray-700" />
 
@@ -1905,532 +1644,467 @@ export default function CadDrawer() {
           </button>
         </div>
 
-        <div className="ml-auto text-xs text-gray-400 flex gap-3">
+        <div className="ml-auto text-xs text-gray-500 italic flex gap-3">
           <div>{objects.length} obj</div>
           <div>{selectedIds.length} sel</div>
           <div>{mode}</div>
-          <div className={wsConnected ? "text-green-400" : "text-red-400"}>
-            ● {wsConnected ? "Online" : "Offline"}
-          </div>
-        </div>
-      </div>
-
-      {/* Hatch Menu */}
-      {showHatchMenu && (
-        <div className="absolute top-14 left-1/2 transform -translate-x-1/2 bg-gray-800 border border-gray-700 rounded shadow-lg p-3 z-50">
-          <div className="text-sm font-bold mb-2">Hatch Patterns</div>
-          <div className="grid grid-cols-4 gap-2">
-            {hatchPatterns.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setSelectedHatch(p.id);
-                  setActiveTool("hatch");
-                  setShowHatchMenu(false);
-                }}
-                className={`p-2 rounded border-2 ${selectedHatch === p.id
-                  ? "border-blue-500 bg-gray-700"
-                  : "border-gray-600 hover:border-gray-500"
-                  }`}
-              >
-                <div className="text-2xl">{p.symbol}</div>
-                <div className="text-xs mt-1">{p.name}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel - Layers */}
-        <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col overflow-hidden">
-          <div className="p-3 border-b border-gray-700 flex items-center justify-between">
-            <h3 className="font-bold text-sm flex items-center gap-2">
-              <Layers size={16} /> Layers
-            </h3>
-            <button
-              onClick={addLayer}
-              className="p-1 hover:bg-gray-700 rounded"
-            >
-              <Plus size={16} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {layers.map((layer) => (
-              <div
-                key={layer.id}
-                onClick={() => !layer.locked && setActiveLayerId(layer.id)}
-                className={`p-3 border-b border-gray-700 cursor-pointer ${activeLayerId === layer.id
-                  ? "bg-blue-900"
-                  : "hover:bg-gray-700"
-                  } ${layer.locked ? "opacity-60" : ""}`}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-4 h-4 rounded"
-                    style={{ backgroundColor: layer.color }}
-                  />
-                  <span className="flex-1 text-sm truncate">{layer.name}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleLayerVisibility(layer.id);
-                    }}
-                    className="p-1"
-                  >
-                    {layer.visible ? <Eye size={14} /> : <EyeOff size={14} />}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleLayerLock(layer.id);
-                    }}
-                    className="p-1"
-                  >
-                    {layer.locked ? <Lock size={14} /> : <Unlock size={14} />}
-                  </button>
-                  {layers.length > 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPendingDeleteLayerId(layer.id);
-                      }}
-                      className="p-1 hover:text-red-400"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {objects.filter((o) => o.layerId === layer.id).length} objects
-                </div>
-              </div>
-            ))}
+          <div className={apiConnected ? "text-green-500" : "text-red-500"}>
+            ● {apiConnected ? "Backend: Live" : "Backend: Down"}
           </div>
         </div>
 
-        {/*        .....................Deletelayer Confirmation              */}
-        {pendingDeleteLayerId && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-            <div className="bg-white p-4 rounded shadow-md">
-              <p>Delete layer and all its objects?</p>
-
-              <div className="flex gap-2 mt-3">
+        {/* Hatch Menu */}
+        {showHatchMenu && (
+          <div className="absolute top-14 left-1/2 transform -translate-x-1/2 bg-gray-800 border border-gray-700 rounded shadow-lg p-3 z-50">
+            <div className="text-sm font-bold mb-2">Hatch Patterns</div>
+            <div className="grid grid-cols-4 gap-2">
+              {hatchPatterns.map((p) => (
                 <button
-                  className="bg-red-500 text-white px-3 py-1 rounded"
+                  key={p.id}
                   onClick={() => {
-                    deleteLayer(pendingDeleteLayerId);
-                    setPendingDeleteLayerId(null);
+                    setSelectedHatch(p.id);
+                    setActiveTool("hatch");
+                    setShowHatchMenu(false);
                   }}
-                >
-                  Delete
-                </button>
-
-                <button
-                  className="px-3 py-1 rounded border"
-                  onClick={() => setPendingDeleteLayerId(null)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Canvas */}
-        <div className="flex-1 flex flex-col">
-          <div
-            ref={canvasRef}
-            className="flex-1 relative bg-gray-900 cursor-crosshair"
-            onMouseDown={handleCanvasMouseDown}
-            onMouseMove={handleCanvasMouseMove}
-            onMouseUp={handleCanvasMouseUp}
-            onDoubleClick={handleCanvasDoubleClick}
-            onWheel={handleWheel}
-          >
-            {/* Active Tool Indicator */}
-            {activeTool && (
-              <div className="absolute top-4 left-4 bg-gray-800 px-3 py-2 rounded border border-gray-700 text-sm z-10">
-                <div className="font-bold text-blue-400">
-                  {activeTool.toUpperCase()}
-                </div>
-                {activeTool === "polyline" && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    {polylinePoints.length} points | Double-click to finish
-                  </div>
-                )}
-                {activeTool === "arc" && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    Click 3 points: {arcPoints.length}/3
-                  </div>
-                )}
-                {activeTool === "spline" && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    {polylinePoints.length} points | Double-click to finish
-                  </div>
-                )}
-                {activeTool === "hatch" && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    Pattern:{" "}
-                    {hatchPatterns.find((p) => p.id === selectedHatch)?.name}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Snap Indicator */}
-            {snapPoint && (
-              <div
-                className="absolute w-3 h-3 border-2 border-yellow-400 pointer-events-none rounded-full"
-                style={{
-                  left: `${(((snapPoint.x - panOffset.x) * zoomLevel + 10) *
-                    canvasRef.current?.clientWidth) /
-                    20
-                    }px`,
-                  top: `${(((-snapPoint.y + panOffset.y) * zoomLevel + 10) *
-                    canvasRef.current?.clientHeight) /
-                    20
-                    }px`,
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                <div className="absolute inset-0 border border-yellow-300 rounded-full" />
-              </div>
-            )}
-
-            {/* Coordinates Display */}
-            {currentPoint && (
-              <div className="absolute bottom-4 left-4 bg-gray-800 px-3 py-2 rounded text-xs font-mono border border-gray-700">
-                X: {currentPoint.x.toFixed(2)} | Y: {currentPoint.y.toFixed(2)}
-                {snapPoint && (
-                  <span className="ml-2 text-yellow-400">
-                    ● {snapPoint.snapType}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Command Line */}
-          {showCommandLine && (
-            <div className="bg-gray-800 border-t border-gray-700 p-2">
-              <div className="flex items-center gap-2">
-                <Command size={16} className="text-gray-400" />
-                <input
-                  type="text"
-                  value={commandInput}
-                  onChange={(e) => setCommandInput(e.target.value)}
-                  onKeyDown={handleCommand}
-                  placeholder="Command: L (Line), C (Circle), R (Rectangle), PL (Polyline)..."
-                  className="flex-1 bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm border border-gray-700 focus:outline-none focus:border-blue-500 font-mono"
-                />
-                <button
-                  onClick={() => setShowCommandLine(false)}
-                  className="p-2 hover:bg-gray-700 rounded"
-                >
-                  <Minus size={16} />
-                </button>
-              </div>
-              {commandInput.length > 0 && (
-                <div className="mt-2 text-xs text-gray-400">
-                  {Object.entries(commands)
-                    .filter(([key]) =>
-                      key.startsWith(commandInput.toUpperCase())
-                    )
-                    .slice(0, 5)
-                    .map(([key, cmd]) => (
-                      <div key={key} className="inline-block mr-3">
-                        <span className="font-bold text-blue-400">{key}</span> -{" "}
-                        {cmd.name}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
-          {!showCommandLine && (
-            <button
-              onClick={() => setShowCommandLine(true)}
-              className="absolute bottom-4 right-4 p-2 bg-gray-800 rounded border border-gray-700 hover:bg-gray-700"
-            >
-              <Command size={16} />
-            </button>
-          )}
-        </div>
-
-        {/* Right Panel - Copilot */}
-        {copilotOpen && (
-          <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col overflow-hidden">
-            <div className="p-3 border-b border-gray-700 flex items-center justify-between">
-              <h3 className="font-bold text-sm">Copilot</h3>
-              <button onClick={() => setCopilotOpen(false)}>
-                <ChevronRight size={18} />
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex border-b border-gray-700">
-              {[
-                { id: "ai", icon: Sparkles, label: "AI" },
-                { id: "properties", icon: Settings, label: "Properties" },
-                { id: "history", icon: Clock, label: "History" },
-                { id: "commands", icon: BookOpen, label: "Commands" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setCopilotTab(tab.id)}
-                  className={`flex-1 p-2 text-xs flex items-center justify-center gap-1 ${copilotTab === tab.id
-                    ? "text-blue-400 border-b-2 border-blue-400"
-                    : "text-gray-400 hover:text-gray-300"
+                  className={`p-2 rounded border-2 ${selectedHatch === p.id
+                    ? "border-blue-500 bg-gray-700"
+                    : "border-gray-600 hover:border-gray-500"
                     }`}
                 >
-                  <tab.icon size={14} />
-                  {tab.label}
+                  <div className="text-2xl">{p.symbol}</div>
+                  <div className="text-xs mt-1">{p.name}</div>
                 </button>
               ))}
             </div>
+          </div>
+        )}
 
-            <div className="flex-1 overflow-y-auto p-3">
-              {/* AI Tab */}
-              {copilotTab === "ai" && (
-                <div className="flex flex-col h-full">
-                  <div className="flex-1 bg-gray-900 rounded p-3 mb-3 overflow-y-auto space-y-2">
-                    {aiMessages.map((msg, idx) => (
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* Left Panel - Layers */}
+          {leftPanelVisible && (
+            <div className={`w-64 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-r flex flex-col overflow-hidden z-20`}>
+              <div className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} flex items-center justify-between`}>
+                <h3 className="font-bold text-sm flex items-center gap-2">
+                  <Layers size={16} /> Layers
+                </h3>
+                <button
+                  onClick={addLayer}
+                  className={`p-1 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"} rounded`}
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {layers.map((layer) => (
+                  <div
+                    key={layer.id}
+                    onClick={() => !layer.locked && setActiveLayerId(layer.id)}
+                    className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} cursor-pointer ${activeLayerId === layer.id
+                      ? (isDark ? "bg-blue-900" : "bg-blue-50")
+                      : (isDark ? "hover:bg-gray-700" : "hover:bg-gray-50")
+                      } ${layer.locked ? "opacity-60" : ""}`}
+                  >
+                    <div className="flex items-center gap-2">
                       <div
-                        key={idx}
-                        className={`text-sm p-2 rounded ${msg.type === "user"
-                          ? "bg-blue-900 text-blue-100 ml-4"
-                          : "bg-gray-700 text-gray-200 mr-4"
-                          }`}
+                        className="w-4 h-4 rounded"
+                        style={{ backgroundColor: layer.color }}
+                      />
+                      <span className={`flex-1 text-sm truncate ${isDark ? "text-gray-100" : "text-gray-900"}`}>{layer.name}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLayerVisibility(layer.id);
+                        }}
+                        className="p-1"
                       >
-                        {msg.text}
+                        {layer.visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLayerLock(layer.id);
+                        }}
+                        className="p-1"
+                      >
+                        {layer.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                      </button>
+                      {layers.length > 1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPendingDeleteLayerId(layer.id);
+                          }}
+                          className="p-1 hover:text-red-400"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {objects.filter((o) => o.layerId === layer.id).length} objects
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/*        .....................Deletelayer Confirmation              */}
+          {pendingDeleteLayerId && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100]">
+              <div className={`${isDark ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"} p-4 rounded shadow-md`}>
+                <p>Delete layer and all its objects?</p>
+
+                <div className="flex gap-2 mt-3">
+                  <button
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                    onClick={() => {
+                      deleteLayer(pendingDeleteLayerId);
+                      setPendingDeleteLayerId(null);
+                    }}
+                  >
+                    Delete
+                  </button>
+
+                  <button
+                    className={`px-3 py-1 rounded border ${isDark ? "border-gray-600 hover:bg-gray-700" : "border-gray-300 hover:bg-gray-100"}`}
+                    onClick={() => setPendingDeleteLayerId(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Canvas */}
+          <div className="flex-1 flex flex-col relative z-0">
+            {mode === "2D" ? (
+              <Stage
+                width={window.innerWidth - (copilotOpen ? 320 : 0) - (leftPanelVisible ? 256 : 0)}
+                height={window.innerHeight - 56 - 40 - 24} // Adjusted for bottom overlap
+                scaleX={zoomLevel}
+                scaleY={zoomLevel}
+                x={panOffset.x}
+                y={panOffset.y}
+                onMouseDown={handleCanvasMouseDown}
+                onMouseMove={handleCanvasMouseMove}
+                onMouseUp={handleCanvasMouseUp}
+                onDblClick={handleCanvasDoubleClick}
+                onWheel={handleWheel}
+                draggable={isPanning}
+                onDragStart={handleStageDragStart}
+                onDragEnd={handleStageDragEnd}
+              >
+                <Layer>
+                  {/* Grid */}
+                  {gridVisible && (
+                    <KonvaGroup>
+                      {[...Array(100)].map((_, i) => (
+                        <React.Fragment key={i}>
+                          <KonvaLine
+                            points={[i * gridSpacing * 10 - 500, -500, i * gridSpacing * 10 - 500, 500]}
+                            stroke="#333"
+                            strokeWidth={0.5}
+                          />
+                          <KonvaLine
+                            points={[-500, i * gridSpacing * 10 - 500, 500, i * gridSpacing * 10 - 500]}
+                            stroke="#333"
+                            strokeWidth={0.5}
+                          />
+                        </React.Fragment>
+                      ))}
+                    </KonvaGroup>
+                  )}
+                  {renderKonvaObjects()}
+                  {/* Transformer for Selection */}
+                  <Transformer
+                    ref={transformerRef}
+                    boundBoxFunc={(oldBox, newBox) => {
+                      if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
+                        return oldBox;
+                      }
+                      return newBox;
+                    }}
+                  />
+                </Layer>
+              </Stage>
+            ) : (
+              <div className="w-full h-full">
+                <StructuralVisualizationComponent
+                  theme="dark"
+                  componentData={{ objects }}
+                  visible={true}
+                />
+              </div>
+            )}
+
+            {/* Command Line */}
+            {showCommandLine && (
+              <div className="bg-gray-800 border-t border-gray-700 p-2">
+                <div className="flex items-center gap-2">
+                  <Command size={16} className="text-gray-400" />
+                  <input
+                    type="text"
+                    value={commandInput}
+                    onChange={(e) => setCommandInput(e.target.value)}
+                    onKeyDown={handleCommand}
+                    placeholder="Command: L (Line), C (Circle), R (Rectangle), PL (Polyline)..."
+                    className="flex-1 bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm border border-gray-700 focus:outline-none focus:border-blue-500 font-mono"
+                  />
+                  <button
+                    onClick={() => setShowCommandLine(false)}
+                    className="p-2 hover:bg-gray-700 rounded"
+                  >
+                    <Minus size={16} />
+                  </button>
+                </div>
+                {commandInput.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-400">
+                    {Object.entries(commands)
+                      .filter(([key]) =>
+                        key.startsWith(commandInput.toUpperCase())
+                      )
+                      .slice(0, 5)
+                      .map(([key, cmd]) => (
+                        <div key={key} className="inline-block mr-3">
+                          <span className="font-bold text-blue-400">{key}</span> -{" "}
+                          {cmd.name}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {!showCommandLine && (
+              <button
+                onClick={() => setShowCommandLine(true)}
+                className="absolute bottom-4 right-4 p-2 bg-gray-800 rounded border border-gray-700 hover:bg-gray-700"
+              >
+                <Command size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Right Panel - Copilot */}
+          {copilotOpen && (
+            <div className={`w-80 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-l flex flex-col overflow-hidden z-20`}>
+              <div className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} flex items-center justify-between`}>
+                <h3 className={`font-bold text-sm ${isDark ? "text-gray-100" : "text-gray-900"}`}>Copilot</h3>
+                <button
+                  onClick={() => setCopilotOpen(false)}
+                  className={`p-1 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"} rounded`}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
+              {/* Tabs */}
+              <div className={`flex border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                {[
+                  { id: "ai", icon: Sparkles, label: "AI" },
+                  { id: "properties", icon: Settings, label: "Properties" },
+                  { id: "history", icon: Clock, label: "History" },
+                  { id: "commands", icon: BookOpen, label: "Commands" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setCopilotTab(tab.id)}
+                    className={`flex-1 p-2 text-xs flex items-center justify-center gap-1 ${copilotTab === tab.id
+                      ? "text-blue-500 border-b-2 border-blue-500"
+                      : (isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700")
+                      }`}
+                  >
+                    <tab.icon size={14} />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3">
+                {/* AI Tab */}
+                {copilotTab === "ai" && (
+                  <div className="flex flex-col h-full">
+                    <div className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"} rounded p-3 mb-3 overflow-y-auto space-y-2`}>
+                      {aiMessages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`text-sm p-2 rounded ${msg.type === "user"
+                            ? "bg-blue-600 text-white ml-4"
+                            : (isDark ? "bg-gray-700 text-gray-200 mr-4" : "bg-white border border-gray-200 text-gray-800 mr-4")
+                            }`}
+                        >
+                          {msg.text}
+                        </div>
+                      ))}
+                      {aiProcessing && (
+                        <div className="text-xs text-gray-500 text-center">
+                          AI thinking...
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleAISend()}
+                        placeholder="Describe what to draw..."
+                        className={`flex-1 ${isDark ? "bg-gray-900 text-gray-100 border-gray-700" : "bg-white text-gray-900 border-gray-300"} px-3 py-2 rounded text-sm border focus:outline-none focus:border-blue-500`}
+                        disabled={aiProcessing}
+                      />
+                      <button
+                        onClick={handleAISend}
+                        disabled={aiProcessing}
+                        className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50"
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Properties Tab */}
+                {copilotTab === "properties" && (
+                  <div className="space-y-3">
+                    {selectedIds.length === 0 ? (
+                      <div className="text-gray-500 text-sm">
+                        Select objects to view properties
                       </div>
-                    ))}
-                    {aiProcessing && (
-                      <div className="text-xs text-gray-500 text-center">
-                        AI thinking...
+                    ) : (
+                      <div>
+                        <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-100" : "text-gray-800"}`}>
+                          Selected: {selectedIds.length} object(s)
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button onClick={handleCopy} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Copy</button>
+                          <button onClick={handleMove} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Move</button>
+                          <button onClick={handleRotate} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Rotate</button>
+                          <button onClick={handleScale} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Scale</button>
+                          <button onClick={handleMirror} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Mirror</button>
+                          <button onClick={handleExtrude} className="px-2 py-1.5 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700">Extrude 3D</button>
+                          <button onClick={handleExplode} className="px-2 py-1.5 rounded text-xs font-medium bg-amber-600 text-white hover:bg-amber-700">Explode</button>
+                          <button onClick={handleDelete} className="px-2 py-1.5 rounded text-xs font-medium bg-red-600 text-white hover:bg-red-700">Delete</button>
+                        </div>
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAISend()}
-                      placeholder="Describe what to draw..."
-                      className="flex-1 bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm border border-gray-700 focus:outline-none focus:border-blue-500"
-                      disabled={aiProcessing}
-                    />
-                    <button
-                      onClick={handleAISend}
-                      disabled={aiProcessing}
-                      className="p-2 bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-50"
-                    >
-                      <Send size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {/* Properties Tab */}
-              {copilotTab === "properties" && (
-                <div className="space-y-3">
-                  {selectedIds.length === 0 ? (
-                    <div className="text-gray-500 text-sm">
-                      Select objects to view properties
+                {/* History Tab */}
+                {copilotTab === "history" && (
+                  <div className="space-y-2">
+                    <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                      Edit History ({historyIndex + 1}/{history.length})
                     </div>
-                  ) : (
-                    <div>
-                      <div className="text-sm font-bold mb-2">
-                        Selected: {selectedIds.length} object(s)
-                      </div>
-                      <div className="space-y-2">
-                        <button
-                          onClick={handleCopy}
-                          className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                    <div className="space-y-1">
+                      {history.map((state, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            setHistoryIndex(idx);
+                            setObjects(JSON.parse(JSON.stringify(state)));
+                          }}
+                          className={`p-2 rounded text-xs cursor-pointer ${idx === historyIndex
+                            ? "bg-blue-600 text-white"
+                            : (isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
+                            }`}
                         >
-                          Copy
-                        </button>
-                        <button
-                          onClick={handleMove}
-                          className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-sm"
-                        >
-                          Move
-                        </button>
-                        <button
-                          onClick={handleRotate}
-                          className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm"
-                        >
-                          Rotate
-                        </button>
-                        <button
-                          onClick={handleScale}
-                          className="w-full px-3 py-2 bg-orange-600 hover:bg-orange-700 rounded text-sm"
-                        >
-                          Scale
-                        </button>
-                        <button
-                          onClick={handleMirror}
-                          className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 rounded text-sm"
-                        >
-                          Mirror
-                        </button>
-                        <button
-                          onClick={handleExtrude}
-                          className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-sm"
-                        >
-                          Extrude 3D
-                        </button>
-                        <button
-                          onClick={handleDelete}
-                          className="w-full px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                          Step {idx + 1}: {state.length} objects
+                        </div>
+                      ))}
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
 
-              {/* History Tab */}
-              {copilotTab === "history" && (
-                <div className="space-y-2">
-                  <div className="text-sm font-bold mb-2">
-                    Edit History ({historyIndex + 1}/{history.length})
+                {/* Commands Tab */}
+                {copilotTab === "commands" && (
+                  <div className="space-y-2">
+                    <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                      Command Reference
+                    </div>
+                    <div className="space-y-1 text-xs">
+                      {Object.entries(commands).map(([key, cmd]) => (
+                        <div
+                          key={key}
+                          className={`${isDark ? "bg-gray-700" : "bg-gray-100"} p-2 rounded flex justify-between`}
+                        >
+                          <span className="font-bold text-blue-500">{key}</span>
+                          <span className={isDark ? "text-gray-400" : "text-gray-600"}>{cmd.name}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    {history.map((state, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => {
-                          setHistoryIndex(idx);
-                          setObjects(JSON.parse(JSON.stringify(state)));
-                        }}
-                        className={`p-2 rounded text-xs cursor-pointer ${idx === historyIndex
-                          ? "bg-blue-900 text-blue-100"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                          }`}
-                      >
-                        Step {idx + 1}: {state.length} objects
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Commands Tab */}
-              {copilotTab === "commands" && (
-                <div className="space-y-2">
-                  <div className="text-sm font-bold mb-2">
-                    Command Reference
-                  </div>
-                  <div className="space-y-1 text-xs">
-                    {Object.entries(commands).map(([key, cmd]) => (
-                      <div
-                        key={key}
-                        className="bg-gray-700 p-2 rounded flex justify-between"
-                      >
-                        <span className="font-bold text-blue-400">{key}</span>
-                        <span className="text-gray-400">{cmd.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {!copilotOpen && (
-          <button
-            onClick={() => setCopilotOpen(true)}
-            className="absolute right-4 top-20 p-2 bg-gray-800 rounded-l border border-r-0 border-gray-700 hover:bg-gray-700"
-          >
-            <ChevronLeft size={18} />
-          </button>
-        )}
-      </div>
-
-      {/* Bottom Status Bar */}
-      <div className="bg-gray-800 border-t border-gray-700 px-4 py-2 flex items-center text-xs">
-        {/* Snap Modes */}
-        <div className="flex gap-1">
-          {Object.entries(SNAP_MODES).map(([key, value]) => (
+          {!copilotOpen && (
             <button
-              key={value}
-              onClick={() =>
-                setSnapSettings((prev) => ({ ...prev, [value]: !prev[value] }))
-              }
-              className={`px-2 py-1 rounded text-xs font-semibold ${snapSettings[value]
-                ? "bg-green-600 text-white"
-                : "bg-gray-700 text-gray-400 hover:bg-gray-600"
-                }`}
-              title={key}
+              onClick={() => setCopilotOpen(true)}
+              className={`absolute right-4 top-20 p-2 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} rounded-l border border-r-0 hover:bg-blue-500 hover:text-white transition-all z-20`}
             >
-              {key.slice(0, 3)}
+              <ChevronLeft size={18} />
             </button>
-          ))}
+          )}
         </div>
 
-        <div className="w-px h-6 bg-gray-700 mx-3" />
-
-        {/* Zoom Controls */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleZoom(-0.2)}
-            className="p-1 hover:bg-gray-700 rounded"
-          >
-            <ZoomOut size={14} />
-          </button>
-          <select
-            value={zoomLevel}
-            onChange={(e) => setZoomLevel(parseFloat(e.target.value))}
-            className="bg-gray-700 px-2 py-1 rounded text-xs border border-gray-600"
-          >
-            {[0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4].map((z) => (
-              <option key={z} value={z}>
-                {Math.round(z * 100)}%
-              </option>
+        {/* Bottom Status Bar */}
+        <div className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-t px-4 py-2 flex items-center text-xs pb-16`}>
+          {/* Snap Modes */}
+          <div className="flex gap-1">
+            {Object.entries(SNAP_MODES).map(([key, value]) => (
+              <button
+                key={value}
+                onClick={() =>
+                  setSnapSettings((prev) => ({ ...prev, [value]: !prev[value] }))
+                }
+                className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${snapSettings[value]
+                  ? "bg-green-600 text-white"
+                  : (isDark ? "bg-gray-700 text-gray-400 hover:bg-gray-600" : "bg-gray-100 text-gray-500 hover:bg-gray-200")
+                  }`}
+                title={key}
+              >
+                {key.slice(0, 3)}
+              </button>
             ))}
-          </select>
-          <button
-            onClick={() => handleZoom(0.2)}
-            className="p-1 hover:bg-gray-700 rounded"
-          >
-            <ZoomIn size={14} />
-          </button>
-          <button
-            onClick={() => {
-              setZoomLevel(1);
-              setPanOffset({ x: 0, y: 0 });
-            }}
-            className="p-1 hover:bg-gray-700 rounded"
-            title="Fit All"
-          >
-            <Home size={14} />
-          </button>
-        </div>
+          </div>
 
-        <div className="ml-auto flex gap-4 text-gray-400">
-          <div>
-            Objects: <span className="text-gray-200">{objects.length}</span>
+          <div className={`w-px h-6 mx-3 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleZoom(-0.2)}
+              className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+            >
+              <ZoomOut size={14} />
+            </button>
+            <span className="min-w-[40px] text-center">{Math.round(zoomLevel * 100)}%</span>
+            <button
+              onClick={() => handleZoom(0.2)}
+              className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+            >
+              <ZoomIn size={14} />
+            </button>
+            <button
+              onClick={() => {
+                setZoomLevel(1);
+                setPanOffset({ x: 0, y: 0 });
+              }}
+              className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+              title="Recenter"
+            >
+              <Home size={14} />
+            </button>
           </div>
-          <div>
-            Selected:{" "}
-            <span className="text-gray-200">{selectedIds.length}</span>
+
+          <div className="ml-auto flex gap-4 text-gray-500 italic">
+            <div>Objects: <span className="font-bold text-blue-500">{objects.length}</span></div>
+            <div>Selection: <span className="font-bold text-blue-500">{selectedIds.length}</span></div>
+            <div className={apiConnected ? "text-green-500" : "text-red-500"}>● Backend: {apiConnected ? "Live" : "Down"}</div>
           </div>
-          <div>
-            Layers: <span className="text-gray-200">{layers.length}</span>
-          </div>
-          <div>
-            Zoom:{" "}
-            <span className="text-gray-200">
-              {Math.round(zoomLevel * 100)}%
-            </span>
-          </div>
-          <div className="text-green-400">● Ready</div>
         </div>
       </div>
     </div>

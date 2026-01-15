@@ -4,7 +4,7 @@ import React, { Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
-import InternalFinishes3DScene from "./InternalFinishes3DScene";
+import StructuralVisualizationComponent from '../Drawings/visualise_component';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 
@@ -469,11 +469,10 @@ const InternalFinishesTakeoff = () => {
         {activeTab === '3d-view' && (
           <div className="h-full bg-slate-900 rounded-2xl overflow-hidden relative border border-slate-800 shadow-2xl">
             {buildingData ? (
-              <Canvas shadows dpr={[1, 2]}>
-                <Suspense fallback={null}>
-                  <InternalFinishes3DScene buildingData={buildingData} />
-                </Suspense>
-              </Canvas>
+              <StructuralVisualizationComponent
+                componentType="internalFinishes"
+                buildingData={buildingData}
+              />
             ) : (
               <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
                 <div className="p-8 bg-slate-800 rounded-full">

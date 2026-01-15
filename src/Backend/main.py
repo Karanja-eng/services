@@ -252,7 +252,7 @@ from calculations.Foundations.foundation_backend_api import (
 
 ##slabs
 # from calculations.Slabs.SlabApi import router as slab_design_router
-from calculations.Slabs.slab_calculator_backend import router as slab_backend_router
+from calculations.Slabs.enhanced_slab_backend import router as slab_backend_router
 
 
 ##retaining
@@ -319,6 +319,7 @@ app.include_router(
 )
 
 
+
 ##retaining
 app.include_router(
     retaining_eurocode_router, prefix="/retaining_eurocode", tags=["retaining_designs"]
@@ -326,6 +327,11 @@ app.include_router(
 app.include_router(
     retaining_backend_router, prefix="/retaining_backend", tags=["retaining_backend"]
 )
+
+# Framed/Tall Buildings
+from calculations.tall_framed.tall_framed_backend import router as tall_framed_router
+app.include_router(tall_framed_router, prefix="/api/framed", tags=["tall_framed_buildings"])
+
 
 ##stairs
 # app.include_router(stairs_design_router, prefix="/stairs", tags=["stairs_designs"])
