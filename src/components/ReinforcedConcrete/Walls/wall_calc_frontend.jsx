@@ -20,7 +20,8 @@ const WallDesignCalculator = () => {
     concreteGrade: 30,
     steelGrade: 500,
     coverDepth: 40,
-    exposureClass: 'XC1'
+    exposureClass: 'XC1',
+    supportCondition: 'fixed-fixed'
   });
 
   const handleInputChange = (e) => {
@@ -33,13 +34,13 @@ const WallDesignCalculator = () => {
   useEffect(() => {
     const checkApiHealth = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/health`);
+        const response = await fetch(`${API_BASE_URL}/`);
         setApiStatus(response.ok ? 'connected' : 'error');
       } catch (err) {
         setApiStatus('error');
       }
     };
-    
+
     checkApiHealth();
   }, []);
 
@@ -70,49 +71,7 @@ const WallDesignCalculator = () => {
       }
 
       const data = await response.json();
-      
       setResult(data);
-        wallType,
-        designStatus: 'PASS',
-        reinforcement: {
-          vertical: {
-            diameter: 16,
-            spacing: 200,
-            area: 1005,
-            ratio: 0.0063
-          },
-          horizontal: {
-            diameter: 12,
-            spacing: 250,
-            area: 452,
-            ratio: 0.0028
-          }
-        },
-        capacities: {
-          axialCapacity: 2450,
-          shearCapacity: 380,
-          momentCapacity: 485,
-          utilization: {
-            axial: 0.61,
-            shear: 0.66,
-            moment: 0.72
-          }
-        },
-        checks: [
-          { name: 'Minimum Reinforcement', status: 'PASS', value: '0.63%', limit: '0.40%' },
-          { name: 'Maximum Reinforcement', status: 'PASS', value: '0.91%', limit: '4.00%' },
-          { name: 'Slenderness Ratio', status: 'PASS', value: '17.5', limit: '30.0' },
-          { name: 'Shear Stress', status: 'PASS', value: '0.42 MPa', limit: '0.63 MPa' },
-          { name: 'Crack Control', status: 'PASS', value: '0.28 mm', limit: '0.30 mm' }
-        ],
-        bsCodeReferences: [
-          'BS EN 1992-1-1:2004 (Eurocode 2)',
-          'BS 8110-1:1997 (Structural Use of Concrete)',
-          'BS 8500-1:2015 (Concrete Specification)'
-        ]
-      };
-
-      setResult(mockResult);
     } catch (err) {
       setError(err.message || 'Calculation failed');
     } finally {
@@ -152,11 +111,10 @@ const WallDesignCalculator = () => {
                   <button
                     key={type.value}
                     onClick={() => setWallType(type.value)}
-                    className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${
-                      wallType === type.value
-                        ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${wallType === type.value
+                      ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                   >
                     {type.label}
                   </button>
@@ -206,6 +164,21 @@ const WallDesignCalculator = () => {
                     step="10"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Support Condition
+                  </label>
+                  <select
+                    name="supportCondition"
+                    value={inputs.supportCondition}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  >
+                    <option value="fixed-fixed">Fixed-Fixed</option>
+                    <option value="pinned-pinned">Pinned-Pinned</option>
+                    <option value="fixed-free">Fixed-Free</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -342,12 +315,26 @@ const WallDesignCalculator = () => {
 
             {result && (
               <>
+                {result.warnings && result.warnings.length > 0 && (
+                  <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 mb-6">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
+                      <div>
+                        <p className="text-amber-800 font-semibold text-sm">Design Warnings</p>
+                        <ul className="list-disc list-inside text-xs text-amber-700 mt-1">
+                          {result.warnings.map((warning, idx) => (
+                            <li key={idx}>{warning}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {/* Status Banner */}
-                <div className={`rounded-lg p-6 ${
-                  result.designStatus === 'PASS' 
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500' 
-                    : 'bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500'
-                }`}>
+                <div className={`rounded-lg p-6 ${result.designStatus === 'PASS'
+                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500'
+                  : 'bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500'
+                  }`}>
                   <div className="flex items-center gap-3">
                     {result.designStatus === 'PASS' ? (
                       <CheckCircle2 className="w-8 h-8 text-green-600" />
@@ -435,11 +422,10 @@ const WallDesignCalculator = () => {
                         <div className="flex items-center gap-3">
                           <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all ${
-                                item.utilization > 0.9 ? 'bg-red-500' :
+                              className={`h-full rounded-full transition-all ${item.utilization > 0.9 ? 'bg-red-500' :
                                 item.utilization > 0.7 ? 'bg-yellow-500' :
-                                'bg-green-500'
-                              }`}
+                                  'bg-green-500'
+                                }`}
                               style={{ width: `${item.utilization * 100}%` }}
                             />
                           </div>
@@ -514,7 +500,7 @@ const WallDesignCalculator = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

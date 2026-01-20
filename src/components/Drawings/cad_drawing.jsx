@@ -46,6 +46,7 @@ import { Stage, Layer, Line as KonvaLine, Circle as KonvaCircle, Rect as KonvaRe
 import StructuralVisualizationComponent from "./visualise_component";
 import { BeamKonvaGroup, getBeamCADPrimitives } from "../ReinforcedConcrete/Beams/BeamDrawer";
 import { ColumnKonvaGroup, getColumnCADPrimitives } from "../ReinforcedConcrete/Columns/ColumnDrawer";
+import { FoundationKonvaGroup, getFoundationCADPrimitives } from "../ReinforcedConcrete/Foundations/Foundation_viewer";
 
 // ============ SNAP MODES ============
 const SNAP_MODES = {
@@ -118,6 +119,9 @@ export default function CadDrawer({ isDark }) {
   const [commandInput, setCommandInput] = useState("");
   const [commandHistory, setCommandHistory] = useState([]);
   const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
+
+  // Toolbar State
+  const [activeToolbarTab, setActiveToolbarTab] = useState("draw"); // draw, modify, annotate, 3d, view
 
   // Drawing State
   const stageRef = useRef(null);
@@ -400,6 +404,17 @@ export default function CadDrawer({ isDark }) {
                 x={obj.x}
                 y={obj.y}
                 scale={obj.scale || 0.8}
+              />
+            );
+          } else if (obj.memberType === "foundation") {
+            return (
+              <FoundationKonvaGroup
+                key={obj.id}
+                foundationType={obj.config?.foundation_type || obj.foundationType}
+                params={obj.config || obj.params}
+                x={obj.x}
+                y={obj.y}
+                scale={obj.scale || 0.15}
               />
             );
           }
@@ -1084,6 +1099,8 @@ export default function CadDrawer({ isDark }) {
         parts = getBeamCADPrimitives(member.config, member.x, member.y, member.scale);
       } else if (member.memberType === "column") {
         parts = getColumnCADPrimitives(member.config, member.x, member.y, member.scale);
+      } else if (member.memberType === "foundation") {
+        parts = getFoundationCADPrimitives(member.foundationType || member.config?.foundation_type, member.config || member.params, member.x, member.y, member.scale);
       }
       newObjects.push(...parts);
     });
@@ -1345,768 +1362,663 @@ export default function CadDrawer({ isDark }) {
 
   return (
     <div className={`flex flex-col h-screen ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"}`}>
-      {/* Top Toolbar */}
-      <div className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-b h-14 flex items-center px-4 gap-4 z-40`}>
-        <div className="flex items-center gap-2 mr-4">
-          <button
-            onClick={() => setLeftPanelVisible(!leftPanelVisible)}
-            className={`p-2 rounded ${isDark ? "hover:bg-gray-700 text-gray-300" : "hover:bg-gray-100 text-gray-600"}`}
-            title="Toggle Layers"
-          >
-            {leftPanelVisible ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-          </button>
-          <div className="font-bold flex items-center gap-2">
-            <Maximize size={20} className="text-blue-500" />
-            <span className="hidden md:inline">Universal CAD</span>
-          </div>
-        </div>
-        <button
-          onClick={() => alert("Save")}
-          className="p-2 hover:bg-gray-700 rounded"
-          title="Save"
-        >
-          <Save size={16} />
-        </button>
-        <button
-          onClick={() => alert("Open")}
-          className="p-2 hover:bg-gray-700 rounded"
-          title="Open"
-        >
-          <Upload size={16} />
-        </button>
-        <button
-          onClick={() => alert("Export")}
-          className="p-2 hover:bg-gray-700 rounded"
-          title="Export"
-        >
-          <Download size={16} />
-        </button>
-        <button
-          onClick={() => alert("Save")}
-          className="p-2 hover:bg-gray-700 rounded"
-          title="Save As"
-        >
-          <Save size={16} />
-        </button>
+      {/* ============ NEW HEADER STRUCTURE ============ */}
+      <div className="flex flex-col z-40">
+        {/* 1. Main Header Strip (Tabs & Global Controls) */}
+        <div className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-b h-12 flex items-center px-3 justify-between gap-4`}>
 
-        <div className="w-px h-6 bg-gray-700" />
-
-        <div className="flex gap-1">
-          <button
-            onClick={undo}
-            disabled={historyIndex === 0}
-            className="p-2 hover:bg-gray-700 rounded disabled:opacity-30"
-            title="Undo (Ctrl+Z)"
-          >
-            <Undo2 size={16} />
-          </button>
-          <button
-            onClick={redo}
-            disabled={historyIndex === history.length - 1}
-            className="p-2 hover:bg-gray-700 rounded disabled:opacity-30"
-            title="Redo (Ctrl+Y)"
-          >
-            <Redo2 size={16} />
-          </button>
-        </div>
-
-        <div className="w-px h-6 bg-gray-700" />
-
-        {/* Draw Tools */}
-        <div className="flex gap-1">
-          <button
-            onClick={() => setActiveTool("line")}
-            className={`px-2 py-1 rounded ${activeTool === "line"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-          >
-            Line
-          </button>
-          <button
-            onClick={() => {
-              setActiveTool("polyline");
-              setPolylinePoints([]);
-            }}
-            className={`px-2 py-1 rounded ${activeTool === "polyline"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-          >
-            PLine
-          </button>
-          <button
-            onClick={() => setActiveTool("circle")}
-            className={`px-2 py-1 rounded ${activeTool === "circle"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-          >
-            Circle
-          </button>
-          <button
-            onClick={() => {
-              setActiveTool("arc");
-              setArcPoints([]);
-            }}
-            className={`px-2 py-1 rounded ${activeTool === "arc"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-          >
-            Arc
-          </button>
-          <button
-            onClick={() => setActiveTool("ellipse")}
-            className={`px-2 py-1 rounded ${activeTool === "ellipse"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-          >
-            Ellipse
-          </button>
-          <button
-            onClick={() => {
-              setActiveTool("spline");
-              setPolylinePoints([]);
-            }}
-            className={`px-2 py-1 rounded ${activeTool === "spline"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-          >
-            Spline
-          </button>
-          <button
-            onClick={() => setActiveTool("rectangle")}
-            className={`px-2 py-1 rounded ${activeTool === "rectangle"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-          >
-            Rect
-          </button>
-          <button
-            onClick={() => setShowHatchMenu(!showHatchMenu)}
-            className={`px-2 py-1 rounded ${activeTool === "hatch"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-          >
-            Hatch
-          </button>
-        </div>
-
-        <div className="w-px h-6 bg-gray-700" />
-
-        {/* Modify Tools */}
-        <div className="flex gap-1">
-          <button
-            onClick={handleMove}
-            disabled={selectedIds.length === 0}
-            className="p-2 hover:bg-gray-700 rounded disabled:opacity-30"
-            title="Move"
-          >
-            <Move size={16} />
-          </button>
-          <button
-            onClick={handleCopy}
-            disabled={selectedIds.length === 0}
-            className="p-2 hover:bg-gray-700 rounded disabled:opacity-30"
-            title="Copy"
-          >
-            <Copy size={16} />
-          </button>
-          <button
-            onClick={handleMirror}
-            disabled={selectedIds.length === 0}
-            className="p-2 hover:bg-gray-700 rounded disabled:opacity-30"
-            title="Mirror"
-          >
-            <Maximize size={16} />
-          </button>
-          <button
-            onClick={handleRotate}
-            disabled={selectedIds.length === 0}
-            className="p-2 hover:bg-gray-700 rounded disabled:opacity-30"
-            title="Rotate"
-          >
-            <RotateCw size={16} />
-          </button>
-          <button
-            onClick={handleScale}
-            disabled={selectedIds.length === 0}
-            className="p-2 hover:bg-gray-700 rounded disabled:opacity-30"
-            title="Scale"
-          >
-            <Maximize2 size={16} />
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={selectedIds.length === 0}
-            className="p-2 hover:bg-gray-700 rounded disabled:opacity-30"
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-
-        <div className="w-px h-6 bg-gray-700" />
-
-        {/* Annotation */}
-        <div className="flex gap-1">
-          <button
-            onClick={() => setActiveTool("dimension")}
-            className={`p-2 rounded ${activeTool === "dimension"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-            title="Dimension"
-          >
-            <Ruler size={16} />
-          </button>
-          <button
-            onClick={() => setActiveTool("text")}
-            className={`p-2 rounded ${activeTool === "text"
-              ? "bg-blue-600"
-              : "bg-gray-700 hover:bg-gray-600"
-              }`}
-            title="Text"
-          >
-            <Type size={16} />
-          </button>
-        </div>
-
-        <div className="w-px h-6 bg-gray-700" />
-
-        {/* 3D Tools */}
-        <div className="flex gap-1">
-          {mode === "3D" && (
+          {/* Left: Brand & Left Sidebar Toggle */}
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => setActiveTool("box")}
-              className={`px-2 py-1 rounded ${activeTool === "box"
-                ? "bg-blue-600"
-                : "bg-gray-700 hover:bg-gray-600"
-                }`}
+              onClick={() => setLeftPanelVisible(!leftPanelVisible)}
+              className={`p-1.5 rounded ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-200" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
+              title={leftPanelVisible ? "Hide Layers" : "Show Layers"}
             >
-              Box
+              <Layers size={18} />
             </button>
-          )}
-          <button
-            onClick={handleExtrude}
-            disabled={selectedIds.length === 0}
-            className="px-2 py-1 bg-green-600 hover:bg-green-700 rounded disabled:opacity-30"
-          >
-            Extrude
-          </button>
-          <button
-            onClick={handleRevolve}
-            disabled={selectedIds.length === 0}
-            className="px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded disabled:opacity-30"
-          >
-            Revolve
-          </button>
-        </div>
+            <div className="font-bold flex items-center gap-2 text-sm md:text-base">
+              <Maximize size={18} className="text-blue-500" />
+              <span className="hidden sm:inline">Universal CAD</span>
+            </div>
+          </div>
 
-        <div className="w-px h-6 bg-gray-700" />
+          {/* Center: Toolbar Categories (Tabs) */}
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+            {[
+              { id: "file", label: "File" },
+              { id: "draw", label: "Draw" },
+              { id: "modify", label: "Modify" },
+              { id: "annotate", label: "Annotate" },
+              { id: "3d", label: "3D Tools" },
+              { id: "view", label: "View" },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveToolbarTab(activeToolbarTab === tab.id ? null : tab.id)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-t-md transition-colors ${activeToolbarTab === tab.id
+                  ? (isDark ? "bg-gray-900 text-blue-400 border-b-2 border-blue-500" : "bg-gray-50 text-blue-600 border-b-2 border-blue-500")
+                  : (isDark ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100")
+                  }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-        {/* View Controls */}
-        <div className="flex gap-1">
-          <button
-            onClick={() => setMode(mode === "2D" ? "3D" : "2D")}
-            className="px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded"
-          >
-            {mode === "2D" ? "3D" : "2D"}
-          </button>
-          <button
-            onClick={() => setGridVisible(!gridVisible)}
-            className={`p-2 rounded ${gridVisible ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
-              }`}
-            title="Grid"
-          >
-            <Grid3X3 size={16} />
-          </button>
-          <button
-            onClick={() => setOrthoMode(!orthoMode)}
-            className={`p-2 rounded ${orthoMode ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
-              }`}
-            title="Ortho"
-          >
-            <Zap size={16} />
-          </button>
-          <button
-            onClick={() => setShowDimensions(!showDimensions)}
-            className={`p-2 rounded ${showDimensions ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
-              }`}
-            title="Dimensions"
-          >
-            <Ruler size={16} />
-          </button>
-        </div>
+          {/* Right: Undo/Redo & Right Sidebar Toggle */}
+          <div className="flex items-center gap-2">
+            <div className="flex bg-gray-700/30 rounded p-0.5 mr-2">
+              <button onClick={undo} disabled={historyIndex === 0} className="p-1.5 hover:bg-gray-600/50 rounded disabled:opacity-30" title="Undo">
+                <Undo2 size={16} />
+              </button>
+              <button onClick={redo} disabled={historyIndex === history.length - 1} className="p-1.5 hover:bg-gray-600/50 rounded disabled:opacity-30" title="Redo">
+                <Redo2 size={16} />
+              </button>
+            </div>
 
-        <div className="ml-auto text-xs text-gray-500 italic flex gap-3">
-          <div>{objects.length} obj</div>
-          <div>{selectedIds.length} sel</div>
-          <div>{mode}</div>
-          <div className={apiConnected ? "text-green-500" : "text-red-500"}>
-            ● {apiConnected ? "Backend: Live" : "Backend: Down"}
+            <button
+              onClick={() => setCopilotOpen(!copilotOpen)}
+              className={`p-1.5 rounded flex items-center gap-2 ${copilotOpen
+                ? "bg-blue-600 text-white"
+                : (isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-200" : "bg-gray-100 hover:bg-gray-200 text-gray-700")}`}
+              title={copilotOpen ? "Hide Copilot" : "Show Copilot"}
+            >
+              <Sparkles size={18} />
+              <span className="text-xs hidden md:inline">Copilot</span>
+            </button>
           </div>
         </div>
 
-        {/* Hatch Menu */}
-        {showHatchMenu && (
-          <div className="absolute top-14 left-1/2 transform -translate-x-1/2 bg-gray-800 border border-gray-700 rounded shadow-lg p-3 z-50">
-            <div className="text-sm font-bold mb-2">Hatch Patterns</div>
-            <div className="grid grid-cols-4 gap-2">
-              {hatchPatterns.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => {
-                    setSelectedHatch(p.id);
-                    setActiveTool("hatch");
-                    setShowHatchMenu(false);
-                  }}
-                  className={`p-2 rounded border-2 ${selectedHatch === p.id
-                    ? "border-blue-500 bg-gray-700"
-                    : "border-gray-600 hover:border-gray-500"
-                    }`}
-                >
-                  <div className="text-2xl">{p.symbol}</div>
-                  <div className="text-xs mt-1">{p.name}</div>
+        {/* 2. Sub-Header Strip (Active Tools) */}
+        {activeToolbarTab && (
+          <div className={`${isDark ? "bg-gray-900 border-gray-700" : "bg-gray-50 border-gray-200"} border-b h-10 flex items-center px-4 gap-3 overflow-x-auto`}>
+
+            {/* === FILE TAB === */}
+            {activeToolbarTab === "file" && (
+              <>
+                <button onClick={() => alert("Save")} className="tool-btn flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-700/50 text-xs">
+                  <Save size={14} /> Save
                 </button>
+                <button onClick={() => alert("Open")} className="tool-btn flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-700/50 text-xs">
+                  <Upload size={14} /> Open
+                </button>
+                <button onClick={() => alert("Export")} className="tool-btn flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-700/50 text-xs">
+                  <Download size={14} /> Export
+                </button>
+              </>
+            )}
+
+            {/* === DRAW TAB === */}
+            {activeToolbarTab === "draw" && (
+              <>
+                <button onClick={() => setActiveTool("line")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "line" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Line
+                </button>
+                <button onClick={() => { setActiveTool("polyline"); setPolylinePoints([]); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "polyline" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Polyline
+                </button>
+                <button onClick={() => setActiveTool("circle")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "circle" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  <Circle size={14} /> Circle
+                </button>
+                <button onClick={() => { setActiveTool("arc"); setArcPoints([]); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "arc" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Arc
+                </button>
+                <button onClick={() => setActiveTool("rectangle")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "rectangle" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Rectangle
+                </button>
+                <button onClick={() => setActiveTool("ellipse")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "ellipse" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Ellipse
+                </button>
+                <button onClick={() => { setActiveTool("spline"); setPolylinePoints([]); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "spline" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Spline
+                </button>
+                <div className="w-px h-4 bg-gray-600 mx-1"></div>
+                <button onClick={() => setShowHatchMenu(!showHatchMenu)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "hatch" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Hatch
+                </button>
+              </>
+            )}
+
+            {/* === MODIFY TAB === */}
+            {activeToolbarTab === "modify" && (
+              <>
+                <button onClick={handleMove} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <Move size={14} /> Move
+                </button>
+                <button onClick={handleCopy} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <Copy size={14} /> Copy
+                </button>
+                <button onClick={handleMirror} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <Maximize size={14} /> Mirror
+                </button>
+                <button onClick={handleRotate} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <RotateCw size={14} /> Rotate
+                </button>
+                <button onClick={handleScale} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <Maximize2 size={14} /> Scale
+                </button>
+                <div className="w-px h-4 bg-gray-600 mx-1"></div>
+                <button onClick={handleDelete} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 text-red-500 hover:bg-red-900/20 disabled:opacity-40">
+                  <Trash2 size={14} /> Delete
+                </button>
+              </>
+            )}
+
+            {/* === ANNOTATE TAB === */}
+            {activeToolbarTab === "annotate" && (
+              <>
+                <button onClick={() => setActiveTool("dimension")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "dimension" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  <Ruler size={14} /> Dimension
+                </button>
+                <button onClick={() => setActiveTool("text")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "text" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  <Type size={14} /> Text
+                </button>
+              </>
+            )}
+
+            {/* === 3D TOOLS TAB === */}
+            {activeToolbarTab === "3d" && (
+              <>
+                <button onClick={() => setMode("3D")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${mode === "3D" ? "bg-purple-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Switch to 3D View
+                </button>
+                <div className="w-px h-4 bg-gray-600 mx-1"></div>
+                {mode === "3D" && (
+                  <button onClick={() => setActiveTool("box")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "box" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                    Box
+                  </button>
+                )}
+                <button onClick={handleExtrude} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 bg-green-900/30 text-green-500 hover:bg-green-900/50 disabled:opacity-40">
+                  Extrude Selected
+                </button>
+                <button onClick={handleRevolve} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 bg-purple-900/30 text-purple-400 hover:bg-purple-900/50 disabled:opacity-40">
+                  Revolve Selected
+                </button>
+              </>
+            )}
+
+            {/* === VIEW TAB === */}
+            {activeToolbarTab === "view" && (
+              <>
+                <button onClick={() => setGridVisible(!gridVisible)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${gridVisible ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  <Grid3X3 size={14} /> Grid
+                </button>
+                <button onClick={() => setOrthoMode(!orthoMode)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${orthoMode ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  <Zap size={14} /> Ortho
+                </button>
+                <button onClick={() => setShowDimensions(!showDimensions)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${showDimensions ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  <Ruler size={14} /> Show Dimensions
+                </button>
+                <div className="w-px h-4 bg-gray-600 mx-1"></div>
+                <button onClick={() => setLeftPanelVisible(!leftPanelVisible)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${leftPanelVisible ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  Layers Panel
+                </button>
+                <button onClick={() => setCopilotOpen(!copilotOpen)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${copilotOpen ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  Copilot Panel
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+
+
+
+      {/* Hatch Menu */}
+      {showHatchMenu && (
+        <div className="absolute top-14 left-1/2 transform -translate-x-1/2 bg-gray-800 border border-gray-700 rounded shadow-lg p-3 z-50">
+          <div className="text-sm font-bold mb-2">Hatch Patterns</div>
+          <div className="grid grid-cols-4 gap-2">
+            {hatchPatterns.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setSelectedHatch(p.id);
+                  setActiveTool("hatch");
+                  setShowHatchMenu(false);
+                }}
+                className={`p-2 rounded border-2 ${selectedHatch === p.id
+                  ? "border-blue-500 bg-gray-700"
+                  : "border-gray-600 hover:border-gray-500"
+                  }`}
+              >
+                <div className="text-2xl">{p.symbol}</div>
+                <div className="text-xs mt-1">{p.name}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Left Panel - Layers */}
+        {leftPanelVisible && (
+          <div className={`w-64 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-r flex flex-col overflow-hidden z-20`}>
+            <div className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} flex items-center justify-between`}>
+              <h3 className="font-bold text-sm flex items-center gap-2">
+                <Layers size={16} /> Layers
+              </h3>
+              <button
+                onClick={addLayer}
+                className={`p-1 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"} rounded`}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {layers.map((layer) => (
+                <div
+                  key={layer.id}
+                  onClick={() => !layer.locked && setActiveLayerId(layer.id)}
+                  className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} cursor-pointer ${activeLayerId === layer.id
+                    ? (isDark ? "bg-blue-900" : "bg-blue-50")
+                    : (isDark ? "hover:bg-gray-700" : "hover:bg-gray-50")
+                    } ${layer.locked ? "opacity-60" : ""}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-4 h-4 rounded"
+                      style={{ backgroundColor: layer.color }}
+                    />
+                    <span className={`flex-1 text-sm truncate ${isDark ? "text-gray-100" : "text-gray-900"}`}>{layer.name}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleLayerVisibility(layer.id);
+                      }}
+                      className="p-1"
+                    >
+                      {layer.visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleLayerLock(layer.id);
+                      }}
+                      className="p-1"
+                    >
+                      {layer.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                    </button>
+                    {layers.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPendingDeleteLayerId(layer.id);
+                        }}
+                        className="p-1 hover:text-red-400"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {objects.filter((o) => o.layerId === layer.id).length} objects
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        <div className="flex flex-1 overflow-hidden relative">
-          {/* Left Panel - Layers */}
-          {leftPanelVisible && (
-            <div className={`w-64 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-r flex flex-col overflow-hidden z-20`}>
-              <div className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} flex items-center justify-between`}>
-                <h3 className="font-bold text-sm flex items-center gap-2">
-                  <Layers size={16} /> Layers
-                </h3>
+        {/*        .....................Deletelayer Confirmation              */}
+        {pendingDeleteLayerId && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100]">
+            <div className={`${isDark ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"} p-4 rounded shadow-md`}>
+              <p>Delete layer and all its objects?</p>
+
+              <div className="flex gap-2 mt-3">
                 <button
-                  onClick={addLayer}
-                  className={`p-1 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"} rounded`}
+                  className="bg-red-500 text-white px-3 py-1 rounded"
+                  onClick={() => {
+                    deleteLayer(pendingDeleteLayerId);
+                    setPendingDeleteLayerId(null);
+                  }}
                 >
-                  <Plus size={16} />
+                  Delete
+                </button>
+
+                <button
+                  className={`px-3 py-1 rounded border ${isDark ? "border-gray-600 hover:bg-gray-700" : "border-gray-300 hover:bg-gray-100"}`}
+                  onClick={() => setPendingDeleteLayerId(null)}
+                >
+                  Cancel
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                {layers.map((layer) => (
-                  <div
-                    key={layer.id}
-                    onClick={() => !layer.locked && setActiveLayerId(layer.id)}
-                    className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} cursor-pointer ${activeLayerId === layer.id
-                      ? (isDark ? "bg-blue-900" : "bg-blue-50")
-                      : (isDark ? "hover:bg-gray-700" : "hover:bg-gray-50")
-                      } ${layer.locked ? "opacity-60" : ""}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-4 h-4 rounded"
-                        style={{ backgroundColor: layer.color }}
-                      />
-                      <span className={`flex-1 text-sm truncate ${isDark ? "text-gray-100" : "text-gray-900"}`}>{layer.name}</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleLayerVisibility(layer.id);
-                        }}
-                        className="p-1"
-                      >
-                        {layer.visible ? <Eye size={14} /> : <EyeOff size={14} />}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleLayerLock(layer.id);
-                        }}
-                        className="p-1"
-                      >
-                        {layer.locked ? <Lock size={14} /> : <Unlock size={14} />}
-                      </button>
-                      {layers.length > 1 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPendingDeleteLayerId(layer.id);
-                          }}
-                          className="p-1 hover:text-red-400"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {objects.filter((o) => o.layerId === layer.id).length} objects
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
-
-          {/*        .....................Deletelayer Confirmation              */}
-          {pendingDeleteLayerId && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100]">
-              <div className={`${isDark ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"} p-4 rounded shadow-md`}>
-                <p>Delete layer and all its objects?</p>
-
-                <div className="flex gap-2 mt-3">
-                  <button
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                    onClick={() => {
-                      deleteLayer(pendingDeleteLayerId);
-                      setPendingDeleteLayerId(null);
-                    }}
-                  >
-                    Delete
-                  </button>
-
-                  <button
-                    className={`px-3 py-1 rounded border ${isDark ? "border-gray-600 hover:bg-gray-700" : "border-gray-300 hover:bg-gray-100"}`}
-                    onClick={() => setPendingDeleteLayerId(null)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Canvas */}
-          <div className="flex-1 flex flex-col relative z-0">
-            {mode === "2D" ? (
-              <Stage
-                width={window.innerWidth - (copilotOpen ? 320 : 0) - (leftPanelVisible ? 256 : 0)}
-                height={window.innerHeight - 56 - 40 - 24} // Adjusted for bottom overlap
-                scaleX={zoomLevel}
-                scaleY={zoomLevel}
-                x={panOffset.x}
-                y={panOffset.y}
-                onMouseDown={handleCanvasMouseDown}
-                onMouseMove={handleCanvasMouseMove}
-                onMouseUp={handleCanvasMouseUp}
-                onDblClick={handleCanvasDoubleClick}
-                onWheel={handleWheel}
-                draggable={isPanning}
-                onDragStart={handleStageDragStart}
-                onDragEnd={handleStageDragEnd}
-              >
-                <Layer>
-                  {/* Grid */}
-                  {gridVisible && (
-                    <KonvaGroup>
-                      {[...Array(100)].map((_, i) => (
-                        <React.Fragment key={i}>
-                          <KonvaLine
-                            points={[i * gridSpacing * 10 - 500, -500, i * gridSpacing * 10 - 500, 500]}
-                            stroke="#333"
-                            strokeWidth={0.5}
-                          />
-                          <KonvaLine
-                            points={[-500, i * gridSpacing * 10 - 500, 500, i * gridSpacing * 10 - 500]}
-                            stroke="#333"
-                            strokeWidth={0.5}
-                          />
-                        </React.Fragment>
-                      ))}
-                    </KonvaGroup>
-                  )}
-                  {renderKonvaObjects()}
-                  {/* Transformer for Selection */}
-                  <Transformer
-                    ref={transformerRef}
-                    boundBoxFunc={(oldBox, newBox) => {
-                      if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
-                        return oldBox;
-                      }
-                      return newBox;
-                    }}
-                  />
-                </Layer>
-              </Stage>
-            ) : (
-              <div className="w-full h-full">
-                <StructuralVisualizationComponent
-                  theme="dark"
-                  componentData={{ objects }}
-                  visible={true}
-                />
-              </div>
-            )}
-
-            {/* Command Line */}
-            {showCommandLine && (
-              <div className="bg-gray-800 border-t border-gray-700 p-2">
-                <div className="flex items-center gap-2">
-                  <Command size={16} className="text-gray-400" />
-                  <input
-                    type="text"
-                    value={commandInput}
-                    onChange={(e) => setCommandInput(e.target.value)}
-                    onKeyDown={handleCommand}
-                    placeholder="Command: L (Line), C (Circle), R (Rectangle), PL (Polyline)..."
-                    className="flex-1 bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm border border-gray-700 focus:outline-none focus:border-blue-500 font-mono"
-                  />
-                  <button
-                    onClick={() => setShowCommandLine(false)}
-                    className="p-2 hover:bg-gray-700 rounded"
-                  >
-                    <Minus size={16} />
-                  </button>
-                </div>
-                {commandInput.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-400">
-                    {Object.entries(commands)
-                      .filter(([key]) =>
-                        key.startsWith(commandInput.toUpperCase())
-                      )
-                      .slice(0, 5)
-                      .map(([key, cmd]) => (
-                        <div key={key} className="inline-block mr-3">
-                          <span className="font-bold text-blue-400">{key}</span> -{" "}
-                          {cmd.name}
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {!showCommandLine && (
-              <button
-                onClick={() => setShowCommandLine(true)}
-                className="absolute bottom-4 right-4 p-2 bg-gray-800 rounded border border-gray-700 hover:bg-gray-700"
-              >
-                <Command size={16} />
-              </button>
-            )}
           </div>
+        )}
 
-          {/* Right Panel - Copilot */}
-          {copilotOpen && (
-            <div className={`w-80 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-l flex flex-col overflow-hidden z-20`}>
-              <div className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} flex items-center justify-between`}>
-                <h3 className={`font-bold text-sm ${isDark ? "text-gray-100" : "text-gray-900"}`}>Copilot</h3>
+        {/* Canvas */}
+        <div className="flex-1 flex flex-col relative z-0">
+          {mode === "2D" ? (
+            <Stage
+              width={window.innerWidth - (copilotOpen ? 320 : 0) - (leftPanelVisible ? 256 : 0)}
+              height={window.innerHeight - 56 - 40 - 24} // Adjusted for bottom overlap
+              scaleX={zoomLevel}
+              scaleY={zoomLevel}
+              x={panOffset.x}
+              y={panOffset.y}
+              onMouseDown={handleCanvasMouseDown}
+              onMouseMove={handleCanvasMouseMove}
+              onMouseUp={handleCanvasMouseUp}
+              onDblClick={handleCanvasDoubleClick}
+              onWheel={handleWheel}
+              draggable={isPanning}
+              onDragStart={handleStageDragStart}
+              onDragEnd={handleStageDragEnd}
+            >
+              <Layer>
+                {/* Grid */}
+                {gridVisible && (
+                  <KonvaGroup>
+                    {[...Array(100)].map((_, i) => (
+                      <React.Fragment key={i}>
+                        <KonvaLine
+                          points={[i * gridSpacing * 10 - 500, -500, i * gridSpacing * 10 - 500, 500]}
+                          stroke="#333"
+                          strokeWidth={0.5}
+                        />
+                        <KonvaLine
+                          points={[-500, i * gridSpacing * 10 - 500, 500, i * gridSpacing * 10 - 500]}
+                          stroke="#333"
+                          strokeWidth={0.5}
+                        />
+                      </React.Fragment>
+                    ))}
+                  </KonvaGroup>
+                )}
+                {renderKonvaObjects()}
+                {/* Transformer for Selection */}
+                <Transformer
+                  ref={transformerRef}
+                  boundBoxFunc={(oldBox, newBox) => {
+                    if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
+                      return oldBox;
+                    }
+                    return newBox;
+                  }}
+                />
+              </Layer>
+            </Stage>
+          ) : (
+            <div className="w-full h-full">
+              <StructuralVisualizationComponent
+                theme="dark"
+                componentData={{ objects }}
+                visible={true}
+              />
+            </div>
+          )}
+
+          {/* Command Line */}
+          {showCommandLine && (
+            <div className="bg-gray-800 border-t border-gray-700 p-2">
+              <div className="flex items-center gap-2">
+                <Command size={16} className="text-gray-400" />
+                <input
+                  type="text"
+                  value={commandInput}
+                  onChange={(e) => setCommandInput(e.target.value)}
+                  onKeyDown={handleCommand}
+                  placeholder="Command: L (Line), C (Circle), R (Rectangle), PL (Polyline)..."
+                  className="flex-1 bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm border border-gray-700 focus:outline-none focus:border-blue-500 font-mono"
+                />
                 <button
-                  onClick={() => setCopilotOpen(false)}
-                  className={`p-1 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"} rounded`}
+                  onClick={() => setShowCommandLine(false)}
+                  className="p-2 hover:bg-gray-700 rounded"
                 >
-                  <ChevronRight size={18} />
+                  <Minus size={16} />
                 </button>
               </div>
-
-              {/* Tabs */}
-              <div className={`flex border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
-                {[
-                  { id: "ai", icon: Sparkles, label: "AI" },
-                  { id: "properties", icon: Settings, label: "Properties" },
-                  { id: "history", icon: Clock, label: "History" },
-                  { id: "commands", icon: BookOpen, label: "Commands" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setCopilotTab(tab.id)}
-                    className={`flex-1 p-2 text-xs flex items-center justify-center gap-1 ${copilotTab === tab.id
-                      ? "text-blue-500 border-b-2 border-blue-500"
-                      : (isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700")
-                      }`}
-                  >
-                    <tab.icon size={14} />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-3">
-                {/* AI Tab */}
-                {copilotTab === "ai" && (
-                  <div className="flex flex-col h-full">
-                    <div className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"} rounded p-3 mb-3 overflow-y-auto space-y-2`}>
-                      {aiMessages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`text-sm p-2 rounded ${msg.type === "user"
-                            ? "bg-blue-600 text-white ml-4"
-                            : (isDark ? "bg-gray-700 text-gray-200 mr-4" : "bg-white border border-gray-200 text-gray-800 mr-4")
-                            }`}
-                        >
-                          {msg.text}
-                        </div>
-                      ))}
-                      {aiProcessing && (
-                        <div className="text-xs text-gray-500 text-center">
-                          AI thinking...
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={aiPrompt}
-                        onChange={(e) => setAiPrompt(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAISend()}
-                        placeholder="Describe what to draw..."
-                        className={`flex-1 ${isDark ? "bg-gray-900 text-gray-100 border-gray-700" : "bg-white text-gray-900 border-gray-300"} px-3 py-2 rounded text-sm border focus:outline-none focus:border-blue-500`}
-                        disabled={aiProcessing}
-                      />
-                      <button
-                        onClick={handleAISend}
-                        disabled={aiProcessing}
-                        className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50"
-                      >
-                        <Send size={16} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Properties Tab */}
-                {copilotTab === "properties" && (
-                  <div className="space-y-3">
-                    {selectedIds.length === 0 ? (
-                      <div className="text-gray-500 text-sm">
-                        Select objects to view properties
+              {commandInput.length > 0 && (
+                <div className="mt-2 text-xs text-gray-400">
+                  {Object.entries(commands)
+                    .filter(([key]) =>
+                      key.startsWith(commandInput.toUpperCase())
+                    )
+                    .slice(0, 5)
+                    .map(([key, cmd]) => (
+                      <div key={key} className="inline-block mr-3">
+                        <span className="font-bold text-blue-400">{key}</span> -{" "}
+                        {cmd.name}
                       </div>
-                    ) : (
-                      <div>
-                        <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-100" : "text-gray-800"}`}>
-                          Selected: {selectedIds.length} object(s)
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button onClick={handleCopy} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Copy</button>
-                          <button onClick={handleMove} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Move</button>
-                          <button onClick={handleRotate} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Rotate</button>
-                          <button onClick={handleScale} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Scale</button>
-                          <button onClick={handleMirror} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Mirror</button>
-                          <button onClick={handleExtrude} className="px-2 py-1.5 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700">Extrude 3D</button>
-                          <button onClick={handleExplode} className="px-2 py-1.5 rounded text-xs font-medium bg-amber-600 text-white hover:bg-amber-700">Explode</button>
-                          <button onClick={handleDelete} className="px-2 py-1.5 rounded text-xs font-medium bg-red-600 text-white hover:bg-red-700">Delete</button>
-                        </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+          {!showCommandLine && (
+            <button
+              onClick={() => setShowCommandLine(true)}
+              className="absolute bottom-4 right-4 p-2 bg-gray-800 rounded border border-gray-700 hover:bg-gray-700"
+            >
+              <Command size={16} />
+            </button>
+          )}
+        </div>
+
+        {/* Right Panel - Copilot */}
+        {copilotOpen && (
+          <div className={`w-80 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-l flex flex-col overflow-hidden z-20`}>
+            <div className={`p-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"} flex items-center justify-between`}>
+              <h3 className={`font-bold text-sm ${isDark ? "text-gray-100" : "text-gray-900"}`}>Copilot</h3>
+              <button
+                onClick={() => setCopilotOpen(false)}
+                className={`p-1 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"} rounded`}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className={`flex border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+              {[
+                { id: "ai", icon: Sparkles, label: "AI" },
+                { id: "properties", icon: Settings, label: "Properties" },
+                { id: "history", icon: Clock, label: "History" },
+                { id: "commands", icon: BookOpen, label: "Commands" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setCopilotTab(tab.id)}
+                  className={`flex-1 p-2 text-xs flex items-center justify-center gap-1 ${copilotTab === tab.id
+                    ? "text-blue-500 border-b-2 border-blue-500"
+                    : (isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700")
+                    }`}
+                >
+                  <tab.icon size={14} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3">
+              {/* AI Tab */}
+              {copilotTab === "ai" && (
+                <div className="flex flex-col h-full">
+                  <div className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"} rounded p-3 mb-3 overflow-y-auto space-y-2`}>
+                    {aiMessages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`text-sm p-2 rounded ${msg.type === "user"
+                          ? "bg-blue-600 text-white ml-4"
+                          : (isDark ? "bg-gray-700 text-gray-200 mr-4" : "bg-white border border-gray-200 text-gray-800 mr-4")
+                          }`}
+                      >
+                        {msg.text}
+                      </div>
+                    ))}
+                    {aiProcessing && (
+                      <div className="text-xs text-gray-500 text-center">
+                        AI thinking...
                       </div>
                     )}
                   </div>
-                )}
-
-                {/* History Tab */}
-                {copilotTab === "history" && (
-                  <div className="space-y-2">
-                    <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-                      Edit History ({historyIndex + 1}/{history.length})
-                    </div>
-                    <div className="space-y-1">
-                      {history.map((state, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => {
-                            setHistoryIndex(idx);
-                            setObjects(JSON.parse(JSON.stringify(state)));
-                          }}
-                          className={`p-2 rounded text-xs cursor-pointer ${idx === historyIndex
-                            ? "bg-blue-600 text-white"
-                            : (isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
-                            }`}
-                        >
-                          Step {idx + 1}: {state.length} objects
-                        </div>
-                      ))}
-                    </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAISend()}
+                      placeholder="Describe what to draw..."
+                      className={`flex-1 ${isDark ? "bg-gray-900 text-gray-100 border-gray-700" : "bg-white text-gray-900 border-gray-300"} px-3 py-2 rounded text-sm border focus:outline-none focus:border-blue-500`}
+                      disabled={aiProcessing}
+                    />
+                    <button
+                      onClick={handleAISend}
+                      disabled={aiProcessing}
+                      className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50"
+                    >
+                      <Send size={16} />
+                    </button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Commands Tab */}
-                {copilotTab === "commands" && (
-                  <div className="space-y-2">
-                    <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-                      Command Reference
+              {/* Properties Tab */}
+              {copilotTab === "properties" && (
+                <div className="space-y-3">
+                  {selectedIds.length === 0 ? (
+                    <div className="text-gray-500 text-sm">
+                      Select objects to view properties
                     </div>
-                    <div className="space-y-1 text-xs">
-                      {Object.entries(commands).map(([key, cmd]) => (
-                        <div
-                          key={key}
-                          className={`${isDark ? "bg-gray-700" : "bg-gray-100"} p-2 rounded flex justify-between`}
-                        >
-                          <span className="font-bold text-blue-500">{key}</span>
-                          <span className={isDark ? "text-gray-400" : "text-gray-600"}>{cmd.name}</span>
-                        </div>
-                      ))}
+                  ) : (
+                    <div>
+                      <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-100" : "text-gray-800"}`}>
+                        Selected: {selectedIds.length} object(s)
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button onClick={handleCopy} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Copy</button>
+                        <button onClick={handleMove} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Move</button>
+                        <button onClick={handleRotate} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Rotate</button>
+                        <button onClick={handleScale} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Scale</button>
+                        <button onClick={handleMirror} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Mirror</button>
+                        <button onClick={handleExtrude} className="px-2 py-1.5 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700">Extrude 3D</button>
+                        <button onClick={handleExplode} className="px-2 py-1.5 rounded text-xs font-medium bg-amber-600 text-white hover:bg-amber-700">Explode</button>
+                        <button onClick={handleDelete} className="px-2 py-1.5 rounded text-xs font-medium bg-red-600 text-white hover:bg-red-700">Delete</button>
+                      </div>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* History Tab */}
+              {copilotTab === "history" && (
+                <div className="space-y-2">
+                  <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                    Edit History ({historyIndex + 1}/{history.length})
                   </div>
-                )}
-              </div>
+                  <div className="space-y-1">
+                    {history.map((state, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          setHistoryIndex(idx);
+                          setObjects(JSON.parse(JSON.stringify(state)));
+                        }}
+                        className={`p-2 rounded text-xs cursor-pointer ${idx === historyIndex
+                          ? "bg-blue-600 text-white"
+                          : (isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
+                          }`}
+                      >
+                        Step {idx + 1}: {state.length} objects
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Commands Tab */}
+              {copilotTab === "commands" && (
+                <div className="space-y-2">
+                  <div className={`text-sm font-bold mb-2 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                    Command Reference
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    {Object.entries(commands).map(([key, cmd]) => (
+                      <div
+                        key={key}
+                        className={`${isDark ? "bg-gray-700" : "bg-gray-100"} p-2 rounded flex justify-between`}
+                      >
+                        <span className="font-bold text-blue-500">{key}</span>
+                        <span className={isDark ? "text-gray-400" : "text-gray-600"}>{cmd.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        )}
 
-          {!copilotOpen && (
+        {!copilotOpen && (
+          <button
+            onClick={() => setCopilotOpen(true)}
+            className={`absolute right-4 top-20 p-2 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} rounded-l border border-r-0 hover:bg-blue-500 hover:text-white transition-all z-20`}
+          >
+            <ChevronLeft size={18} />
+          </button>
+        )}
+      </div>
+
+      {/* Bottom Status Bar */}
+      <div className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-t px-4 py-2 flex items-center text-xs pb-16`}>
+        {/* Snap Modes */}
+        <div className="flex gap-1">
+          {Object.entries(SNAP_MODES).map(([key, value]) => (
             <button
-              onClick={() => setCopilotOpen(true)}
-              className={`absolute right-4 top-20 p-2 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} rounded-l border border-r-0 hover:bg-blue-500 hover:text-white transition-all z-20`}
+              key={value}
+              onClick={() =>
+                setSnapSettings((prev) => ({ ...prev, [value]: !prev[value] }))
+              }
+              className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${snapSettings[value]
+                ? "bg-green-600 text-white"
+                : (isDark ? "bg-gray-700 text-gray-400 hover:bg-gray-600" : "bg-gray-100 text-gray-500 hover:bg-gray-200")
+                }`}
+              title={key}
             >
-              <ChevronLeft size={18} />
+              {key.slice(0, 3)}
             </button>
-          )}
+          ))}
         </div>
 
-        {/* Bottom Status Bar */}
-        <div className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-t px-4 py-2 flex items-center text-xs pb-16`}>
-          {/* Snap Modes */}
-          <div className="flex gap-1">
-            {Object.entries(SNAP_MODES).map(([key, value]) => (
-              <button
-                key={value}
-                onClick={() =>
-                  setSnapSettings((prev) => ({ ...prev, [value]: !prev[value] }))
-                }
-                className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${snapSettings[value]
-                  ? "bg-green-600 text-white"
-                  : (isDark ? "bg-gray-700 text-gray-400 hover:bg-gray-600" : "bg-gray-100 text-gray-500 hover:bg-gray-200")
-                  }`}
-                title={key}
-              >
-                {key.slice(0, 3)}
-              </button>
-            ))}
-          </div>
+        <div className={`w-px h-6 mx-3 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
 
-          <div className={`w-px h-6 mx-3 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+        {/* Zoom Controls */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleZoom(-0.2)}
+            className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+          >
+            <ZoomOut size={14} />
+          </button>
+          <span className="min-w-[40px] text-center">{Math.round(zoomLevel * 100)}%</span>
+          <button
+            onClick={() => handleZoom(0.2)}
+            className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+          >
+            <ZoomIn size={14} />
+          </button>
+          <button
+            onClick={() => {
+              setZoomLevel(1);
+              setPanOffset({ x: 0, y: 0 });
+            }}
+            className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+            title="Recenter"
+          >
+            <Home size={14} />
+          </button>
+        </div>
 
-          {/* Zoom Controls */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleZoom(-0.2)}
-              className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
-            >
-              <ZoomOut size={14} />
-            </button>
-            <span className="min-w-[40px] text-center">{Math.round(zoomLevel * 100)}%</span>
-            <button
-              onClick={() => handleZoom(0.2)}
-              className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
-            >
-              <ZoomIn size={14} />
-            </button>
-            <button
-              onClick={() => {
-                setZoomLevel(1);
-                setPanOffset({ x: 0, y: 0 });
-              }}
-              className={`p-1 rounded ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
-              title="Recenter"
-            >
-              <Home size={14} />
-            </button>
-          </div>
-
-          <div className="ml-auto flex gap-4 text-gray-500 italic">
-            <div>Objects: <span className="font-bold text-blue-500">{objects.length}</span></div>
-            <div>Selection: <span className="font-bold text-blue-500">{selectedIds.length}</span></div>
-            <div className={apiConnected ? "text-green-500" : "text-red-500"}>● Backend: {apiConnected ? "Live" : "Down"}</div>
-          </div>
+        <div className="ml-auto flex gap-4 text-gray-500 italic">
+          <div>Objects: <span className="font-bold text-blue-500">{objects.length}</span></div>
+          <div>Selection: <span className="font-bold text-blue-500">{selectedIds.length}</span></div>
+          <div className={apiConnected ? "text-green-500" : "text-red-500"}>● Backend: {apiConnected ? "Live" : "Down"}</div>
         </div>
       </div>
     </div>
+
   );
 }

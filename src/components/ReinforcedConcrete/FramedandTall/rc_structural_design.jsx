@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight, Columns } from 'lucide-react';
+import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight, Columns, TrendingUp } from 'lucide-react';
 import * as THREE from 'three';
 import GridApp from './GridCode/MainGrid';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 import { SectionView } from './SectionView';
+import FrameViewer from './New_frame';
+import InteractiveStructureBuilder from './InteractiveStructureBuilder';
 // Theme Context
 const ThemeContext = React.createContext();
 
@@ -16,7 +18,8 @@ const RCStructuralDesign = () => {
     ties: false,
     analysis: false,
     systems: false,
-    modeling: false
+    modeling: false,
+    advanced: false
   });
 
   // Load Combinations State
@@ -437,6 +440,8 @@ const RCStructuralDesign = () => {
     { id: 'column', icon: Columns, label: 'Column Design', section: 'members' },
     { id: 'modeling', icon: Box, label: 'Computer Modeling', section: 'modeling' },
     { id: 'visualization', icon: Ruler, label: '3D Visualization', section: 'modeling' },
+    { id: 'builder', icon: Building2, label: 'Structure Builder', section: 'modeling' },
+    { id: 'advanced', icon: TrendingUp, label: 'Advanced 3D Analysis', section: 'modeling' },
     { id: 'Grid', icon: Ruler, label: 'Frame Grid', section: 'Geid' },
 
   ];
@@ -1106,6 +1111,18 @@ const RCStructuralDesign = () => {
                     Results should be verified by a qualified structural engineer before implementation.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {activeModule === 'advanced' && (
+              <div className="h-[800px]">
+                <FrameViewer />
+              </div>
+            )}
+
+            {activeModule === 'builder' && (
+              <div className="h-[800px]">
+                <InteractiveStructureBuilder />
               </div>
             )}
 

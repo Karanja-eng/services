@@ -6,8 +6,14 @@ import {
   Save,
   CheckCircle,
   AlertTriangle,
+  Eye,
+  Box,
+  X
 } from "lucide-react";
 import Foundation3DVisualization from "../../components/foundation_3d_helper";
+import CadDrawer from "../../Drawings/cad_drawing";
+import StructuralVisualizationComponent from "../../Drawings/visualise_component";
+import axios from "axios";
 
 const EurocodeFoundationApp = ({ theme = "light" }) => {
   const [foundationType, setFoundationType] = useState("isolated");
@@ -78,6 +84,8 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDrawingModalOpen, setIsDrawingModalOpen] = useState(false);
+  const [isVisualizerModalOpen, setIsVisualizerModalOpen] = useState(false);
 
   const handleInputChange = (e) => {
     setInputs({ ...inputs, [e.target.name]: e.target.value });
@@ -91,9 +99,8 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
         designSummary: {
           status: "VERIFIED",
           unity_check: 0.83,
-          foundationSize: `${inputs.foundationLength || "3000"} x ${
-            inputs.foundationWidth || "3000"
-          } x ${inputs.foundationThickness || "700"}mm`,
+          foundationSize: `${inputs.foundationLength || "3000"} x ${inputs.foundationWidth || "3000"
+            } x ${inputs.foundationThickness || "700"}mm`,
           designApproach: inputs.designApproach,
           eurocode: "EN 1997-1:2004",
         },
@@ -212,6 +219,46 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
     }, 1500);
   };
 
+  const downloadFoundationDXF = async () => {
+    const foundationTypeMap = {
+      isolated: "pad",
+      piled: "pile",
+      combined: "combined",
+      strip: "strip",
+      raft: "raft"
+    };
+
+    const mappedType = foundationTypeMap[foundationType] || "pad";
+
+    try {
+      const response = await axios.post("http://localhost:8001/api/export-foundation-dxf", {
+        foundation_type: mappedType,
+        params: {
+          ...inputs,
+          length: parseFloat(inputs.foundationLength),
+          width: parseFloat(inputs.foundationWidth),
+          depth: parseFloat(inputs.foundationThickness),
+          column_width: parseFloat(inputs.columnWidth),
+          column_depth: parseFloat(inputs.columnDepth),
+          column_diameter: parseFloat(inputs.columnDiameter),
+        }
+      }, {
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${mappedType}_foundation_${new Date().getTime()}.dxf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('DXF export error:', error);
+      alert("Failed to export DXF. Please try again.");
+    }
+  };
+
   const renderInputSection = () => {
     return (
       <div className="space-y-6">
@@ -230,11 +277,10 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
               <button
                 key={type.id}
                 onClick={() => setFoundationType(type.id)}
-                className={`p-3 rounded border-2 transition-all ${textPrimary} ${
-                  foundationType === type.id
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                    : `${border} ${borderHover}`
-                }`}
+                className={`p-3 rounded border-2 transition-all ${textPrimary} ${foundationType === type.id
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                  : `${border} ${borderHover}`
+                  }`}
               >
                 {type.label}
               </button>
@@ -619,20 +665,18 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
       <div className="space-y-6">
         {/* Design Summary */}
         <div
-          className={`p-6 rounded-lg border-2 ${
-            results.designSummary.status === "VERIFIED"
-              ? "bg-green-50 dark:bg-green-900/20 border-green-500"
-              : "bg-red-50 dark:bg-red-900/20 border-red-500"
-          }`}
+          className={`p-6 rounded-lg border-2 ${results.designSummary.status === "VERIFIED"
+            ? "bg-green-50 dark:bg-green-900/20 border-green-500"
+            : "bg-red-50 dark:bg-red-900/20 border-red-500"
+            }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CheckCircle
-                className={`w-8 h-8 ${
-                  results.designSummary.status === "VERIFIED"
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600"
-                }`}
+                className={`w-8 h-8 ${results.designSummary.status === "VERIFIED"
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600"
+                  }`}
               />
               <div>
                 <h3 className={`text-xl font-bold ${textPrimary}`}>
@@ -897,24 +941,22 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                   </td>
                   <td className={`px-6 py-3 text-center`}>
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        check.unity < 0.85
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                          : check.unity < 1.0
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${check.unity < 0.85
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                        : check.unity < 1.0
                           ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
                           : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-                      }`}
+                        }`}
                     >
                       {(check.unity * 100).toFixed(0)}%
                     </span>
                   </td>
                   <td className={`px-6 py-3 text-center`}>
                     <span
-                      className={`px-3 py-1 rounded text-sm font-bold ${
-                        check.status === "OK"
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                          : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-                      }`}
+                      className={`px-3 py-1 rounded text-sm font-bold ${check.status === "OK"
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                        : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
+                        }`}
                     >
                       {check.status}
                     </span>
@@ -985,11 +1027,10 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                   </td>
                   <td className={`px-6 py-3 text-center`}>
                     <span
-                      className={`px-3 py-1 rounded text-sm font-bold ${
-                        check.status === "OK"
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                          : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-                      }`}
+                      className={`px-3 py-1 rounded text-sm font-bold ${check.status === "OK"
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                        : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
+                        }`}
                     >
                       {check.status}
                     </span>
@@ -1090,14 +1131,31 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
           foundationType={foundationType}
         />
 
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-wrap justify-end gap-3 mt-8">
+          <button
+            onClick={() => setIsVisualizerModalOpen(true)}
+            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+          >
+            <Box size={20} />
+            View 3D
+          </button>
+          <button
+            onClick={() => setIsDrawingModalOpen(true)}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
+            <Eye size={20} />
+            View 2D
+          </button>
+          <button
+            onClick={downloadFoundationDXF}
+            className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
+          >
+            <Download size={20} />
+            Export CAD (DXF)
+          </button>
           <button className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
             <Download className="w-5 h-5" />
             Export Calculation Report
-          </button>
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Generate DXF Drawings
           </button>
         </div>
       </div>
@@ -1132,6 +1190,71 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
       {/* Main Content */}
       {activeTab === "input" && renderInputSection()}
       {activeTab === "results" && renderResults()}
+
+      {/* 2D Drawing Modal */}
+      {isDrawingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 w-full h-full rounded-xl overflow-hidden flex flex-col shadow-2xl border border-gray-700">
+            <div className="p-4 bg-gray-800 text-white flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <FileText className="text-blue-400" />
+                <h3 className="text-lg font-bold">Foundation Detailing (Eurocode 2D)</h3>
+              </div>
+              <button
+                onClick={() => setIsDrawingModalOpen(false)}
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                title="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="flex-1 relative bg-slate-950">
+              <CadDrawer
+                isDark={true}
+                initialObjects={[{
+                  id: 'foundation-1',
+                  type: 'member',
+                  memberType: 'foundation',
+                  foundationType: foundationType === 'isolated' ? 'pad' : (foundationType === 'piled' ? 'pilecap' : foundationType),
+                  config: { ...inputs, ...results?.reinforcement },
+                  x: 200,
+                  y: 200,
+                  scale: 0.2,
+                  layerId: 'structural'
+                }]}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3D Visualizer Modal */}
+      {isVisualizerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 w-full h-full rounded-xl overflow-hidden flex flex-col shadow-2xl border border-gray-700">
+            <div className="p-4 bg-gray-800 text-white flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <Box className="text-purple-400" />
+                <h3 className="text-lg font-bold">Foundation Structural Analysis (Eurocode 3D)</h3>
+              </div>
+              <button
+                onClick={() => setIsVisualizerModalOpen(false)}
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                title="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="flex-1 relative bg-slate-900">
+              <StructuralVisualizationComponent
+                visible={true}
+                componentType={foundationType === 'piled' ? 'foundation_MF2' : 'foundation_MF1'}
+                componentData={{ ...inputs, ...results?.reinforcement }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1181,16 +1304,15 @@ const TabButton = ({ active, onClick, children, icon, disabled, theme }) => {
   const activeClasses = active
     ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20"
     : isDark
-    ? "text-gray-300 hover:text-gray-100 hover:bg-gray-700"
-    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50";
+      ? "text-gray-300 hover:text-gray-100 hover:bg-gray-700"
+      : "text-gray-600 hover:text-gray-800 hover:bg-gray-50";
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${activeClasses} ${
-        disabled ? "opacity-50 cursor-not-allowed" : ""
-      }`}
+      className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${activeClasses} ${disabled ? "opacity-50 cursor-not-allowed" : ""
+        }`}
     >
       {icon}
       {children}

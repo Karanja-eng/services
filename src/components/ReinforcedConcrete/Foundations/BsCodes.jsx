@@ -5,9 +5,15 @@ import {
   Settings,
   Download,
   Save,
+  Eye,
+  Box,
+  X,
   CheckCircle,
 } from "lucide-react";
 import Foundation3DVisualization from "../../components/foundation_3d_helper";
+import CadDrawer from "../../Drawings/cad_drawing";
+import StructuralVisualizationComponent from "../../Drawings/visualise_component";
+import axios from "axios";
 
 const BSCodesFoundation = ({ isDark = false }) => {
   const [foundationType, setFoundationType] = useState("pad");
@@ -50,10 +56,13 @@ const BSCodesFoundation = ({ isDark = false }) => {
     // Cover and other
     cover: "50",
     density: "24",
+    columnSpacing: "",
   });
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDrawingModalOpen, setIsDrawingModalOpen] = useState(false);
+  const [isVisualizerModalOpen, setIsVisualizerModalOpen] = useState(false);
 
   const handleInputChange = (e) => {
     setInputs({ ...inputs, [e.target.name]: e.target.value });
@@ -61,81 +70,130 @@ const BSCodesFoundation = ({ isDark = false }) => {
 
   const calculateFoundation = async () => {
     setLoading(true);
-
-    // Simulate API call - replace with actual FastAPI endpoint
-    setTimeout(() => {
-      const mockResults = {
-        designSummary: {
-          status: "PASS",
-          utilizationRatio: 0.87,
-          foundationSize: `${inputs.foundationLength || "2500"} x ${
-            inputs.foundationWidth || "2500"
-          } x ${inputs.foundationDepth || "600"}mm`,
-        },
-        loadAnalysis: {
-          totalVerticalLoad:
-            parseFloat(inputs.deadLoad || 0) + parseFloat(inputs.liveLoad || 0),
-          designLoad: (
-            parseFloat(inputs.deadLoad || 0) * 1.35 +
-            parseFloat(inputs.liveLoad || 0) * 1.5
-          ).toFixed(2),
-          bearingPressure: 245.5,
-          allowablePressure: parseFloat(inputs.soilBearing || 300),
-        },
-        reinforcement: {
-          mainBarsX: "12H16@200 (B1)",
-          mainBarsY: "12H16@200 (B2)",
-          area: 2412,
-          areaRequired: 1950,
-        },
-        checks: [
-          {
-            description: "Bearing Pressure",
-            value: "245.5 kN/m²",
-            limit: `${inputs.soilBearing || 300} kN/m²`,
-            status: "PASS",
-            ratio: 0.82,
-          },
-          {
-            description: "Punching Shear",
-            value: "1.25 MPa",
-            limit: "1.85 MPa",
-            status: "PASS",
-            ratio: 0.68,
-          },
-          {
-            description: "Beam Shear (X)",
-            value: "0.45 MPa",
-            limit: "0.62 MPa",
-            status: "PASS",
-            ratio: 0.73,
-          },
-          {
-            description: "Beam Shear (Y)",
-            value: "0.45 MPa",
-            limit: "0.62 MPa",
-            status: "PASS",
-            ratio: 0.73,
-          },
-          {
-            description: "Reinforcement Ratio",
-            value: "0.42%",
-            limit: "0.13% min",
-            status: "PASS",
-            ratio: 3.23,
-          },
-        ],
-        bsReferences: [
-          "BS EN 1992-1-1:2004 - Design of concrete structures",
-          "BS 8004:2015 - Code of practice for foundations",
-          "BS EN 1997-1:2004 - Geotechnical design",
-        ],
+    try {
+      // Map frontend inputs to backend snake_case model
+      const apiInputs = {
+        foundation_type: foundationType,
+        column_shape: columnShape,
+        column_position: columnPosition,
+        dead_load: parseFloat(inputs.deadLoad) || 0,
+        live_load: parseFloat(inputs.liveLoad) || 0,
+        wind_load: parseFloat(inputs.windLoad) || 0,
+        moment_x: parseFloat(inputs.momentX) || 0,
+        moment_y: parseFloat(inputs.momentY) || 0,
+        shear_x: parseFloat(inputs.shearX) || 0,
+        shear_y: parseFloat(inputs.shearY) || 0,
+        column_width: parseFloat(inputs.columnWidth) || null,
+        column_depth: parseFloat(inputs.columnDepth) || null,
+        column_diameter: parseFloat(inputs.columnDiameter) || null,
+        concrete_fck: parseFloat(inputs.concreteFck) || 30,
+        steel_fyk: parseFloat(inputs.steelFyk) || 500,
+        soil_bearing: parseFloat(inputs.soilBearing) || 0,
+        cover: parseFloat(inputs.cover) || 50,
+        density: parseFloat(inputs.density) || 24,
+        foundation_length: parseFloat(inputs.foundationLength) || null,
+        foundation_width: parseFloat(inputs.foundationWidth) || null,
+        foundation_depth: parseFloat(inputs.foundationDepth) || null,
+        pile_count: parseInt(inputs.pileCount) || null,
+        pile_diameter: parseFloat(inputs.pileDiameter) || null,
+        pile_capacity: parseFloat(inputs.pileCapacity) || null,
+        pile_spacing: parseFloat(inputs.pileSpacing) || null,
+        column_spacing: parseFloat(inputs.columnSpacing) || null,
       };
 
-      setResults(mockResults);
-      setLoading(false);
+      // Map foundation type to endpoint
+      const endpointMap = {
+        pad: 'pad-foundation',
+        strip: 'strip-foundation',
+        pile: 'pile-foundation',
+        pilecap: 'pile-cap',
+        combined: 'combined-footing', // Added support for combined
+        raft: 'raft-foundation'    // Added support for raft
+      };
+
+      const endpoint = endpointMap[foundationType] || 'pad-foundation';
+
+      const response = await fetch(`http://localhost:8001/foundation_bakend/design/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiInputs),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Calculation failed');
+      }
+
+      const data = await response.json();
+
+      // Map backend response (snake_case) to frontend (camelCase)
+      const mappedResults = {
+        designSummary: {
+          status: data.design_summary.status,
+          utilizationRatio: data.design_summary.utilization_ratio,
+          foundationSize: data.design_summary.foundation_size,
+        },
+        loadAnalysis: {
+          totalVerticalLoad: data.load_analysis.total_vertical_load,
+          designLoad: data.load_analysis.design_load,
+          bearingPressure: data.load_analysis.bearing_pressure,
+          allowablePressure: data.load_analysis.allowable_pressure,
+        },
+        reinforcement: {
+          mainBarsX: data.reinforcement.main_bars_x,
+          mainBarsY: data.reinforcement.main_bars_y,
+          area: data.reinforcement.area,
+          areaRequired: data.reinforcement.area_required,
+        },
+        checks: data.checks.map(check => ({
+          description: check.description,
+          value: check.value,
+          limit: check.limit,
+          status: check.status,
+          ratio: check.ratio,
+        })),
+        bsReferences: data.bs_references,
+      };
+
+      setResults(mappedResults);
       setActiveTab("results");
-    }, 1500);
+    } catch (error) {
+      console.error('Foundation calculation error:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadFoundationDXF = async () => {
+    try {
+      const response = await axios.post("http://localhost:8001/api/export-foundation-dxf", {
+        foundation_type: foundationType,
+        params: {
+          ...inputs,
+          // Add any specific mappings if needed by the backend
+          length: parseFloat(inputs.foundationLength),
+          width: parseFloat(inputs.foundationWidth),
+          depth: parseFloat(inputs.foundationDepth),
+          column_width: parseFloat(inputs.columnWidth),
+          column_depth: parseFloat(inputs.columnDepth),
+          column_diameter: parseFloat(inputs.columnDiameter),
+        }
+      }, {
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${foundationType}_foundation_${new Date().getTime()}.dxf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('DXF export error:', error);
+      alert("Failed to export DXF. Please try again.");
+    }
   };
 
   const renderInputSection = () => {
@@ -147,18 +205,17 @@ const BSCodesFoundation = ({ isDark = false }) => {
             Foundation Type
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {["pad", "strip", "pile", "pilecap"].map((type) => (
+            {["pad", "strip", "pile", "pilecap", "combined", "raft"].map((type) => (
               <button
                 key={type}
                 onClick={() => setFoundationType(type)}
-                className={`p-3 rounded border-2 transition-all ${
-                  foundationType === type
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                    : "border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-slate-300"
-                }`}
+                className={`p-3 rounded border-2 transition-all ${foundationType === type
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                  : "border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-slate-300"
+                  }`}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}{" "}
-                {type === "pilecap" ? "Cap" : "Foundation"}
+                {type === "pilecap" ? "Cap" : type === "raft" ? "" : "Foundation"}
               </button>
             ))}
           </div>
@@ -199,6 +256,24 @@ const BSCodesFoundation = ({ isDark = false }) => {
                   <option value="corner">Corner</option>
                 </select>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Combined Footing Configuration */}
+        {foundationType === "combined" && (
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">
+              Combined Footing Details
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <InputField
+                label="Column Spacing (c/c)"
+                name="columnSpacing"
+                value={inputs.columnSpacing}
+                onChange={handleInputChange}
+                unit="mm"
+              />
             </div>
           </div>
         )}
@@ -419,20 +494,18 @@ const BSCodesFoundation = ({ isDark = false }) => {
       <div className="space-y-6">
         {/* Design Summary */}
         <div
-          className={`p-6 rounded-lg border-2 ${
-            results.designSummary.status === "PASS"
-              ? "bg-green-50 border-green-500"
-              : "bg-red-50 border-red-500"
-          }`}
+          className={`p-6 rounded-lg border-2 ${results.designSummary.status === "PASS"
+            ? "bg-green-50 border-green-500"
+            : "bg-red-50 border-red-500"
+            }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CheckCircle
-                className={`w-8 h-8 ${
-                  results.designSummary.status === "PASS"
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
+                className={`w-8 h-8 ${results.designSummary.status === "PASS"
+                  ? "text-green-600"
+                  : "text-red-600"
+                  }`}
               />
               <div>
                 <h3 className="text-xl font-bold text-gray-800">
@@ -559,24 +632,22 @@ const BSCodesFoundation = ({ isDark = false }) => {
                   </td>
                   <td className="px-6 py-3 text-center">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        check.ratio < 0.9
-                          ? "bg-green-100 text-green-800"
-                          : check.ratio < 1.0
+                      className={`px-3 py-1 rounded-full text-sm ${check.ratio < 0.9
+                        ? "bg-green-100 text-green-800"
+                        : check.ratio < 1.0
                           ? "bg-yellow-100 text-yellow-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {(check.ratio * 100).toFixed(0)}%
                     </span>
                   </td>
                   <td className="px-6 py-3 text-center">
                     <span
-                      className={`px-3 py-1 rounded text-sm font-medium ${
-                        check.status === "PASS"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                      className={`px-3 py-1 rounded text-sm font-medium ${check.status === "PASS"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
                     >
                       {check.status}
                     </span>
@@ -654,14 +725,31 @@ const BSCodesFoundation = ({ isDark = false }) => {
           foundationType={foundationType}
         />
 
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-wrap justify-end gap-3 mt-8">
+          <button
+            onClick={() => setIsVisualizerModalOpen(true)}
+            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+          >
+            <Box size={20} />
+            View 3D
+          </button>
+          <button
+            onClick={() => setIsDrawingModalOpen(true)}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
+            <Eye size={20} />
+            View 2D
+          </button>
+          <button
+            onClick={downloadFoundationDXF}
+            className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
+          >
+            <Download size={20} />
+            Export CAD (DXF)
+          </button>
           <button className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
             <Download className="w-5 h-5" />
             Export PDF Report
-          </button>
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Generate Drawings
           </button>
         </div>
       </div>
@@ -713,6 +801,71 @@ const BSCodesFoundation = ({ isDark = false }) => {
         {activeTab === "input" && renderInputSection()}
         {activeTab === "results" && renderResults()}
       </main>
+
+      {/* 2D Drawing Modal */}
+      {isDrawingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 w-full h-full rounded-xl overflow-hidden flex flex-col shadow-2xl border border-gray-700">
+            <div className="p-4 bg-gray-800 text-white flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <FileText className="text-blue-400" />
+                <h3 className="text-lg font-bold">Foundation Detailing (2D CAD)</h3>
+              </div>
+              <button
+                onClick={() => setIsDrawingModalOpen(false)}
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                title="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="flex-1 relative bg-slate-950">
+              <CadDrawer
+                isDark={true}
+                initialObjects={[{
+                  id: 'foundation-1',
+                  type: 'member',
+                  memberType: 'foundation',
+                  foundationType: foundationType,
+                  config: { ...inputs, ...results?.reinforcement },
+                  x: 200,
+                  y: 200,
+                  scale: 0.2,
+                  layerId: 'structural'
+                }]}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3D Visualizer Modal */}
+      {isVisualizerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 w-full h-full rounded-xl overflow-hidden flex flex-col shadow-2xl border border-gray-700">
+            <div className="p-4 bg-gray-800 text-white flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <Box className="text-purple-400" />
+                <h3 className="text-lg font-bold">Foundation Structural Analysis (3D)</h3>
+              </div>
+              <button
+                onClick={() => setIsVisualizerModalOpen(false)}
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                title="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="flex-1 relative bg-slate-900">
+              <StructuralVisualizationComponent
+                visible={true}
+                componentType={foundationType === 'pile' || foundationType === 'pilecap' ? 'foundation_MF2' : 'foundation_MF1'}
+                componentData={{ ...inputs, ...results?.reinforcement }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -751,11 +904,10 @@ const TabButton = ({ active, onClick, children, icon, disabled }) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${
-      active
-        ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-        : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-    } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+    className={`px-6 py-4 font-medium transition-all flex items-center gap-2 ${active
+      ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
+      : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
   >
     {icon}
     {children}

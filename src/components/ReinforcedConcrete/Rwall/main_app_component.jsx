@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BookOpen, Globe } from "lucide-react";
-import BSCodesApp from "./bscodes_wrapper";
+import Retaining from "./rc_retaining_app";
 import EurocodeDesigner from "./eurocode_component";
 
 const MainRetainingApp = ({ isDark = false }) => {
@@ -102,7 +102,7 @@ const MainRetainingApp = ({ isDark = false }) => {
       {/* Content Area - Render Active Component */}
       <main className="transition-all duration-500">
         {activeStandard === "bs" ? (
-          <BSCodesApp isDark={isDark} />
+          <Retaining isDark={isDark} />
         ) : (
           <EurocodeDesigner isDark={isDark} />
         )}

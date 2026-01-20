@@ -246,7 +246,7 @@ from calculations.Columns.Interactio import router as column_interaction_router
 
 ##foundations
 # from calculations.Foundations.FundationsApi import router as foundation_design_router
-from calculations.Foundations.foundation_backend_api import (
+from calculations.Foundations.New_foundation import (
     router as foundation_backend_router,
 )
 
@@ -258,6 +258,7 @@ from calculations.Slabs.enhanced_slab_backend import router as slab_backend_rout
 ##retaining
 from calculations.Retaining.eurocode_backend import router as retaining_eurocode_router
 from calculations.Retaining.retaining_backend import router as retaining_backend_router
+from calculations.Retaining.New_retaining import router as retaining_bs_router
 
 
 ##stairs
@@ -268,7 +269,7 @@ from calculations.Stairs.eurocode_backend import router as stairs_euro_backend_r
 
 ##walls
 from calculations.Walls.eurocode_wall import router as walls_eurodesign_router
-from calculations.Walls.wall_calc_backend import router as walls_bsdesign_router
+from calculations.Walls.New_wall import router as walls_bsdesign_router
 
 
 ##beam
@@ -285,10 +286,17 @@ app.include_router(beam_analysis_router, prefix="/beam_analysis")
 from calculations.Beams.main_eurocode import router as eurocode_beam_router
 app.include_router(eurocode_beam_router, prefix="/eurocode_beam", tags=["Eurocode_Beam"])
 
-# AutoCAD Export Endpoint
+# AutoCAD Export Endpoints
 from fastapi import Request
 from fastapi.responses import Response
 from calculations.Beams.autocad_drawer import generate_beam_dxf
+from calculations.Walls.autocad_wall_generator import generate_wall_dxf
+from calculations.Foundations.Foundation_autocad_generator import (
+    generate_pad_foundation_dxf,
+    generate_pile_cap_dxf,
+    generate_strip_foundation_dxf,
+    generate_raft_foundation_dxf
+)
 
 @app.post("/api/export-dxf", tags=["Export"])
 async def export_dxf(request: Request):
@@ -296,6 +304,43 @@ async def export_dxf(request: Request):
     dxf_content = generate_beam_dxf(data)
     
     filename = f"beam_{data.get('beam_type', 'design')}.dxf"
+    
+    return Response(
+        content=dxf_content, 
+        media_type="application/dxf", 
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+@app.post("/api/export-wall-dxf", tags=["Export"])
+async def export_wall_dxf(request: Request):
+    data = await request.json()
+    dxf_content = generate_wall_dxf(data)
+    
+    filename = f"wall_{data.get('wall_type', 'design')}.dxf"
+    
+    return Response(
+        content=dxf_content, 
+        media_type="application/dxf", 
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+@app.post("/api/export-foundation-dxf", tags=["Export"])
+async def export_foundation_dxf(request: Request):
+    data = await request.json()
+    foundation_type = data.get("foundation_type", "pad")
+    
+    if foundation_type == "pad":
+        dxf_content = generate_pad_foundation_dxf(data)
+    elif foundation_type == "pilecap":
+        dxf_content = generate_pile_cap_dxf(data)
+    elif foundation_type == "strip":
+        dxf_content = generate_strip_foundation_dxf(data)
+    elif foundation_type == "raft":
+        dxf_content = generate_raft_foundation_dxf(data)
+    else:
+        dxf_content = generate_pad_foundation_dxf(data)
+        
+    filename = f"foundation_{foundation_type}.dxf"
     
     return Response(
         content=dxf_content, 
@@ -327,10 +372,17 @@ app.include_router(
 app.include_router(
     retaining_backend_router, prefix="/retaining_backend", tags=["retaining_backend"]
 )
+app.include_router(
+    retaining_bs_router, prefix="/retaining_bs", tags=["retaining_designs_new"]
+)
 
 # Framed/Tall Buildings
-from calculations.tall_framed.tall_framed_backend import router as tall_framed_router
+# Framed/Tall Buildings
+from calculations.tall_framed.New_frame import router as tall_framed_router
+from calculations.tall_framed.tall_framed_backend import router as legacy_frame_router
+
 app.include_router(tall_framed_router, prefix="/api/framed", tags=["tall_framed_buildings"])
+app.include_router(legacy_frame_router, prefix="/api/framed", tags=["legacy_frame_analysis"])
 
 
 ##stairs

@@ -6,8 +6,11 @@ import {
   CheckCircle2,
   FileText,
   Euro,
+  Eye,
+  Download
 } from "lucide-react";
 import Wall3DVisualization from "../../components/wall_3d_helper";
+import WallDetailedDrawing from "./Wall_visualiser";
 
 const API_BASE_URL = "http://localhost:8001/eurocode_walls/";
 
@@ -16,6 +19,7 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [activeView, setActiveView] = useState("3d"); // "3d" or "2d"
   const [apiStatus, setApiStatus] = useState("checking");
 
   const [inputs, setInputs] = useState({
@@ -88,6 +92,50 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
     }
   };
 
+  const exportToAutoCAD = async () => {
+    if (!result) return;
+
+    try {
+      const response = await fetch("http://localhost:8001/api/export-wall-dxf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          wall_type: wallType,
+          thickness: inputs.thickness,
+          height: inputs.height,
+          length: inputs.length,
+          vertical_steel: {
+            diameter: result.reinforcement.vertical.outerLayer.diameter,
+            spacing: result.reinforcement.vertical.outerLayer.spacing,
+            area: result.reinforcement.vertical.outerLayer.area + result.reinforcement.vertical.innerLayer.area
+          },
+          horizontal_steel: {
+            diameter: result.reinforcement.horizontal.outerLayer.diameter,
+            spacing: result.reinforcement.horizontal.outerLayer.spacing,
+            area: result.reinforcement.horizontal.outerLayer.area + result.reinforcement.horizontal.innerLayer.area
+          },
+          concrete_grade: inputs.concreteClass,
+          steel_grade: inputs.steelClass,
+          cover: inputs.coverDepth,
+        }),
+      });
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Eurocode_Wall_${wallType}.dxf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("AutoCAD export failed:", error);
+      alert("Failed to generate AutoCAD DXF");
+    }
+  };
+
   const bgMain = isDark ? "bg-gray-900" : "bg-gray-50";
   const bgCard = isDark ? "bg-gray-800" : "bg-white";
   const textPrimary = isDark ? "text-gray-100" : "text-gray-800";
@@ -133,13 +181,12 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
                   <button
                     key={type.value}
                     onClick={() => setWallType(type.value)}
-                    className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${
-                      wallType === type.value
+                    className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${wallType === type.value
                         ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-md"
                         : isDark
-                        ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                          ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
                   >
                     {type.label}
                   </button>
@@ -318,18 +365,16 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
           <div className="lg:col-span-2 space-y-6">
             {error && (
               <div
-                className={`${
-                  isDark
+                className={`${isDark
                     ? "bg-red-900/30 border-red-700"
                     : "bg-red-50 border-red-500"
-                } border-l-4 rounded-lg p-4`}
+                  } border-l-4 rounded-lg p-4`}
               >
                 <div className="flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-red-500" />
                   <p
-                    className={`${
-                      isDark ? "text-red-300" : "text-red-700"
-                    } font-medium`}
+                    className={`${isDark ? "text-red-300" : "text-red-700"
+                      } font-medium`}
                   >
                     {error}
                   </p>
@@ -341,29 +386,51 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
               <>
                 {/* Status */}
                 <div
-                  className={`rounded-lg p-6 ${
-                    result.designStatus === "PASS"
+                  className={`rounded-lg p-6 ${result.designStatus === "PASS"
                       ? isDark
                         ? "bg-green-900/30 border-green-700"
                         : "bg-green-50 border-green-500"
                       : isDark
-                      ? "bg-red-900/30 border-red-700"
-                      : "bg-red-50 border-red-500"
-                  } border-l-4`}
+                        ? "bg-red-900/30 border-red-700"
+                        : "bg-red-50 border-red-500"
+                    } border-l-4`}
                 >
-                  <div className="flex items-center gap-3">
-                    {result.designStatus === "PASS" ? (
-                      <CheckCircle2 className="w-8 h-8 text-green-600" />
-                    ) : (
-                      <AlertCircle className="w-8 h-8 text-red-600" />
-                    )}
-                    <div>
-                      <h3 className={`text-2xl font-bold ${textPrimary}`}>
-                        Design {result.designStatus}
-                      </h3>
-                      <p className={textSecondary}>
-                        Eurocode 2 Analysis Complete
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {result.designStatus === "PASS" ? (
+                        <CheckCircle2 className="w-8 h-8 text-green-600" />
+                      ) : (
+                        <AlertCircle className="w-8 h-8 text-red-600" />
+                      )}
+                      <div>
+                        <h3 className={`text-2xl font-bold ${textPrimary}`}>
+                          Design {result.designStatus}
+                        </h3>
+                        <p className={textSecondary}>
+                          Eurocode 2 Analysis Complete
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setActiveView(activeView === "3d" ? "2d" : "3d")}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeView === "2d"
+                            ? "bg-blue-600 text-white"
+                            : isDark
+                              ? "bg-gray-700 text-gray-200"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                      >
+                        <Eye className="w-4 h-4" />
+                        {activeView === "3d" ? "Show 2D Details" : "Show 3D View"}
+                      </button>
+                      <button
+                        onClick={exportToAutoCAD}
+                        className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-900 transition-all"
+                      >
+                        <Download className="w-4 h-4" />
+                        AutoCAD DXF
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -516,18 +583,16 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
                         </div>
                         <div className="flex items-center gap-3">
                           <div
-                            className={`flex-1 ${
-                              isDark ? "bg-gray-700" : "bg-gray-200"
-                            } rounded-full h-6 overflow-hidden`}
+                            className={`flex-1 ${isDark ? "bg-gray-700" : "bg-gray-200"
+                              } rounded-full h-6 overflow-hidden`}
                           >
                             <div
-                              className={`h-full rounded-full transition-all ${
-                                item.util > 0.9
+                              className={`h-full rounded-full transition-all ${item.util > 0.9
                                   ? "bg-red-500"
                                   : item.util > 0.7
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                              }`}
+                                    ? "bg-yellow-500"
+                                    : "bg-green-500"
+                                }`}
                               style={{ width: `${item.util * 100}%` }}
                             />
                           </div>
@@ -631,11 +696,10 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
 
                 {/* Standards */}
                 <div
-                  className={`${
-                    isDark
+                  className={`${isDark
                       ? "bg-blue-900/30 border-blue-700"
                       : "bg-blue-50 border-blue-500"
-                  } rounded-lg p-6 border-l-4`}
+                    } rounded-lg p-6 border-l-4`}
                 >
                   <div className="flex items-start gap-3">
                     <FileText className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
@@ -652,13 +716,40 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
                   </div>
                 </div>
 
-                {/* 3D Visualization Component */}
-                <Wall3DVisualization
-                  inputs={inputs}
-                  results={result}
-                  theme={isDark ? "dark" : "light"}
-                  wallType={wallType}
-                />
+                {/* Visualization Container */}
+                <div className="relative min-h-[500px] border border-gray-200 rounded-xl overflow-hidden mb-6 bg-white">
+                  {activeView === "3d" ? (
+                    <Wall3DVisualization
+                      inputs={inputs}
+                      results={result}
+                      theme={isDark ? "dark" : "light"}
+                      wallType={wallType}
+                    />
+                  ) : (
+                    <div className="p-4 overflow-auto bg-white">
+                      <WallDetailedDrawing
+                        design={{
+                          ...result,
+                          reinforcement: {
+                            vertical: {
+                              diameter: result.reinforcement.vertical.outerLayer.diameter,
+                              spacing: result.reinforcement.vertical.outerLayer.spacing,
+                            },
+                            horizontal: {
+                              diameter: result.reinforcement.horizontal.outerLayer.diameter,
+                              spacing: result.reinforcement.horizontal.outerLayer.spacing,
+                            }
+                          }
+                        }}
+                        inputs={{
+                          ...inputs,
+                          concreteGrade: inputs.concreteClass.split('/')[0].replace('C', ''),
+                          steelGrade: inputs.steelClass.replace('B', '').replace('A', '').replace('C', '')
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
@@ -667,9 +758,8 @@ const EurocodeWallCalculator = ({ isDark = false }) => {
                 className={`${bgCard} rounded-lg shadow-md p-12 text-center`}
               >
                 <Euro
-                  className={`w-16 h-16 ${
-                    isDark ? "text-gray-600" : "text-gray-300"
-                  } mx-auto mb-4`}
+                  className={`w-16 h-16 ${isDark ? "text-gray-600" : "text-gray-300"
+                    } mx-auto mb-4`}
                 />
                 <h3 className={`text-xl font-semibold ${textSecondary} mb-2`}>
                   Ready to Design
