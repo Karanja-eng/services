@@ -25,6 +25,10 @@ import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
 import ChatPage from "./components/ChatPage"; // Home Page
 import SurveyingApp from "./Surveying/surveying_app";
+import EarthworksQSModule from "./Surveying/Earthworks/erathworks";
+import SurveyingDashboard from "./Surveying/Setting_&_construction/surveying_dashboard";
+import TerrainModeler from "./Surveying/Contouring/Contouring_terrain";
+import MonitoringDashboard from "./Surveying/Deformation_&_Monitoring/monitoring_deformation";
 import CadDrawer from "./Drawings/cad_drawing";
 import StructuralVisualizationComponent from "./Drawings/visualise_component";
 
@@ -60,13 +64,13 @@ import SepticTakeoffApp from "./takeoff2/septik/septik_tank";
 import SwimmingPoolTakeoffApp from "./takeoff2/swimming/swimming_pool";
 import BasementTakeoffApp from "./takeoff2/Basement_Takeoff";
 import RCCSuperstructureApp from "./takeoff2/superstructure";
-import DoorWindowTakeoff from "./takeoff2/Doors&Window";
-import InternalFinishesTakeoff from "./takeoff2/internal_finishes";
+import DoorWindowTakeoff from "./takeoff2/Door_Window/Doors&Window";
+import InternalFinishesTakeoff from "./takeoff2/Internal_Finishes/internal_finishes";
 import SuperstructureTakeoffApp from "./takeoff2/Superstructure/Superstructure_takeoff";
 import UnderGroundTankComponent from "./takeoff2/underground_tank";
-import SubstructureTakeoffApp from "./takeoff2/substructure_works";
+import SubstructureTakeoffApp from "./takeoff2/SubStrucure_works/substructure_works";
 import StaircaseTakeoffApp from "./takeoff2/Stairs/Enhanced_Stairs";
-import ElectricalPlumbingTakeoff from "./takeoff2/ElectricalPlumbingTakeoff";
+import ElectricalPlumbingTakeoff from "./takeoff2/Electrical_Plumbing/ElectricalPlumbingTakeoff";
 
 
 //////////////////////////TakingOff /////////////////////
@@ -617,6 +621,22 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             <Route
               path="/surveying"
               element={<SurveyingApp isDark={isDark} />}
+            />
+            <Route
+              path="/surveying/earthworks"
+              element={<EarthworksQSModule isDark={isDark} />}
+            />
+            <Route
+              path="/surveying/setting-out"
+              element={<SurveyingDashboard isDark={isDark} />}
+            />
+            <Route
+              path="/surveying/contouring"
+              element={<TerrainModeler isDark={isDark} />}
+            />
+            <Route
+              path="/surveying/monitoring"
+              element={<MonitoringDashboard isDark={isDark} />}
             />
             <Route
               path="/visualise"

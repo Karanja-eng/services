@@ -108,7 +108,11 @@ const ChatPage = ({ renderSearch, isDark }) => {
           title: "Surveying Tools",
           type: "section",
           items: [
-            { label: "Main Surveying App", path: "/surveying" }
+            { label: "Main Surveying App", path: "/surveying" },
+            { label: "Setting Out & Construction", path: "/surveying/setting-out" },
+            { label: "Earthworks", path: "/surveying/earthworks" },
+            { label: "Contouring & Terrain", path: "/surveying/contouring" },
+            { label: "Deformation & Monitoring", path: "/surveying/monitoring" }
           ]
         },
         {

@@ -13,6 +13,15 @@ import math
 from io import BytesIO
 from PIL import Image
 import base64
+from .control_survey import (
+    TriangulationRequest, TrilaterationRequest, ResectionRequest, 
+    IntersectionRequest, TransformationRequest, CalculationResult,
+    calculate_angular_intersection, calculate_distance_intersection, 
+    calculate_3point_resection, transform_local_to_national
+)
+from .corrections import (
+    CorrectionResult, apply_slope_correction, apply_chained_corrections
+)
 
 router = APIRouter()
 # ==================== PYDANTIC MODELS ====================
@@ -105,39 +114,6 @@ class SewerDesignResponse(BaseModel):
     flow_capacity: Optional[float] = None
 
 
-class GridPoint(BaseModel):
-    row: int
-    col: int
-    rl: float
-
-
-class ContouringRequest(BaseModel):
-    grid_data: List[GridPoint]
-    contour_interval: float
-    grid_size: int
-
-
-class ContourLine(BaseModel):
-    elevation: float
-    points: List[Tuple[float, float]]
-
-
-class ContouringResponse(BaseModel):
-    contours: List[ContourLine]
-    min_elevation: float
-    max_elevation: float
-
-
-class PolygonPoint(BaseModel):
-    x: float
-    y: float
-
-
-class ImageContourResponse(BaseModel):
-    polygon_points: List[PolygonPoint]
-    area: float
-    perimeter: float
-    image_base64: str
 
 
 # ==================== LEVELLING CALCULATIONS ====================
@@ -490,149 +466,69 @@ async def calculate_sewer_design(request: SewerDesignRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# ==================== CONTOURING CALCULATIONS ====================
 
 
-@router.post("/api/contouring/calculate", response_model=ContouringResponse)
-async def calculate_contours(request: ContouringRequest):
-    """
-    Calculate contour lines from grid elevation data
-    """
+
+
+# ==================== CONTROL SURVEY CALCULATIONS ====================
+
+@router.post("/api/control/intersection/angular", response_model=CalculationResult)
+async def api_angular_intersection(request: IntersectionRequest):
+    """Calculate intersection of two bearings"""
     try:
-        # Create elevation grid
-        grid_size = request.grid_size
-        elevation_grid = np.zeros((grid_size, grid_size))
+        return calculate_angular_intersection(request.p1.coords, request.p2.coords, request.obs1, request.obs2)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-        for point in request.grid_data:
-            if 0 <= point.row < grid_size and 0 <= point.col < grid_size:
-                elevation_grid[point.row, point.col] = point.rl
+@router.post("/api/control/intersection/distance", response_model=CalculationResult)
+async def api_distance_intersection(request: IntersectionRequest):
+    """Calculate intersection of two distances (circles)"""
+    try:
+        return calculate_distance_intersection(request.p1.coords, request.p2.coords, request.obs1, request.obs2)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-        # Find min and max elevations
-        valid_elevations = [p.rl for p in request.grid_data]
-        min_elev = min(valid_elevations)
-        max_elev = max(valid_elevations)
-
-        # Generate contour levels
-        contour_interval = request.contour_interval
-        contour_levels = []
-        current_level = math.ceil(min_elev / contour_interval) * contour_interval
-
-        while current_level <= max_elev:
-            contour_levels.append(current_level)
-            current_level += contour_interval
-
-        # Simple contour generation (linear interpolation between grid points)
-        contours = []
-
-        for level in contour_levels:
-            contour_points = []
-
-            # Check horizontal edges
-            for i in range(grid_size):
-                for j in range(grid_size - 1):
-                    z1 = elevation_grid[i, j]
-                    z2 = elevation_grid[i, j + 1]
-
-                    if z1 != 0 and z2 != 0:
-                        if (z1 <= level <= z2) or (z2 <= level <= z1):
-                            # Linear interpolation
-                            if z2 != z1:
-                                t = (level - z1) / (z2 - z1)
-                                x = j + t
-                                y = i
-                                contour_points.append((round(x, 2), round(y, 2)))
-
-            # Check vertical edges
-            for i in range(grid_size - 1):
-                for j in range(grid_size):
-                    z1 = elevation_grid[i, j]
-                    z2 = elevation_grid[i + 1, j]
-
-                    if z1 != 0 and z2 != 0:
-                        if (z1 <= level <= z2) or (z2 <= level <= z1):
-                            if z2 != z1:
-                                t = (level - z1) / (z2 - z1)
-                                x = j
-                                y = i + t
-                                contour_points.append((round(x, 2), round(y, 2)))
-
-            if contour_points:
-                contours.append(ContourLine(elevation=level, points=contour_points))
-
-        return ContouringResponse(
-            contours=contours,
-            min_elevation=round(min_elev, 2),
-            max_elevation=round(max_elev, 2),
+@router.post("/api/control/resection/3point", response_model=CalculationResult)
+async def api_3point_resection(request: ResectionRequest):
+    """Calculate resection for 3 fixed points"""
+    try:
+        if len(request.fixed_points) < 3 or len(request.observations) < 3:
+            raise ValueError("Exactly 3 points and 3 angles required for this resection method.")
+        return calculate_3point_resection(
+            request.fixed_points[0], request.fixed_points[1], request.fixed_points[2],
+            request.observations[0], request.observations[1], request.observations[2]
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-# ==================== IMAGE PROCESSING ====================
-
-
-@router.post("/api/image/extract-contour", response_model=ImageContourResponse)
-async def extract_contour_from_image(file: UploadFile = File(...)):
-    """
-    Extract land plot contour from uploaded image using OpenCV
-    """
+@router.post("/api/control/transformation/helmer", response_model=List[Coordinate])
+async def api_helmer_transformation(request: TransformationRequest):
+    """Apply 2D Helmert transformation"""
     try:
-        # Read image
-        contents = await file.read()
-        nparr = np.frombuffer(contents, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-        if img is None:
-            raise HTTPException(status_code=400, detail="Invalid image file")
-
-        # Convert to grayscale
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        # Apply Gaussian blur
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-        # Edge detection
-        edges = cv2.Canny(blurred, 50, 150)
-
-        # Find contours
-        contours, _ = cv2.findContours(
-            edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        params = request.params or {}
+        return transform_local_to_national(
+            request.points, 
+            params.get("tx", 0), params.get("ty", 0), 
+            params.get("rotation", 0), params.get("scale", 1.0)
         )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-        if not contours:
-            raise HTTPException(status_code=400, detail="No contours found in image")
+# ==================== CORRECTIONS ====================
 
-        # Get the largest contour (assumed to be the land plot)
-        largest_contour = max(contours, key=cv2.contourArea)
+@router.post("/api/corrections/slope", response_model=CorrectionResult)
+async def api_slope_correction_endpoint(distance: float, angle: Optional[float] = 0, h_diff: Optional[float] = 0):
+    """Calculate slope correction"""
+    try:
+        return apply_slope_correction(distance, vertical_angle_deg=angle, h_diff=h_diff)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-        # Approximate polygon
-        epsilon = 0.01 * cv2.arcLength(largest_contour, True)
-        approx_polygon = cv2.approxPolyDP(largest_contour, epsilon, True)
-
-        # Extract points
-        polygon_points = []
-        for point in approx_polygon:
-            x, y = point[0]
-            polygon_points.append(PolygonPoint(x=float(x), y=float(y)))
-
-        # Calculate area and perimeter
-        area = cv2.contourArea(largest_contour)
-        perimeter = cv2.arcLength(largest_contour, True)
-
-        # Draw contour on image
-        result_img = img.copy()
-        cv2.drawContours(result_img, [approx_polygon], -1, (0, 255, 0), 3)
-
-        # Convert result image to base64
-        _, buffer = cv2.imencode(".png", result_img)
-        img_base64 = base64.b64encode(buffer).decode("utf-8")
-
-        return ImageContourResponse(
-            polygon_points=polygon_points,
-            area=round(area, 2),
-            perimeter=round(perimeter, 2),
-            image_base64=img_base64,
-        )
+@router.post("/api/corrections/chained", response_model=CorrectionResult)
+async def api_chained_corrections_endpoint(distance: float, corrections: List[Dict]):
+    """Apply multiple corrections sequentially"""
+    try:
+        return apply_chained_corrections(distance, corrections)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -651,8 +547,12 @@ async def root():
             "traverse": "/api/traverse/calculate",
             "tacheometry": "/api/tacheometry/calculate",
             "sewer": "/api/sewer/calculate",
-            "contouring": "/api/contouring/calculate",
-            "image_processing": "/api/image/extract-contour",
+            "control_intersection_angular": "/api/control/intersection/angular",
+            "control_intersection_distance": "/api/control/intersection/distance",
+            "control_resection_3point": "/api/control/resection/3point",
+            "control_transformation_helmer": "/api/control/transformation/helmer",
+            "corrections_slope": "/api/corrections/slope",
+            "corrections_chained": "/api/corrections/chained",
         },
     }
 

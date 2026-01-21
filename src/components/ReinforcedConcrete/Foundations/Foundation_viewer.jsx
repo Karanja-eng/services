@@ -967,30 +967,52 @@ export const getFoundationCADPrimitives = (foundationType, params, x = 0, y = 0,
 
     // Basic implementation for Pad Foundation as a starting point
     if (foundationType === "pad") {
-        const { length = 2000, width = 2000, depth = 500 } = params;
+        const { length = 2000, width = 2000, depth = 500, side_cover = 75, cover = 75, main_bars_x = { count: 8, diameter: 16, spacing: 200 } } = params;
         const L = length * scale;
         const B = width * scale;
         const D = depth * scale;
+        const s_cov = side_cover * scale;
+        const cov = cover * scale;
 
-        // Plan View Outline
-        primitives.push({
-            id: `pad-plan-${Math.random()}`,
-            type: 'rectangle',
-            start: { x: x, y: y },
-            end: { x: x + L, y: y + B },
-            color: '#000',
-            layerId
-        });
+        // --- 1. Plan View ---
+        // Outline
+        primitives.push({ id: `pad-plan-outline-${Math.random()}`, type: 'rectangle', start: { x: x, y: y }, end: { x: x + L, y: y + B }, color: '#000', layerId });
 
-        // Section View Outline
-        primitives.push({
-            id: `pad-sec-${Math.random()}`,
-            type: 'rectangle',
-            start: { x: x + L + 100, y: y },
-            end: { x: x + 2 * L + 100, y: y + D },
-            color: '#000',
-            layerId
-        });
+        // Bars in Plan (Partial representation)
+        for (let i = 0; i < (main_bars_x.count || 0); i++) {
+            const bar_y = y + s_cov + i * (main_bars_x.spacing || 200) * scale;
+            if (bar_y <= y + B - s_cov) {
+                primitives.push({ id: `pad-plan-bar-${i}-${Math.random()}`, type: 'line', start: { x: x + s_cov, y: bar_y }, end: { x: x + L - s_cov, y: bar_y }, color: '#ff0000', layerId });
+            }
+        }
+        primitives.push({ id: `pad-plan-label-${Math.random()}`, type: 'text', position: { x: x + L / 2 - 20, y: y - 20 }, text: "PLAN", size: 0.8, color: '#000', layerId });
+
+        // --- 2. Section View ---
+        const secX = x + L + 100;
+        // Outline
+        primitives.push({ id: `pad-sec-outline-${Math.random()}`, type: 'rectangle', start: { x: secX, y: y }, end: { x: secX + L, y: y + D }, color: '#000', layerId });
+
+        // Bars in Section (Dots)
+        for (let i = 0; i < (main_bars_x.count || 0); i++) {
+            const bar_x = secX + s_cov + i * (main_bars_x.spacing || 200) * scale;
+            if (bar_x <= secX + L - s_cov) {
+                primitives.push({ id: `pad-sec-bar-${i}-${Math.random()}`, type: 'circle', center: { x: bar_x, y: y + D - cov }, radius: 2, color: '#ff0000', layerId });
+            }
+        }
+        primitives.push({ id: `pad-sec-label-${Math.random()}`, type: 'text', position: { x: secX + L / 2 - 40, y: y + D + 20 }, text: "SECTION A-A", size: 0.8, color: '#000', layerId });
+
+        // Add dimensions
+        const addDim = (x1, y1, x2, y2, text, vertical = false, offset = 30) => {
+            const lineX1 = vertical ? x1 - offset : x1;
+            const lineY1 = vertical ? y1 : y1 - offset;
+            const lineX2 = vertical ? x2 - offset : x2;
+            const lineY2 = vertical ? y2 : y2 - offset;
+            primitives.push({ id: Math.random().toString(), type: 'line', start: { x: lineX1, y: lineY1 }, end: { x: lineX2, y: lineY2 }, color: '#666', layerId });
+            primitives.push({ id: Math.random().toString(), type: 'text', position: { x: vertical ? lineX1 - 10 : (lineX1 + lineX2) / 2, y: vertical ? (lineY1 + lineY2) / 2 : lineY1 - 10 }, text, size: 0.6, color: '#000', layerId });
+        };
+
+        addDim(x, y + B, x + L, y + B, `${length}`, false, -25);
+        addDim(secX + L, y, secX + L, y + D, `${depth}`, true, -25);
     }
 
     return primitives;

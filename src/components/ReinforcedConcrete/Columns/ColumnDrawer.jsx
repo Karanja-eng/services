@@ -230,8 +230,49 @@ export const getColumnCADPrimitives = (config, x = 0, y = 0, scale = 0.8) => {
         primitives.push({ id: Math.random().toString(), type: 'circle', center: p, radius: bDia / 2, color: '#000', layerId });
     });
 
-    // 4. Labels
-    primitives.push({ id: Math.random().toString(), type: 'text', position: { x: x, y: tlY + d + 30 }, text: `${width}x${depth} COLUMN`, size: 1.5, color: '#000', layerId });
+    // 4. Detailing (Dimensions)
+    const addDim = (x1, y1, x2, y2, text, vertical = false, offset = 30) => {
+        const lineX1 = vertical ? x1 - offset : x1;
+        const lineY1 = vertical ? y1 : y1 - offset;
+        const lineX2 = vertical ? x2 - offset : x2;
+        const lineY2 = vertical ? y2 : y2 - offset;
+        primitives.push({ id: Math.random().toString(), type: 'line', start: { x: lineX1, y: lineY1 }, end: { x: lineX2, y: lineY2 }, color: '#666', layerId });
+        primitives.push({ id: Math.random().toString(), type: 'line', start: { x: x1, y: y1 }, end: { x: lineX1, y: lineY1 }, color: '#999', layerId });
+        primitives.push({ id: Math.random().toString(), type: 'line', start: { x: x2, y: y2 }, end: { x: lineX2, y: lineY2 }, color: '#999', layerId });
+        primitives.push({
+            id: Math.random().toString(),
+            type: 'text',
+            position: { x: vertical ? lineX1 - 15 : (lineX1 + lineX2) / 2, y: vertical ? (lineY1 + lineY2) / 2 : lineY1 - 10 },
+            text,
+            size: 0.8,
+            color: '#000',
+            layerId
+        });
+    };
+
+    addDim(tlX, tlY + d, tlX + w, tlY + d, `${width}`, false, -35);
+    addDim(tlX, tlY, tlX, tlY + d, `${depth}`, true, 35);
+
+    // 5. Leader Lines
+    const addLeader = (tx, ty, ex, ey, text) => {
+        primitives.push({ id: Math.random().toString(), type: 'line', start: { x: tx, y: ty }, end: { x: ex, y: ey }, color: '#333', layerId });
+        primitives.push({ id: Math.random().toString(), type: 'line', start: { x: ex, y: ey }, end: { x: ex + (ex > tx ? 15 : -15), y: ey }, color: '#333', layerId });
+        primitives.push({
+            id: Math.random().toString(),
+            type: 'text',
+            position: { x: ex + (ex > tx ? 20 : -80), y: ey - 5 },
+            text,
+            size: 0.8,
+            color: '#000',
+            layerId
+        });
+    };
+
+    addLeader(positions[0].x, positions[0].y, tlX - 45, tlY - 25, `${numBars}T${barDia}`);
+    addLeader(tieL + tieW, tieT + tieH / 2, tlX + w + 45, tlY + d / 2, `R${tieDia}-200`);
+
+    // 6. Section Title
+    primitives.push({ id: Math.random().toString(), type: 'text', position: { x: x - 40, y: tlY + d + 80 }, text: "SECTION A-A", size: 1.2, color: '#000', layerId });
 
     return primitives;
 };

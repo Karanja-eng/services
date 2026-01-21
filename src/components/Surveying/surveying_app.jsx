@@ -8,9 +8,10 @@ export default function SurveyingApp({ isDark = false }) {
   const tabs = [
     { id: 'levelling', label: 'Levelling', icon: TrendingUp },
     { id: 'traverse', label: 'Traverse', icon: Map },
-    { id: 'contouring', label: 'Contouring', icon: Layers },
     { id: 'tacheometric', label: 'Tacheometry', icon: Calculator },
-    { id: 'sewer', label: 'Sewer Design', icon: Wrench }
+    { id: 'sewer', label: 'Sewer Design', icon: Wrench },
+    { id: 'control', label: 'Control Survey', icon: Map },
+    { id: 'corrections', label: 'Corrections', icon: Calculator }
   ];
 
   return (
@@ -52,9 +53,10 @@ export default function SurveyingApp({ isDark = false }) {
         <main className="container mx-auto px-4 py-8">
           {activeTab === 'levelling' && <LevellingModule isDark={isDark} />}
           {activeTab === 'traverse' && <TraverseModule isDark={isDark} />}
-          {activeTab === 'contouring' && <ContouringModule isDark={isDark} />}
           {activeTab === 'tacheometric' && <TacheometricModule isDark={isDark} />}
           {activeTab === 'sewer' && <SewerDesignModule isDark={isDark} />}
+          {activeTab === 'control' && <ControlSurveyModule isDark={isDark} />}
+          {activeTab === 'corrections' && <CorrectionsModule isDark={isDark} />}
         </main>
       </div>
     </div>
@@ -518,108 +520,6 @@ function TraverseModule() {
   );
 }
 
-// Contouring Module
-function ContouringModule() {
-  const [gridSize, setGridSize] = useState(5);
-  const [contourInterval, setContourInterval] = useState(1);
-  const [gridData, setGridData] = useState([]);
-
-  const initializeGrid = () => {
-    const data = [];
-    for (let i = 0; i < gridSize; i++) {
-      const row = [];
-      for (let j = 0; j < gridSize; j++) {
-        row.push({ row: i, col: j, rl: '' });
-      }
-      data.push(row);
-    }
-    setGridData(data);
-  };
-
-  const updateGridValue = (row, col, value) => {
-    const newData = [...gridData];
-    newData[row][col].rl = value;
-    setGridData(newData);
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-slate-800 mb-4">Contouring & Grid Survey</h2>
-
-        <div className="grid md:grid-cols-3 gap-6 mb-6">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Grid Size</label>
-            <input
-              type="number"
-              min="2"
-              max="20"
-              value={gridSize}
-              onChange={(e) => setGridSize(parseInt(e.target.value))}
-              className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:border-teal-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Contour Interval (m)</label>
-            <input
-              type="number"
-              step="0.1"
-              value={contourInterval}
-              onChange={(e) => setContourInterval(parseFloat(e.target.value))}
-              className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:border-teal-500 focus:outline-none"
-            />
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={initializeGrid}
-              className="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-teal-600 hover:to-teal-700 transition-all shadow-md flex items-center justify-center gap-2"
-            >
-              <Grid3x3 className="w-5 h-5" />
-              Generate Grid
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {gridData.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 overflow-x-auto">
-          <h3 className="text-xl font-bold text-slate-800 mb-4">Grid RL Values</h3>
-          <table className="border-collapse">
-            <thead>
-              <tr>
-                <th className="border-2 border-slate-400 px-4 py-2 bg-slate-200"></th>
-                {gridData[0].map((_, colIndex) => (
-                  <th key={colIndex} className="border-2 border-slate-400 px-4 py-2 bg-slate-200 font-bold">
-                    {String.fromCharCode(65 + colIndex)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {gridData.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  <th className="border-2 border-slate-400 px-4 py-2 bg-slate-200 font-bold">{rowIndex + 1}</th>
-                  {row.map((cell, colIndex) => (
-                    <td key={colIndex} className="border-2 border-slate-300 p-0">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={cell.rl}
-                        onChange={(e) => updateGridValue(rowIndex, colIndex, e.target.value)}
-                        className="w-20 h-16 text-center border-0 focus:bg-teal-50 focus:outline-none font-semibold"
-                        placeholder="RL"
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Tacheometric Module
 function TacheometricModule() {
@@ -906,6 +806,333 @@ function SewerDesignModule() {
           </li>
         </ul>
       </div>
+    </div>
+  );
+}
+
+// Control Survey Module
+function ControlSurveyModule({ isDark = false }) {
+  const [activeSubTab, setActiveSubTab] = useState('intersection');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Intersection State
+  const [intersection, setIntersection] = useState({
+    p1: { easting: 1000, northing: 1000 },
+    p2: { easting: 1200, northing: 1000 },
+    obs1: 45,
+    obs2: 315,
+    method: 'angular'
+  });
+
+  // Resection State
+  const [resection, setResection] = useState({
+    pts: [
+      { id: 'A', coords: { easting: 1000, northing: 2000 } },
+      { id: 'B', coords: { easting: 2000, northing: 2000 } },
+      { id: 'C', coords: { easting: 1500, northing: 1000 } }
+    ],
+    angles: [120, 120, 120]
+  });
+
+  const handleCalculateIntersection = async () => {
+    setLoading(true);
+    try {
+      const endpoint = intersection.method === 'angular'
+        ? '/surveying_router/api/control/intersection/angular'
+        : '/surveying_router/api/control/intersection/distance';
+
+      const payload = {
+        p1: { id: 'P1', coords: intersection.p1 },
+        p2: { id: 'P2', coords: intersection.p2 },
+        obs1: parseFloat(intersection.obs1),
+        obs2: parseFloat(intersection.obs2),
+        method: intersection.method
+      };
+
+      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCalculateResection = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        target_id: 'P',
+        fixed_points: resection.pts.map(p => ({ id: p.id, coords: p.coords })),
+        observations: resection.angles.map(a => parseFloat(a)),
+        method: '3-point'
+      };
+
+      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/surveying_router/api/control/resection/3point`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Horizontal & Vertical Control</h2>
+
+        <div className="flex border-b mb-6 border-slate-200 dark:border-slate-700">
+          <button
+            onClick={() => { setActiveSubTab('intersection'); setResult(null); }}
+            className={`px-4 py-2 font-semibold ${activeSubTab === 'intersection' ? 'border-b-2 border-teal-500 text-teal-600' : 'text-slate-500'}`}
+          >
+            Intersection
+          </button>
+          <button
+            onClick={() => { setActiveSubTab('resection'); setResult(null); }}
+            className={`px-4 py-2 font-semibold ${activeSubTab === 'resection' ? 'border-b-2 border-teal-500 text-teal-600' : 'text-slate-500'}`}
+          >
+            3-Point Resection
+          </button>
+        </div>
+
+        {activeSubTab === 'intersection' && (
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="font-bold text-slate-700 dark:text-slate-300">Base Point 1</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <input type="number" placeholder="Easting" value={intersection.p1.easting} onChange={e => setIntersection({ ...intersection, p1: { ...intersection.p1, easting: e.target.value } })} className="px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+                <input type="number" placeholder="Northing" value={intersection.p1.northing} onChange={e => setIntersection({ ...intersection, p1: { ...intersection.p1, northing: e.target.value } })} className="px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+              </div>
+              <h3 className="font-bold text-slate-700 dark:text-slate-300">Base Point 2</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <input type="number" placeholder="Easting" value={intersection.p2.easting} onChange={e => setIntersection({ ...intersection, p2: { ...intersection.p2, easting: e.target.value } })} className="px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+                <input type="number" placeholder="Northing" value={intersection.p2.northing} onChange={e => setIntersection({ ...intersection, p2: { ...intersection.p2, northing: e.target.value } })} className="px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="font-bold text-slate-700 dark:text-slate-300">Observations</h3>
+              <select value={intersection.method} onChange={e => setIntersection({ ...intersection, method: e.target.value })} className="w-full px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                <option value="angular">Angular Intersection (Bearings)</option>
+                <option value="distance">Distance Intersection (Radii)</option>
+              </select>
+              <div className="grid grid-cols-2 gap-4">
+                <input type="number" placeholder={intersection.method === 'angular' ? 'Bearing 1 (°)' : 'Distance 1 (m)'} value={intersection.obs1} onChange={e => setIntersection({ ...intersection, obs1: e.target.value })} className="px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+                <input type="number" placeholder={intersection.method === 'angular' ? 'Bearing 2 (°)' : 'Distance 2 (m)'} value={intersection.obs2} onChange={e => setIntersection({ ...intersection, obs2: e.target.value })} className="px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+              </div>
+              <button
+                onClick={handleCalculateIntersection}
+                disabled={loading}
+                className="w-full bg-teal-600 text-white py-3 rounded-lg font-bold hover:bg-teal-700 transition"
+              >
+                {loading ? 'Calculating...' : 'Calculate Intersection'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === 'resection' && (
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-3 gap-6">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="space-y-2">
+                  <h3 className="font-bold text-slate-700 dark:text-slate-300">Point {resection.pts[i].id}</h3>
+                  <input type="number" placeholder="Easting" value={resection.pts[i].coords.easting} onChange={e => {
+                    const next = [...resection.pts];
+                    next[i].coords.easting = e.target.value;
+                    setResection({ ...resection, pts: next });
+                  }} className="w-full px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+                  <input type="number" placeholder="Northing" value={resection.pts[i].coords.northing} onChange={e => {
+                    const next = [...resection.pts];
+                    next[i].coords.northing = e.target.value;
+                    setResection({ ...resection, pts: next });
+                  }} className="w-full px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+                  <input type="number" placeholder="Angle at P (°)" value={resection.angles[i]} onChange={e => {
+                    const next = [...resection.angles];
+                    next[i] = e.target.value;
+                    setResection({ ...resection, angles: next });
+                  }} className="w-full px-4 py-2 border rounded bg-blue-50 dark:bg-blue-900/40 dark:border-slate-600 dark:text-slate-100" />
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={handleCalculateResection}
+              disabled={loading}
+              className="w-full bg-teal-600 text-white py-3 rounded-lg font-bold hover:bg-teal-700 transition"
+            >
+              {loading ? 'Calculating...' : 'Calculate 3-Point Resection'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {result && result.result && (
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Results</h3>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div className="p-4 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded">
+              <p className="text-sm text-slate-500">Calculated Easting</p>
+              <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">{result.result.easting || result.result.solution_a?.easting}</p>
+            </div>
+            <div className="p-4 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded">
+              <p className="text-sm text-slate-500">Calculated Northing</p>
+              <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">{result.result.northing || result.result.solution_a?.northing}</p>
+            </div>
+          </div>
+          {result.steps && (
+            <div className="space-y-2">
+              <h4 className="font-bold text-slate-700 dark:text-slate-300">Calculation Steps</h4>
+              <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400">
+                {result.steps.map((s, i) => <li key={i}>{s}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Corrections Module
+function CorrectionsModule({ isDark = false }) {
+  const [distance, setDistance] = useState(100);
+  const [corrections, setCorrections] = useState([
+    { name: 'temperature', temp: 25, std_temp: 20, active: true },
+    { name: 'tension', tension: 100, std_tension: 80, area: 0.000005, active: false }
+  ]);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const calculate = async () => {
+    setLoading(true);
+    try {
+      const activeCorrs = corrections.filter(c => c.active);
+      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/surveying_router/api/corrections/chained?distance=${distance}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(activeCorrs)
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Angle & Distance Corrections</h2>
+
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Measured Distance (m)</label>
+          <input
+            type="number"
+            value={distance}
+            onChange={e => setDistance(e.target.value)}
+            className="w-full px-4 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+          />
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-700 dark:text-slate-300">Applicable Corrections</h3>
+          {corrections.map((c, i) => (
+            <div key={i} className="flex items-center gap-4 p-4 border rounded border-slate-200 dark:border-slate-700">
+              <input type="checkbox" checked={c.active} onChange={e => {
+                const next = [...corrections];
+                next[i].active = e.target.checked;
+                setCorrections(next);
+              }} />
+              <div className="flex-1">
+                <p className="font-bold capitalize dark:text-slate-200">{c.name}</p>
+                {c.name === 'temperature' && (
+                  <div className="flex gap-4 mt-2">
+                    <input type="number" placeholder="Temp" value={c.temp} onChange={e => {
+                      const next = [...corrections];
+                      next[i].temp = e.target.value;
+                      setCorrections(next);
+                    }} className="px-2 py-1 border rounded w-24 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+                    <span className="text-sm text-slate-500">°C</span>
+                  </div>
+                )}
+                {c.name === 'tension' && (
+                  <div className="flex gap-4 mt-2">
+                    <input type="number" placeholder="Tension" value={c.tension} onChange={e => {
+                      const next = [...corrections];
+                      next[i].tension = e.target.value;
+                      setCorrections(next);
+                    }} className="px-2 py-1 border rounded w-24 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" />
+                    <span className="text-sm text-slate-500">N</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={calculate}
+          disabled={loading}
+          className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition"
+        >
+          {loading ? 'Calculating...' : 'Apply Corrections'}
+        </button>
+      </div>
+
+      {result && (
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Corrected Results</h3>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div className="p-4 bg-slate-50 dark:bg-slate-900/20 border rounded dark:border-slate-700">
+              <p className="text-sm text-slate-500">Original Distance</p>
+              <p className="text-2xl font-bold dark:text-slate-200">{result.original_value} m</p>
+            </div>
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+              <p className="text-sm text-slate-500">Final Corrected Distance</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-400">{result.corrected_value} m</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-bold text-slate-700 dark:text-slate-300">Correction Components</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-100 dark:bg-slate-700">
+                    <th className="px-2 py-1 text-left">Correction</th>
+                    <th className="px-2 py-1 text-right">Value (m)</th>
+                    <th className="px-2 py-1 text-left">Parameters</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.components.map((c, i) => (
+                    <tr key={i} className="border-t border-slate-200 dark:border-slate-700">
+                      <td className="px-2 py-2 dark:text-slate-300">{c.name}</td>
+                      <td className={`px-2 py-2 text-right font-bold ${c.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {c.value.toFixed(5)}
+                      </td>
+                      <td className="px-2 py-2 text-xs text-slate-500 dark:text-slate-400">{c.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

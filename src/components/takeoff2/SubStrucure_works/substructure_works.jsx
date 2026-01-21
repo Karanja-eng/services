@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import React, { Suspense, useState } from "react";
 import axios from "axios";
-import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
-import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
-import StructuralVisualizationComponent from '../Drawings/visualise_component';
+import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 
 const API_BASE = "http://localhost:8001";
 

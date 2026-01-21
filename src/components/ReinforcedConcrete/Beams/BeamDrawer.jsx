@@ -226,8 +226,54 @@ export const getBeamCADPrimitives = (config, x = 0, y = 0, scale = 0.5) => {
   drawBars(saggingCompCount, saggingCompDia, true);
   drawBars(saggingBarsCount, saggingBarDiameter, false);
 
-  // 4. Dimensions & ID
-  primitives.push({ id: Math.random().toString(), type: 'text', position: { x: x, y: botY + 40 }, text: `SECTION A-A (${webWidth}x${beamDepth})`, size: 1.5, color: '#000', layerId });
+  // 4. Detailing (Dimensions)
+  const addDim = (x1, y1, x2, y2, text, vertical = false, offset = 30) => {
+    const lineX1 = vertical ? x1 - offset : x1;
+    const lineY1 = vertical ? y1 : y1 - offset;
+    const lineX2 = vertical ? x2 - offset : x2;
+    const lineY2 = vertical ? y2 : y2 - offset;
+    // Main line
+    primitives.push({ id: Math.random().toString(), type: 'line', start: { x: lineX1, y: lineY1 }, end: { x: lineX2, y: lineY2 }, color: '#666', layerId });
+    // Extension lines
+    primitives.push({ id: Math.random().toString(), type: 'line', start: { x: x1, y: y1 }, end: { x: lineX1, y: lineY1 }, color: '#999', layerId });
+    primitives.push({ id: Math.random().toString(), type: 'line', start: { x: x2, y: y2 }, end: { x: lineX2, y: lineY2 }, color: '#999', layerId });
+    // Text
+    primitives.push({
+      id: Math.random().toString(),
+      type: 'text',
+      position: { x: vertical ? lineX1 - 15 : (lineX1 + lineX2) / 2, y: vertical ? (lineY1 + lineY2) / 2 : lineY1 - 10 },
+      text,
+      size: 0.8,
+      color: '#000',
+      layerId
+    });
+  };
+
+  addDim(webLX, botY, webRX, botY, `${webWidth}`, false, -30);
+  addDim(webRX, topY, webRX, botY, `${beamDepth}`, true, -30);
+  if (type !== "rectangular") addDim(flangeLX, topY, flangeRX, topY, `${flangeWidth}`, false, 25);
+
+  // 5. Leader Lines (Simplified as lines and text)
+  const addLeader = (tx, ty, ex, ey, text) => {
+    primitives.push({ id: Math.random().toString(), type: 'line', start: { x: tx, y: ty }, end: { x: ex, y: ey }, color: '#333', layerId });
+    primitives.push({ id: Math.random().toString(), type: 'line', start: { x: ex, y: ey }, end: { x: ex + (ex > tx ? 20 : -20), y: ey }, color: '#333', layerId });
+    primitives.push({
+      id: Math.random().toString(),
+      type: 'text',
+      position: { x: ex + (ex > tx ? 25 : -80), y: ey - 5 },
+      text,
+      size: 0.8,
+      color: '#000',
+      layerId
+    });
+  };
+
+  const sc_off = sc * 0.8;
+  addLeader(sLX + sc_off, sTY + sc_off, x - 100, topY - 50, `${saggingCompCount}T${saggingCompDia}`);
+  addLeader(sRX - sc_off, sBY - sc_off, x + 100, botY + 50, `${saggingBarsCount}T${saggingBarDiameter}`);
+
+  // 6. Section Title
+  primitives.push({ id: Math.random().toString(), type: 'text', position: { x: x - 50, y: botY + 80 }, text: "SECTION A-A", size: 1.2, color: '#000', layerId });
 
   return primitives;
 };

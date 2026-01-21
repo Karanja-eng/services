@@ -2,9 +2,9 @@ import { Calculator, Plus, Trash2, Download, FileText, Box, Paintbrush, Upload, 
 import axios from "axios";
 import React, { Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
-import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
-import StructuralVisualizationComponent from '../Drawings/visualise_component';
+import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 

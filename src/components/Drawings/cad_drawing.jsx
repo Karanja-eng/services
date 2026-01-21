@@ -315,13 +315,27 @@ export default function CadDrawer({ isDark }) {
 
   const [isPanning, setIsPanning] = useState(false);
   const handleStageDragStart = (e) => {
-    if (e.evt.button === 1 || e.evt.button === 2 || e.evt.spaceKey) {
+    // Middle button (1) or Space key (check e.evt.code or similar)
+    if (e.evt.button === 1 || e.evt.shiftKey) {
       setIsPanning(true);
     }
   };
 
-  const handleStageDragEnd = () => {
+  const handleStageDragEnd = (e) => {
     setIsPanning(false);
+    setPanOffset({
+      x: e.target.x(),
+      y: e.target.y()
+    });
+  };
+
+  const handleStageDragMove = (e) => {
+    if (isPanning) {
+      setPanOffset({
+        x: e.target.x(),
+        y: e.target.y()
+      });
+    }
   };
 
   // ============ RENDER KONVA OBJECTS ============
@@ -330,24 +344,68 @@ export default function CadDrawer({ isDark }) {
       const layer = layers.find((l) => l.id === obj.layerId);
       if (!layer?.visible) return null;
 
-      const color = obj.color || "#FFFFFF";
+      const color = obj.color || (isDark ? "#FFFFFF" : "#000000");
       const strokeWidth = obj.lineWidth || 2;
+      const isSelected = selectedIds.includes(obj.id);
+
+      const handleDragEnd = (e) => {
+        const newObjects = objects.map((o) => {
+          if (o.id === obj.id) {
+            if (o.type === "line" || o.type === "rectangle") {
+              const dx = e.target.x();
+              const dy = e.target.y();
+              // For shapes with start/end, we update them and reset Konva x/y to 0
+              return {
+                ...o,
+                start: { x: o.start.x + dx, y: o.start.y + dy, z: o.start.z },
+                end: { x: o.end.x + dx, y: o.end.y + dy, z: o.end.z }
+              };
+            }
+            if (o.type === "circle") {
+              return {
+                ...o,
+                center: { x: o.center.x + e.target.x(), y: o.center.y + e.target.y(), z: o.center.z }
+              };
+            }
+            if (o.type === "text") {
+              return {
+                ...o,
+                position: { x: o.position.x + e.target.x(), y: o.position.y + e.target.y(), z: o.position.z }
+              };
+            }
+            if (o.type === "member") {
+              return {
+                ...o,
+                x: o.x + e.target.x(),
+                y: o.y + e.target.y()
+              };
+            }
+          }
+          return o;
+        });
+        // Important: reset internal konva position to 0 because we updated world coordinates
+        e.target.position({ x: 0, y: 0 });
+        addToHistory(newObjects);
+      };
 
       switch (obj.type) {
         case "line":
           return (
             <KonvaLine
               key={obj.id}
+              id={obj.id}
               points={[obj.start.x, obj.start.y, obj.end.x, obj.end.y]}
               stroke={color}
               strokeWidth={strokeWidth}
               draggable={!layer.locked}
+              onDragEnd={handleDragEnd}
             />
           );
         case "rectangle":
           return (
             <KonvaRect
               key={obj.id}
+              id={obj.id}
               x={Math.min(obj.start.x, obj.end.x)}
               y={Math.min(obj.start.y, obj.end.y)}
               width={Math.abs(obj.end.x - obj.start.x)}
@@ -355,30 +413,42 @@ export default function CadDrawer({ isDark }) {
               stroke={color}
               strokeWidth={strokeWidth}
               draggable={!layer.locked}
+              onDragEnd={handleDragEnd}
             />
           );
         case "circle":
           return (
             <KonvaCircle
               key={obj.id}
+              id={obj.id}
               x={obj.center.x}
               y={obj.center.y}
               radius={obj.radius}
               stroke={color}
               strokeWidth={strokeWidth}
               draggable={!layer.locked}
+              onDragEnd={handleDragEnd}
             />
           );
         case "text":
           return (
             <KonvaText
               key={obj.id}
+              id={obj.id}
               x={obj.position.x}
               y={obj.position.y}
               text={obj.text}
-              fontSize={obj.size * 10 || 16}
+              fontSize={(obj.size || 1) * 20}
               fill={color}
               draggable={!layer.locked}
+              onDragEnd={handleDragEnd}
+              onDblClick={() => {
+                const newText = prompt("Edit text:", obj.text);
+                if (newText !== null) {
+                  const updated = objects.map(o => o.id === obj.id ? { ...o, text: newText } : o);
+                  addToHistory(updated);
+                }
+              }}
             />
           );
         case "member":
@@ -386,17 +456,21 @@ export default function CadDrawer({ isDark }) {
             return (
               <BeamKonvaGroup
                 key={obj.id}
+                id={obj.id}
                 config={obj.config}
                 section={obj.section || "midspan"}
                 x={obj.x}
                 y={obj.y}
                 scale={obj.scale || 0.4}
+                draggable={!layer.locked}
+                onDragEnd={handleDragEnd}
               />
             );
           } else if (obj.memberType === "column") {
             return (
               <ColumnKonvaGroup
                 key={obj.id}
+                id={obj.id}
                 width={obj.width}
                 depth={obj.depth}
                 numBars={obj.numBars}
@@ -404,17 +478,22 @@ export default function CadDrawer({ isDark }) {
                 x={obj.x}
                 y={obj.y}
                 scale={obj.scale || 0.8}
+                draggable={!layer.locked}
+                onDragEnd={handleDragEnd}
               />
             );
           } else if (obj.memberType === "foundation") {
             return (
               <FoundationKonvaGroup
                 key={obj.id}
+                id={obj.id}
                 foundationType={obj.config?.foundation_type || obj.foundationType}
                 params={obj.config || obj.params}
                 x={obj.x}
                 y={obj.y}
                 scale={obj.scale || 0.15}
+                draggable={!layer.locked}
+                onDragEnd={handleDragEnd}
               />
             );
           }
@@ -1113,13 +1192,23 @@ export default function CadDrawer({ isDark }) {
   useEffect(() => {
     const handleAddMember = (e) => {
       const { memberType, config, x, y } = e.detail;
+
+      // Calculate viewport center
+      const stage = stageRef.current;
+      let centerX = 0;
+      let centerY = 0;
+      if (stage) {
+        centerX = (stage.width() / 2 - stage.x()) / stage.scaleX();
+        centerY = (stage.height() / 2 - stage.y()) / stage.scaleY();
+      }
+
       const newObj = {
         id: "MEMBER_" + Date.now(),
         type: "member",
         memberType,
         config,
-        x: x || 0,
-        y: y || 0,
+        x: x !== undefined ? x : centerX,
+        y: y !== undefined ? y : centerY,
         scale: 0.5,
         layerId: activeLayerId
       };
@@ -1131,13 +1220,22 @@ export default function CadDrawer({ isDark }) {
     // Also check for pending member from navigation
     if (window.CAD_PENDING_MEMBER) {
       const { memberType, config, x, y } = window.CAD_PENDING_MEMBER;
+
+      const stage = stageRef.current;
+      let centerX = 0;
+      let centerY = 0;
+      if (stage) {
+        centerX = (stage.width() / 2 - stage.x()) / stage.scaleX();
+        centerY = (stage.height() / 2 - stage.y()) / stage.scaleY();
+      }
+
       const newObj = {
         id: "MEMBER_" + Date.now(),
         type: "member",
         memberType,
         config,
-        x: x || 0,
-        y: y || 0,
+        x: x !== undefined ? x : centerX,
+        y: y !== undefined ? y : centerY,
         scale: 0.5,
         layerId: activeLayerId
       };
@@ -1693,8 +1791,9 @@ export default function CadDrawer({ isDark }) {
         <div className="flex-1 flex flex-col relative z-0">
           {mode === "2D" ? (
             <Stage
+              ref={stageRef}
               width={window.innerWidth - (copilotOpen ? 320 : 0) - (leftPanelVisible ? 256 : 0)}
-              height={window.innerHeight - 56 - 40 - 24} // Adjusted for bottom overlap
+              height={window.innerHeight - 48 - 40 - 32} // 48 (header) + 40 (sub) + 32 (bottom bar)
               scaleX={zoomLevel}
               scaleY={zoomLevel}
               x={panOffset.x}
@@ -1706,23 +1805,36 @@ export default function CadDrawer({ isDark }) {
               onWheel={handleWheel}
               draggable={isPanning}
               onDragStart={handleStageDragStart}
+              onDragMove={handleStageDragMove}
               onDragEnd={handleStageDragEnd}
             >
               <Layer>
                 {/* Grid */}
                 {gridVisible && (
                   <KonvaGroup>
-                    {[...Array(100)].map((_, i) => (
+                    {[...Array(200)].map((_, i) => (
                       <React.Fragment key={i}>
+                        {/* Vertical lines */}
                         <KonvaLine
-                          points={[i * gridSpacing * 10 - 500, -500, i * gridSpacing * 10 - 500, 500]}
-                          stroke="#333"
-                          strokeWidth={0.5}
+                          points={[
+                            (i - 100) * gridSpacing * 10,
+                            -5000 / zoomLevel,
+                            (i - 100) * gridSpacing * 10,
+                            5000 / zoomLevel
+                          ]}
+                          stroke={isDark ? "#333333" : "#e0e0e0"}
+                          strokeWidth={0.5 / zoomLevel}
                         />
+                        {/* Horizontal lines */}
                         <KonvaLine
-                          points={[-500, i * gridSpacing * 10 - 500, 500, i * gridSpacing * 10 - 500]}
-                          stroke="#333"
-                          strokeWidth={0.5}
+                          points={[
+                            -5000 / zoomLevel,
+                            (i - 100) * gridSpacing * 10,
+                            5000 / zoomLevel,
+                            (i - 100) * gridSpacing * 10
+                          ]}
+                          stroke={isDark ? "#333333" : "#e0e0e0"}
+                          strokeWidth={0.5 / zoomLevel}
                         />
                       </React.Fragment>
                     ))}
@@ -1732,6 +1844,43 @@ export default function CadDrawer({ isDark }) {
                 {/* Transformer for Selection */}
                 <Transformer
                   ref={transformerRef}
+                  onTransformEnd={(e) => {
+                    const nodes = transformerRef.current.nodes();
+                    const newObjects = objects.map(obj => {
+                      const node = nodes.find(n => n.id() === obj.id);
+                      if (node) {
+                        if (obj.type === "member") {
+                          return {
+                            ...obj,
+                            x: node.x(),
+                            y: node.y(),
+                            scale: obj.scale * node.scaleX(),
+                            rotation: node.rotation()
+                          };
+                        }
+                        // For other shapes, we could bake the transformation here
+                        // but for now let's just save the node's properties if the object supports them
+                        return {
+                          ...obj,
+                          scaleX: node.scaleX(),
+                          scaleY: node.scaleY(),
+                          rotation: node.rotation(),
+                          x: node.x(),
+                          y: node.y()
+                        };
+                      }
+                      return obj;
+                    });
+                    // Reset node transformations to 1/0 to avoid double scaling in next render
+                    nodes.forEach(node => {
+                      const obj = objects.find(o => o.id === node.id());
+                      if (obj && obj.type === "member") {
+                        node.scaleX(1);
+                        node.scaleY(1);
+                      }
+                    });
+                    addToHistory(newObjects);
+                  }}
                   boundBoxFunc={(oldBox, newBox) => {
                     if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
                       return oldBox;

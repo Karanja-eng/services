@@ -1,12 +1,12 @@
 import { Calculator, Download, Plus, Trash2, FileText, DoorOpen, Upload, Loader2, Eye, Box, X, Layers } from 'lucide-react';
 import React, { Suspense, useState, useEffect } from "react";
-import descriptionsData from "./descriptions";
+import descriptionsData from "../descriptions";
 
 import axios from "axios";
 import { Canvas } from "@react-three/fiber";
-import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
-import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
-import StructuralVisualizationComponent from '../Drawings/visualise_component';
+import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
+import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 
 const API_BASE = "http://localhost:8001";
 
