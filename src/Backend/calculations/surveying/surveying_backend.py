@@ -16,6 +16,7 @@ import base64
 from .control_survey import (
     TriangulationRequest, TrilaterationRequest, ResectionRequest, 
     IntersectionRequest, TransformationRequest, CalculationResult,
+    Coordinate,
     calculate_angular_intersection, calculate_distance_intersection, 
     calculate_3point_resection, transform_local_to_national
 )

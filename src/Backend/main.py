@@ -139,7 +139,7 @@ async def database_status(db: Session = Depends(get_db)):
 
 from calculations.surveying.surveying_backend import router as surveying_backend_router
 from calculations.surveying.Erathworks.eartworks_backend import router as earthworks_router
-from calculations.surveying.setting_out_construction.router import router as setting_out_router
+# from calculations.surveying.setting_out_construction.router import router as setting_out_router  # TODO: Fix module structure
 from calculations.surveying.Monitoring_Deformation.monitoring_backend import router as monitoring_router
 
 app.include_router(
@@ -148,9 +148,9 @@ app.include_router(
 app.include_router(
     earthworks_router, prefix="/earthworks", tags=["earthworks"]
 )
-app.include_router(
-    setting_out_router, prefix="/surveying_alignment", tags=["Surveying & Setting Out"]
-)
+# app.include_router(
+#     setting_out_router, prefix="/surveying_alignment", tags=["Surveying & Setting Out"]
+# )  # TODO: Fix module structure
 app.include_router(
     monitoring_router, prefix="/monitoring_router", tags=["Deformation & Monitoring"]
 )

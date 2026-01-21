@@ -301,7 +301,7 @@ Enforces engineering constraints and data integrity.
 
 import math
 from typing import List, Tuple
-from .constants import *
+# Constants are defined at the top of this file
 
 
 def validate_closure(coordinates: List[Tuple[float, float]]) -> float:
@@ -369,8 +369,7 @@ For irregular polygons using surveyed coordinates.
 
 import math
 from typing import List, Tuple, Dict, Any
-from ..validation import validate_closure
-from ..constants import CLOSURE_TOLERANCE_METERS
+# validate_closure and CLOSURE_TOLERANCE_METERS are defined in this file
 
 
 def calculate_coordinate_area(coordinates: List[Tuple[float, float]]) -> Dict[str, Any]:
@@ -588,7 +587,7 @@ Requires even number of intervals.
 """
 
 from typing import List, Dict, Any
-from ..validation import validate_equal_spacing, validate_even_intervals
+# validate_equal_spacing and validate_even_intervals are defined in this file
 
 
 def calculate_simpson_area(offsets: List[float], heights: List[float]) -> Dict[str, Any]:
@@ -649,7 +648,7 @@ Standard method for earthworks between successive cross-sections.
 """
 
 from typing import List, Dict, Any
-from ..validation import validate_monotonic_chainages
+# validate_monotonic_chainages is defined in this file
 
 
 def calculate_end_area_volume(
@@ -803,7 +802,7 @@ Converts between in-situ, loose, and compacted volumes.
 """
 
 from typing import Dict, Any
-from ..constants import DEFAULT_SHRINKAGE_FACTOR, DEFAULT_SWELL_FACTOR
+# DEFAULT_SHRINKAGE_FACTOR and DEFAULT_SWELL_FACTOR are defined at the top of this file
 
 
 def calculate_borrow_spoil(
@@ -870,7 +869,7 @@ Critical for optimizing haul distances and identifying borrow/spoil zones.
 """
 
 from typing import List, Dict, Any
-from ..constants import DEFAULT_FREE_HAUL_DISTANCE
+# DEFAULT_FREE_HAUL_DISTANCE is defined at the top of this file
 
 
 def calculate_mass_haul_diagram(
