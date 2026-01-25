@@ -32,6 +32,14 @@ export function RCSettings({
     setAmbientIntensity,
     directionalIntensity,
     setDirectionalIntensity,
+    // Frame Analysis settings
+    showDeformed = false,
+    setShowDeformed = () => { },
+    deformationScale = 100,
+    setDeformationScale = () => { },
+    showDiagrams = { moment: true, shear: true, axial: false },
+    setShowDiagrams = () => { },
+    analysisResults = null,
     isDark = false,
 }) {
     const textSecondary = isDark ? 'text-gray-300' : 'text-gray-600';
@@ -102,6 +110,66 @@ export function RCSettings({
                     </label>
                 </div>
             </section>
+
+            {/* Structural Analysis Controls */}
+            {analysisResults && (
+                <section className={`p-3 rounded ${bgSection} border border-blue-500/20`}>
+                    <h3 className="text-sm font-semibold mb-3 flex items-center text-blue-600">
+                        <Code className="w-4 h-4 mr-2" />
+                        Structural Analysis
+                    </h3>
+                    <div className="space-y-4">
+                        <label className="flex items-center justify-between cursor-pointer">
+                            <span className="text-xs">Show Deflections</span>
+                            <input
+                                type="checkbox"
+                                checked={showDeformed}
+                                onChange={(e) => setShowDeformed(e.target.checked)}
+                                className="w-4 h-4 rounded"
+                            />
+                        </label>
+
+                        <div>
+                            <div className="flex justify-between text-[10px] mb-1 opacity-70 uppercase tracking-tighter">
+                                <span>Scale</span>
+                                <span>{deformationScale}x</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="1"
+                                max="500"
+                                value={deformationScale}
+                                onChange={(e) => setDeformationScale(Number(e.target.value))}
+                                className="w-full accent-blue-600"
+                            />
+                        </div>
+
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <p className="text-[10px] font-bold mb-2 opacity-50 uppercase">Internal Diagrams</p>
+                            <div className="grid grid-cols-1 gap-2">
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <span className="text-xs">Moment (Mz)</span>
+                                    <input
+                                        type="checkbox"
+                                        checked={showDiagrams.moment}
+                                        onChange={(e) => setShowDiagrams({ ...showDiagrams, moment: e.target.checked })}
+                                        className="w-4 h-4 rounded"
+                                    />
+                                </label>
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <span className="text-xs">Shear (Vy)</span>
+                                    <input
+                                        type="checkbox"
+                                        checked={showDiagrams.shear}
+                                        onChange={(e) => setShowDiagrams({ ...showDiagrams, shear: e.target.checked })}
+                                        className="w-4 h-4 rounded"
+                                    />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Color Customization */}
             <section>

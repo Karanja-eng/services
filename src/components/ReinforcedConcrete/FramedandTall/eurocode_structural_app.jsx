@@ -1129,97 +1129,70 @@ const EurocodeComponent = ({ theme, onThemeChange }) => {
 // MAIN APP SWITCHER COMPONENT
 // ============================================================================
 
-const FramedStructureComponent = () => {
-  const [theme, setTheme] = useState('light');
-  const [activeCode, setActiveCode] = useState('eurocode');
+const FramedStructureComponent = ({ isDark = false }) => {
+  const [activeCode, setActiveCode] = useState('bs');
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const bgColor = theme === 'dark' ? 'bg-gray-900' : 'bg-white';
-  const textColor = theme === 'dark' ? 'text-gray-100' : 'text-gray-900';
-  const cardBg = theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50';
-  const borderColor = theme === 'dark' ? 'border-gray-700' : 'border-gray-200';
+  const bgColor = isDark ? 'bg-gray-900' : 'bg-white';
+  const textColor = isDark ? 'text-gray-100' : 'text-gray-900';
+  const cardBg = isDark ? 'bg-gray-800' : 'bg-gray-50';
+  const borderColor = isDark ? 'border-gray-700' : 'border-gray-200';
 
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor}`}>
-      {/* Main Header */}
-      <header className={`${cardBg} border-b ${borderColor} px-6 py-4  top-0 z-50`}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Building2 size={36} className="text-blue-600" />
-            <div>
-              <h1 className="text-3xl font-bold">Structural Design Suite</h1>
-              <p className="text-sm opacity-70">Professional RC Design & Analysis Platform</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <button onClick={toggleTheme} className={`p-3 rounded-lg ${cardBg} hover:opacity-80 border ${borderColor}`}>
-              {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
-            </button>
-          </div>
-        </div>
-      </header>
 
-      {/* Code Selector */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Select Design Code</h2>
-            <div className="flex items-center gap-2">
-              <ToggleRight size={20} className="text-blue-600" />
-              <span className="text-sm font-medium">Code Standard</span>
-            </div>
+
+    <div className="w-full px-6 py-4">
+      <div className={`${cardBg} rounded-xl p-4 border ${borderColor} flex items-center justify-between`}>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <ToggleRight size={18} className="text-blue-600" />
+            <span className="text-xs font-bold uppercase tracking-wider opacity-60">Code standard</span>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className={`flex p-1 ${isDark ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
             <button
               onClick={() => setActiveCode('bs')}
-              className={`p-6 rounded-lg border-2 transition-all ${activeCode === 'bs'
-                ? 'border-blue-600 bg-blue-50 dark:bg-blue-900'
-                : `border-gray-300 dark:border-gray-600 ${cardBg} hover:border-blue-400`
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md transition-all text-sm font-bold ${activeCode === 'bs'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-500 hover:text-blue-600'
                 }`}
             >
-              <div className="flex items-center gap-4">
-                <BookOpen size={48} className="text-blue-600" />
-                <div className="text-left">
-                  <h3 className="text-xl font-bold">BS Codes</h3>
-                  <p className="text-sm opacity-70 mt-1">BS 8110 | BS 6399 | BS 8002</p>
-                  <p className="text-xs opacity-50 mt-2">British Standards for reinforced concrete design</p>
-                </div>
-              </div>
+              <BookOpen size={16} />
+              BS Codes
             </button>
-
             <button
               onClick={() => setActiveCode('eurocode')}
-              className={`p-6 rounded-lg border-2 transition-all ${activeCode === 'eurocode'
-                ? 'border-blue-600 bg-blue-50 dark:bg-blue-900'
-                : `border-gray-300 dark:border-gray-600 ${cardBg} hover:border-blue-400`
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md transition-all text-sm font-bold ${activeCode === 'eurocode'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-500 hover:text-blue-600'
                 }`}
             >
-              <div className="flex items-center gap-4">
-                <Code2 size={48} className="text-blue-600" />
-                <div className="text-left">
-                  <h3 className="text-xl font-bold">Eurocodes</h3>
-                  <p className="text-sm opacity-70 mt-1">EN 1990 | EN 1991 | EN 1992 | EN 1998</p>
-                  <p className="text-xs opacity-50 mt-2">European standards for structural design</p>
-                </div>
-              </div>
+              <Code2 size={16} />
+              Eurocodes
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Active Component Display */}
-      <div className="max-w-7xl mx-auto px-6 pb-6">
-        {activeCode === 'eurocode' ? (
-          <EurocodeComponent theme={theme} onThemeChange={toggleTheme} />
-        ) : (
-          <RCStructuralDesign theme={theme} onThemeChange={toggleTheme} />
-        )}
+        <div className="text-[10px] font-medium opacity-40 uppercase tracking-widest hidden md:block">
+          {activeCode === 'bs' ? 'BS 8110 | BS 6399 | BS 8002' : 'EN 1990 | EN 1991 | EN 1992 | EN 1998'}
+        </div>
       </div>
     </div>
+        </div >
+      </div >
+
+  {/* Active Component Display */ }
+  < div className = "w-full px-6 pb-6" >
+    { activeCode === 'eurocode' ? (
+    <EurocodeComponent isDark={isDark} />
+  ) : (
+    <RCStructuralDesign isDark={isDark} />
+  )}
+      </div >
+    </div >
   );
 };
 

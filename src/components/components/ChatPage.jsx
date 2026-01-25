@@ -112,7 +112,11 @@ const ChatPage = ({ renderSearch, isDark }) => {
             { label: "Setting Out & Construction", path: "/surveying/setting-out" },
             { label: "Earthworks", path: "/surveying/earthworks" },
             { label: "Contouring & Terrain", path: "/surveying/contouring" },
-            { label: "Deformation & Monitoring", path: "/surveying/monitoring" }
+            { label: "Deformation & Monitoring", path: "/surveying/monitoring" },
+            { label: "Geoid & GNSS", path: "/surveying/geoid-model" },
+            { label: "Road & Railway Design", path: "/surveying/road-railway" },
+            { label: "Utilities & Infrastructure", path: "/surveying/utilities" },
+            { label: "Soil Mechanics", path: "/surveying/soil-mechanics" }
           ]
         },
         {

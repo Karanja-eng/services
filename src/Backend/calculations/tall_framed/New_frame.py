@@ -456,6 +456,7 @@ class BS6399LoadCalculator:
 
 
 from fastapi import APIRouter, HTTPException
+from .design_orchestrator import DesignOrchestrator
 from pydantic import BaseModel, Field
 from .frame_analysis_core import (
     Frame3DAnalyzer, Node as CoreNode, Member as CoreMember, 
@@ -554,6 +555,23 @@ async def analyze_frame_v2(request: FrameAnalysisRequest):
     viz_data = vis_gen.generate_3d_frame_data(analyzer, combo.name)
     
     return viz_data
+
+@router.post("/api/design/all", response_model=Dict)
+async def analyze_and_design_all(request: FrameAnalysisRequest):
+    """
+    Perform 3D Frame analysis AND automatically design all building members
+    """
+    # 1. Reuse analysis logic
+    viz_data = await analyze_frame_v2(request)
+    
+    # 2. Trigger Design Orchestrator
+    orchestrator = DesignOrchestrator(viz_data)
+    design_results = orchestrator.design_all_members()
+    
+    return {
+        "analysis": viz_data,
+        "design": design_results
+    }
 
 @router.get("/api/example")
 async def get_example_frame():

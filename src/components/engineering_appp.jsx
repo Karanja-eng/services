@@ -26,9 +26,13 @@ import RightSidebar from "./components/RightSidebar";
 import ChatPage from "./components/ChatPage"; // Home Page
 import SurveyingApp from "./Surveying/surveying_app";
 import EarthworksQSModule from "./Surveying/Earthworks/erathworks";
+import GNSSModuleDemo from "./Surveying/Geoid_model/geoid_model";
+import RouteSurveyingModule from "./Surveying/Road_Railway/main_road";
+import UtilitiesInfrastructureModule from "./Surveying/Utilities/Utilities_infrastructure";
 import SurveyingDashboard from "./Surveying/Setting_&_construction/surveying_dashboard";
 import TerrainModeler from "./Surveying/Contouring/Contouring_terrain";
 import MonitoringDashboard from "./Surveying/Deformation_&_Monitoring/monitoring_deformation";
+import SoilMechanicsModule from "./Soil_mechanics/soil_mechanics";
 import CadDrawer from "./Drawings/cad_drawing";
 import StructuralVisualizationComponent from "./Drawings/visualise_component";
 
@@ -623,6 +627,18 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
               element={<SurveyingApp isDark={isDark} />}
             />
             <Route
+              path="/surveying/geoid-model"
+              element={<GNSSModuleDemo isDark={isDark} />}
+            />
+            <Route
+              path="/surveying/road-railway"
+              element={<RouteSurveyingModule isDark={isDark} />}
+            />
+            <Route
+              path="/surveying/utilities"
+              element={<UtilitiesInfrastructureModule isDark={isDark} />}
+            />
+            <Route
               path="/surveying/earthworks"
               element={<EarthworksQSModule isDark={isDark} />}
             />
@@ -637,6 +653,10 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             <Route
               path="/surveying/monitoring"
               element={<MonitoringDashboard isDark={isDark} />}
+            />
+            <Route
+              path="/surveying/soil-mechanics"
+              element={<SoilMechanicsModule isDark={isDark} />}
             />
             <Route
               path="/visualise"

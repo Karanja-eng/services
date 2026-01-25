@@ -19,6 +19,7 @@ import {
     Minus,
     RotateCw,
     Maximize2,
+    Minimize2,
     Box,
     Download,
     Upload,
@@ -28,7 +29,12 @@ import {
     Home,
     Columns,
     Calculator,
-    Library
+    Library,
+    ChevronLeft,
+    ChevronRight,
+    ChevronDown,
+    ChevronUp,
+    Edit2
 } from 'lucide-react';
 
 import Complete3DStructureView from './Multi_storey_structure';
@@ -107,13 +113,14 @@ class StructuralElement {
         this.id = id;
         this.position = position; // { x, y, z } or { start, end }
         this.properties = {
-            width: 300,
-            depth: 300,
-            height: 3000,
+            width: 0.45,    // default 450mm
+            depth: 0.45,    // default 450mm
+            height: 3.5,    // default 3.5m
+            thickness: 0.2, // default 200mm
             material: 'C30',
             ...properties
         };
-        this.layer = properties.layer || 'default';
+        this.layer = this.properties.layer || 'Floor 1';
         this.selected = false;
         this.visible = true;
         this.loads = [];
@@ -125,8 +132,8 @@ class StructuralElement {
         switch (this.type) {
             case 'column':
                 return {
-                    x: this.position.x - this.properties.width / 2,
-                    y: this.position.y - this.properties.depth / 2,
+                    x: this.position.x - (this.properties.width / 2),
+                    y: this.position.y - (this.properties.depth / 2),
                     width: this.properties.width,
                     height: this.properties.depth
                 };
@@ -147,7 +154,7 @@ class StructuralElement {
                     x: this.position.x,
                     y: this.position.y,
                     width: this.properties.width,
-                    height: this.properties.height
+                    height: this.properties.depth
                 };
 
             default:
@@ -370,8 +377,8 @@ const SlabComponent = ({ element, scale, onClick, opacity = 0.3 }) => {
         <Rect
             x={bounds.x * scale}
             y={bounds.y * scale}
-            width={bounds.width * scale}
-            height={bounds.height * scale}
+            width={element.properties.width * scale}
+            height={element.properties.depth * scale}
             fill={element.selected ? '#4CAF5066' : '#88888844'}
             stroke="#333"
             strokeWidth={1}
@@ -394,7 +401,8 @@ const StructuralCanvas = ({
     showGrid,
     showDiagrams,
     showForces,
-    scale
+    scale,
+    activeLayer
 }) => {
     const stageRef = useRef();
     const [drawing, setDrawing] = useState(null);
@@ -415,7 +423,12 @@ const StructuralCanvas = ({
         const y = pos.y / scale;
 
         if (tool === 'column') {
-            const newColumn = new StructuralElement('column', `C${elements.length + 1}`, { x, y, z: 0 });
+            const newColumn = new StructuralElement(
+                'column',
+                `C${elements.length + 1}`,
+                { x, y, z: 0 },
+                { layer: activeLayer || 'Floor 1' }
+            );
             onElementsAdd([newColumn]);
         } else if (tool === 'beam') {
             setDrawing({ start: { x, y } });
@@ -454,6 +467,8 @@ const StructuralCanvas = ({
             const newBeam = new StructuralElement('beam', `B${elements.length + 1}`, {
                 start: drawing.start,
                 end: { x, y }
+            }, {
+                layer: activeLayer
             });
             onElementsAdd([newBeam]);
         } else if (tool === 'slab') {
@@ -462,7 +477,8 @@ const StructuralCanvas = ({
                 y: Math.min(drawing.start.y, y)
             }, {
                 width: Math.abs(x - drawing.start.x),
-                height: Math.abs(y - drawing.start.y)
+                depth: Math.abs(y - drawing.start.y),
+                layer: activeLayer
             });
             onElementsAdd([newSlab]);
         }
@@ -487,7 +503,7 @@ const StructuralCanvas = ({
                 {showGrid && <GridComponent grid={grid} visible={showGrid} scale={scale} />}
 
                 {/* Slabs (render first, behind everything) */}
-                {elements.filter(el => el.type === 'slab' && el.visible).map(element => (
+                {elements.filter(el => el.type === 'slab' && el.visible && (!activeLayer || el.layer === activeLayer)).map(element => (
                     <SlabComponent
                         key={element.id}
                         element={element}
@@ -497,7 +513,7 @@ const StructuralCanvas = ({
                 ))}
 
                 {/* Beams */}
-                {elements.filter(el => el.type === 'beam' && el.visible).map(element => (
+                {elements.filter(el => el.type === 'beam' && el.visible && (!activeLayer || el.layer === activeLayer)).map(element => (
                     <BeamComponent
                         key={element.id}
                         element={element}
@@ -509,7 +525,7 @@ const StructuralCanvas = ({
                 ))}
 
                 {/* Columns */}
-                {elements.filter(el => el.type === 'column' && el.visible).map(element => (
+                {elements.filter(el => el.type === 'column' && el.visible && (!activeLayer || el.layer === activeLayer)).map(element => (
                     <ColumnComponent
                         key={element.id}
                         element={element}
@@ -556,13 +572,14 @@ const StructuralCanvas = ({
 // TOOLBAR COMPONENT
 // ============================================================================
 
-const Toolbar = ({ tool, onToolChange, onAction, disabled }) => {
+const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewChange, isFullScreen, onFullScreenChange }) => {
     const tools = [
         { id: 'select', icon: MousePointer, label: 'Select', color: '#333' },
         { id: 'column', icon: Square, label: 'Column', color: '#2196F3' },
         { id: 'beam', icon: Minus, label: 'Beam', color: '#4CAF50' },
         { id: 'slab', icon: Grid, label: 'Slab', color: '#FF9800' },
         { id: 'wall', icon: Box, label: 'Wall', color: '#9C27B0' },
+        { id: 'add_bay', icon: Plus, label: 'Add Bay', color: '#FF5722', action: true },
     ];
 
     return (
@@ -574,7 +591,9 @@ const Toolbar = ({ tool, onToolChange, onAction, disabled }) => {
             alignItems: 'center',
             padding: '0 16px',
             gap: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            zIndex: 10,
+            position: 'relative'
         }}>
             {/* Drawing tools */}
             <div style={{
@@ -587,7 +606,7 @@ const Toolbar = ({ tool, onToolChange, onAction, disabled }) => {
                 {tools.map(t => (
                     <button
                         key={t.id}
-                        onClick={() => onToolChange(t.id)}
+                        onClick={() => t.action ? onAction(t.id) : onToolChange(t.id)}
                         disabled={disabled}
                         style={{
                             padding: '8px 16px',
@@ -602,7 +621,8 @@ const Toolbar = ({ tool, onToolChange, onAction, disabled }) => {
                             fontSize: '13px',
                             fontWeight: '500',
                             opacity: disabled ? 0.5 : 1,
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s',
+                            boxShadow: tool === t.id ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
                         }}
                     >
                         <t.icon size={16} />
@@ -675,6 +695,59 @@ const Toolbar = ({ tool, onToolChange, onAction, disabled }) => {
 
             <div style={{ flex: 1 }} />
 
+            {/* View toggle */}
+            <div style={{
+                display: 'flex',
+                gap: '4px',
+                padding: '4px',
+                background: '#f5f5f5',
+                borderRadius: '8px'
+            }}>
+                <button
+                    onClick={() => onViewChange(view === '2d' ? '3d' : '2d')}
+                    style={{
+                        padding: '8px 16px',
+                        background: '#fff',
+                        color: view === '3d' ? '#9C27B0' : '#333',
+                        border: `1px solid ${view === '3d' ? '#9C27B0' : '#ddd'}`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        fontWeight: '500'
+                    }}
+                >
+                    {view === '2d' ? <Grid3x3 size={16} /> : <Box size={16} />}
+                    {view === '2d' ? '3D View' : '2D View'}
+                </button>
+
+                {view === '3d' && (
+                    <button
+                        onClick={() => onFullScreenChange(!isFullScreen)}
+                        style={{
+                            padding: '8px 16px',
+                            background: isFullScreen ? '#333' : '#2196F3',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontWeight: 'bold',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                    >
+                        {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                        {isFullScreen ? 'Exit FS' : 'Full Screen'}
+                    </button>
+                )}
+            </div>
+
+            <div style={{ width: '1px', height: '40px', background: '#ddd' }} />
+
             {/* Analysis */}
             <button
                 onClick={() => onAction('analyze')}
@@ -744,25 +817,49 @@ const PropertiesPanel = ({ selectedElement, onPropertyChange, onClose }) => {
                 background: '#f5f5f5'
             }}>
                 <div style={{ fontWeight: 'bold', fontSize: '16px' }}>
-                    {selectedElement.type.toUpperCase()} - {selectedElement.id}
+                    {selectedElement.type.toUpperCase()}
                 </div>
-                <button
-                    onClick={onClose}
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '4px'
-                    }}
-                >
-                    ✕
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '4px'
+                        }}
+                    >
+                        ✕
+                    </button>
+                </div>
             </div>
 
             {/* Properties */}
             <div style={{ padding: '20px' }}>
                 <div style={{ marginBottom: '20px' }}>
                     <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#666' }}>
+                        DIMENSIONS & IDENTITY
+                    </div>
+
+                    <div style={{ marginBottom: '12px' }}>
+                        <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
+                            ID / Name
+                        </label>
+                        <input
+                            type="text"
+                            value={selectedElement.id}
+                            onChange={(e) => onPropertyChange('id', e.target.value)} // Note: Requires handling ID change in parent if ID is used as key
+                            style={{
+                                width: '100%',
+                                padding: '8px',
+                                border: '1px solid #ddd',
+                                borderRadius: '4px',
+                                fontSize: '13px'
+                            }}
+                        />
+                    </div>
+
+                    <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#666', marginTop: '16px' }}>
                         DIMENSIONS
                     </div>
 
@@ -932,7 +1029,7 @@ const InteractiveStructureBuilder = () => {
     const [showGrid, setShowGrid] = useState(true);
     const [showDiagrams, setShowDiagrams] = useState({ moment: false, shear: false });
     const [showForces, setShowForces] = useState(false);
-    const [scale, setScale] = useState(10);
+    const [scale, setScale] = useState(25);
     const [layers, setLayers] = useState({
         'Floor 1': { visible: true, elements: [] },
         'Floor 2': { visible: true, elements: [] },
@@ -940,8 +1037,22 @@ const InteractiveStructureBuilder = () => {
     });
     const [activeLayer, setActiveLayer] = useState('Floor 1');
     const [view, setView] = useState('2d'); // '2d' or '3d'
+
+    // Override setTool to ensure we are in 2D mode when drawing
+    const handleToolChange = (newTool) => {
+        if (newTool !== 'select' && view === '3d') {
+            setView('2d');
+        }
+        setTool(newTool);
+    };
     const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
     const [showLibrary, setShowLibrary] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
+    const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+    const [collapsedSections, setCollapsedSections] = useState({
+        layers: false,
+        display: false
+    });
 
     const handleElementClick = useCallback((element) => {
         if (tool !== 'select') return;
@@ -972,6 +1083,18 @@ const InteractiveStructureBuilder = () => {
 
     const handlePropertyChange = useCallback((property, value) => {
         if (!selectedElement) return;
+
+        // If changing ID, we need to update the element's ID directly, not in properties
+        if (property === 'id') {
+            setElements(prev => prev.map(el => {
+                if (el.id === selectedElement.id) {
+                    return { ...el, id: value };
+                }
+                return el;
+            }));
+            setSelectedElement(prev => ({ ...prev, id: value }));
+            return;
+        }
 
         setElements(prev => prev.map(el => {
             if (el.id === selectedElement.id) {
@@ -1021,7 +1144,7 @@ const InteractiveStructureBuilder = () => {
                         'column',
                         `C-F${f}-${i}-${j}`,
                         { x, y, z },
-                        { height: floor_height, layer: floorName }
+                        { depth: 0.45, height: floor_height, layer: floorName }
                     ));
                 }
             }
@@ -1033,8 +1156,8 @@ const InteractiveStructureBuilder = () => {
                         'beam',
                         `B-X-F${f}-${i}-${j}`,
                         {
-                            start: { x: i * x_spacing, y: j * y_spacing, z },
-                            end: { x: (i + 1) * x_spacing, y: j * y_spacing, z }
+                            start: { x: i * x_spacing, y: j * y_spacing, z: z + floor_height },
+                            end: { x: (i + 1) * x_spacing, y: j * y_spacing, z: z + floor_height }
                         },
                         { layer: floorName }
                     ));
@@ -1048,8 +1171,8 @@ const InteractiveStructureBuilder = () => {
                         'beam',
                         `B-Y-F${f}-${i}-${j}`,
                         {
-                            start: { x: i * x_spacing, y: j * y_spacing, z },
-                            end: { x: i * x_spacing, y: (j + 1) * y_spacing, z }
+                            start: { x: i * x_spacing, y: j * y_spacing, z: z + floor_height },
+                            end: { x: i * x_spacing, y: (j + 1) * y_spacing, z: z + floor_height }
                         },
                         { layer: floorName }
                     ));
@@ -1065,11 +1188,14 @@ const InteractiveStructureBuilder = () => {
                         {
                             x: i * x_spacing,
                             y: j * y_spacing,
-                            z,
-                            width: x_spacing,
-                            height: y_spacing
+                            z: z + floor_height
                         },
-                        { layer: floorName }
+                        {
+                            width: x_spacing,
+                            depth: y_spacing,
+                            thickness: 0.2,
+                            layer: floorName
+                        }
                     ));
                 }
             }
@@ -1114,6 +1240,14 @@ const InteractiveStructureBuilder = () => {
                 setShowLibrary(true);
                 break;
 
+            case 'library':
+                setShowLibrary(true);
+                break;
+
+            case 'add_bay':
+                handleGenerateBay();
+                break;
+
             default:
                 break;
         }
@@ -1136,7 +1270,7 @@ const InteractiveStructureBuilder = () => {
         elements.forEach(el => {
             if (el.type === 'column') {
                 getOrAddNode(el.position.x, el.position.y, el.position.z || 0);
-                getOrAddNode(el.position.x, el.position.y, (el.position.z || 0) + (el.properties.height / 1000));
+                getOrAddNode(el.position.x, el.position.y, (el.position.z || 0) + el.properties.height);
             } else if (el.type === 'beam') {
                 getOrAddNode(el.position.start.x, el.position.start.y, el.position.start.z || 0);
                 getOrAddNode(el.position.end.x, el.position.end.y, el.position.end.z || 0);
@@ -1151,7 +1285,7 @@ const InteractiveStructureBuilder = () => {
         elements.forEach((el) => {
             if (el.type === 'column') {
                 const n1 = nodeMap.get(`${Number(el.position.x).toFixed(3)},${Number(el.position.y).toFixed(3)},${(Number(el.position.z) || 0).toFixed(3)}`);
-                const n2 = nodeMap.get(`${Number(el.position.x).toFixed(3)},${Number(el.position.y).toFixed(3)},${((Number(el.position.z) || 0) + (Number(el.properties.height) / 1000)).toFixed(3)}`);
+                const n2 = nodeMap.get(`${Number(el.position.x).toFixed(3)},${Number(el.position.y).toFixed(3)},${((Number(el.position.z) || 0) + Number(el.properties.height)).toFixed(3)}`);
                 members.push({
                     id: el.id,
                     type: 'column',
@@ -1258,9 +1392,26 @@ const InteractiveStructureBuilder = () => {
 
     const handleGenerateBay = useCallback(() => {
         // Generate a standard bay with columns at corners
+        // Generate a standard bay with columns at corners
         const bayWidth = 6;
         const bayDepth = 6;
-        const baseX = 5;
+
+        // Find the maximum X coordinate of existing elements to place the new bay beside it
+        let maxX = 0;
+        if (elements.length > 0) {
+            elements.forEach(el => {
+                let elMaxX = 0;
+                if (el.type === 'column' || el.type === 'slab') {
+                    elMaxX = el.position.x + (el.properties.width || 0);
+                } else if (el.type === 'beam') {
+                    elMaxX = Math.max(el.position.start.x, el.position.end.x);
+                }
+                if (elMaxX > maxX) maxX = elMaxX;
+            });
+        }
+
+        const spacing = elements.length > 0 ? 1 : 0; // 1m gap if there are existing elements
+        const baseX = elements.length > 0 ? Math.ceil(maxX) + spacing : 5;
         const baseY = 5;
 
         const newElements = [];
@@ -1273,52 +1424,65 @@ const InteractiveStructureBuilder = () => {
             { x: baseX + bayWidth, y: baseY + bayDepth }
         ];
 
-        columnPositions.forEach((pos, i) => {
-            newElements.push(new StructuralElement(
-                'column',
-                `C${elements.length + i + 1}`,
-                { ...pos, z: 0 }
-            ));
-        });
-
-        // Four beams connecting columns
         const beamConnections = [
             [0, 1], [1, 3], [3, 2], [2, 0]
         ];
 
-        beamConnections.forEach(([startIdx, endIdx], i) => {
+        // Generate elements for EACH layer (floor)
+        Object.keys(layers).forEach((layerName, floorIdx) => {
+            const z = floorIdx * 3.5;
+            const floorNum = floorIdx + 1;
+
+            // Four columns
+            columnPositions.forEach((pos, i) => {
+                newElements.push(new StructuralElement(
+                    'column',
+                    `C-F${floorNum}-${elements.length + i + 1}`,
+                    { ...pos, z },
+                    { layer: layerName }
+                ));
+            });
+
+            // Four beams connecting columns
+            beamConnections.forEach(([startIdx, endIdx], i) => {
+                newElements.push(new StructuralElement(
+                    'beam',
+                    `B-F${floorNum}-${elements.length + columnPositions.length + i + 1}`,
+                    {
+                        start: { ...columnPositions[startIdx], z: z + 3.5 },
+                        end: { ...columnPositions[endIdx], z: z + 3.5 }
+                    },
+                    { layer: layerName }
+                ));
+            });
+
+            // Slab for this floor
             newElements.push(new StructuralElement(
-                'beam',
-                `B${elements.length + columnPositions.length + i + 1}`,
-                {
-                    start: columnPositions[startIdx],
-                    end: columnPositions[endIdx]
-                }
+                'slab',
+                `S-F${floorNum}-${elements.length + columnPositions.length + beamConnections.length + 1}`,
+                { x: baseX, y: baseY, z: z + 3.5 },
+                { width: bayWidth, depth: bayDepth, thickness: 0.2, layer: layerName }
             ));
         });
-
-        // Slab
-        newElements.push(new StructuralElement(
-            'slab',
-            `S${elements.length + columnPositions.length + beamConnections.length + 1}`,
-            { x: baseX, y: baseY },
-            { width: bayWidth, height: bayDepth, thickness: 200 }
-        ));
 
         handleElementsAdd(newElements);
     }, [elements, handleElementsAdd]);
 
     return (
         <div style={{
-            width: '100%',
-            height: '800px',
+            width: isFullScreen ? '100vw' : '100%',
+            height: isFullScreen ? '100vh' : '800px',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
             background: '#fff',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            border: '1px solid #ddd'
+            borderRadius: isFullScreen ? '0' : '8px',
+            boxShadow: isFullScreen ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
+            border: isFullScreen ? 'none' : '1px solid #ddd',
+            position: isFullScreen ? 'fixed' : 'relative',
+            top: isFullScreen ? 0 : 'auto',
+            left: isFullScreen ? 0 : 'auto',
+            zIndex: isFullScreen ? 5000 : 1
         }}>
             {/* Header */}
             <div style={{
@@ -1329,18 +1493,47 @@ const InteractiveStructureBuilder = () => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '0 20px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                zIndex: 1002, // Ensure header is above everything
+                position: 'relative'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Building2 size={32} color="#2196F3" />
-                    <div>
-                        <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                            Interactive Structure Builder
+                    {!isFullScreen && (
+                        <Building2 size={32} color="#2196F3" />
+                    )}
+
+                    {/* Exit full screen remains here if needed or removed */}
+
+                    <button
+                        onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+                        style={{
+                            padding: '8px',
+                            background: '#2196F3',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginLeft: isFullScreen ? '10px' : '0',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                        title={isSidebarVisible ? "Hide Sidebar" : "Show Sidebar"}
+                    >
+                        {isSidebarVisible ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                    </button>
+
+                    {!isFullScreen && (
+                        <div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                                Interactive Structure Builder
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#888' }}>
+                                Professional Structural Modeler
+                            </div>
                         </div>
-                        <div style={{ fontSize: '11px', color: '#888' }}>
-                            Professional Structural Modeler
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -1382,249 +1575,250 @@ const InteractiveStructureBuilder = () => {
                     <div style={{ width: '1px', height: '30px', background: '#ddd' }} />
 
                     {/* Quick actions */}
-                    <button
-                        onClick={handleGenerateBay}
-                        style={{
-                            padding: '8px 16px',
-                            background: '#FF9800',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '13px',
-                            fontWeight: '500'
-                        }}
-                    >
-                        <Plus size={16} />
-                        Add Standard Bay
-                    </button>
 
-                    {/* View toggle */}
-                    <button
-                        onClick={() => setView(view === '2d' ? '3d' : '2d')}
-                        style={{
-                            padding: '8px 16px',
-                            background: view === '3d' ? '#9C27B0' : '#fff',
-                            color: view === '3d' ? '#fff' : '#333',
-                            border: `1px solid ${view === '3d' ? '#9C27B0' : '#ddd'}`,
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '13px',
-                            fontWeight: '500'
-                        }}
-                    >
-                        {view === '2d' ? <Grid3x3 size={16} /> : <Box size={16} />}
-                        {view === '2d' ? '2D View' : '3D View'}
-                    </button>
+
+
                 </div>
             </div>
 
             {/* Toolbar */}
             <Toolbar
                 tool={tool}
-                onToolChange={setTool}
+                onToolChange={handleToolChange}
                 onAction={handleAction}
                 disabled={false}
+                view={view}
+                onViewChange={setView}
+                isFullScreen={isFullScreen}
+                onFullScreenChange={setIsFullScreen}
             />
 
             {/* Main content */}
             <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
                 {/* Left sidebar - Layers */}
-                <div style={{
-                    width: '250px',
-                    background: '#fff',
-                    borderRight: '1px solid #ddd',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
+                {isSidebarVisible && (
                     <div style={{
-                        padding: '16px',
-                        borderBottom: '1px solid #ddd',
-                        fontWeight: 'bold',
+                        width: '250px',
+                        background: '#fff',
+                        borderRight: '1px solid #ddd',
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: '#f5f5f5'
+                        flexDirection: 'column'
                     }}>
-                        <LayersIcon size={18} />
-                        Layers & Floors
-                    </div>
-
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
-                        {Object.keys(layers).map(layerName => (
-                            <div
-                                key={layerName}
-                                style={{
-                                    padding: '12px',
-                                    background: activeLayer === layerName ? '#e3f2fd' : '#fff',
-                                    border: '1px solid #ddd',
-                                    borderRadius: '6px',
-                                    marginBottom: '8px',
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => setActiveLayer(layerName)}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div style={{
-                                        fontSize: '13px',
-                                        fontWeight: activeLayer === layerName ? 'bold' : 'normal'
-                                    }}>
-                                        {layerName}
-                                    </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setLayers(prev => ({
-                                                ...prev,
-                                                [layerName]: {
-                                                    ...prev[layerName],
-                                                    visible: !prev[layerName].visible
-                                                }
-                                            }));
-                                        }}
-                                        style={{
-                                            background: 'transparent',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            padding: '4px'
-                                        }}
-                                    >
-                                        {layers[layerName].visible ?
-                                            <Eye size={16} color="#4CAF50" /> :
-                                            <EyeOff size={16} color="#999" />
-                                        }
-                                    </button>
-                                </div>
-                                <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
-                                    {elements.filter(el => el.layer === layerName).length} elements
-                                </div>
-                            </div>
-                        ))}
-
-                        <button
-                            onClick={() => {
-                                const newLayerName = `Floor ${Object.keys(layers).length + 1}`;
-                                setLayers(prev => ({
-                                    ...prev,
-                                    [newLayerName]: { visible: true, elements: [] }
-                                }));
-                                setActiveLayer(newLayerName);
-                            }}
+                        <div
+                            onClick={() => setCollapsedSections(prev => ({ ...prev, layers: !prev.layers }))}
                             style={{
-                                width: '100%',
-                                padding: '10px',
-                                background: '#f5f5f5',
-                                border: '1px dashed #ddd',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
+                                padding: '16px',
+                                borderBottom: '1px solid #ddd',
+                                fontWeight: 'bold',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '6px',
-                                fontSize: '13px',
-                                color: '#666',
-                                marginTop: '8px'
+                                justifyContent: 'space-between',
+                                background: '#f5f5f5',
+                                cursor: 'pointer'
                             }}
                         >
-                            <Plus size={16} />
-                            Add Floor
-                        </button>
-                    </div>
-
-                    {/* Display options */}
-                    <div style={{
-                        padding: '16px',
-                        borderTop: '1px solid #ddd',
-                        background: '#f9f9f9'
-                    }}>
-                        <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '12px', color: '#666' }}>
-                            DISPLAY OPTIONS
-                        </div>
-
-                        <label style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            fontSize: '12px',
-                            marginBottom: '8px',
-                            cursor: 'pointer'
-                        }}>
-                            <input
-                                type="checkbox"
-                                checked={showGrid}
-                                onChange={(e) => setShowGrid(e.target.checked)}
-                            />
-                            Show Grid
-                        </label>
-
-                        <label style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            fontSize: '12px',
-                            marginBottom: '8px',
-                            cursor: 'pointer'
-                        }}>
-                            <input
-                                type="checkbox"
-                                checked={showDiagrams.moment}
-                                onChange={(e) => setShowDiagrams(prev => ({ ...prev, moment: e.target.checked }))}
-                            />
-                            Show BM Diagrams
-                        </label>
-
-                        <label style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            fontSize: '12px',
-                            marginBottom: '8px',
-                            cursor: 'pointer'
-                        }}>
-                            <input
-                                type="checkbox"
-                                checked={showDiagrams.shear}
-                                onChange={(e) => setShowDiagrams(prev => ({ ...prev, shear: e.target.checked }))}
-                            />
-                            Show SF Diagrams
-                        </label>
-
-                        <label style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            fontSize: '12px',
-                            cursor: 'pointer'
-                        }}>
-                            <input
-                                type="checkbox"
-                                checked={showForces}
-                                onChange={(e) => setShowForces(e.target.checked)}
-                            />
-                            Show Forces
-                        </label>
-
-                        <div style={{ marginTop: '16px' }}>
-                            <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>
-                                Scale: {scale}x
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <LayersIcon size={18} />
+                                Layers & Floors
                             </div>
-                            <input
-                                type="range"
-                                min="5"
-                                max="50"
-                                value={scale}
-                                onChange={(e) => setScale(Number(e.target.value))}
-                                style={{ width: '100%' }}
-                            />
+                            {collapsedSections.layers ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                         </div>
+
+
+                        {!collapsedSections.layers && (
+                            <>
+                                <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+                                    {Object.keys(layers).map(layerName => (
+                                        <div
+                                            key={layerName}
+                                            style={{
+                                                padding: '12px',
+                                                background: activeLayer === layerName ? '#e3f2fd' : '#fff',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '6px',
+                                                marginBottom: '8px',
+                                                cursor: 'pointer'
+                                            }}
+                                            onClick={() => setActiveLayer(layerName)}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: activeLayer === layerName ? 'bold' : 'normal'
+                                                }}>
+                                                    {layerName}
+                                                </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setLayers(prev => ({
+                                                            ...prev,
+                                                            [layerName]: {
+                                                                ...prev[layerName],
+                                                                visible: !prev[layerName].visible
+                                                            }
+                                                        }));
+                                                    }}
+                                                    style={{
+                                                        background: 'transparent',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        padding: '4px'
+                                                    }}
+                                                >
+                                                    {layers[layerName].visible ?
+                                                        <Eye size={16} color="#4CAF50" /> :
+                                                        <EyeOff size={16} color="#999" />
+                                                    }
+                                                </button>
+                                            </div>
+                                            <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
+                                                {elements.filter(el => el.layer === layerName).length} elements
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    <div style={{ borderTop: '1px solid #eee', margin: '8px 0' }} />
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        const newLayerName = `Floor ${Object.keys(layers).length + 1}`;
+                                        setLayers(prev => ({
+                                            ...prev,
+                                            [newLayerName]: { visible: true, elements: [] }
+                                        }));
+                                        setActiveLayer(newLayerName);
+                                    }}
+                                    style={{
+                                        margin: '0 12px 12px 12px',
+                                        padding: '10px',
+                                        background: '#f5f5f5',
+                                        border: '1px dashed #ddd',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '6px',
+                                        fontSize: '13px',
+                                        color: '#666'
+                                    }}
+                                >
+                                    <Plus size={16} />
+                                    Add Floor
+                                </button>
+                            </>
+                        )}
+
+
+                        {/* Display options */}
+                        <div
+                            onClick={() => setCollapsedSections(prev => ({ ...prev, display: !prev.display }))}
+                            style={{
+                                padding: '16px',
+                                borderTop: '1px solid #ddd',
+                                background: '#f9f9f9',
+                                fontWeight: 'bold',
+                                fontSize: '12px',
+                                color: '#666',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            DISPLAY OPTIONS
+                            {collapsedSections.display ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                        </div>
+
+                        {!collapsedSections.display && (
+                            <div style={{
+                                padding: '16px',
+                                background: '#f9f9f9',
+                                borderTop: '1px solid #eee'
+                            }}>
+
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '12px',
+                                    marginBottom: '8px',
+                                    cursor: 'pointer'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={showGrid}
+                                        onChange={(e) => setShowGrid(e.target.checked)}
+                                    />
+                                    Show Grid
+                                </label>
+
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '12px',
+                                    marginBottom: '8px',
+                                    cursor: 'pointer'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={showDiagrams.moment}
+                                        onChange={(e) => setShowDiagrams(prev => ({ ...prev, moment: e.target.checked }))}
+                                    />
+                                    Show BM Diagrams
+                                </label>
+
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '12px',
+                                    marginBottom: '8px',
+                                    cursor: 'pointer'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={showDiagrams.shear}
+                                        onChange={(e) => setShowDiagrams(prev => ({ ...prev, shear: e.target.checked }))}
+                                    />
+                                    Show SF Diagrams
+                                </label>
+
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '12px',
+                                    cursor: 'pointer'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={showForces}
+                                        onChange={(e) => setShowForces(e.target.checked)}
+                                    />
+                                    Show Forces
+                                </label>
+
+                                <div style={{ marginTop: '16px' }}>
+                                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>
+                                        Scale: {scale}x
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="5"
+                                        max="50"
+                                        value={scale}
+                                        onChange={(e) => setScale(Number(e.target.value))}
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </div>
+                )}
 
                 {/* Canvas */}
                 <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
@@ -1639,6 +1833,7 @@ const InteractiveStructureBuilder = () => {
                             showDiagrams={showDiagrams}
                             showForces={showForces}
                             scale={scale}
+                            activeLayer={activeLayer}
                         />
                     ) : (
                         <Complete3DStructureView

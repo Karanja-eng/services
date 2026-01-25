@@ -155,6 +155,18 @@ app.include_router(
     monitoring_router, prefix="/monitoring_router", tags=["Deformation & Monitoring"]
 )
 
+from calculations.SoilMechanics.soil_router import router as soil_mechanics_router
+app.include_router(soil_mechanics_router)
+
+from calculations.surveying.Geoid_model.geoid_api import router as geoid_router
+app.include_router(geoid_router)
+
+from calculations.surveying.Road_railway.rail_router import router as rail_router
+app.include_router(rail_router)
+
+from calculations.surveying.Utilities.utilities import router as utilities_router
+app.include_router(utilities_router)
+
 ####### Quantity Surveying  #############
 
 from calculations.takeoff.Qs import router as QuantitySurvey_backend_router

@@ -12,9 +12,9 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
     const meshRef = useRef();
     const [hovered, setHovered] = useState(false);
 
-    const width = element.properties.width / 1000;
-    const depth = element.properties.depth / 1000;
-    const height = element.properties.height / 1000 || floorHeight;
+    const width = element.properties.width;
+    const depth = element.properties.depth;
+    const height = element.properties.height || floorHeight;
 
     const x = element.position.x;
     const y = element.position.z || 0; // Floor level
@@ -136,8 +136,8 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick }) => {
     const length = direction.length();
     const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
 
-    const width = element.properties.width / 1000;
-    const depth = element.properties.depth / 1000;
+    const width = element.properties.width;
+    const depth = element.properties.depth;
 
     // Rotation to align cylinder with beam direction
     const quaternion = new THREE.Quaternion();
@@ -230,14 +230,14 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick }) => {
 const Slab3D = ({ element, floorLevel, opacity, visible, onClick }) => {
     if (!visible) return null;
 
-    const thickness = (element.properties.thickness || 200) / 1000;
+    const thickness = element.properties.thickness || 0.2;
 
     return (
         <mesh
             position={[
                 element.position.x + element.properties.width / 2,
                 floorLevel + thickness / 2,
-                element.position.y + element.properties.height / 2
+                element.position.y + element.properties.depth / 2
             ]}
             onClick={(e) => {
                 e.stopPropagation();
@@ -247,7 +247,7 @@ const Slab3D = ({ element, floorLevel, opacity, visible, onClick }) => {
             <boxGeometry args={[
                 element.properties.width,
                 thickness,
-                element.properties.height
+                element.properties.depth
             ]} />
             <meshStandardMaterial
                 color="#cccccc"
@@ -437,7 +437,7 @@ const Complete3DStructureView = ({
                             />
 
                             {/* Columns */}
-                            {columns.map(column => (
+                            {columns.filter(el => el.layer === floorName).map(column => (
                                 <Column3D
                                     key={`${column.id}-${floorIndex}`}
                                     element={column}
@@ -450,7 +450,7 @@ const Complete3DStructureView = ({
                             ))}
 
                             {/* Beams */}
-                            {beams.map(beam => (
+                            {beams.filter(el => el.layer === floorName).map(beam => (
                                 <Beam3D
                                     key={`${beam.id}-${floorIndex}`}
                                     element={beam}
@@ -462,7 +462,7 @@ const Complete3DStructureView = ({
                             ))}
 
                             {/* Slabs */}
-                            {slabs.map(slab => (
+                            {slabs.filter(el => el.layer === floorName).map(slab => (
                                 <Slab3D
                                     key={`${slab.id}-${floorIndex}`}
                                     element={slab}

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight, Columns, TrendingUp } from 'lucide-react';
+import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight, Columns, TrendingUp, ArrowLeft } from 'lucide-react';
 import * as THREE from 'three';
-import GridApp from './GridCode/MainGrid';
+
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 import { SectionView } from './SectionView';
 import FrameViewer from './New_frame';
@@ -81,7 +81,9 @@ const RCStructuralDesign = () => {
     axialLoad: '', moment: '', effectiveLength: ''
   });
 
+  const [showReferenceTables, setShowReferenceTables] = useState(false);
   const [results, setResults] = useState(null);
+  const isFullScreen = ['builder', 'advanced'].includes(activeModule);
   const canvasRef = useRef(null);
 
   const toggleTheme = () => {
@@ -294,6 +296,27 @@ const RCStructuralDesign = () => {
 
     try {
       switch (activeModule) {
+        case 'design_dashboard':
+        case 'frame':
+          const framePayload = {
+            floors: parseInt(frameData.floors) || 0,
+            bays: parseInt(frameData.bays) || 0,
+            story_height: parseFloat(frameData.storyHeight) || 0,
+            bay_width: parseFloat(frameData.bayWidth) || 0,
+            lateral_load: parseFloat(frameData.lateralLoad) || 0,
+            vertical_load: parseFloat(loadData.deadLoad) + parseFloat(loadData.imposedLoad) || 0,
+            concrete_grade: tieData.concreteGrade,
+            steel_grade: parseInt(tieData.steelGrade)
+          };
+          const endpoint = activeModule === 'design_dashboard' ? 'design/all' : 'analyze';
+          const frameRes = await fetch(`${API_BASE}/${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(framePayload)
+          });
+          calculationResults = await frameRes.json();
+          break;
+
         case 'loads':
           const loadPayload = {
             dead_load: parseFloat(loadData.deadLoad) || 0,
@@ -326,23 +349,6 @@ const RCStructuralDesign = () => {
           calculationResults = await tieRes.json();
           break;
 
-        case 'frame':
-          const framePayload = {
-            method: frameData.method,
-            floors: parseInt(frameData.floors) || 0,
-            bays: parseInt(frameData.bays) || 0,
-            story_height: parseFloat(frameData.storyHeight) || 0,
-            bay_width: parseFloat(frameData.bayWidth) || 0,
-            lateral_load: parseFloat(frameData.lateralLoad) || 0
-          };
-          const frameRes = await fetch(`${API_BASE}/analysis/frame`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(framePayload)
-          });
-          calculationResults = await frameRes.json();
-          break;
-
         case 'systems':
           const systemPayload = {
             system_type: systemData.type,
@@ -350,7 +356,7 @@ const RCStructuralDesign = () => {
             width: parseFloat(systemData.width) || 0,
             depth: parseFloat(systemData.depth) || 0,
             core_size: parseFloat(systemData.coreSize) || 0,
-            wind_pressure: 1.5 // Default or add input
+            wind_pressure: 1.5
           };
           const sysRes = await fetch(`${API_BASE}/analysis/structural-system`, {
             method: 'POST',
@@ -432,64 +438,97 @@ const RCStructuralDesign = () => {
   const borderColor = theme === 'dark' ? 'border-gray-700' : 'border-gray-200';
 
   const modules = [
-    { id: 'loads', icon: Calculator, label: 'Load Combinations', section: 'loads' },
-    { id: 'ties', icon: Layers, label: 'Tie Design', section: 'ties' },
-    { id: 'frame', icon: Frame, label: 'Frame Analysis', section: 'analysis' },
-    { id: 'systems', icon: Building2, label: 'Structural Systems', section: 'systems' },
-    { id: 'beam', icon: Box, label: 'Beam Design', section: 'members' },
-    { id: 'column', icon: Columns, label: 'Column Design', section: 'members' },
-    { id: 'modeling', icon: Box, label: 'Computer Modeling', section: 'modeling' },
-    { id: 'visualization', icon: Ruler, label: '3D Visualization', section: 'modeling' },
     { id: 'builder', icon: Building2, label: 'Structure Builder', section: 'modeling' },
-    { id: 'advanced', icon: TrendingUp, label: 'Advanced 3D Analysis', section: 'modeling' },
-    { id: 'Grid', icon: Ruler, label: 'Frame Grid', section: 'Geid' },
+    { id: 'loads', icon: Calculator, label: 'Loads & Combinations', section: 'analysis' },
+    { id: 'frame', icon: Frame, label: 'Frame Analysis', section: 'analysis' },
+    { id: 'design_dashboard', icon: Box, label: 'Member Design Dashboard', section: 'design' },
+    { id: 'beams', icon: Ruler, label: 'Beam Reports', section: 'design' },
+    { id: 'columns', icon: Columns, label: 'Column Reports', section: 'design' },
+    { id: 'foundations', icon: Box, label: 'Foundation Reports', section: 'design' },
+    { id: 'modeling', icon: Box, label: 'System Properties', section: 'modeling' },
+    { id: 'advanced', icon: TrendingUp, label: 'Advanced Settings', section: 'modeling' },
+  ];
 
+  const sections = [
+    { id: 'modeling', label: '1. Build & Setup', icon: Building2 },
+    { id: 'analysis', label: '2. Loads & Analysis', icon: Calculator },
+    { id: 'design', label: '3. Member Design', icon: Box },
   ];
 
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} transition-colors duration-200`}>
       {/* Header */}
-      <header className={`${cardBg} border-b ${borderColor} px-6 py-4  top-0 z-50`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
-              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <Building2 size={32} className="text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold">BS Structural Design System</h1>
-              <p className="text-sm opacity-70">BS Code Compliant Analysis & Design</p>
+      {!isFullScreen && (
+        <header className={`${cardBg} border-b ${borderColor} px-6 py-4 top-0 z-50`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
+                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+              <Building2 size={32} className="text-blue-600" />
+              <div>
+                <h1 className="text-2xl font-bold">BS Structural Design System</h1>
+                <p className="text-sm opacity-70">BS Code Compliant Analysis & Design</p>
+              </div>
             </div>
+            <button onClick={toggleTheme} className={`p-2 rounded-lg ${inputBg} hover:opacity-80`}>
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
           </div>
-          <button onClick={toggleTheme} className={`p-2 rounded-lg ${inputBg} hover:opacity-80`}>
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-        </div>
-      </header>
+        </header>
+      )}
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} ${cardBg} border-r ${borderColor} transition-all duration-300 overflow-hidden`}>
-          <nav className="p-4 space-y-2">
-            {modules.map(module => (
-              <button
-                key={module.id}
-                onClick={() => setActiveModule(module.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeModule === module.id
-                  ? 'bg-blue-600 text-white'
-                  : `${inputBg} hover:bg-blue-100 hover:text-blue-600`
-                  }`}
-              >
-                <module.icon size={20} />
-                <span className="text-sm font-medium">{module.label}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
+        {!isFullScreen && (
+          <aside className={`${sidebarOpen ? 'w-72' : 'w-0'} ${cardBg} border-r ${borderColor} transition-all duration-300 overflow-hidden`}>
+            <div className="p-4 space-y-6">
+              {sections.map(section => (
+                <div key={section.id}>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-3 px-2">
+                    {section.label}
+                  </h3>
+                  <nav className="space-y-1">
+                    {modules.filter(m => m.section === section.id).map(module => (
+                      <button
+                        key={module.id}
+                        onClick={() => setActiveModule(module.id)}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${activeModule === module.id
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : `${inputBg} hover:bg-blue-50 hover:text-blue-600`
+                          }`}
+                      >
+                        <module.icon size={18} />
+                        <span className="text-sm font-medium">{module.label}</span>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+              ))}
+            </div>
+          </aside>
+        )}
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto space-y-6">
+        <main className={`flex-1 ${isFullScreen ? 'h-screen overflow-hidden' : 'p-6'}`}>
+          {isFullScreen && (
+            <div className={`flex items-center gap-4 px-6 py-3 border-b ${borderColor} ${cardBg} sticky top-0 z-50`}>
+              <button
+                onClick={() => setActiveModule('design_dashboard')}
+                className="flex items-center gap-2 text-blue-600 font-bold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <ArrowLeft size={18} />
+                Back to Dashboard
+              </button>
+              <div className="w-px h-6 bg-gray-300 mx-2" />
+              <div className="flex items-center gap-2">
+                {React.createElement(modules.find(m => m.id === activeModule)?.icon || Box, { size: 20, className: "text-blue-600" })}
+                <span className="font-bold">{modules.find(m => m.id === activeModule)?.label}</span>
+              </div>
+            </div>
+          )}
+
+          <div className={isFullScreen ? "h-[calc(100vh-56px)] w-full" : "max-w-6xl mx-auto space-y-6"}>
             {/* Load Combinations Module */}
             {activeModule === 'loads' && (
               <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
@@ -881,9 +920,6 @@ const RCStructuralDesign = () => {
             )}
 
             {/* Framed Grid */}
-            {activeModule === 'Grid' &&
-              <GridApp />
-            }
 
 
             {/* 3D Visualization */}
@@ -1105,6 +1141,159 @@ const RCStructuralDesign = () => {
                   </div>
                 )}
 
+                {activeModule === 'design_dashboard' && results?.design && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      {[
+                        { label: 'Beams', count: results.design.beams.length, color: 'blue' },
+                        { label: 'Columns', count: results.design.columns.length, color: 'green' },
+                        { label: 'Foundations', count: results.design.foundations.length, color: 'purple' },
+                        { label: 'Slabs', count: results.design.slabs.length, color: 'orange' }
+                      ].map(stat => (
+                        <div key={stat.label} className={`${inputBg} p-4 rounded-xl border border-${stat.color}-200 flex flex-col items-center justify-center`}>
+                          <p className={`text-${stat.color}-600 font-bold text-2xl`}>{stat.count}</p>
+                          <p className="text-xs opacity-60 uppercase">{stat.label} Designed</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="bg-blue-600/10 p-4 rounded-xl border border-blue-600/20">
+                      <h3 className="font-bold text-blue-600 mb-2 flex items-center gap-2">
+                        <Calculator size={18} />
+                        Engineering Utilization Summary
+                      </h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left opacity-60">
+                              <th className="pb-2">Member Group</th>
+                              <th className="pb-2">Status</th>
+                              <th className="pb-2">Avg Utilization</th>
+                              <th className="pb-2">Critical Member</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="py-2 font-medium">Main Beams</td>
+                              <td><span className="bg-green-500/20 text-green-600 px-2 py-0.5 rounded text-xs font-bold">PASS</span></td>
+                              <td>42%</td>
+                              <td>B-01-Level2</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 font-medium">Vertical Columns</td>
+                              <td><span className="bg-green-500/20 text-green-600 px-2 py-0.5 rounded text-xs font-bold">PASS</span></td>
+                              <td>68%</td>
+                              <td>C-04-Level0</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeModule === 'beams' && results?.design?.beams && (
+                  <div className="grid grid-cols-1 gap-4">
+                    {results.design.beams.map(beam => (
+                      <div key={beam.member_id} className={`${inputBg} p-4 rounded-xl border ${borderColor}`}>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-bold">Member ID: {beam.member_id}</h4>
+                          <span className={`${beam.status ? 'bg-green-500' : 'bg-red-500'} text-white px-3 py-1 rounded-full text-xs font-bold`}>
+                            {beam.status ? 'BS 8110 COMPLIANT' : 'FAIL'}
+                          </span>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div className="space-y-1">
+                            <p className="opacity-70">Main Tension Steel: <span className="font-bold text-blue-600">{beam.details.span_designs[0]?.sagging_bars_count}H{beam.details.span_designs[0]?.sagging_bars_diameter}</span></p>
+                            <p className="opacity-70">Shear Links: <span className="font-bold">H{beam.details.span_designs[0]?.shear_links_diameter}@{beam.details.span_designs[0]?.shear_links_spacing}mm</span></p>
+                          </div>
+                          <div className="space-y-1 text-right">
+                            <p className="opacity-70">Moment Util: {(beam.details.span_designs[0].design_checks.moment_utilization * 100).toFixed(1)}%</p>
+                            <p className="opacity-70">Shear Util: {(beam.details.span_designs[0].design_checks.shear_utilization * 100).toFixed(1)}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeModule === 'columns' && results?.design?.columns && (
+                  <div className="grid grid-cols-1 gap-4">
+                    {results.design.columns.map(col => (
+                      <div key={col.member_id} className={`${inputBg} p-4 rounded-xl border ${borderColor}`}>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-bold">Column ID: {col.member_id}</h4>
+                          <span className={`bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase`}>
+                            {col.classification} - {col.mode}
+                          </span>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-4 text-center">
+                          <div>
+                            <p className="text-xs opacity-60">Steel Area</p>
+                            <p className="font-bold text-lg">{col.steel_area.toFixed(0)} mm²</p>
+                          </div>
+                          <div>
+                            <p className="text-xs opacity-60">Status</p>
+                            <p className="font-bold text-green-600 uppercase">{col.status}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs opacity-60">Ratio (ρ)</p>
+                            <p className="font-bold">{col.steel_percentage.toFixed(2)}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeModule === 'foundations' && results?.design?.foundations && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {results.design.foundations.map((found, idx) => (
+                      <div key={idx} className={`${inputBg} p-4 rounded-xl border ${borderColor}`}>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-bold">{found.design_summary.type}</h4>
+                          <span className={`${found.design_summary.status === 'PASS' ? 'bg-green-500' : 'bg-red-500'} text-white px-3 py-1 rounded-full text-xs font-bold`}>
+                            {found.design_summary.status}
+                          </span>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <p className="flex justify-between"><span>Dimensions:</span> <span className="font-bold">{found.design_summary.foundation_size}</span></p>
+                          <p className="flex justify-between"><span>Reinf X:</span> <span>{found.reinforcement.main_bars_x}</span></p>
+                          <p className="flex justify-between"><span>Reinf Y:</span> <span>{found.reinforcement.main_bars_y}</span></p>
+                          <div className="pt-2 border-t opacity-40">
+                            <p className="flex justify-between text-xs"><span>Bearing Utilization:</span> <span>{(found.design_summary.utilization_ratio * 100).toFixed(1)}%</span></p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeModule === 'slabs' && results?.design?.slabs && (
+                  <div className="grid grid-cols-1 gap-4">
+                    {results.design.slabs.map((slab, idx) => (
+                      <div key={idx} className={`${inputBg} p-4 rounded-xl border ${borderColor}`}>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-bold">{slab.slabType}</h4>
+                          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+                            BS 8110 DESIGN
+                          </span>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div className="space-y-1">
+                            <p className="opacity-70">Main Reinf: <span className="font-bold text-blue-600">{slab.reinforcementX || slab.mainReinforcement}</span></p>
+                            <p className="opacity-70">Distribution: <span className="font-bold">{slab.reinforcementY || slab.distributionSteel}</span></p>
+                          </div>
+                          <div className="space-y-1 text-right">
+                            <p className="opacity-70">Thickness: {slab.totalDepth} mm</p>
+                            <p className="opacity-70">Effective Depth: {slab.effectiveDepth} mm</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
                   <p className="text-sm">
                     <strong>Note:</strong> All calculations are based on BS 8110 and Eurocode standards.
@@ -1128,130 +1317,146 @@ const RCStructuralDesign = () => {
 
             {/* BS Code Reference Tables */}
             <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
-              <h2 className="text-xl font-bold mb-4">BS Code Reference Tables</h2>
-              <div className="space-y-4">
-                <div className={`p-4 ${inputBg} rounded-lg`}>
-                  <h3 className="font-bold mb-2">Concrete Grades (BS 8110)</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-300">
-                          <th className="text-left py-2">Grade</th>
-                          <th className="text-left py-2">fcu (N/mm²)</th>
-                          <th className="text-left py-2">Application</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">C25</td>
-                          <td className="py-2">25</td>
-                          <td className="py-2">General construction</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">C30</td>
-                          <td className="py-2">30</td>
-                          <td className="py-2">Reinforced concrete</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">C40</td>
-                          <td className="py-2">40</td>
-                          <td className="py-2">High strength applications</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2">C50</td>
-                          <td className="py-2">50</td>
-                          <td className="py-2">Pre-stressed concrete</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className={`p-4 ${inputBg} rounded-lg`}>
-                  <h3 className="font-bold mb-2">Load Factors (BS 8110)</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-300">
-                          <th className="text-left py-2">Load Type</th>
-                          <th className="text-left py-2">ULS Factor</th>
-                          <th className="text-left py-2">SLS Factor</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">Dead Load (Gk)</td>
-                          <td className="py-2">1.4</td>
-                          <td className="py-2">1.0</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">Imposed Load (Qk)</td>
-                          <td className="py-2">1.6</td>
-                          <td className="py-2">1.0</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2">Wind Load (Wk)</td>
-                          <td className="py-2">1.4</td>
-                          <td className="py-2">1.0</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className={`p-4 ${inputBg} rounded-lg`}>
-                  <h3 className="font-bold mb-2">Reinforcement Bar Sizes (BS 4449)</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-300">
-                          <th className="text-left py-2">Bar Size</th>
-                          <th className="text-left py-2">Diameter (mm)</th>
-                          <th className="text-left py-2">Area (mm²)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">H8</td>
-                          <td className="py-2">8</td>
-                          <td className="py-2">50</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">H10</td>
-                          <td className="py-2">10</td>
-                          <td className="py-2">79</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">H12</td>
-                          <td className="py-2">12</td>
-                          <td className="py-2">113</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">H16</td>
-                          <td className="py-2">16</td>
-                          <td className="py-2">201</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">H20</td>
-                          <td className="py-2">20</td>
-                          <td className="py-2">314</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2">H25</td>
-                          <td className="py-2">25</td>
-                          <td className="py-2">491</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <FileText size={24} className="text-blue-600" />
+                  BS Code Reference Tables
+                </h2>
+                <button
+                  onClick={() => setShowReferenceTables(!showReferenceTables)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${showReferenceTables
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : `${inputBg} border ${borderColor} hover:bg-gray-100`
+                    }`}
+                >
+                  {showReferenceTables ? 'Hide Tables' : 'Show Reference Tables'}
+                  {showReferenceTables ? <ChevronDown size={18} className="rotate-180" /> : <ChevronRight size={18} />}
+                </button>
               </div>
+
+              {showReferenceTables && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className={`p-4 ${inputBg} rounded-lg`}>
+                    <h3 className="font-bold mb-2">Concrete Grades (BS 8110)</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-300">
+                            <th className="text-left py-2">Grade</th>
+                            <th className="text-left py-2">fcu (N/mm²)</th>
+                            <th className="text-left py-2">Application</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">C25</td>
+                            <td className="py-2">25</td>
+                            <td className="py-2">General construction</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">C30</td>
+                            <td className="py-2">30</td>
+                            <td className="py-2">Reinforced concrete</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">C40</td>
+                            <td className="py-2">40</td>
+                            <td className="py-2">High strength applications</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2">C50</td>
+                            <td className="py-2">50</td>
+                            <td className="py-2">Pre-stressed concrete</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className={`p-4 ${inputBg} rounded-lg`}>
+                    <h3 className="font-bold mb-2">Load Factors (BS 8110)</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-300">
+                            <th className="text-left py-2">Load Type</th>
+                            <th className="text-left py-2">ULS Factor</th>
+                            <th className="text-left py-2">SLS Factor</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">Dead Load (Gk)</td>
+                            <td className="py-2">1.4</td>
+                            <td className="py-2">1.0</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">Imposed Load (Qk)</td>
+                            <td className="py-2">1.6</td>
+                            <td className="py-2">1.0</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2">Wind Load (Wk)</td>
+                            <td className="py-2">1.4</td>
+                            <td className="py-2">1.0</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className={`p-4 ${inputBg} rounded-lg`}>
+                    <h3 className="font-bold mb-2">Reinforcement Bar Sizes (BS 4449)</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-300">
+                            <th className="text-left py-2">Bar Size</th>
+                            <th className="text-left py-2">Diameter (mm)</th>
+                            <th className="text-left py-2">Area (mm²)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">H8</td>
+                            <td className="py-2">8</td>
+                            <td className="py-2">50</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">H10</td>
+                            <td className="py-2">10</td>
+                            <td className="py-2">79</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">H12</td>
+                            <td className="py-2">12</td>
+                            <td className="py-2">113</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">H16</td>
+                            <td className="py-2">16</td>
+                            <td className="py-2">201</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-2">H20</td>
+                            <td className="py-2">20</td>
+                            <td className="py-2">314</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2">H25</td>
+                            <td className="py-2">25</td>
+                            <td className="py-2">491</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </main>
       </div>
-
-
     </div>
   );
 };
