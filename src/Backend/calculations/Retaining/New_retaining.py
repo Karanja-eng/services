@@ -1,18 +1,4 @@
-"""
-Continuation of RetainingWallDesigner class and API endpoints
-"""
 
-"""
-Enhanced FastAPI Backend for RC Retaining Structure Designer
-BS 8110, BS 8007, BS 8002, BS 4449 Compliant
-Supports: Cantilever, Counterfort, Buttress, and Gravity Walls
-
-Install dependencies:
-pip install fastapi uvicorn pydantic python-multipart numpy scipy
-
-Run server:
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-"""
 
 from fastapi import HTTPException, APIRouter, Response
 from fastapi.responses import JSONResponse
@@ -192,6 +178,10 @@ class DesignInput(BaseModel):
     auto_size: bool = Field(
         True, description="Automatically determine wall dimensions"
     )
+    # Custom soil parameters
+    custom_phi: Optional[float] = Field(None, ge=0, le=90, description="Internal friction angle (deg)")
+    custom_gamma: Optional[float] = Field(None, ge=10, le=30, description="Unit weight (kN/m³)")
+    custom_cohesion: Optional[float] = Field(None, ge=0, description="Cohesion (kN/m²)")
 
     @validator("concrete_grade")
     def validate_concrete(cls, v):
@@ -203,9 +193,9 @@ class DesignInput(BaseModel):
 
     @validator("soil_type", "foundation_soil")
     def validate_soil(cls, v):
-        if v and v not in SOIL_PROPERTIES:
+        if v and v not in SOIL_PROPERTIES and v != "Custom":
             raise ValueError(
-                f"Invalid soil type. Choose from: {list(SOIL_PROPERTIES.keys())}"
+                f"Invalid soil type. Choose from: {list(SOIL_PROPERTIES.keys())} or 'Custom'"
             )
         return v
 
@@ -375,16 +365,24 @@ class PressureCalculator:
     @staticmethod
     def calculate_active_pressure(
         height: float,
-        soil_type: str,
         surcharge: float = 0,
         water_depth: Optional[float] = None,
+        custom_params: Optional[Dict] = None,
     ) -> PressureDistribution:
         """Calculate active earth pressure distribution"""
 
-        soil = SOIL_PROPERTIES[soil_type]
-        Ka = soil["Ka"]
-        gamma = soil["gamma"]
-        c = soil["cohesion"]
+        if soil_type == "Custom" and custom_params:
+            phi = custom_params.get("phi", 30)
+            gamma = custom_params.get("gamma", 18)
+            c = custom_params.get("cohesion", 0)
+            # Rankine Ka = (1-sin(phi))/(1+sin(phi))
+            phi_rad = math.radians(phi)
+            Ka = (1 - math.sin(phi_rad)) / (1 + math.sin(phi_rad))
+        else:
+            soil = SOIL_PROPERTIES.get(soil_type, SOIL_PROPERTIES["Medium Sand"])
+            Ka = soil["Ka"]
+            gamma = soil["gamma"]
+            c = soil["cohesion"]
 
         depths = np.linspace(0, height, 20)
         pressures = []
@@ -427,14 +425,21 @@ class PressureCalculator:
 
     @staticmethod
     def calculate_passive_pressure(
-        depth: float, soil_type: str
+        depth: float, soil_type: str, custom_params: Optional[Dict] = None
     ) -> float:
         """Calculate passive earth pressure"""
 
-        soil = SOIL_PROPERTIES[soil_type]
-        Kp = soil["Kp"]
-        gamma = soil["gamma"]
-        c = soil["cohesion"]
+        if soil_type == "Custom" and custom_params:
+            phi = custom_params.get("phi", 30)
+            gamma = custom_params.get("gamma", 18)
+            c = custom_params.get("cohesion", 0)
+            phi_rad = math.radians(phi)
+            Kp = (1 + math.sin(phi_rad)) / (1 - math.sin(phi_rad))
+        else:
+            soil = SOIL_PROPERTIES.get(soil_type, SOIL_PROPERTIES["Medium Sand"])
+            Kp = soil["Kp"]
+            gamma = soil["gamma"]
+            c = soil["cohesion"]
 
         # Passive pressure: p = Kp*gamma*z + 2*c*sqrt(Kp)
         passive_force = 0.5 * Kp * gamma * depth**2
@@ -462,10 +467,20 @@ class StabilityAnalyzer:
         wall_thick = geometry["wall_thickness"] / 1000  # Convert to meters
         base_thick = geometry["base_thickness"] / 1000
 
-        soil = SOIL_PROPERTIES[inputs.soil_type]
+        if inputs.soil_type == "Custom":
+            soil = {
+                "phi": inputs.custom_phi or 30,
+                "gamma": inputs.custom_gamma or 18,
+                "cohesion": inputs.custom_cohesion or 0,
+                "mu": 0.5, # Default friction coefficient
+                "beta": 0
+            }
+        else:
+            soil = SOIL_PROPERTIES.get(inputs.soil_type, SOIL_PROPERTIES["Medium Sand"])
+        
         gamma_soil = soil["gamma"]
-        mu = soil["mu"]
-        beta = soil["beta"]
+        mu = soil.get("mu", 0.5)
+        beta = soil.get("beta", 0)
 
         # Calculate vertical loads
         vertical_loads = []
@@ -520,8 +535,15 @@ class StabilityAnalyzer:
         passive_resistance = 0
         if inputs.has_nib and inputs.nib_depth:
             foundation_soil = inputs.foundation_soil or inputs.soil_type
+            custom_f_params = None
+            if foundation_soil == "Custom":
+                custom_f_params = {
+                    "phi": inputs.custom_phi, # Simplified: assume same custom soil for base if not specific
+                    "gamma": inputs.custom_gamma,
+                    "cohesion": inputs.custom_cohesion
+                }
             passive_resistance = PressureCalculator.calculate_passive_pressure(
-                inputs.nib_depth, foundation_soil
+                inputs.nib_depth, foundation_soil, custom_f_params
             )
 
         # Add adhesion for cohesive soils
@@ -652,7 +674,9 @@ class ReinforcementDesigner:
                 )
 
         # If no solution found, return maximum bar
-        raise ValueError("Cannot design reinforcement - section too small or moment too large")
+        element = "Wall" if is_wall else "Slab"
+        msg = f"Cannot design reinforcement for {element} - section (t={thickness}mm) too small for moment M={moment}kNm/m. Try increasing thickness."
+        raise ValueError(msg)
 
     @staticmethod
     def calculate_curtailment_length(
@@ -738,12 +762,21 @@ class RetainingWallDesigner:
     def design(self) -> DesignOutput:
         """Complete design process"""
 
+        custom_params = None
+        if self.inputs.soil_type == "Custom":
+            custom_params = {
+                "phi": self.inputs.custom_phi,
+                "gamma": self.inputs.custom_gamma,
+                "cohesion": self.inputs.custom_cohesion
+            }
+
         # Calculate pressures
         pressures = PressureCalculator.calculate_active_pressure(
             self.inputs.height,
             self.inputs.soil_type,
             self.inputs.surcharge,
             self.inputs.water_table_depth,
+            custom_params
         )
 
         # Check stability
@@ -1070,9 +1103,14 @@ class RetainingWallDesigner:
         depth_top = self.geometry["wall_thickness"]
         depth_base = heel_width * 1000  # mm
         
+        # Correct approach for design_flexural_steel:
+        # Pass depth_base as thickness, but scale the moment to 1m width
+        b_counterfort = self.geometry["counterfort_thickness"]
+        M_per_m_counterfort = M_counterfort / (b_counterfort / 1000.0)
+        
         counterfort_steel_base = ReinforcementDesigner.design_flexural_steel(
-            M_counterfort,
-            self.geometry["counterfort_thickness"],
+            M_per_m_counterfort,
+            depth_base,
             self.cover,
             self.concrete_props["fck"],
             self.steel_props["fy"],

@@ -55,8 +55,12 @@ const InternalFinishesTakeoff = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Immediate local preview
-    setPlanImageUrl(URL.createObjectURL(file));
+    const isImage = file.type.startsWith("image/");
+    if (isImage) {
+      setPlanImageUrl(URL.createObjectURL(file));
+    } else {
+      setPlanImageUrl("cad_placeholder");
+    }
     setProcessing(true);
 
     const fd = new FormData();
@@ -260,9 +264,9 @@ const InternalFinishesTakeoff = () => {
                               <h3 className="font-bold text-gray-900 uppercase">Room Extractor</h3>
                               <p className="text-xs text-gray-500">Scan plan for automated finishes.</p>
                             </div>
-                            <input type="file" id="finishes-upload" className="hidden" onChange={handleUpload} />
+                            <input type="file" id="finishes-upload" className="hidden" accept="image/*,.dxf,.ifc" onChange={handleUpload} />
                             <label htmlFor="finishes-upload" className="cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition-all text-sm">
-                              Upload Plan
+                              Upload Plan (Img/CAD)
                             </label>
                           </>
                         )}
@@ -325,18 +329,28 @@ const InternalFinishesTakeoff = () => {
               <div className="bg-slate-900 rounded-2xl shadow-xl overflow-hidden flex-1 relative border-4 border-white">
                 {planImageUrl ? (
                   <div className="absolute inset-0 bg-white">
-                    <img
-                      src={planImageUrl}
-                      className={`absolute inset-0 w-full h-full object-contain transition-all duration-500 ${buildingData?.metadata?.segmented_urls && activeSegment !== 'all' ? 'opacity-40 grayscale-[50%]' : 'opacity-100'}`}
-                      alt="Base Plan"
-                    />
-                    {buildingData?.metadata?.segmented_urls && activeSegment !== 'all' && (
-                      <img
-                        src={`${API_BASE}${buildingData.metadata.segmented_urls[activeSegment]}`}
-                        className="absolute inset-0 w-full h-full object-contain pointer-events-none mix-blend-multiply transition-all duration-300"
-                        alt="Segment Mask"
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                      />
+                    {planImageUrl === "cad_placeholder" ? (
+                      <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-white p-8 space-y-4">
+                        <Box size={64} className="text-blue-400" />
+                        <h3 className="text-xl font-bold">CAD File Render</h3>
+                        <p className="text-sm text-slate-400 text-center">AutoCAD/Revit/ArchiCAD data extracted successfully. Close this view to see calculated results in the forms.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <img
+                          src={planImageUrl}
+                          className={`absolute inset-0 w-full h-full object-contain transition-all duration-500 ${buildingData?.metadata?.segmented_urls && activeSegment !== 'all' ? 'opacity-40 grayscale-[50%]' : 'opacity-100'}`}
+                          alt="Base Plan"
+                        />
+                        {buildingData?.metadata?.segmented_urls && activeSegment !== 'all' && (
+                          <img
+                            src={`${API_BASE}${buildingData.metadata.segmented_urls[activeSegment]}`}
+                            className="absolute inset-0 w-full h-full object-contain pointer-events-none mix-blend-multiply transition-all duration-300"
+                            alt="Segment Mask"
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
+                        )}
+                      </>
                     )}
 
                     <div className="absolute top-4 right-4 z-20">
@@ -502,12 +516,20 @@ const InternalFinishesTakeoff = () => {
             </div>
             <div className="flex-1 overflow-auto bg-gray-100 p-8 flex items-center justify-center relative min-h-[500px]">
               <div className="relative inline-block border-4 border-white shadow-2xl rounded-lg overflow-hidden">
-                <img
-                  src={planImageUrl}
-                  alt="Floor Plan"
-                  className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
-                />
-                {activeSegment !== 'all' && (
+                {planImageUrl === "cad_placeholder" ? (
+                  <div className="w-[600px] h-[400px] bg-slate-900 flex flex-col items-center justify-center text-white p-8 space-y-4">
+                    <Box size={64} className="text-blue-400" />
+                    <h3 className="text-xl font-bold">CAD File Render</h3>
+                    <p className="text-sm text-slate-400 text-center">AutoCAD/Revit/ArchiCAD data extracted successfully. Close this view to see calculated results in the forms.</p>
+                  </div>
+                ) : (
+                  <img
+                    src={planImageUrl}
+                    alt="Floor Plan"
+                    className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
+                  />
+                )}
+                {activeSegment !== 'all' && planImageUrl !== "cad_placeholder" && (
                   <img
                     src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}
                     alt={`${activeSegment} Layer`}

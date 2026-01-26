@@ -57,8 +57,8 @@ class Point3D(BaseModel):
 class DrawingObject(BaseModel):
     id: str
     type: str
-    layerId: str = Field(alias="layerId")
-    color: str
+    layerId: str = Field(default="1", alias="layerId")
+    color: str = "#FFFFFF"
     visible: bool = True
     locked: bool = False
     lineWidth: Optional[float] = 2.0

@@ -6,11 +6,17 @@ import StructuralVisualizationComponent from '../../Drawings/visualise_component
 import { SectionView } from './SectionView';
 import FrameViewer from './New_frame';
 import InteractiveStructureBuilder from './InteractiveStructureBuilder';
+
+import StructuralEngineeeringSuite from "../Beams/StructuralEngineeeringSuite";
+import Columnmain from "../Columns/Columnmain";
+import FoundationMainApp from "../Foundations/foundation_main_app";
+import WallDesignCalculator from "../Walls/main_wall_app";
+import MainSlabApp from "../Slabs/main_slab_app";
+
 // Theme Context
 const ThemeContext = React.createContext();
 
-const RCStructuralDesign = () => {
-  const [theme, setTheme] = useState('light');
+const RCStructuralDesign = ({ isDark = false }) => {
   const [activeModule, setActiveModule] = useState('loads');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedSections, setExpandedSections] = useState({
@@ -83,12 +89,8 @@ const RCStructuralDesign = () => {
 
   const [showReferenceTables, setShowReferenceTables] = useState(false);
   const [results, setResults] = useState(null);
-  const isFullScreen = ['builder', 'advanced'].includes(activeModule);
+  const isFullScreen = activeModule === 'builder';
   const canvasRef = useRef(null);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -431,22 +433,25 @@ const RCStructuralDesign = () => {
 
   // 3D Visualization Effect removed - replaced by StructuralVisualizationComponent
 
-  const bgColor = theme === 'dark' ? 'bg-gray-900' : 'bg-white';
-  const textColor = theme === 'dark' ? 'text-gray-100' : 'text-gray-900';
-  const cardBg = theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50';
-  const inputBg = theme === 'dark' ? 'bg-gray-700' : 'bg-white';
-  const borderColor = theme === 'dark' ? 'border-gray-700' : 'border-gray-200';
+  const bgColor = isDark ? 'bg-gray-900' : 'bg-white';
+  const textColor = isDark ? 'text-gray-100' : 'text-gray-900';
+  const cardBg = isDark ? 'bg-gray-800' : 'bg-gray-50';
+  const inputBg = isDark ? 'bg-gray-700' : 'bg-white';
+  const borderColor = isDark ? 'border-gray-700' : 'border-gray-200';
 
   const modules = [
     { id: 'builder', icon: Building2, label: 'Structure Builder', section: 'modeling' },
     { id: 'loads', icon: Calculator, label: 'Loads & Combinations', section: 'analysis' },
     { id: 'frame', icon: Frame, label: 'Frame Analysis', section: 'analysis' },
+    { id: 'visualization', icon: TrendingUp, label: '3D Building View', section: 'analysis' },
     { id: 'design_dashboard', icon: Box, label: 'Member Design Dashboard', section: 'design' },
-    { id: 'beams', icon: Ruler, label: 'Beam Reports', section: 'design' },
-    { id: 'columns', icon: Columns, label: 'Column Reports', section: 'design' },
-    { id: 'foundations', icon: Box, label: 'Foundation Reports', section: 'design' },
+    { id: 'beam_suite', icon: Ruler, label: 'Beam Design Suite', section: 'design' },
+    { id: 'column_main', icon: Columns, label: 'Column Design App', section: 'design' },
+    { id: 'slab_app', icon: Layers, label: 'Slab Design Suite', section: 'design' },
+    { id: 'wall_calc', icon: Wind, label: 'Wall Design App', section: 'design' },
+    { id: 'foundation_app', icon: Box, label: 'Foundation Design', section: 'design' },
+    { id: 'reference', icon: FileText, label: 'BS Code Tables', section: 'modeling' },
     { id: 'modeling', icon: Box, label: 'System Properties', section: 'modeling' },
-    { id: 'advanced', icon: TrendingUp, label: 'Advanced Settings', section: 'modeling' },
   ];
 
   const sections = [
@@ -457,27 +462,6 @@ const RCStructuralDesign = () => {
 
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} transition-colors duration-200`}>
-      {/* Header */}
-      {!isFullScreen && (
-        <header className={`${cardBg} border-b ${borderColor} px-6 py-4 top-0 z-50`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
-                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-              <Building2 size={32} className="text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold">BS Structural Design System</h1>
-                <p className="text-sm opacity-70">BS Code Compliant Analysis & Design</p>
-              </div>
-            </div>
-            <button onClick={toggleTheme} className={`p-2 rounded-lg ${inputBg} hover:opacity-80`}>
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-          </div>
-        </header>
-      )}
-
       <div className="flex">
         {/* Sidebar */}
         {!isFullScreen && (
@@ -499,7 +483,7 @@ const RCStructuralDesign = () => {
                           }`}
                       >
                         <module.icon size={18} />
-                        <span className="text-sm font-medium">{module.label}</span>
+                        <span className="text-xs font-bold uppercase tracking-tight">{module.label}</span>
                       </button>
                     ))}
                   </nav>
@@ -510,8 +494,8 @@ const RCStructuralDesign = () => {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 ${isFullScreen ? 'h-screen overflow-hidden' : 'p-6'}`}>
-          {isFullScreen && (
+        <main className={`flex-1 ${activeModule === 'builder' ? 'h-screen overflow-hidden' : 'p-6'}`}>
+          {activeModule === 'builder' && (
             <div className={`flex items-center gap-4 px-6 py-3 border-b ${borderColor} ${cardBg} sticky top-0 z-50`}>
               <button
                 onClick={() => setActiveModule('design_dashboard')}
@@ -528,7 +512,7 @@ const RCStructuralDesign = () => {
             </div>
           )}
 
-          <div className={isFullScreen ? "h-[calc(100vh-56px)] w-full" : "max-w-6xl mx-auto space-y-6"}>
+          <div className={activeModule === 'builder' ? "h-[calc(100vh-56px)] w-full" : "w-full max-w-none space-y-6"}>
             {/* Load Combinations Module */}
             {activeModule === 'loads' && (
               <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
@@ -927,7 +911,7 @@ const RCStructuralDesign = () => {
             {activeModule === 'visualization' && (
               <div className="h-[600px] w-full rounded-lg overflow-hidden border border-gray-200 relative">
                 <StructuralVisualizationComponent
-                  theme={theme}
+                  theme={isDark ? 'dark' : 'light'}
                   componentType="tall_framed_analysis"
                   componentData={{
                     floors: parseInt(frameData.floors) || 1,
@@ -1309,151 +1293,151 @@ const RCStructuralDesign = () => {
               </div>
             )}
 
+            {activeModule === 'beam_suite' && (
+              <StructuralEngineeeringSuite isDark={isDark} />
+            )}
+
+            {activeModule === 'column_main' && (
+              <Columnmain isDark={isDark} />
+            )}
+
+            {activeModule === 'slab_app' && (
+              <MainSlabApp isDark={isDark} />
+            )}
+
+            {activeModule === 'wall_calc' && (
+              <WallDesignCalculator isDark={isDark} />
+            )}
+
+            {activeModule === 'foundation_app' && (
+              <FoundationMainApp isDark={isDark} />
+            )}
+
             {activeModule === 'builder' && (
               <div className="h-[800px]">
                 <InteractiveStructureBuilder />
               </div>
             )}
 
-            {/* BS Code Reference Tables */}
-            <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <FileText size={24} className="text-blue-600" />
-                  BS Code Reference Tables
-                </h2>
-                <button
-                  onClick={() => setShowReferenceTables(!showReferenceTables)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${showReferenceTables
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : `${inputBg} border ${borderColor} hover:bg-gray-100`
-                    }`}
-                >
-                  {showReferenceTables ? 'Hide Tables' : 'Show Reference Tables'}
-                  {showReferenceTables ? <ChevronDown size={18} className="rotate-180" /> : <ChevronRight size={18} />}
-                </button>
-              </div>
-
-              {showReferenceTables && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className={`p-4 ${inputBg} rounded-lg`}>
-                    <h3 className="font-bold mb-2">Concrete Grades (BS 8110)</h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-300">
-                            <th className="text-left py-2">Grade</th>
-                            <th className="text-left py-2">fcu (N/mm²)</th>
-                            <th className="text-left py-2">Application</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">C25</td>
-                            <td className="py-2">25</td>
-                            <td className="py-2">General construction</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">C30</td>
-                            <td className="py-2">30</td>
-                            <td className="py-2">Reinforced concrete</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">C40</td>
-                            <td className="py-2">40</td>
-                            <td className="py-2">High strength applications</td>
-                          </tr>
-                          <tr>
-                            <td className="py-2">C50</td>
-                            <td className="py-2">50</td>
-                            <td className="py-2">Pre-stressed concrete</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className={`p-4 ${inputBg} rounded-lg`}>
-                    <h3 className="font-bold mb-2">Load Factors (BS 8110)</h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-300">
-                            <th className="text-left py-2">Load Type</th>
-                            <th className="text-left py-2">ULS Factor</th>
-                            <th className="text-left py-2">SLS Factor</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">Dead Load (Gk)</td>
-                            <td className="py-2">1.4</td>
-                            <td className="py-2">1.0</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">Imposed Load (Qk)</td>
-                            <td className="py-2">1.6</td>
-                            <td className="py-2">1.0</td>
-                          </tr>
-                          <tr>
-                            <td className="py-2">Wind Load (Wk)</td>
-                            <td className="py-2">1.4</td>
-                            <td className="py-2">1.0</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className={`p-4 ${inputBg} rounded-lg`}>
-                    <h3 className="font-bold mb-2">Reinforcement Bar Sizes (BS 4449)</h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-300">
-                            <th className="text-left py-2">Bar Size</th>
-                            <th className="text-left py-2">Diameter (mm)</th>
-                            <th className="text-left py-2">Area (mm²)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">H8</td>
-                            <td className="py-2">8</td>
-                            <td className="py-2">50</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">H10</td>
-                            <td className="py-2">10</td>
-                            <td className="py-2">79</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">H12</td>
-                            <td className="py-2">12</td>
-                            <td className="py-2">113</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">H16</td>
-                            <td className="py-2">16</td>
-                            <td className="py-2">201</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-2">H20</td>
-                            <td className="py-2">20</td>
-                            <td className="py-2">314</td>
-                          </tr>
-                          <tr>
-                            <td className="py-2">H25</td>
-                            <td className="py-2">25</td>
-                            <td className="py-2">491</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+            {activeModule === 'reference' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className={`p-4 ${inputBg} rounded-lg`}>
+                  <h3 className="font-bold mb-2">Concrete Grades (BS 8110)</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-300">
+                          <th className="text-left py-2">Grade</th>
+                          <th className="text-left py-2">fcu (N/mm²)</th>
+                          <th className="text-left py-2">Application</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">C25</td>
+                          <td className="py-2">25</td>
+                          <td className="py-2">General construction</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">C30</td>
+                          <td className="py-2">30</td>
+                          <td className="py-2">Reinforced concrete</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">C40</td>
+                          <td className="py-2">40</td>
+                          <td className="py-2">High strength applications</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">C50</td>
+                          <td className="py-2">50</td>
+                          <td className="py-2">Pre-stressed concrete</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div className={`p-4 ${inputBg} rounded-lg`}>
+                  <h3 className="font-bold mb-2">Load Factors (BS 8110)</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-300">
+                          <th className="text-left py-2">Load Type</th>
+                          <th className="text-left py-2">ULS Factor</th>
+                          <th className="text-left py-2">SLS Factor</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">Dead Load (Gk)</td>
+                          <td className="py-2">1.4</td>
+                          <td className="py-2">1.0</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">Imposed Load (Qk)</td>
+                          <td className="py-2">1.6</td>
+                          <td className="py-2">1.0</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">Wind Load (Wk)</td>
+                          <td className="py-2">1.4</td>
+                          <td className="py-2">1.0</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className={`p-4 ${inputBg} rounded-lg`}>
+                  <h3 className="font-bold mb-2">Reinforcement Bar Sizes (BS 4449)</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-300">
+                          <th className="text-left py-2">Bar Size</th>
+                          <th className="text-left py-2">Diameter (mm)</th>
+                          <th className="text-left py-2">Area (mm²)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">H8</td>
+                          <td className="py-2">8</td>
+                          <td className="py-2">50</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">H10</td>
+                          <td className="py-2">10</td>
+                          <td className="py-2">79</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">H12</td>
+                          <td className="py-2">12</td>
+                          <td className="py-2">113</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">H16</td>
+                          <td className="py-2">16</td>
+                          <td className="py-2">201</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2">H20</td>
+                          <td className="py-2">20</td>
+                          <td className="py-2">314</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">H25</td>
+                          <td className="py-2">25</td>
+                          <td className="py-2">491</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>

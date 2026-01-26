@@ -21,6 +21,7 @@ from shapely.geometry import LineString, Point
 from .models import BuildingModel, FloorPlan, Wall, Opening, Room, Furniture, TechnicalPoint, Conduit, WallSegment
 from .detectors import YOLODetector
 from .engine_rules import EngineeringEngine
+from .cad_file_extractor import CADFileProcessor
 
 # Proven CV utilities
 try:
@@ -1062,6 +1063,7 @@ router = APIRouter()
 uploaded_files = {}
 opencv_proc = OpenCVProcessor()
 yolo_det = InternalYOLODetector(yolo_model) if yolo_model else None
+cad_proc = CADFileProcessor()
 
 
 @router.get("/")
@@ -1083,22 +1085,33 @@ async def upload(file: UploadFile = File(...)):
         with open(path, "wb") as f:
             f.write(content)
 
-        img = cv2.imread(str(path))
-        if img is None:
-            path.unlink()
-            raise HTTPException(400, "Invalid image")
-
-        h, w = img.shape[:2]
-        uploaded_files[file_id] = {
-            "path": str(path),
-            "filename": file.filename,
-            "width": w,
-            "height": h,
-        }
-
-        return JSONResponse(
-            {"file_id": file_id, "filename": file.filename, "width": w, "height": h}
-        )
+        if img is not None:
+            h, w = img.shape[:2]
+            uploaded_files[file_id] = {
+                "path": str(path),
+                "filename": file.filename,
+                "width": w,
+                "height": h,
+                "type": "image"
+            }
+            return JSONResponse(
+                {"file_id": file_id, "filename": file.filename, "width": w, "height": h, "type": "image"}
+            )
+        else:
+            if file.filename.lower().endswith(('.dxf', '.ifc')):
+                uploaded_files[file_id] = {
+                    "path": str(path),
+                    "filename": file.filename,
+                    "width": 0,
+                    "height": 0,
+                    "type": "cad"
+                }
+                return JSONResponse(
+                    {"file_id": file_id, "filename": file.filename, "width": 0, "height": 0, "type": "cad"}
+                )
+            else:
+                path.unlink()
+                raise HTTPException(400, "Invalid file type. Supported: Images, DXF, IFC")
     except Exception as e:
         raise HTTPException(500, str(e))
 
@@ -1128,6 +1141,32 @@ async def process(
     use_yolo = useYolo if useYolo is not None else use_yolo
     if file_id not in uploaded_files:
         raise HTTPException(400, "File not found")
+
+    file_info = uploaded_files[file_id]
+    
+    if file_info.get("type") == "cad":
+        try:
+            cad_floors = cad_proc.extract_from_file(file_info["path"])
+            if not cad_floors:
+                raise HTTPException(500, "CAD extraction failed")
+            
+            # Post-process all floors
+            for floor in cad_floors:
+                for i, wall in enumerate(floor.walls):
+                    if wall.thickness <= 0:
+                        wall.thickness = wall_thickness
+                    wall.id = f"wall_{i}"
+                    wall.segments = get_wall_segments(wall, wall_height, floor.doors, floor.windows)
+            
+            return BuildingModel(
+                project_id=file_id,
+                floors=cad_floors,
+                totalFloors=len(cad_floors),
+                totalHeight=len(cad_floors) * wall_height,
+                metadata={"file_type": "cad", "filename": file_info["filename"], "multi_storey": len(cad_floors) > 1}
+            )
+        except Exception as e:
+            raise HTTPException(500, f"CAD processing error: {str(e)}\n{traceback.format_exc()}")
 
     try:
         img = cv2.imread(uploaded_files[file_id]["path"])

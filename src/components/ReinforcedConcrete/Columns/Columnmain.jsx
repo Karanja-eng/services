@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
   Scatter,
+  ComposedChart,
 } from "recharts";
 import Column3DVisualization from "../../components/column_3d_helper";
 import ColumnDrawer from "./ColumnDrawer";
@@ -54,44 +55,30 @@ const ColumnApp = () => {
   // Submit design request
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload =
-      mode === "uniaxial"
-        ? {
-          mode,
-          b,
-          h,
-          N: N,
-          M: M,
-          cover,
-          tie_dia: tieDia,
-          max_agg: maxAgg,
-          bar_diameter: barDiameter,
-          braced,
-          end_top: endTop,
-          end_bottom: endBottom,
-          lo,
-          inclination,
-          fire_res: fireRes,
-        }
-        : {
-          mode,
-          b,
-          h,
-          N: N,
-          Mx: Mx,
-          My: My,
-          alpha,
-          cover,
-          tie_dia: tieDia,
-          max_agg: maxAgg,
-          bar_diameter: barDiameter,
-          braced,
-          end_top: endTop,
-          end_bottom: endBottom,
-          lo,
-          inclination,
-          fire_res: fireRes,
-        };
+    let payload = {
+      mode,
+      b,
+      h,
+      N,
+      cover,
+      tie_dia: tieDia,
+      max_agg: maxAgg,
+      bar_diameter: barDiameter,
+      braced,
+      end_top: endTop,
+      end_bottom: endBottom,
+      lo,
+      inclination,
+      fire_res: fireRes,
+    };
+
+    if (mode === "uniaxial") {
+      payload.M = M;
+    } else if (mode === "biaxial") {
+      payload.Mx = Mx;
+      payload.My = My;
+      payload.alpha = alpha;
+    }
 
     try {
       const res = await fetch(`${API}/design-column`, {
@@ -143,9 +130,9 @@ const ColumnApp = () => {
         const dp = result.design_point;
         const cp = result.chart_point;
         if (dp?.N != null && dp?.M != null)
-          scatterPoints.push({ name: "Target", M: dp.M, N: dp.N });
+          scatterPoints.push({ name: "Design Load", M: dp.M, N: dp.N });
         if (cp?.N != null && cp?.M != null)
-          scatterPoints.push({ name: "Chart", M: cp.M, N: cp.N });
+          scatterPoints.push({ name: "Provided Capacity", M: cp.M, N: cp.N });
       } else {
         const dp = result.design_point;
         const cp = result.chart_point;
@@ -164,7 +151,7 @@ const ColumnApp = () => {
     }
 
     return (
-      <LineChart
+      <ComposedChart
         width={800}
         height={400}
         margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
@@ -197,13 +184,12 @@ const ColumnApp = () => {
         ))}
         {scatterPoints.length > 0 && (
           <Scatter
-            name="Design points"
+            name="Analysis Points"
             data={scatterPoints}
-            fill="red"
-            shape="star"
+            fill="#e11d48"
           />
         )}
-      </LineChart>
+      </ComposedChart>
     );
   };
 
@@ -289,6 +275,7 @@ const ColumnApp = () => {
                   onChange={(e) => setMode(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
+                  <option value="axial">Axial</option>
                   <option value="uniaxial">Uniaxial</option>
                   <option value="biaxial">Biaxial</option>
                 </select>
@@ -402,7 +389,7 @@ const ColumnApp = () => {
                   unit="kN"
                 />
 
-                {mode === "uniaxial" ? (
+                {mode === "axial" ? null : mode === "uniaxial" ? (
                   <InputField
                     label="Moment (M)"
                     name="moment"
@@ -530,7 +517,7 @@ const ColumnApp = () => {
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                       <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Classification</p>
                       <p className="text-lg font-bold text-blue-900">
-                        {result.classification}
+                        {result.is_inclined ? `Inclined (${result.classification})` : result.classification}
                       </p>
                     </div>
 
@@ -563,18 +550,22 @@ const ColumnApp = () => {
 
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p className="text-sm text-gray-600">Design Loads</p>
-                      {result.mode === "uniaxial" ? (
+                      {result.mode === "axial" ? (
                         <p className="text-lg font-medium text-gray-800">
-                          N = {(result.loads.N / 1000).toFixed(1)} kN
-                          <br />M = {(result.loads.M / 1e6).toFixed(2)} kNm
+                          N = {result.loads.N.toFixed(1)} kN
+                        </p>
+                      ) : result.mode === "uniaxial" ? (
+                        <p className="text-lg font-medium text-gray-800">
+                          N = {result.loads.N.toFixed(1)} kN
+                          <br />M = {result.loads.Mx.toFixed(2)} kNm
                         </p>
                       ) : (
                         <p className="text-lg font-medium text-gray-800">
-                          N = {(result.loads.N / 1000).toFixed(1)} kN
+                          N = {result.loads.N.toFixed(1)} kN
                           <br />
-                          Mx = {(result.loads.Mx / 1e6).toFixed(2)} kNm
+                          Mx = {result.loads.Mx.toFixed(2)} kNm
                           <br />
-                          My = {(result.loads.My / 1e6).toFixed(2)} kNm
+                          My = {result.loads.My.toFixed(2)} kNm
                         </p>
                       )}
                     </div>

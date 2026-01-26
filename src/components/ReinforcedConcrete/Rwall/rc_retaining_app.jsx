@@ -47,6 +47,9 @@ function Retaining({ isDark }) {
     has_nib: false,
     nib_depth: 0.5,
     auto_size: true,
+    custom_phi: 30,
+    custom_gamma: 18,
+    custom_cohesion: 0,
   });
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -168,6 +171,9 @@ function Retaining({ isDark }) {
         has_nib: inputs.has_nib,
         nib_depth: inputs.nib_depth ? parseFloat(inputs.nib_depth) : null,
         auto_size: inputs.auto_size,
+        custom_phi: inputs.soil_type === "Custom" ? parseFloat(inputs.custom_phi) : null,
+        custom_gamma: inputs.soil_type === "Custom" ? parseFloat(inputs.custom_gamma) : null,
+        custom_cohesion: inputs.soil_type === "Custom" ? parseFloat(inputs.custom_cohesion) : null,
       };
 
       const response = await fetch(`${API_BASE_URL}/design`, {
@@ -369,6 +375,37 @@ function Retaining({ isDark }) {
                   </>
                 )}
 
+                {(wallType === "counterfort" || wallType === "buttress") && (
+                  <div className="grid grid-cols-2 gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <div>
+                      <label className="block text-sm font-medium text-blue-800 mb-1">
+                        Cf. Spacing (m)
+                      </label>
+                      <input
+                        type="number"
+                        name="counterfort_spacing"
+                        value={inputs.counterfort_spacing}
+                        onChange={handleInputChange}
+                        step="0.5"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-blue-800 mb-1">
+                        Cf. Thick (mm)
+                      </label>
+                      <input
+                        type="number"
+                        name="counterfort_thickness"
+                        value={inputs.counterfort_thickness}
+                        onChange={handleInputChange}
+                        step="50"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 mt-2">
                   <input
                     type="checkbox"
@@ -449,8 +486,44 @@ function Retaining({ isDark }) {
                           <option value="Stiff Clay">Stiff Clay</option>
                         </>
                       )}
+                    <option value="Custom">Custom Soil...</option>
                   </select>
                 </div>
+
+                {inputs.soil_type === "Custom" && (
+                  <div className="grid grid-cols-3 gap-2 p-3 bg-orange-50 rounded-lg border border-orange-100 animate-in slide-in-from-top-2">
+                    <div>
+                      <label className="block text-xs font-medium text-orange-800 mb-1">Phi</label>
+                      <input
+                        type="number"
+                        name="custom_phi"
+                        value={inputs.custom_phi}
+                        onChange={handleInputChange}
+                        className="w-full px-2 py-1 text-sm border rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-orange-800 mb-1">Gamma</label>
+                      <input
+                        type="number"
+                        name="custom_gamma"
+                        value={inputs.custom_gamma}
+                        onChange={handleInputChange}
+                        className="w-full px-2 py-1 text-sm border rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-orange-800 mb-1">Coh.</label>
+                      <input
+                        type="number"
+                        name="custom_cohesion"
+                        value={inputs.custom_cohesion}
+                        onChange={handleInputChange}
+                        className="w-full px-2 py-1 text-sm border rounded"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -783,6 +856,35 @@ function Retaining({ isDark }) {
                           </div>
                         </div>
                       </div>
+
+                      {/* Counterfort Design (if applicable) */}
+                      {results.counterfort_design && (
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                          <h3 className="font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">
+                            Counterfort Design
+                          </h3>
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                              <span className="block text-blue-500 text-xs font-semibold uppercase">Thickness</span>
+                              <span className="font-bold text-lg">{results.counterfort_design.thickness} mm</span>
+                            </div>
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                              <span className="block text-blue-500 text-xs font-semibold uppercase">Spacing</span>
+                              <span className="font-bold text-lg">{results.counterfort_design.spacing} m</span>
+                            </div>
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                              <span className="block text-blue-500 text-xs font-semibold uppercase">Main Steel (Base)</span>
+                              <span className="font-bold text-lg text-blue-600">
+                                {results.counterfort_design.main_steel[0].notation}
+                              </span>
+                            </div>
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                              <span className="block text-blue-500 text-xs font-semibold uppercase">Design Moment</span>
+                              <span className="font-bold text-lg">{results.counterfort_design.design_moments[0].toFixed(1)} kNm</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

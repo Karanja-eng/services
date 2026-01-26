@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from "react";
 import {
+  Box,
   Calculator,
   FileText,
   Download,
+  Building,
   Plus,
   Trash2,
-  Building,
+  ChevronDown,
+  ChevronUp,
   Upload,
   Loader2,
   Eye,
-  Layers,
+  Settings as SettingsIcon,
   X,
+  Layers
 } from "lucide-react";
 import axios from "axios";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
+
+const API_BASE = `http://${window.location.hostname}:8001`;
 
 const RCCSuperstructureApp = () => {
   const [activeTab, setActiveTab] = useState("calculator");
@@ -131,14 +137,17 @@ const RCCSuperstructureApp = () => {
     );
   };
 
-  const API_BASE = `http://${window.location.hostname}:8001`;
-
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     // Immediate local preview
-    setPlanImageUrl(URL.createObjectURL(file));
+    const isImage = file.type.startsWith("image/");
+    if (isImage) {
+      setPlanImageUrl(URL.createObjectURL(file));
+    } else {
+      setPlanImageUrl("cad_placeholder");
+    }
     setProcessing(true);
 
     const fd = new FormData();
@@ -503,11 +512,11 @@ const RCCSuperstructureApp = () => {
                           <Upload className="w-8 h-8 text-blue-400" />
                           <div className="text-center">
                             <h3 className="text-sm font-bold text-gray-900">RC Analysis</h3>
-                            <p className="text-[10px] text-gray-500">Upload plan to auto-detect columns, beams and slabs.</p>
+                            <p className="text-[10px] text-gray-500">Upload plan (Image, DXF, IFC) to auto-detect elements.</p>
                           </div>
-                          <input type="file" id="rc-upload" className="hidden" onChange={handleUpload} />
+                          <input type="file" id="rc-upload" className="hidden" accept="image/*,.dxf,.ifc" onChange={handleUpload} />
                           <label htmlFor="rc-upload" className="cursor-pointer bg-blue-600 text-white px-4 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-all text-xs">
-                            Select Plan
+                            Select Plan (Img/CAD)
                           </label>
                         </>
                       )}
@@ -905,11 +914,19 @@ const RCCSuperstructureApp = () => {
             </div>
             <div className="flex-1 overflow-auto bg-gray-100 p-8 flex items-center justify-center relative min-h-[500px]">
               <div className="relative inline-block border-4 border-white shadow-2xl rounded-lg overflow-hidden">
-                <img
-                  src={planImageUrl}
-                  alt="Floor Plan"
-                  className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
-                />
+                {planImageUrl === "cad_placeholder" ? (
+                  <div className="w-[600px] h-[400px] bg-slate-900 flex flex-col items-center justify-center text-white p-8 space-y-4">
+                    <Box size={64} className="text-blue-400" />
+                    <h3 className="text-xl font-bold">CAD File Render</h3>
+                    <p className="text-sm text-slate-400 text-center">AutoCAD/Revit/ArchiCAD data extracted successfully. Close this view to see calculated results in the forms.</p>
+                  </div>
+                ) : (
+                  <img
+                    src={planImageUrl}
+                    alt="Floor Plan"
+                    className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
+                  />
+                )}
                 {activeSegment !== 'all' && (
                   <img
                     src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}

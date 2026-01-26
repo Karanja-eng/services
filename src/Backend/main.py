@@ -38,18 +38,18 @@ GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 @app.get("/uploads/{filename}", tags=["Static"])
 async def serve_upload(filename: str):
     file_path = UPLOADS_DIR / filename
-    print(f"📂 Serving upload: {file_path}")
+    print(f" Serving upload: {file_path}")
     if not file_path.exists():
-        print(f"❌ File not found: {file_path}")
+        print(f" File not found: {file_path}")
         return {"error": "File not found"}
     return FileResponse(file_path, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/generated/{filename}", tags=["Static"])
 async def serve_generated(filename: str):
     file_path = GENERATED_DIR / filename
-    print(f"📂 Serving generated: {file_path}")
+    print(f" Serving generated: {file_path}")
     if not file_path.exists():
-        print(f"❌ File not found: {file_path}")
+        print(f" File not found: {file_path}")
         return {"error": "File not found"}
     return FileResponse(file_path, headers={"Access-Control-Allow-Origin": "*"})
 
@@ -65,8 +65,8 @@ async def startup_event():
     print("\n" + "="*60)
     print("Starting Fundi API")
     print("="*60)
-    print(f"📡 UPLOADS DIR: {UPLOADS_DIR}")
-    print(f"📡 GENERATED DIR: {GENERATED_DIR}")
+    print(f" UPLOADS DIR: {UPLOADS_DIR}")
+    print(f" GENERATED DIR: {GENERATED_DIR}")
     print("="*60)
     
     # Check database connection
@@ -228,7 +228,7 @@ app.include_router(rc_substructure_router, prefix="/rc_substructure_router", tag
 from calculations.Atomationmodels.arch_pro.opencvmodel import router as open_cv_model_router
 # from calculations.Atomationmodels.phi_vision import router as phi_model_router
 from calculations.Atomationmodels.qwen_3_vl_4B import router as qwen_model_router, preload_model
-from calculations.Atomationmodels.arch_pro.main2 import router as architectural_automation_router
+from calculations.Atomationmodels.arch_pro.yolo_cv import router as architectural_automation_router
 from calculations.takeoff.electrical_plumbing_takeoff import router as electrical_plumbing_takeoff_router
 
 #app.include_router(qwen_model_router, prefix="/qwen_model", tags=["qwen_model_router"])

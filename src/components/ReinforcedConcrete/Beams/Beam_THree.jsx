@@ -93,12 +93,118 @@ function SupportColumn({ x, y, z, width, depth, colors }) {
   )
 }
 
+/**
+ * BeamCrossSection Component
+ * Renders different beam cross-sections: Rectangular, T-Beam, or L-Beam
+ * For T-beam and L-beam, the web (stem) extends down from the flange (slab)
+ */
+function BeamCrossSection({
+  position,
+  spanLength,
+  beamType,
+  beamWidth, // Web width
+  beamDepth, // Total depth
+  flangeWidth,
+  flangeThickness,
+  color,
+  opacity,
+  wireframe
+}) {
+
+  if (beamType === "T-Beam") {
+    // T-Beam: Flange (slab) at top, web (beam stem) extends down
+    const webDepth = beamDepth - flangeThickness;
+    const webY = -flangeThickness / 2 - webDepth / 2; // Position web below flange
+    const flangeY = beamDepth / 2 - flangeThickness / 2; // Flange at top
+
+    return (
+      <group position={position}>
+        {/* Flange (Slab part) */}
+        <mesh position={[0, flangeY, 0]}>
+          <boxGeometry args={[spanLength, flangeThickness, flangeWidth]} />
+          <meshStandardMaterial
+            color={color}
+            transparent={true}
+            opacity={opacity}
+            wireframe={wireframe}
+          />
+        </mesh>
+
+        {/* Web (Beam stem extending down) */}
+        <mesh position={[0, webY, 0]}>
+          <boxGeometry args={[spanLength, webDepth, beamWidth]} />
+          <meshStandardMaterial
+            color={color}
+            transparent={true}
+            opacity={opacity}
+            wireframe={wireframe}
+          />
+        </mesh>
+      </group>
+    );
+  } else if (beamType === "L-Beam") {
+    // L-Beam: Flange on one side, web extends down
+    const webDepth = beamDepth - flangeThickness;
+    const webY = -flangeThickness / 2 - webDepth / 2;
+    const flangeY = beamDepth / 2 - flangeThickness / 2;
+
+    // Flange offset to one side (creating the L shape)
+    const flangeOffset = (flangeWidth - beamWidth) / 2;
+
+    return (
+      <group position={position}>
+        {/* Flange (Slab part) - offset to create L shape */}
+        <mesh position={[0, flangeY, flangeOffset]}>
+          <boxGeometry args={[spanLength, flangeThickness, flangeWidth]} />
+          <meshStandardMaterial
+            color={color}
+            transparent={true}
+            opacity={opacity}
+            wireframe={wireframe}
+          />
+        </mesh>
+
+        {/* Web (Beam stem extending down) */}
+        <mesh position={[0, webY, 0]}>
+          <boxGeometry args={[spanLength, webDepth, beamWidth]} />
+          <meshStandardMaterial
+            color={color}
+            transparent={true}
+            opacity={opacity}
+            wireframe={wireframe}
+          />
+        </mesh>
+      </group>
+    );
+  } else {
+    // Rectangular beam (default)
+    return (
+      <mesh position={position}>
+        <boxGeometry args={[spanLength, beamDepth, beamWidth]} />
+        <meshStandardMaterial
+          color={color}
+          transparent={true}
+          opacity={opacity}
+          wireframe={wireframe}
+        />
+      </mesh>
+    );
+  }
+}
+
+
 function SingleSpanSection({
   startX,
   spanLength,
   beamWidth = 0.3,
   beamDepth = 0.5,
   cover = 0.03, // meters
+
+  // T-beam and L-beam specific properties
+  beamType = "Rectangular", // "Rectangular", "T-Beam", "L-Beam"
+  flangeWidth = 1.0, // For T-beam and L-beam
+  flangeThickness = 0.15, // Slab thickness
+  webWidth = 0.3, // Width of the web (beam stem)
 
   // Reinforcement Data (Standardized from Backend)
   saggingBarsCount = 0,
@@ -162,15 +268,18 @@ function SingleSpanSection({
     <group>
       {/* Concrete */}
       {showConcrete && (
-        <mesh position={[concreteX, concreteY, concreteZ]}>
-          <boxGeometry args={[spanLength, beamDepth, beamWidth]} />
-          <meshStandardMaterial
-            color={colors.concrete}
-            transparent={true}
-            opacity={opacity}
-            wireframe={wireframe}
-          />
-        </mesh>
+        <BeamCrossSection
+          position={[concreteX, concreteY, concreteZ]}
+          spanLength={spanLength}
+          beamType={beamType}
+          beamWidth={webWidth || beamWidth}
+          beamDepth={beamDepth}
+          flangeWidth={flangeWidth}
+          flangeThickness={flangeThickness}
+          color={colors.concrete}
+          opacity={opacity}
+          wireframe={wireframe}
+        />
       )}
 
       {showRebar && (

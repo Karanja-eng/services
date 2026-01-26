@@ -19,7 +19,7 @@ import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffShee
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 
-const API_BASE = "http://localhost:8001";
+const API_BASE = `http://${window.location.hostname}:8001`;
 
 // Ray-casting algorithm for point in polygon
 function isPointInPoly(pt, poly) {
@@ -56,6 +56,8 @@ const ElectricalPlumbingTakeoff = () => {
         try {
             const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
             const data = await res.json();
+            // Note: MEP automation currently relies on image context for some rules,
+            // but we allow CAD upload to extract basic geometry.
             await processFloorplan(data.file_id);
         } catch (err) { console.error("Upload error:", err); }
         setProcessing(false);
@@ -225,9 +227,9 @@ const ElectricalPlumbingTakeoff = () => {
                                                             <Upload className="w-12 h-12 text-blue-500 mb-4 group-hover:scale-110 transition-transform" />
                                                             <h3 className="text-slate-900 font-bold text-lg">Extract MEP Data</h3>
                                                             <p className="text-slate-500 text-sm mb-6">Upload floor plan to auto-calculate conduits & pipes</p>
-                                                            <input type="file" id="mep-upload" className="hidden" onChange={handleUpload} />
+                                                            <input type="file" id="mep-upload" className="hidden" accept="image/*,.dxf,.ifc" onChange={handleUpload} />
                                                             <label htmlFor="mep-upload" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all cursor-pointer inline-block">
-                                                                Select Plan Image
+                                                                Select Plan (Img/CAD)
                                                             </label>
                                                         </div>
                                                     )}

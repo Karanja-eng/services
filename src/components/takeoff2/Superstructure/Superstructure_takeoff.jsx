@@ -128,9 +128,15 @@ const SuperstructureTakeoffApp = () => {
     if (!file) return;
 
     // LOCAL PREVIEW (Foolproof & "Simple")
-    const localUrl = URL.createObjectURL(file);
-    setUploadedImageUrl(localUrl);
-    console.log("📸 Local Preview created:", localUrl);
+    const isImage = file.type.startsWith("image/");
+    if (isImage) {
+      const localUrl = URL.createObjectURL(file);
+      setUploadedImageUrl(localUrl);
+      console.log("📸 Local Preview created:", localUrl);
+    } else {
+      setUploadedImageUrl("cad_placeholder"); // Special flag for UI
+      console.log("📐 CAD File selected:", file.name);
+    }
 
     setProcessing(true);
     const fd = new FormData();
@@ -286,47 +292,47 @@ const SuperstructureTakeoffApp = () => {
 
       const response = await axios.post(`${API_BASE}/rc_superstructure_router/api/calculate-superstructure`, payload);
       const data = response.data;
-      
+
       console.log("API Response:", data); // Debug log
 
       // Map SuperstructureResults to BOQ items
       if (data && data.total_conc_m3 !== undefined) {
-         // Success
-         const items = [
-            // Concrete
-            {
-                id: 'conc-1',
-                billNo: 'F',
-                itemNo: 'F10',
-                description: `Providing and placing C25 concrete in columns, beams, and slabs.`,
-                unit: 'm³',
-                quantity: data.total_conc_with_wastage,
-                rate: 0,
-                amount: 0
-            },
-             // Formwork
-             {
-                id: 'form-1',
-                billNo: 'F',
-                itemNo: 'F20',
-                description: `Centering and shuttering (Formwork) including strutting, propping etc. and removal of formwork.`,
-                unit: 'm²',
-                quantity: data.total_form_m2,
-                rate: 0,
-                amount: 0
-            },
-             // Reinforcement
-             {
-                id: 'reinf-1',
-                billNo: 'G',
-                itemNo: 'G10',
-                description: `Supply and fix High Yield Strength Deformed (HYSD) bars for reinforcement including cutting, bending, binding etc.`,
-                unit: 'kg',
-                quantity: data.total_reinf_kg,
-                rate: 0,
-                amount: 0
-            }
-         ];
+        // Success
+        const items = [
+          // Concrete
+          {
+            id: 'conc-1',
+            billNo: 'F',
+            itemNo: 'F10',
+            description: `Providing and placing C25 concrete in columns, beams, and slabs.`,
+            unit: 'm³',
+            quantity: data.total_conc_with_wastage,
+            rate: 0,
+            amount: 0
+          },
+          // Formwork
+          {
+            id: 'form-1',
+            billNo: 'F',
+            itemNo: 'F20',
+            description: `Centering and shuttering (Formwork) including strutting, propping etc. and removal of formwork.`,
+            unit: 'm²',
+            quantity: data.total_form_m2,
+            rate: 0,
+            amount: 0
+          },
+          // Reinforcement
+          {
+            id: 'reinf-1',
+            billNo: 'G',
+            itemNo: 'G10',
+            description: `Supply and fix High Yield Strength Deformed (HYSD) bars for reinforcement including cutting, bending, binding etc.`,
+            unit: 'kg',
+            quantity: data.total_reinf_kg,
+            rate: 0,
+            amount: 0
+          }
+        ];
         setTakeoffData(items);
         setEditorKey(prev => prev + 1);
         setActiveTab("takeoff"); // Switch to takeoff to see results
@@ -396,11 +402,11 @@ const SuperstructureTakeoffApp = () => {
                       </div>
                       <div className="text-center">
                         <h3 className="text-lg font-bold text-gray-900">AI Floorplan Extraction</h3>
-                        <p className="text-sm text-gray-500 max-w-sm">Upload your floor plan image to automatically extract wall lengths, door/window counts, and column positions.</p>
+                        <p className="text-sm text-gray-500 max-w-sm">Upload your floor plan (PNG, JPG, DXF, IFC) to automatically extract wall lengths, door/window counts, and column positions.</p>
                       </div>
-                      <input type="file" id="takeoff-upload" className="hidden" onChange={handleUpload} />
+                      <input type="file" id="takeoff-upload" className="hidden" accept="image/*,.dxf,.ifc" onChange={handleUpload} />
                       <label htmlFor="takeoff-upload" className="cursor-pointer bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200">
-                        Select Plan Image
+                        Select Plan (Image/CAD)
                       </label>
                       {buildingData && (
                         <div className="mt-4 flex flex-col items-center gap-3 w-full">
@@ -712,12 +718,20 @@ const SuperstructureTakeoffApp = () => {
               </div>
               <div className="flex-1 overflow-auto bg-gray-100 p-8 flex items-center justify-center relative min-h-[500px]">
                 <div className="relative inline-block border-4 border-white shadow-2xl rounded-lg overflow-hidden">
-                  <img
-                    src={uploadedImageUrl}
-                    alt="Floor Plan"
-                    className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
-                    onLoad={() => console.log("✅ Image loaded successfully:", uploadedImageUrl)}
-                  />
+                  {uploadedImageUrl === "cad_placeholder" ? (
+                    <div className="w-[600px] h-[400px] bg-slate-900 flex flex-col items-center justify-center text-white p-8 space-y-4">
+                      <Box size={64} className="text-blue-400" />
+                      <h3 className="text-xl font-bold">CAD File Render</h3>
+                      <p className="text-sm text-slate-400 text-center">AutoCAD/Revit/ArchiCAD data extracted successfully. Close this view to see calculated results in the forms.</p>
+                    </div>
+                  ) : (
+                    <img
+                      src={uploadedImageUrl}
+                      alt="Floor Plan"
+                      className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
+                      onLoad={() => console.log("✅ Image loaded successfully:", uploadedImageUrl)}
+                    />
+                  )}
                   {activeSegment !== 'all' && (
                     <img
                       src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}

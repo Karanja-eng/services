@@ -18,7 +18,7 @@ import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffShee
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 
-const API_BASE = "http://localhost:8001";
+const API_BASE = `http://${window.location.hostname}:8001`;
 
 const SubstructureTakeoffApp = () => {
 
@@ -41,13 +41,20 @@ const SubstructureTakeoffApp = () => {
     const file = e.target.files[0];
     if (!file) return;
     setProcessing(true);
+
+    const isImage = file.type.startsWith("image/");
+    if (isImage) {
+      setPlanImageUrl(URL.createObjectURL(file));
+    } else {
+      setPlanImageUrl("cad_placeholder");
+    }
+
     const fd = new FormData();
     fd.append("file", file);
     try {
       const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
       const data = await res.json();
       setFileId(data.file_id);
-      setPlanImageUrl(`${API_BASE}/uploads/${data.filename}`);
       await processFloorplan(data.file_id);
     } catch (err) { console.error(err); }
     setProcessing(false);
@@ -354,9 +361,9 @@ const SubstructureTakeoffApp = () => {
                           <h3 className="font-bold text-gray-900">AI Substructure Setup</h3>
                           <p className="text-xs text-gray-500">Auto-detect foundation walls, column bases, and excavation depths.</p>
                         </div>
-                        <input type="file" id="sub-upload" className="hidden" onChange={handleUpload} />
+                        <input type="file" id="sub-upload" className="hidden" accept="image/*,.dxf,.ifc" onChange={handleUpload} />
                         <label htmlFor="sub-upload" className="cursor-pointer bg-gray-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition-all shadow-lg">
-                          Upload Foundation Plan
+                          Upload Plan (Img/CAD)
                         </label>
                         {buildingData && (
                           <button
@@ -515,11 +522,19 @@ const SubstructureTakeoffApp = () => {
             </div>
             <div className="flex-1 overflow-auto bg-gray-100 p-8 flex items-center justify-center relative min-h-[500px]">
               <div className="relative inline-block border-4 border-white shadow-2xl rounded-lg overflow-hidden">
-                <img
-                  src={planImageUrl}
-                  alt="Floor Plan"
-                  className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
-                />
+                {planImageUrl === "cad_placeholder" ? (
+                  <div className="w-[600px] h-[400px] bg-slate-900 flex flex-col items-center justify-center text-white p-8 space-y-4">
+                    <Box size={64} className="text-blue-400" />
+                    <h3 className="text-xl font-bold">CAD File Render</h3>
+                    <p className="text-sm text-slate-400 text-center">AutoCAD/Revit/ArchiCAD data extracted successfully. Close this view to see calculated results in the forms.</p>
+                  </div>
+                ) : (
+                  <img
+                    src={planImageUrl}
+                    alt="Floor Plan"
+                    className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
+                  />
+                )}
                 {activeSegment !== 'all' && (
                   <img
                     src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}

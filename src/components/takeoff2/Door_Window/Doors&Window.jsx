@@ -8,7 +8,7 @@ import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffShee
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 
-const API_BASE = "http://localhost:8001";
+const API_BASE = `http://${window.location.hostname}:8001`;
 
 
 const DoorWindowTakeoff = () => {
@@ -59,6 +59,7 @@ const DoorWindowTakeoff = () => {
 
     // Automation State
     const [buildingData, setBuildingData] = useState(null);
+    const [fileId, setFileId] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [showPlanModal, setShowPlanModal] = useState(false);
     const [planImageUrl, setPlanImageUrl] = useState("");
@@ -68,12 +69,20 @@ const DoorWindowTakeoff = () => {
         const file = e.target.files[0];
         if (!file) return;
         setProcessing(true);
+
+        const isImage = file.type.startsWith("image/");
+        if (isImage) {
+            setPlanImageUrl(URL.createObjectURL(file));
+        } else {
+            setPlanImageUrl("cad_placeholder");
+        }
+
         const fd = new FormData();
         fd.append("file", file);
         try {
             const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
             const data = await res.json();
-            setPlanImageUrl(`${API_BASE}/uploads/${data.filename}`);
+            setFileId(data.file_id);
             await processFloorplan(data.file_id);
         } catch (err) { console.error(err); }
         setProcessing(false);
@@ -246,8 +255,8 @@ const DoorWindowTakeoff = () => {
                                                 <div className="flex flex-col items-center">
                                                     <Upload className="w-8 h-8 text-blue-400 mb-2" />
                                                     <p className="text-xs text-gray-500 mb-3">Upload plan to list all doors & windows</p>
-                                                    <input type="file" id="dw-upload" className="hidden" onChange={handleUpload} />
-                                                    <label htmlFor="dw-upload" className="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold cursor-pointer hover:bg-blue-700">Upload Plan</label>
+                                                    <input type="file" id="dw-upload" className="hidden" accept="image/*,.dxf,.ifc" onChange={handleUpload} />
+                                                    <label htmlFor="dw-upload" className="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold cursor-pointer hover:bg-blue-700">Upload Plan (Img/CAD)</label>
                                                     {buildingData && (
                                                         <button
                                                             onClick={() => setShowPlanModal(true)}
@@ -474,12 +483,20 @@ const DoorWindowTakeoff = () => {
                             </div>
                             <div className="flex-1 overflow-auto bg-gray-100 p-8 flex items-center justify-center relative min-h-[500px]">
                                 <div className="relative inline-block border-4 border-white shadow-2xl rounded-lg overflow-hidden">
-                                    <img
-                                        src={planImageUrl}
-                                        alt="Floor Plan"
-                                        className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
-                                    />
-                                    {activeSegment !== 'all' && (
+                                    {planImageUrl === "cad_placeholder" ? (
+                                        <div className="w-[600px] h-[400px] bg-slate-900 flex flex-col items-center justify-center text-white p-8 space-y-4">
+                                            <Box size={64} className="text-blue-400" />
+                                            <h3 className="text-xl font-bold">CAD File Render</h3>
+                                            <p className="text-sm text-slate-400 text-center">AutoCAD/Revit/ArchiCAD data extracted successfully. Close this view to see calculated results in the forms.</p>
+                                        </div>
+                                    ) : (
+                                        <img
+                                            src={planImageUrl}
+                                            alt="Floor Plan"
+                                            className={`max-w-full h-auto transition-all duration-500 ${activeSegment !== 'all' ? 'opacity-0 grayscale-[70%]' : 'opacity-100'}`}
+                                        />
+                                    )}
+                                    {activeSegment !== 'all' && planImageUrl !== "cad_placeholder" && (
                                         <img
                                             src={`${API_BASE}/opencv/${activeSegment}?file_id=${buildingData?.project_id}`}
                                             alt={`${activeSegment} Layer`}

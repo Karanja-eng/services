@@ -210,6 +210,7 @@ class EurocodeStairInput(BaseModel):
         ..., ge=0, le=20, description="Characteristic live load in kN/m²"
     )
     finishes_load: float = Field(..., ge=0, le=5, description="Finishes load in kN/m²")
+    concrete_unit_weight: float = Field(25.0, ge=20, le=30, description="Concrete unit weight in kN/m³")
 
     @validator("cantilever_type")
     def validate_cantilever_type(cls, v, values):
@@ -322,7 +323,7 @@ class EurocodeStairCalculator:
         # Self-weight per m² (inclined surface)
         waist_m = self.input.waist_thickness / 1000
         self_weight_per_m2 = (
-            waist_m * EurocodeTablesEC2.UNIT_WEIGHT_CONCRETE * inclined_multiplier
+            waist_m * self.input.concrete_unit_weight * inclined_multiplier
         )
 
         # Total dead load
@@ -744,6 +745,7 @@ class BS8110StairInput(BaseModel):
 
     live_load: float = Field(..., ge=0, le=20)
     finishes_load: float = Field(..., ge=0, le=5)
+    concrete_unit_weight: float = Field(25.0, ge=20, le=30)
 
 
 class BS8110DesignOutput(BaseModel):
@@ -799,7 +801,7 @@ class BS8110Calculator:
         )
 
         waist_m = self.input.waist_thickness / 1000
-        self_weight = waist_m * 25 * inclined_multiplier
+        self_weight = waist_m * self.input.concrete_unit_weight * inclined_multiplier
         dead_load = self_weight + self.input.finishes_load
         ultimate_load = 1.4 * dead_load + 1.6 * self.input.live_load
 
