@@ -89,7 +89,8 @@ const RCStructuralDesign = ({ isDark = false }) => {
 
   const [showReferenceTables, setShowReferenceTables] = useState(false);
   const [results, setResults] = useState(null);
-  const isFullScreen = activeModule === 'builder';
+  const [builderFullScreen, setBuilderFullScreen] = useState(false);
+  const isFullScreen = activeModule === 'builder' || builderFullScreen;
   const canvasRef = useRef(null);
 
   const toggleSection = (section) => {
@@ -494,8 +495,8 @@ const RCStructuralDesign = ({ isDark = false }) => {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 ${activeModule === 'builder' ? 'h-screen overflow-hidden' : 'p-6'}`}>
-          {activeModule === 'builder' && (
+        <main className={`flex-1 ${activeModule === 'builder' ? (builderFullScreen ? 'h-[calc(100vh-96px)] overflow-hidden p-0' : 'h-screen overflow-hidden') : 'p-6'}`}>
+          {activeModule === 'builder' && !builderFullScreen && (
             <div className={`flex items-center gap-4 px-6 py-3 border-b ${borderColor} ${cardBg} sticky top-0 z-50`}>
               <button
                 onClick={() => setActiveModule('design_dashboard')}
@@ -1314,8 +1315,11 @@ const RCStructuralDesign = ({ isDark = false }) => {
             )}
 
             {activeModule === 'builder' && (
-              <div className="h-[800px]">
-                <InteractiveStructureBuilder />
+              <div className="h-full">
+                <InteractiveStructureBuilder
+                  isFullScreen={builderFullScreen}
+                  onFullScreenChange={setBuilderFullScreen}
+                />
               </div>
             )}
 

@@ -15,7 +15,8 @@ const ColumnKonvaGroup = ({
     showLabels = true,
     scale = 0.8,
     x = 0,
-    y = 0
+    y = 0,
+    textSize = 10
 }) => {
     // Column Shape
     const w = width * scale;
@@ -86,7 +87,7 @@ const ColumnKonvaGroup = ({
                     x={vertical ? lineX1 - 22 : (lineX1 + lineX2) / 2 - 15}
                     y={vertical ? (lineY1 + lineY2) / 2 - 10 : lineY1 - 15}
                     text={text}
-                    fontSize={10}
+                    fontSize={textSize}
                     fontFamily="Arial"
                     rotation={vertical ? -90 : 0}
                     fill="#000"
@@ -107,7 +108,7 @@ const ColumnKonvaGroup = ({
             <Group>
                 <Line points={[tx, ty, ex, ey, ex + (ex > tx ? 15 : -15), ey]} stroke="#000" strokeWidth={0.8} />
                 <Line points={arrowPoints} closed fill="#333" stroke="#000" strokeWidth={1} />
-                <Text x={ex + (ex > tx ? 20 : -85)} y={ey - 5} text={text} fontSize={10} fontFamily="Arial" fill="#000" />
+                <Text x={ex + (ex > tx ? 20 : -85)} y={ey - 5} text={text} fontSize={textSize} fontFamily="Arial" fill="#000" />
             </Group>
         );
     };
@@ -159,7 +160,7 @@ const ColumnKonvaGroup = ({
                         width={w}
                         text="SECTION A-A"
                         align="center"
-                        fontSize={13}
+                        fontSize={textSize * 1.3}
                         fontStyle="bold"
                         fill="#000"
                     />

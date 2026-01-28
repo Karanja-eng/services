@@ -319,6 +319,12 @@ export default function StructuralVisualizationComponent({
   visible = true,
   onClose = () => { },
   stairProps = null,
+  slabOpacity: externalSlabOpacity,
+  setSlabOpacity: externalSetSlabOpacity,
+  groundOpacity: externalGroundOpacity,
+  setGroundOpacity: externalSetGroundOpacity,
+  showGrid: externalShowGrid,
+  setShowGrid: externalSetShowGrid,
 }) {
   const isDark = theme === "dark";
 
@@ -420,7 +426,20 @@ export default function StructuralVisualizationComponent({
   // Display controls (RC-specific)
   const [showConcrete, setShowConcrete] = useState(true);
   const [showRebar, setShowRebar] = useState(true);
-  const [showGrid, setShowGrid] = useState(false);
+  const [internalSlabOpacity, setInternalSlabOpacity] = useState(0.4);
+  const [internalGroundOpacity, setInternalGroundOpacity] = useState(1.0);
+
+  // Use external props if provided, otherwise fallback to internal state
+  const slabOpacity = externalSlabOpacity !== undefined ? externalSlabOpacity : internalSlabOpacity;
+  const setSlabOpacity = externalSetSlabOpacity || setInternalSlabOpacity;
+
+  const groundOpacity = externalGroundOpacity !== undefined ? externalGroundOpacity : internalGroundOpacity;
+  const setGroundOpacity = externalSetGroundOpacity || setInternalGroundOpacity;
+
+  const [internalShowGrid, setInternalShowGrid] = useState(true);
+  const showGrid = externalShowGrid !== undefined ? externalShowGrid : internalShowGrid;
+  const setShowGrid = externalSetShowGrid || setInternalShowGrid;
+
   const [showAxis, setShowAxis] = useState(true);
   const [showDimensions, setShowDimensions] = useState(true);
   const [showAnnotations, setShowAnnotations] = useState(false);
@@ -575,6 +594,10 @@ export default function StructuralVisualizationComponent({
                   setShowConcrete={setShowConcrete}
                   showRebar={showRebar}
                   setShowRebar={setShowRebar}
+                  slabOpacity={slabOpacity}
+                  setSlabOpacity={setSlabOpacity}
+                  groundOpacity={groundOpacity}
+                  setGroundOpacity={setGroundOpacity}
                   showGrid={showGrid}
                   setShowGrid={setShowGrid}
                   showAxis={showAxis}
@@ -768,7 +791,13 @@ export default function StructuralVisualizationComponent({
 
               {/* Render RC Component */}
               {Element3DComponent && (
-                <Element3DComponent {...actualComponentData} {...sharedProps} />
+                <Element3DComponent
+                  {...actualComponentData}
+                  {...sharedProps}
+                  slabOpacity={slabOpacity}
+                  groundOpacity={groundOpacity}
+                  showGrid={showGrid}
+                />
               )}
 
               {/* Render CAD Objects if provided */}

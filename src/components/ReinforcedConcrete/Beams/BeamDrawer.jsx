@@ -11,7 +11,8 @@ const BeamKonvaGroup = ({
   showLabels = true,
   x = 0,
   y = 0,
-  scale = 0.4
+  scale = 0.4,
+  textSize = 10
 }) => {
   const {
     type = "t_beam",
@@ -49,7 +50,7 @@ const BeamKonvaGroup = ({
           x={vertical ? lineX1 - 25 : (lineX1 + lineX2) / 2 - 20}
           y={vertical ? (lineY1 + lineY2) / 2 - 10 : lineY1 - 15}
           text={text}
-          fontSize={10}
+          fontSize={textSize}
           fontFamily="Arial"
           rotation={vertical ? -90 : 0}
           fill="#000"
@@ -71,7 +72,7 @@ const BeamKonvaGroup = ({
       <Group>
         <Line points={[tx, ty, ex, ey, ex + (ex > tx ? 20 : -20), ey]} stroke="#000" strokeWidth={0.8} />
         <Line points={arrowPoints} closed fill="#333" stroke="#000" strokeWidth={1} />
-        <Text x={ex + (ex > tx ? 25 : -95)} y={ey - 5} text={text} fontSize={10} fontFamily="Arial" fill="#000" />
+        <Text x={ex + (ex > tx ? 25 : -95)} y={ey - 5} text={text} fontSize={textSize} fontFamily="Arial" fill="#000" />
       </Group>
     );
   };
@@ -140,7 +141,7 @@ const BeamKonvaGroup = ({
       elements.push(<LeaderLine key={`${label}-lead-bot`} tx={sRX - 8} ty={sBY - 5} ex={centerX + 80} ey={botY + 30} text={`${botCount}T${botDia}`} />);
       elements.push(<LeaderLine key={`${label}-lead-link`} tx={webRX - sCover} ty={(sTY + sBY) / 2} ex={webRX + 50} ey={(sTY + sBY) / 2 - 10} text={`R${linksDiameter}@${linksSpacing}`} />);
 
-      elements.push(<Text key={`${label}-title`} x={centerX - 100} y={botY + 55} width={200} text={label} align="center" fontSize={13} fontStyle="bold" fill="#000" />);
+      elements.push(<Text key={`${label}-title`} x={centerX - 100} y={botY + 55} width={200} text={label} align="center" fontSize={textSize * 1.3} fontStyle="bold" fill="#000" />);
     }
     return elements;
   };

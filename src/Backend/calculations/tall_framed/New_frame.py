@@ -96,6 +96,10 @@ class DetailedMemberAnalysis:
             My = My1
             Mz = Mz1
             
+            # Add effect of end shear once
+            Mz += Vy1 * x
+            My -= Vz1 * x
+            
             # Add effects of loads between start and current section
             for load in loads:
                 if load.member_id != self.member.id:
@@ -113,8 +117,8 @@ class DetailedMemberAnalysis:
                     if x > 0:
                         # Shear reduces linearly
                         Vy -= w * x
-                        # Moment increases parabolically
-                        Mz -= Vy1 * x - w * x**2 / 2
+                        # Moment increases parabolically (subtracted from Mz1 + Vy1*x)
+                        Mz -= w * x**2 / 2
                 
                 elif load.load_type == LoadType.POINT:
                     # Point load
@@ -130,13 +134,13 @@ class DetailedMemberAnalysis:
                     w2 = factor * load.end_value
                     
                     if x > 0:
-                        # Load intensity at x: w(x) = w1 + (w2-w1)*x/L
-                        # Integral from 0 to x: W = w1*x + (w2-w1)*x²/(2L)
+                        # Load intensity at x: w(x) = w1 + (w2-w1)*x/L (if x < segment end)
+                        # For simplicity, assuming load covers whole length L for now
+                        # Correct logic should handle partial length varying loads
                         W = w1 * x + (w2 - w1) * x**2 / (2 * self.L)
                         Vy -= W
                         
-                        # Moment integral
-                        # ∫w(ξ)*(x-ξ)dξ from 0 to x
+                        # Moment integral: ∫w(ξ)*(x-ξ)dξ from 0 to x
                         M_load = (w1 * x**2 / 2 + 
                                  (w2 - w1) * x**3 / (6 * self.L))
                         Mz -= M_load

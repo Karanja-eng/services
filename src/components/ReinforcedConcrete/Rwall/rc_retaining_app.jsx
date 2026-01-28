@@ -908,23 +908,7 @@ function Retaining({ isDark }) {
         </div >
       </div >
 
-      {/* Footer */}
-      < footer className="bg-white border-t border-gray-200 mt-12 py-6" >
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-600">
-          <p>
-            <strong>Reinforced Concrete Retaining Structure Designer</strong> |
-            BS Codes Compliant
-          </p>
-          <p className="mt-1">
-            For professional use only. Results should be verified by a qualified
-            structural engineer.
-          </p>
-          <p className="mt-2 text-xs text-gray-500">
-            FastAPI Backend | React Frontend | Full-Stack Engineering
-            Application
-          </p>
-        </div>
-      </footer >
+
     </div >
   );
 }

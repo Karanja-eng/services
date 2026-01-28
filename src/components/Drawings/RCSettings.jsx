@@ -41,6 +41,10 @@ export function RCSettings({
     setShowDiagrams = () => { },
     analysisResults = null,
     isDark = false,
+    slabOpacity = 0.4,
+    setSlabOpacity = () => { },
+    groundOpacity = 1.0,
+    setGroundOpacity = () => { },
 }) {
     const textSecondary = isDark ? 'text-gray-300' : 'text-gray-600';
     const bgSection = isDark ? 'bg-gray-750' : 'bg-gray-50';
@@ -108,6 +112,38 @@ export function RCSettings({
                             className="w-4 h-4 rounded"
                         />
                     </label>
+
+                    <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-between text-[10px] mb-1 opacity-70 uppercase tracking-tighter">
+                            <span>Slab Opacity</span>
+                            <span>{(slabOpacity * 100).toFixed(0)}%</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={slabOpacity}
+                            onChange={(e) => setSlabOpacity(Number(e.target.value))}
+                            className="w-full accent-blue-600"
+                        />
+                    </div>
+
+                    <div>
+                        <div className="flex justify-between text-[10px] mb-1 opacity-70 uppercase tracking-tighter">
+                            <span>Ground Opacity</span>
+                            <span>{(groundOpacity * 100).toFixed(0)}%</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={groundOpacity}
+                            onChange={(e) => setGroundOpacity(Number(e.target.value))}
+                            className="w-full accent-green-600"
+                        />
+                    </div>
                 </div>
             </section>
 

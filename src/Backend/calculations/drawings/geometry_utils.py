@@ -252,141 +252,9 @@ def line_rectangle_intersection(line: Line, rect: Rectangle) -> List[Point]:
     
     return intersections
 
-# ============ TRANSFORMATIONS ============
-
-def translate_point(point: Point, dx: float, dy: float, dz: float = 0.0) -> Point:
-    """Translate point by delta values"""
-    return Point(point.x + dx, point.y + dy, point.z + dz)
-
-def translate_points(points: List[Point], dx: float, dy: float, dz: float = 0.0) -> List[Point]:
-    """Translate multiple points"""
-    return [translate_point(p, dx, dy, dz) for p in points]
-
-def rotate_point(point: Point, center: Point, angle_degrees: float) -> Point:
-    """Rotate point around center by angle (in degrees)"""
-    angle_rad = math.radians(angle_degrees)
-    cos_a = math.cos(angle_rad)
-    sin_a = math.sin(angle_rad)
-    
-    x = point.x - center.x
-    y = point.y - center.y
-    
-    rotated_x = x * cos_a - y * sin_a
-    rotated_y = x * sin_a + y * cos_a
-    
-    return Point(rotated_x + center.x, rotated_y + center.y, point.z)
-
-def rotate_points(points: List[Point], center: Point, angle_degrees: float) -> List[Point]:
-    """Rotate multiple points"""
-    return [rotate_point(p, center, angle_degrees) for p in points]
-
-def scale_point(point: Point, center: Point, scale: float) -> Point:
-    """Scale point relative to center"""
-    return Point(
-        center.x + (point.x - center.x) * scale,
-        center.y + (point.y - center.y) * scale,
-        center.z + (point.z - center.z) * scale
-    )
-
-def scale_points(points: List[Point], center: Point, scale: float) -> List[Point]:
-    """Scale multiple points"""
-    return [scale_point(p, center, scale) for p in points]
-
-def mirror_point(point: Point, axis_start: Point, axis_end: Point) -> Point:
-    """Mirror point across a line"""
-    lx = axis_end.x - axis_start.x
-    ly = axis_end.y - axis_start.y
-    
-    len_l = math.sqrt(lx*lx + ly*ly)
-    if len_l == 0:
-        return Point(point.x, point.y, point.z)
-    
-    lx /= len_l
-    ly /= len_l
-    
-    px = point.x - axis_start.x
-    py = point.y - axis_start.y
-    
-    dot = px * lx + py * ly
-    proj_x = axis_start.x + dot * lx
-    proj_y = axis_start.y + dot * ly
-    
-    mirror_x = 2 * proj_x - point.x
-    mirror_y = 2 * proj_y - point.y
-    
-    return Point(mirror_x, mirror_y, point.z)
-
-def mirror_points(points: List[Point], axis_start: Point, axis_end: Point) -> List[Point]:
-    """Mirror multiple points"""
-    return [mirror_point(p, axis_start, axis_end) for p in points]
-
-def offset_line(line: Line, distance: float) -> Tuple[Line, Line]:
-    """Create parallel lines at distance from original"""
-    dx = line.end.x - line.start.x
-    dy = line.end.y - line.start.y
-    length = math.sqrt(dx*dx + dy*dy)
-    
-    if length == 0:
-        return line, line
-    
-    perp_x = -dy / length * distance
-    perp_y = dx / length * distance
-    
-    line1 = Line(
-        Point(line.start.x + perp_x, line.start.y + perp_y),
-        Point(line.end.x + perp_x, line.end.y + perp_y)
-    )
-    
-    line2 = Line(
-        Point(line.start.x - perp_x, line.start.y - perp_y),
-        Point(line.end.x - perp_x, line.end.y - perp_y)
-    )
-    
-    return line1, line2
-
-def offset_polyline(points: List[Point], distance: float, closed: bool = False) -> List[Point]:
-    """Offset polyline by distance"""
-    if len(points) < 2:
-        return points
-    
-    offset_points = []
-    n = len(points)
-    
-    for i in range(n - (0 if closed else 1)):
-        p1 = points[i]
-        p2 = points[(i + 1) % n]
-        
-        dx = p2.x - p1.x
-        dy = p2.y - p1.y
-        length = math.sqrt(dx*dx + dy*dy)
-        
-        if length > 0:
-            perp_x = -dy / length * distance
-            perp_y = dx / length * distance
-            offset_points.append(Point(p1.x + perp_x, p1.y + perp_y))
-    
-    if not closed and len(offset_points) > 0:
-        last = points[-1]
-        dx = last.x - points[-2].x
-        dy = last.y - points[-2].y
-        length = math.sqrt(dx*dx + dy*dy)
-        if length > 0:
-            perp_x = -dy / length * distance
-            perp_y = dx / length * distance
-            offset_points.append(Point(last.x + perp_x, last.y + perp_y))
-    
-    return offset_points
-
-def stretch_points(points: List[Point], start: Point, end: Point, stretch_x: float, stretch_y: float) -> List[Point]:
-    """Stretch points within a boundary"""
-    stretched = []
-    for p in points:
-        new_p = Point(p.x, p.y, p.z)
-        if start.x <= p.x <= end.x and start.y <= p.y <= end.y:
-            new_p.x += stretch_x
-            new_p.y += stretch_y
-        stretched.append(new_p)
-    return stretched
+# Note: Technical modification functions (translate, rotate, scale, mirror, offset, stretch, snap) 
+# have been moved to cadGeometryUtils.js for frontend performance.
+# Backend remains responsible for measurement and data persistence.
 
 # ============ SNAP POINTS ============
 
@@ -1136,10 +1004,7 @@ __all__ = [
     'arc_length', 'box_volume', 'box_surface_area', 'cylinder_volume',
     'cylinder_surface_area', 'sphere_volume', 'sphere_surface_area',
     'line_line_intersection', 'line_circle_intersection', 'circle_circle_intersection',
-    'line_rectangle_intersection', 'translate_point', 'translate_points',
-    'rotate_point', 'rotate_points', 'scale_point', 'scale_points',
-    'mirror_point', 'mirror_points', 'offset_line', 'offset_polyline',
-    'stretch_points', 'find_snap_points', 'find_nearest_snap',
+    'line_rectangle_intersection', 
     'point_in_circle', 'point_in_rectangle', 'point_in_polygon', 'point_on_line',
     'get_bounding_box', 'angle_between_points', 'angle_at_vertex', 'normalize_angle',
     'point_to_line_distance', 'point_to_circle_distance', 'simplify_polyline',

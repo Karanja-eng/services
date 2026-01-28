@@ -8,9 +8,51 @@ import { Eye, EyeOff, Layers, TrendingUp, Activity } from 'lucide-react';
 // 3D COLUMN COMPONENT WITH FORCES
 // ============================================================================
 
-const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, onClick }) => {
+const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, onClick, showDiagrams = { moment: false, shear: false }, showLabels = true }) => {
     const meshRef = useRef();
     const [hovered, setHovered] = useState(false);
+
+    // Generate BM diagram points for column
+    const bmCurve = useMemo(() => {
+        if (!showDiagrams.moment || !element.analysisResults?.sections) return null;
+
+        const points = [];
+        const sections = element.analysisResults.sections;
+        const scale = 0.05;
+        const height = element.properties.height || floorHeight;
+        const x = element.position.x;
+        const y = element.position.z || 0;
+        const z = element.position.y;
+
+        sections.forEach(section => {
+            const t = section.ratio;
+            const offset = (section.Mz || 0) * scale;
+            points.push(new THREE.Vector3(x + offset, y + t * height, z));
+        });
+
+        return points;
+    }, [showDiagrams.moment, element.analysisResults, element.position, element.properties, floorHeight]);
+
+    // Generate SF diagram points for column
+    const sfCurve = useMemo(() => {
+        if (!showDiagrams.shear || !element.analysisResults?.sections) return null;
+
+        const points = [];
+        const sections = element.analysisResults.sections;
+        const scale = 0.05;
+        const height = element.properties.height || floorHeight;
+        const x = element.position.x;
+        const y = element.position.z || 0;
+        const z = element.position.y;
+
+        sections.forEach(section => {
+            const t = section.ratio;
+            const offset = (section.Vy || 0) * scale;
+            points.push(new THREE.Vector3(x + offset, y + t * height, z));
+        });
+
+        return points;
+    }, [showDiagrams.shear, element.analysisResults, element.position, element.properties, floorHeight]);
 
     const width = element.properties.width;
     const depth = element.properties.depth;
@@ -61,7 +103,7 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
             </lineSegments>
 
             {/* Label */}
-            {(hovered || selected) && (
+            {(showLabels || hovered || selected) && (
                 <Html position={[0, height / 2 + 0.3, 0]} center>
                     <div style={{
                         background: 'rgba(0,0,0,0.85)',
@@ -109,6 +151,24 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
                     ]}
                 />
             )}
+
+            {/* Column BM diagram */}
+            {bmCurve && bmCurve.length > 1 && (
+                <Line
+                    points={bmCurve}
+                    color="#ff0000"
+                    lineWidth={2}
+                />
+            )}
+
+            {/* Column SF diagram */}
+            {sfCurve && sfCurve.length > 1 && (
+                <Line
+                    points={sfCurve}
+                    color="#0000ff"
+                    lineWidth={2}
+                />
+            )}
         </group>
     );
 };
@@ -117,7 +177,7 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
 // 3D BEAM COMPONENT WITH BM DIAGRAM
 // ============================================================================
 
-const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick }) => {
+const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabels = true }) => {
     const [hovered, setHovered] = useState(false);
 
     const start = new THREE.Vector3(
@@ -156,22 +216,43 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick }) => {
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.01; // Scale factor for moment diagram
+        const scale = 0.05; // Scale factor for moment diagram
 
         sections.forEach(section => {
             const t = section.ratio;
             const pos = new THREE.Vector3().lerpVectors(start, end, t);
 
-            // Offset perpendicular to beam
-            const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x).normalize();
-            const offset = perpendicular.multiplyScalar((section.Mz || 0) * scale);
+            // Offset perpendicular to beam (upward/downward or sideways)
+            // For frames, we usually show it in the plane of the frame (local Y)
+            const offset = (section.Mz || 0) * scale;
+            pos.y += offset;
 
-            pos.add(offset);
             points.push(pos);
         });
 
         return points;
-    }, [showDiagrams.moment, element.analysisResults, start, end, direction]);
+    }, [showDiagrams.moment, element.analysisResults, start, end]);
+
+    // Generate SF diagram points
+    const sfCurve = useMemo(() => {
+        if (!showDiagrams.shear || !element.analysisResults?.sections) return null;
+
+        const points = [];
+        const sections = element.analysisResults.sections;
+        const scale = 0.05; // Scale factor for shear diagram
+
+        sections.forEach(section => {
+            const t = section.ratio;
+            const pos = new THREE.Vector3().lerpVectors(start, end, t);
+
+            const offset = (section.Vy || 0) * scale;
+            pos.y += offset;
+
+            points.push(pos);
+        });
+
+        return points;
+    }, [showDiagrams.shear, element.analysisResults, start, end]);
 
     return (
         <group>
@@ -198,12 +279,21 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick }) => {
                 <Line
                     points={bmCurve}
                     color="#ff0000"
-                    lineWidth={3}
+                    lineWidth={2}
+                />
+            )}
+
+            {/* SF diagram */}
+            {sfCurve && sfCurve.length > 1 && (
+                <Line
+                    points={sfCurve}
+                    color="#0000ff"
+                    lineWidth={2}
                 />
             )}
 
             {/* Label */}
-            {(hovered || selected) && (
+            {(showLabels || hovered || selected) && (
                 <Html position={center} center>
                     <div style={{
                         background: 'rgba(0,0,0,0.85)',
@@ -298,15 +388,20 @@ const FloorLevelIndicator = ({ level, height, label, visible }) => {
 // FOUNDATION COMPONENT
 // ============================================================================
 
-const Foundation3D = ({ columns, visible }) => {
+const Foundation3D = ({ columns, visible, opacity = 1.0 }) => {
     if (!visible) return null;
 
     return (
         <group position={[0, -0.5, 0]}>
-            {/* Foundation slab */}
-            <mesh>
-                <boxGeometry args={[50, 0.5, 50]} />
-                <meshStandardMaterial color="#8D6E63" roughness={0.9} />
+            {/* Foundation bed / Site soil */}
+            <mesh receiveShadow>
+                <boxGeometry args={[100, 0.5, 100]} />
+                <meshStandardMaterial
+                    color="#8D6E63"
+                    roughness={0.9}
+                    transparent={true}
+                    opacity={opacity}
+                />
             </mesh>
 
             {/* Piles under columns */}
@@ -316,7 +411,11 @@ const Foundation3D = ({ columns, visible }) => {
                     args={[0.15, 0.15, 2, 16]}
                     position={[column.position.x, -1.25, column.position.y]}
                 >
-                    <meshStandardMaterial color="#5D4037" />
+                    <meshStandardMaterial
+                        color="#5D4037"
+                        transparent={true}
+                        opacity={Math.max(opacity, 0.3)} // Keep piles more visible
+                    />
                 </Cylinder>
             ))}
         </group>
@@ -326,6 +425,201 @@ const Foundation3D = ({ columns, visible }) => {
 // ============================================================================
 // MAIN 3D VIEWER
 // ============================================================================
+
+// ============================================================================
+// STRUCTURAL GRID COMPONENT (3D)
+// ============================================================================
+
+const StructuralGrid3D = ({ size = 100, spacing = 5, visible = true }) => {
+    if (!visible) return null;
+
+    const lines = [];
+    const labels = [];
+    const halfSize = size / 2;
+
+    // Grid lines and labels
+    for (let i = -halfSize; i <= halfSize; i += spacing) {
+        // Vertical grid lines (Parallel to Z axis, spaced along X)
+        lines.push(
+            <Line
+                key={`v-${i}`}
+                points={[i, 0, -halfSize, i, 0, halfSize]}
+                color="#000000"
+                lineWidth={0.5}
+                transparent
+                opacity={0.2}
+            />
+        );
+
+        // Horizontal grid lines (Parallel to X axis, spaced along Z)
+        lines.push(
+            <Line
+                key={`h-${i}`}
+                points={[-halfSize, 0, i, halfSize, 0, i]}
+                color="#000000"
+                lineWidth={0.5}
+                transparent
+                opacity={0.2}
+            />
+        );
+
+        // Labels (X-axis labels: 1, 2, 3...)
+        // We only label positive and zero coordinates to match 2D origin at 0,0
+        if (i >= 0) {
+            const indexX = Math.floor(i / spacing) + 1;
+            labels.push(
+                <Text
+                    key={`label-x-${i}`}
+                    position={[i, 0.1, -2]}
+                    fontSize={2}
+                    color="#000000"
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    anchorX="center"
+                    anchorY="middle"
+                >
+                    {indexX}
+                </Text>
+            );
+
+            const indexY = String.fromCharCode(65 + Math.floor(i / spacing));
+            labels.push(
+                <Text
+                    key={`label-y-${i}`}
+                    position={[-2, 0.1, i]}
+                    fontSize={2}
+                    color="#000000"
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    anchorX="center"
+                    anchorY="middle"
+                >
+                    {indexY}
+                </Text>
+            );
+        }
+    }
+
+    return (
+        <group>
+            {lines}
+            {labels}
+        </group>
+    );
+};
+
+// ============================================================================
+// STRUCTURAL SCENE COMPONENTS
+// ============================================================================
+
+export const StructureScene = ({
+    elements,
+    floors = 5,
+    floorHeight = 3.5,
+    selectedElement,
+    onElementClick,
+    showDiagrams = { moment: false, shear: false },
+    showForces = false,
+    showDeflection = false,
+    floorVisibility = {},
+    componentVisibility = { columns: true, beams: true, slabs: true, gridLines: true, voids: true, labels: true },
+    slabOpacity = 0.4,
+    groundOpacity = 1.0,
+    showGrid = true,
+    showFoundation = true,
+    showFloorLabels = true
+}) => {
+    const columns = elements.filter(el => el.type === 'column');
+    const beams = elements.filter(el => el.type === 'beam');
+    const slabs = elements.filter(el => el.type === 'slab');
+
+    return (
+        <group>
+            {/* Lighting (Optional if provided by parent, but safe here) */}
+            {/* Parent Canvas often provides lighting, but we can keep it for standalone robustness if needed */}
+            {/* For use in StructuralVisualizationComponent, we might allow parent to handle lighting */}
+
+            {/* Ground plane (Site surface) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
+                <planeGeometry args={[100, 100]} />
+                <meshStandardMaterial
+                    color="#f5f5f5"
+                    roughness={0.8}
+                    transparent={true}
+                    opacity={groundOpacity}
+                />
+            </mesh>
+
+            {/* Custom Labeled Grid */}
+            <StructuralGrid3D size={100} spacing={5} visible={showGrid} />
+
+            {/* Foundation */}
+            <Foundation3D columns={columns} visible={showFoundation} opacity={groundOpacity} />
+
+            {/* Structural elements by floor */}
+            {Array.from({ length: floors }, (_, floorIndex) => {
+                const floorName = `Floor ${floorIndex + 1}`;
+                const floorZ = floorIndex * floorHeight;
+                const isVisible = floorVisibility[floorName] !== false;
+
+                if (!isVisible) return null;
+
+                return (
+                    <group key={floorName}>
+                        {/* Floor level indicator */}
+                        <FloorLevelIndicator
+                            level={floorIndex}
+                            height={floorZ}
+                            label={floorName}
+                            visible={showFloorLabels}
+                        />
+
+                        {/* Columns */}
+                        {componentVisibility.columns && columns.filter(el => el.layer === floorName).map(column => (
+                            <Column3D
+                                key={column.id}
+                                element={column}
+                                floorHeight={floorHeight}
+                                showForces={showForces}
+                                showDeflection={showDeflection}
+                                showDiagrams={showDiagrams}
+                                selected={selectedElement?.id === column.id}
+                                onClick={onElementClick}
+                                showLabels={componentVisibility.labels}
+                            />
+                        ))}
+
+                        {/* Beams */}
+                        {componentVisibility.beams && beams.filter(el => el.layer === floorName).map(beam => (
+                            <Beam3D
+                                key={`${beam.id}-${floorIndex}`}
+                                element={beam}
+                                floorLevel={floorZ + floorHeight}
+                                showDiagrams={showDiagrams}
+                                selected={selectedElement?.id === beam.id}
+                                onClick={onElementClick}
+                                showLabels={componentVisibility.labels}
+                            />
+                        ))}
+
+                        {/* Slabs */}
+                        {componentVisibility.slabs && slabs.filter(el => el.layer === floorName).map(slab => (
+                            <Slab3D
+                                key={slab.id}
+                                element={slab}
+                                floorLevel={floorZ + floorHeight}
+                                opacity={slabOpacity}
+                                selected={selectedElement?.id === slab.id}
+                                onClick={onElementClick}
+                            />
+                        ))}
+                    </group>
+                );
+            })}
+
+            {/* Axes helper */}
+            <axesHelper args={[5]} />
+        </group>
+    );
+};
 
 const Complete3DStructureView = ({
     elements,
@@ -339,48 +633,10 @@ const Complete3DStructureView = ({
     layerVisibility = {}
 }) => {
     const [controlsEnabled, setControlsEnabled] = useState(true);
-    const [viewMode, setViewMode] = useState('perspective'); // 'perspective', 'plan', 'elevation'
-    const [slabOpacity, setSlabOpacity] = useState(0.3);
+    const [slabOpacity, setSlabOpacity] = useState(0.4);
+    const [groundOpacity, setGroundOpacity] = useState(1.0);
     const [showFoundation, setShowFoundation] = useState(true);
     const [showFloorLabels, setShowFloorLabels] = useState(true);
-
-    // Group elements by floor
-    const elementsByFloor = useMemo(() => {
-        const byFloor = {};
-        elements.forEach(el => {
-            const floor = el.layer || 'Floor 1';
-            if (!byFloor[floor]) byFloor[floor] = [];
-            byFloor[floor].push(el);
-        });
-        return byFloor;
-    }, [elements]);
-
-    // Calculate scene bounds
-    const bounds = useMemo(() => {
-        if (elements.length === 0) return { minX: 0, maxX: 30, minZ: 0, maxZ: 30 };
-
-        const xs = [], zs = [];
-        elements.forEach(el => {
-            if (el.type === 'column') {
-                xs.push(el.position.x);
-                zs.push(el.position.y);
-            } else if (el.type === 'beam') {
-                xs.push(el.position.start.x, el.position.end.x);
-                zs.push(el.position.start.y, el.position.end.y);
-            }
-        });
-
-        return {
-            minX: Math.min(...xs) - 5,
-            maxX: Math.max(...xs) + 5,
-            minZ: Math.min(...zs) - 5,
-            maxZ: Math.max(...zs) + 5
-        };
-    }, [elements]);
-
-    const columns = elements.filter(el => el.type === 'column');
-    const beams = elements.filter(el => el.type === 'beam');
-    const slabs = elements.filter(el => el.type === 'slab');
 
     return (
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -406,78 +662,21 @@ const Complete3DStructureView = ({
                     maxDistance={100}
                 />
 
-                {/* Ground plane */}
-                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-                    <planeGeometry args={[100, 100]} />
-                    <meshStandardMaterial color="#A5D6A7" roughness={0.8} />
-                </mesh>
-
-                {/* Grid helper */}
-                <gridHelper args={[50, 50, '#81C784', '#C8E6C9']} position={[0, 0, 0]} />
-
-                {/* Foundation */}
-                <Foundation3D columns={columns} visible={showFoundation} />
-
-                {/* Structural elements by floor */}
-                {Array.from({ length: floors }, (_, floorIndex) => {
-                    const floorName = `Floor ${floorIndex + 1}`;
-                    const floorZ = floorIndex * floorHeight;
-                    const isVisible = layerVisibility[floorName] !== false;
-
-                    if (!isVisible) return null;
-
-                    return (
-                        <group key={floorName}>
-                            {/* Floor level indicator */}
-                            <FloorLevelIndicator
-                                level={floorIndex}
-                                height={floorZ}
-                                label={floorName}
-                                visible={showFloorLabels}
-                            />
-
-                            {/* Columns */}
-                            {columns.filter(el => el.layer === floorName).map(column => (
-                                <Column3D
-                                    key={`${column.id}-${floorIndex}`}
-                                    element={column}
-                                    floorHeight={floorHeight}
-                                    showForces={showForces}
-                                    showDeflection={showDeflection}
-                                    selected={selectedElement?.id === column.id}
-                                    onClick={onElementClick}
-                                />
-                            ))}
-
-                            {/* Beams */}
-                            {beams.filter(el => el.layer === floorName).map(beam => (
-                                <Beam3D
-                                    key={`${beam.id}-${floorIndex}`}
-                                    element={beam}
-                                    floorLevel={floorZ + floorHeight}
-                                    showDiagrams={showDiagrams}
-                                    selected={selectedElement?.id === beam.id}
-                                    onClick={onElementClick}
-                                />
-                            ))}
-
-                            {/* Slabs */}
-                            {slabs.filter(el => el.layer === floorName).map(slab => (
-                                <Slab3D
-                                    key={`${slab.id}-${floorIndex}`}
-                                    element={slab}
-                                    floorLevel={floorZ + floorHeight}
-                                    opacity={slabOpacity}
-                                    visible={true}
-                                    onClick={onElementClick}
-                                />
-                            ))}
-                        </group>
-                    );
-                })}
-
-                {/* Axes helper */}
-                <axesHelper args={[5]} />
+                <StructureScene
+                    elements={elements}
+                    floors={floors}
+                    floorHeight={floorHeight}
+                    selectedElement={selectedElement}
+                    onElementClick={onElementClick}
+                    showDiagrams={showDiagrams}
+                    showForces={showForces}
+                    showDeflection={showDeflection}
+                    layerVisibility={layerVisibility}
+                    slabOpacity={slabOpacity}
+                    groundOpacity={groundOpacity}
+                    showFoundation={showFoundation}
+                    showFloorLabels={showFloorLabels}
+                />
             </Canvas>
 
             {/* View controls overlay */}
@@ -511,6 +710,25 @@ const Complete3DStructureView = ({
                             step="0.1"
                             value={slabOpacity}
                             onChange={(e) => setSlabOpacity(Number(e.target.value))}
+                            style={{ width: '100px' }}
+                        />
+                    </label>
+
+                    <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                    }}>
+                        <span>Ground Opacity</span>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={groundOpacity}
+                            onChange={(e) => setGroundOpacity(Number(e.target.value))}
                             style={{ width: '100px' }}
                         />
                     </label>

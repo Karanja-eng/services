@@ -56,7 +56,7 @@ import {
     DrawSlabMS3,
 } from '../ReinforcedConcrete/Slabs/slab_THReeD';
 import { DrawRetainingWallMRW1 } from '../ReinforcedConcrete/Rwall/Retaining_Three';
-import { FrameScene } from '../ReinforcedConcrete/FramedandTall/FrameScene';
+import Complete3DStructureView, { StructureScene } from '../ReinforcedConcrete/FramedandTall/Multi_storey_structure';
 
 /**
  * Component Type Enum
@@ -309,7 +309,7 @@ export const RC_COMPONENTS = {
         category: 'Retaining Walls',
     },
     tall_framed_analysis: {
-        Component: FrameScene,
+        Component: StructureScene,
         type: COMPONENT_TYPES.RC,
         name: 'Tall Frame Analysis',
         category: 'Analysis',

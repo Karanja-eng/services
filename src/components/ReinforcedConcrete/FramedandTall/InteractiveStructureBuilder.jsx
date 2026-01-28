@@ -1,1034 +1,44 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Circle, Line, Text, Group, Transformer } from 'react-konva';
 import {
-    Building2,
-    Plus,
-    Trash2,
-    Grid3x3,
-    Move,
-    Copy,
-    Layers as LayersIcon,
-    Eye,
-    EyeOff,
-    Settings,
-    Save,
-    FolderOpen,
-    Play,
-    MousePointer,
-    Square,
-    Minus,
-    RotateCw,
-    Maximize2,
-    Minimize2,
-    Box,
-    Download,
-    Upload,
-    Zap,
-    TrendingUp,
-    Grid,
-    Home,
-    Columns,
-    Calculator,
-    Library,
-    ChevronLeft,
-    ChevronRight,
-    ChevronDown,
-    ChevronUp,
-    Edit2
+    Plus, Trash2, Grid3x3, Move, Copy, Layers as LayersIcon, Eye, EyeOff, Settings, Save, FolderOpen, Play,
+    MousePointer, Square, Minus, RotateCw, Maximize2, Minimize2, Box, Download, Upload, Zap, TrendingUp, Grid, Home, Columns,
+    Edit2, Layout, Library, Calculator, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X
 } from 'lucide-react';
 
+import { exportStructureToCAD } from './builderCADExporter';
+import CadDrawingApp from '../../Drawings/cad_drawing';
 import Complete3DStructureView from './Multi_storey_structure';
+import StructuralVisualizationComponent from '../../Drawings/visualise_component';
+import { COMPONENT_TYPES } from '../../Drawings/componentRegistry';
 import { BuildingLibraryBrowser, LoadAssignmentPanel } from './Building_library';
 
-// ============================================================================
-// STRUCTURAL ELEMENT CLASSES
-// ============================================================================
-
-class StructuralGrid {
-    constructor(spacing = 5) {
-        this.spacing = spacing;
-        this.lines = {
-            horizontal: [],
-            vertical: []
-        };
-    }
-
-    generateGrid(width, height, originX = 0, originY = 0) {
-        const lines = [];
-
-        // Vertical grid lines
-        for (let x = originX; x <= width; x += this.spacing) {
-            lines.push({
-                id: `v-${x}`,
-                x1: x,
-                y1: originY,
-                x2: x,
-                y2: height,
-                type: 'vertical',
-                label: String.fromCharCode(65 + Math.floor(x / this.spacing))
-            });
-        }
-
-        // Horizontal grid lines
-        for (let y = originY; y <= height; y += this.spacing) {
-            lines.push({
-                id: `h-${y}`,
-                x1: originX,
-                y1: y,
-                x2: width,
-                y2: y,
-                type: 'horizontal',
-                label: String(Math.floor(y / this.spacing) + 1)
-            });
-        }
-
-        return lines;
-    }
-
-    getGridIntersections(width, height) {
-        const intersections = [];
-        const cols = Math.floor(width / this.spacing) + 1;
-        const rows = Math.floor(height / this.spacing) + 1;
-
-        for (let i = 0; i < cols; i++) {
-            for (let j = 0; j < rows; j++) {
-                intersections.push({
-                    id: `grid-${i}-${j}`,
-                    x: i * this.spacing,
-                    y: j * this.spacing,
-                    gridX: i,
-                    gridY: j,
-                    label: `${String.fromCharCode(65 + i)}${j + 1}`
-                });
-            }
-        }
-
-        return intersections;
-    }
-}
-
-class StructuralElement {
-    constructor(type, id, position, properties = {}) {
-        this.type = type; // 'column', 'beam', 'slab', 'wall', 'foundation'
-        this.id = id;
-        this.position = position; // { x, y, z } or { start, end }
-        this.properties = {
-            width: 0.45,    // default 450mm
-            depth: 0.45,    // default 450mm
-            height: 3.5,    // default 3.5m
-            thickness: 0.2, // default 200mm
-            material: 'C30',
-            ...properties
-        };
-        this.layer = this.properties.layer || 'Floor 1';
-        this.selected = false;
-        this.visible = true;
-        this.loads = [];
-        this.reinforcement = null;
-        this.analysisResults = null;
-    }
-
-    getBounds() {
-        switch (this.type) {
-            case 'column':
-                return {
-                    x: this.position.x - (this.properties.width / 2),
-                    y: this.position.y - (this.properties.depth / 2),
-                    width: this.properties.width,
-                    height: this.properties.depth
-                };
-
-            case 'beam':
-                const dx = this.position.end.x - this.position.start.x;
-                const dy = this.position.end.y - this.position.start.y;
-                const length = Math.sqrt(dx * dx + dy * dy);
-                return {
-                    x: this.position.start.x,
-                    y: this.position.start.y,
-                    width: length,
-                    height: this.properties.depth
-                };
-
-            case 'slab':
-                return {
-                    x: this.position.x,
-                    y: this.position.y,
-                    width: this.properties.width,
-                    height: this.properties.depth
-                };
-
-            default:
-                return { x: 0, y: 0, width: 0, height: 0 };
-        }
-    }
-
-    containsPoint(x, y) {
-        const bounds = this.getBounds();
-        return (
-            x >= bounds.x &&
-            x <= bounds.x + bounds.width &&
-            y >= bounds.y &&
-            y <= bounds.y + bounds.height
-        );
-    }
-}
-
-// ============================================================================
-// KONVA COMPONENTS FOR STRUCTURAL ELEMENTS
-// ============================================================================
-
-const GridComponent = ({ grid, visible, scale }) => {
-    if (!visible) return null;
-
-    const gridLines = grid.generateGrid(100, 100);
-
-    return (
-        <Group>
-            {gridLines.map(line => (
-                <Group key={line.id}>
-                    <Line
-                        points={[line.x1 * scale, line.y1 * scale, line.x2 * scale, line.y2 * scale]}
-                        stroke="#ddd"
-                        strokeWidth={0.5}
-                        dash={[5, 5]}
-                    />
-                    {line.type === 'vertical' && line.y1 === 0 && (
-                        <Text
-                            x={line.x1 * scale - 10}
-                            y={-20}
-                            text={line.label}
-                            fontSize={12}
-                            fill="#666"
-                        />
-                    )}
-                    {line.type === 'horizontal' && line.x1 === 0 && (
-                        <Text
-                            x={-25}
-                            y={line.y1 * scale - 8}
-                            text={line.label}
-                            fontSize={12}
-                            fill="#666"
-                        />
-                    )}
-                </Group>
-            ))}
-        </Group>
-    );
-};
-
-const ColumnComponent = ({ element, scale, onClick, onDragEnd, showForces }) => {
-    const shapeRef = useRef();
-    const trRef = useRef();
-    const [isDragging, setIsDragging] = useState(false);
-
-    useEffect(() => {
-        if (element.selected && trRef.current && shapeRef.current) {
-            trRef.current.nodes([shapeRef.current]);
-            trRef.current.getLayer().batchDraw();
-        }
-    }, [element.selected]);
-
-    const width = element.properties.width / 1000 * scale; // Convert mm to m, then scale
-    const depth = element.properties.depth / 1000 * scale;
-
-    let fillColor = '#888';
-    if (element.selected) fillColor = '#4CAF50';
-    else if (isDragging) fillColor = '#2196F3';
-
-    // Show axial force color if analysis results available
-    if (showForces && element.analysisResults) {
-        const axial = element.analysisResults.N || 0;
-        if (axial > 0) fillColor = '#ff6b6b'; // Tension
-        else if (axial < 0) fillColor = '#4ecdc4'; // Compression
-    }
-
-    return (
-        <Group>
-            <Rect
-                ref={shapeRef}
-                x={element.position.x * scale - width / 2}
-                y={element.position.y * scale - depth / 2}
-                width={width}
-                height={depth}
-                fill={fillColor}
-                stroke="#333"
-                strokeWidth={2}
-                draggable
-                onClick={() => onClick(element)}
-                onDragStart={() => setIsDragging(true)}
-                onDragEnd={(e) => {
-                    setIsDragging(false);
-                    onDragEnd(element.id, {
-                        x: e.target.x() / scale + width / (2 * scale),
-                        y: e.target.y() / scale + depth / (2 * scale)
-                    });
-                }}
-                shadowBlur={element.selected ? 10 : 0}
-                shadowColor="#4CAF50"
-            />
-
-            {/* Column label */}
-            <Text
-                x={element.position.x * scale - 15}
-                y={element.position.y * scale - 8}
-                text={element.id}
-                fontSize={10}
-                fill="#fff"
-                fontStyle="bold"
-                listening={false}
-            />
-
-            {/* Analysis results overlay */}
-            {showForces && element.analysisResults && (
-                <Text
-                    x={element.position.x * scale + width / 2 + 5}
-                    y={element.position.y * scale - depth / 2}
-                    text={`N=${element.analysisResults.N?.toFixed(0)}kN\nM=${element.analysisResults.M?.toFixed(0)}kNm`}
-                    fontSize={9}
-                    fill="#000"
-                    listening={false}
-                />
-            )}
-
-            {element.selected && <Transformer ref={trRef} />}
-        </Group>
-    );
-};
-
-const BeamComponent = ({ element, scale, onClick, onDragEnd, showDiagrams }) => {
-    const { start, end } = element.position;
-    const depth = element.properties.depth / 1000 * scale;
-
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-    let strokeColor = element.selected ? '#4CAF50' : '#666';
-
-    // BM diagram overlay
-    const bmPoints = [];
-    if (showDiagrams.moment && element.analysisResults?.sections) {
-        const sections = element.analysisResults.sections;
-        sections.forEach(section => {
-            const t = section.ratio;
-            const x = start.x + t * dx;
-            const y = start.y + t * dy;
-            const offset = (section.Mz || 0) * 0.02; // Scale factor
-
-            // Perpendicular offset
-            const perpX = -Math.sin(angle * Math.PI / 180) * offset;
-            const perpY = Math.cos(angle * Math.PI / 180) * offset;
-
-            bmPoints.push(x * scale + perpX, y * scale + perpY);
-        });
-    }
-
-    return (
-        <Group>
-            {/* Main beam line */}
-            <Line
-                points={[start.x * scale, start.y * scale, end.x * scale, end.y * scale]}
-                stroke={strokeColor}
-                strokeWidth={depth}
-                lineCap="round"
-                onClick={() => onClick(element)}
-                draggable
-                onDragEnd={(e) => {
-                    const deltaX = e.target.x() / scale;
-                    const deltaY = e.target.y() / scale;
-                    onDragEnd(element.id, {
-                        start: { x: start.x + deltaX, y: start.y + deltaY },
-                        end: { x: end.x + deltaX, y: end.y + deltaY }
-                    });
-                    e.target.position({ x: 0, y: 0 });
-                }}
-            />
-
-            {/* BM diagram */}
-            {bmPoints.length > 0 && (
-                <Line
-                    points={[start.x * scale, start.y * scale, ...bmPoints, end.x * scale, end.y * scale]}
-                    stroke="#ff0000"
-                    strokeWidth={2}
-                    fill="#ff000033"
-                    closed
-                    listening={false}
-                />
-            )}
-
-            {/* Beam label */}
-            <Text
-                x={(start.x + end.x) / 2 * scale}
-                y={(start.y + end.y) / 2 * scale - 10}
-                text={element.id}
-                fontSize={10}
-                fill="#333"
-                listening={false}
-            />
-        </Group>
-    );
-};
-
-const SlabComponent = ({ element, scale, onClick, opacity = 0.3 }) => {
-    const bounds = element.getBounds();
-
-    return (
-        <Rect
-            x={bounds.x * scale}
-            y={bounds.y * scale}
-            width={element.properties.width * scale}
-            height={element.properties.depth * scale}
-            fill={element.selected ? '#4CAF5066' : '#88888844'}
-            stroke="#333"
-            strokeWidth={1}
-            onClick={() => onClick(element)}
-            opacity={opacity}
-        />
-    );
-};
-
-// ============================================================================
-// MAIN CANVAS COMPONENT
-// ============================================================================
-
-const StructuralCanvas = ({
-    elements,
-    onElementClick,
-    onElementDragEnd,
-    onElementsAdd,
-    tool,
-    showGrid,
-    showDiagrams,
-    showForces,
-    scale,
-    activeLayer
-}) => {
-    const stageRef = useRef();
-    const [drawing, setDrawing] = useState(null);
-    const [tempLine, setTempLine] = useState(null);
-    const [grid] = useState(new StructuralGrid(5));
-
-    const handleStageClick = (e) => {
-        if (e.target === e.target.getStage()) {
-            onElementClick(null); // Deselect all
-        }
-    };
-
-    const handleStageMouseDown = (e) => {
-        if (tool === 'select' || tool === null) return;
-
-        const pos = e.target.getStage().getPointerPosition();
-        const x = pos.x / scale;
-        const y = pos.y / scale;
-
-        if (tool === 'column') {
-            const newColumn = new StructuralElement(
-                'column',
-                `C${elements.length + 1}`,
-                { x, y, z: 0 },
-                { layer: activeLayer || 'Floor 1' }
-            );
-            onElementsAdd([newColumn]);
-        } else if (tool === 'beam') {
-            setDrawing({ start: { x, y } });
-        } else if (tool === 'slab') {
-            setDrawing({ start: { x, y } });
-        }
-    };
-
-    const handleStageMouseMove = (e) => {
-        if (!drawing) return;
-
-        const pos = e.target.getStage().getPointerPosition();
-        const x = pos.x / scale;
-        const y = pos.y / scale;
-
-        if (tool === 'beam') {
-            setTempLine({ start: drawing.start, end: { x, y } });
-        } else if (tool === 'slab') {
-            setTempLine({
-                x: Math.min(drawing.start.x, x),
-                y: Math.min(drawing.start.y, y),
-                width: Math.abs(x - drawing.start.x),
-                height: Math.abs(y - drawing.start.y)
-            });
-        }
-    };
-
-    const handleStageMouseUp = (e) => {
-        if (!drawing) return;
-
-        const pos = e.target.getStage().getPointerPosition();
-        const x = pos.x / scale;
-        const y = pos.y / scale;
-
-        if (tool === 'beam') {
-            const newBeam = new StructuralElement('beam', `B${elements.length + 1}`, {
-                start: drawing.start,
-                end: { x, y }
-            }, {
-                layer: activeLayer
-            });
-            onElementsAdd([newBeam]);
-        } else if (tool === 'slab') {
-            const newSlab = new StructuralElement('slab', `S${elements.length + 1}`, {
-                x: Math.min(drawing.start.x, x),
-                y: Math.min(drawing.start.y, y)
-            }, {
-                width: Math.abs(x - drawing.start.x),
-                depth: Math.abs(y - drawing.start.y),
-                layer: activeLayer
-            });
-            onElementsAdd([newSlab]);
-        }
-
-        setDrawing(null);
-        setTempLine(null);
-    };
-
-    return (
-        <Stage
-            ref={stageRef}
-            width={window.innerWidth - 400}
-            height={window.innerHeight - 60}
-            onClick={handleStageClick}
-            onMouseDown={handleStageMouseDown}
-            onMouseMove={handleStageMouseMove}
-            onMouseUp={handleStageMouseUp}
-            style={{ background: '#f5f5f5' }}
-        >
-            <Layer>
-                {/* Grid */}
-                {showGrid && <GridComponent grid={grid} visible={showGrid} scale={scale} />}
-
-                {/* Slabs (render first, behind everything) */}
-                {elements.filter(el => el.type === 'slab' && el.visible && (!activeLayer || el.layer === activeLayer)).map(element => (
-                    <SlabComponent
-                        key={element.id}
-                        element={element}
-                        scale={scale}
-                        onClick={onElementClick}
-                    />
-                ))}
-
-                {/* Beams */}
-                {elements.filter(el => el.type === 'beam' && el.visible && (!activeLayer || el.layer === activeLayer)).map(element => (
-                    <BeamComponent
-                        key={element.id}
-                        element={element}
-                        scale={scale}
-                        onClick={onElementClick}
-                        onDragEnd={onElementDragEnd}
-                        showDiagrams={showDiagrams}
-                    />
-                ))}
-
-                {/* Columns */}
-                {elements.filter(el => el.type === 'column' && el.visible && (!activeLayer || el.layer === activeLayer)).map(element => (
-                    <ColumnComponent
-                        key={element.id}
-                        element={element}
-                        scale={scale}
-                        onClick={onElementClick}
-                        onDragEnd={onElementDragEnd}
-                        showForces={showForces}
-                    />
-                ))}
-
-                {/* Temporary drawing */}
-                {tempLine && tool === 'beam' && (
-                    <Line
-                        points={[
-                            tempLine.start.x * scale,
-                            tempLine.start.y * scale,
-                            tempLine.end.x * scale,
-                            tempLine.end.y * scale
-                        ]}
-                        stroke="#2196F3"
-                        strokeWidth={3}
-                        dash={[5, 5]}
-                    />
-                )}
-
-                {tempLine && tool === 'slab' && (
-                    <Rect
-                        x={tempLine.x * scale}
-                        y={tempLine.y * scale}
-                        width={tempLine.width * scale}
-                        height={tempLine.height * scale}
-                        stroke="#2196F3"
-                        strokeWidth={2}
-                        dash={[5, 5]}
-                        fill="#2196F333"
-                    />
-                )}
-            </Layer>
-        </Stage>
-    );
-};
-
-// ============================================================================
-// TOOLBAR COMPONENT
-// ============================================================================
-
-const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewChange, isFullScreen, onFullScreenChange }) => {
-    const tools = [
-        { id: 'select', icon: MousePointer, label: 'Select', color: '#333' },
-        { id: 'column', icon: Square, label: 'Column', color: '#2196F3' },
-        { id: 'beam', icon: Minus, label: 'Beam', color: '#4CAF50' },
-        { id: 'slab', icon: Grid, label: 'Slab', color: '#FF9800' },
-        { id: 'wall', icon: Box, label: 'Wall', color: '#9C27B0' },
-        { id: 'add_bay', icon: Plus, label: 'Add Bay', color: '#FF5722', action: true },
-    ];
-
-    return (
-        <div style={{
-            height: '60px',
-            background: '#fff',
-            borderBottom: '1px solid #ddd',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 16px',
-            gap: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            zIndex: 10,
-            position: 'relative'
-        }}>
-            {/* Drawing tools */}
-            <div style={{
-                display: 'flex',
-                gap: '4px',
-                padding: '4px',
-                background: '#f5f5f5',
-                borderRadius: '8px'
-            }}>
-                {tools.map(t => (
-                    <button
-                        key={t.id}
-                        onClick={() => t.action ? onAction(t.id) : onToolChange(t.id)}
-                        disabled={disabled}
-                        style={{
-                            padding: '8px 16px',
-                            background: tool === t.id ? t.color : '#fff',
-                            color: tool === t.id ? '#fff' : '#333',
-                            border: `1px solid ${tool === t.id ? t.color : '#ddd'}`,
-                            borderRadius: '6px',
-                            cursor: disabled ? 'not-allowed' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            opacity: disabled ? 0.5 : 1,
-                            transition: 'all 0.2s',
-                            boxShadow: tool === t.id ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
-                        }}
-                    >
-                        <t.icon size={16} />
-                        {t.label}
-                    </button>
-                ))}
-            </div>
-
-            <div style={{ width: '1px', height: '40px', background: '#ddd' }} />
-
-            {/* Actions */}
-            <button
-                onClick={() => onAction('delete')}
-                disabled={disabled}
-                style={{
-                    padding: '8px 16px',
-                    background: '#fff',
-                    color: '#f44336',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '13px',
-                    opacity: disabled ? 0.5 : 1
-                }}
-            >
-                <Trash2 size={16} />
-                Delete
-            </button>
-
-            <button
-                onClick={() => onAction('copy')}
-                disabled={disabled}
-                style={{
-                    padding: '8px 16px',
-                    background: '#fff',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '13px',
-                    opacity: disabled ? 0.5 : 1
-                }}
-            >
-                <Copy size={16} />
-                Copy
-            </button>
-
-            <button
-                onClick={() => onAction('library')}
-                style={{
-                    padding: '8px 16px',
-                    background: '#fff',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '13px'
-                }}
-            >
-                <Library size={16} />
-                Library
-            </button>
-
-            <div style={{ flex: 1 }} />
-
-            {/* View toggle */}
-            <div style={{
-                display: 'flex',
-                gap: '4px',
-                padding: '4px',
-                background: '#f5f5f5',
-                borderRadius: '8px'
-            }}>
-                <button
-                    onClick={() => onViewChange(view === '2d' ? '3d' : '2d')}
-                    style={{
-                        padding: '8px 16px',
-                        background: '#fff',
-                        color: view === '3d' ? '#9C27B0' : '#333',
-                        border: `1px solid ${view === '3d' ? '#9C27B0' : '#ddd'}`,
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '13px',
-                        fontWeight: '500'
-                    }}
-                >
-                    {view === '2d' ? <Grid3x3 size={16} /> : <Box size={16} />}
-                    {view === '2d' ? '3D View' : '2D View'}
-                </button>
-
-                {view === '3d' && (
-                    <button
-                        onClick={() => onFullScreenChange(!isFullScreen)}
-                        style={{
-                            padding: '8px 16px',
-                            background: isFullScreen ? '#333' : '#2196F3',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontWeight: 'bold',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                    >
-                        {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                        {isFullScreen ? 'Exit FS' : 'Full Screen'}
-                    </button>
-                )}
-            </div>
-
-            <div style={{ width: '1px', height: '40px', background: '#ddd' }} />
-
-            {/* Analysis */}
-            <button
-                onClick={() => onAction('analyze')}
-                style={{
-                    padding: '10px 20px',
-                    background: '#4CAF50',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-            >
-                <Play size={18} />
-                Run Analysis
-            </button>
-        </div>
-    );
-};
-
-// ============================================================================
-// PROPERTIES PANEL
-// ============================================================================
-
-const PropertiesPanel = ({ selectedElement, onPropertyChange, onClose }) => {
-    if (!selectedElement) {
-        return (
-            <div style={{
-                width: '350px',
-                background: '#fff',
-                borderLeft: '1px solid #ddd',
-                padding: '20px',
-                overflowY: 'auto'
-            }}>
-                <div style={{ textAlign: 'center', color: '#999', marginTop: '100px' }}>
-                    <Settings size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-                    <div>No Element Selected</div>
-                    <div style={{ fontSize: '12px', marginTop: '8px' }}>
-                        Click on an element to view properties
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div style={{
-            width: '350px',
-            background: '#fff',
-            borderLeft: '1px solid #ddd',
-            display: 'flex',
-            flexDirection: 'column',
-            overflowY: 'auto'
-        }}>
-            {/* Header */}
-            <div style={{
-                padding: '16px',
-                borderBottom: '1px solid #ddd',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                background: '#f5f5f5'
-            }}>
-                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>
-                    {selectedElement.type.toUpperCase()}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: '4px'
-                        }}
-                    >
-                        ✕
-                    </button>
-                </div>
-            </div>
-
-            {/* Properties */}
-            <div style={{ padding: '20px' }}>
-                <div style={{ marginBottom: '20px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#666' }}>
-                        DIMENSIONS & IDENTITY
-                    </div>
-
-                    <div style={{ marginBottom: '12px' }}>
-                        <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-                            ID / Name
-                        </label>
-                        <input
-                            type="text"
-                            value={selectedElement.id}
-                            onChange={(e) => onPropertyChange('id', e.target.value)} // Note: Requires handling ID change in parent if ID is used as key
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                fontSize: '13px'
-                            }}
-                        />
-                    </div>
-
-                    <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#666', marginTop: '16px' }}>
-                        DIMENSIONS
-                    </div>
-
-                    <div style={{ marginBottom: '12px' }}>
-                        <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-                            Width (mm)
-                        </label>
-                        <input
-                            type="number"
-                            value={selectedElement.properties.width}
-                            onChange={(e) => onPropertyChange('width', Number(e.target.value))}
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                fontSize: '13px'
-                            }}
-                        />
-                    </div>
-
-                    <div style={{ marginBottom: '12px' }}>
-                        <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-                            Depth (mm)
-                        </label>
-                        <input
-                            type="number"
-                            value={selectedElement.properties.depth}
-                            onChange={(e) => onPropertyChange('depth', Number(e.target.value))}
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                fontSize: '13px'
-                            }}
-                        />
-                    </div>
-
-                    {selectedElement.type === 'column' && (
-                        <div style={{ marginBottom: '12px' }}>
-                            <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-                                Height (mm)
-                            </label>
-                            <input
-                                type="number"
-                                value={selectedElement.properties.height}
-                                onChange={(e) => onPropertyChange('height', Number(e.target.value))}
-                                style={{
-                                    width: '100%',
-                                    padding: '8px',
-                                    border: '1px solid #ddd',
-                                    borderRadius: '4px',
-                                    fontSize: '13px'
-                                }}
-                            />
-                        </div>
-                    )}
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#666' }}>
-                        MATERIAL
-                    </div>
-
-                    <div style={{ marginBottom: '12px' }}>
-                        <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-                            Concrete Grade
-                        </label>
-                        <select
-                            value={selectedElement.properties.material}
-                            onChange={(e) => onPropertyChange('material', e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                fontSize: '13px'
-                            }}
-                        >
-                            <option value="C25">C25</option>
-                            <option value="C30">C30</option>
-                            <option value="C35">C35</option>
-                            <option value="C40">C40</option>
-                            <option value="C50">C50</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Analysis Results */}
-                {selectedElement.analysisResults && (
-                    <div style={{
-                        marginTop: '20px',
-                        padding: '16px',
-                        background: '#f9f9f9',
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0'
-                    }}>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#666' }}>
-                            ANALYSIS RESULTS
-                        </div>
-
-                        <div style={{ fontSize: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                            <div>
-                                <div style={{ color: '#888' }}>Axial Force:</div>
-                                <div style={{ fontWeight: 'bold' }}>
-                                    {selectedElement.analysisResults.N?.toFixed(1)} kN
-                                </div>
-                            </div>
-                            <div>
-                                <div style={{ color: '#888' }}>Moment:</div>
-                                <div style={{ fontWeight: 'bold' }}>
-                                    {selectedElement.analysisResults.M?.toFixed(1)} kNm
-                                </div>
-                            </div>
-                            <div>
-                                <div style={{ color: '#888' }}>Shear:</div>
-                                <div style={{ fontWeight: 'bold' }}>
-                                    {selectedElement.analysisResults.V?.toFixed(1)} kN
-                                </div>
-                            </div>
-                            <div>
-                                <div style={{ color: '#888' }}>Utilization:</div>
-                                <div style={{ fontWeight: 'bold', color: selectedElement.analysisResults.utilization > 1 ? '#f44336' : '#4CAF50' }}>
-                                    {(selectedElement.analysisResults.utilization * 100)?.toFixed(0)}%
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => {/* Open design details */ }}
-                            style={{
-                                width: '100%',
-                                marginTop: '12px',
-                                padding: '10px',
-                                background: '#2196F3',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: '500',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '6px'
-                            }}
-                        >
-                            <Calculator size={16} />
-                            View Design Details
-                        </button>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
+import { StructuralGrid, StructuralElement } from './StructuralClasses';
+import { StructuralCanvas } from './StructuralCanvas';
+import { Toolbar, PropertiesPanel, LayerControlPanel } from './StructuralUIComponents';
 
 // ============================================================================
 // MAIN APPLICATION
 // ============================================================================
 
-const InteractiveStructureBuilder = () => {
+const InteractiveStructureBuilder = ({
+    isFullScreen: propFullScreen,
+    onFullScreenChange
+}) => {
+    // Override local isFullScreen if props are provided
+    const [localFullScreen, setLocalFullScreen] = useState(false);
+    const isFullScreen = propFullScreen !== undefined ? propFullScreen : localFullScreen;
+    const setIsFullScreen = onFullScreenChange || setLocalFullScreen;
+
     const [elements, setElements] = useState([]);
     const [selectedElement, setSelectedElement] = useState(null);
     const [tool, setTool] = useState('select');
     const [showGrid, setShowGrid] = useState(true);
     const [showDiagrams, setShowDiagrams] = useState({ moment: false, shear: false });
     const [showForces, setShowForces] = useState(false);
+    const [slabOpacity, setSlabOpacity] = useState(0.4);
+    const [beamOpacity, setBeamOpacity] = useState(1.0);
+    const [groundOpacity, setGroundOpacity] = useState(1.0);
     const [scale, setScale] = useState(25);
     const [layers, setLayers] = useState({
         'Floor 1': { visible: true, elements: [] },
@@ -1036,23 +46,75 @@ const InteractiveStructureBuilder = () => {
         'Floor 3': { visible: true, elements: [] }
     });
     const [activeLayer, setActiveLayer] = useState('Floor 1');
-    const [view, setView] = useState('2d'); // '2d' or '3d'
+    const [view, setView] = useState('2d'); // '2d', '3d', or 'cad'
+
+    // Grid State
+    const [grid, setGrid] = useState(new StructuralGrid(5));
+
+    const handleGridUpdate = useCallback((newGrid) => {
+        // Create a new instance with the same properties to trigger re-render
+        // Assuming newGrid is the modified instance from StructuralCanvas, we just need to force update if mutation happened
+        // Or better, clone it:
+        const updatedGrid = new StructuralGrid(newGrid.spacing);
+        updatedGrid.xLines = [...newGrid.xLines];
+        updatedGrid.yLines = [...newGrid.yLines];
+        updatedGrid.idCounter = newGrid.idCounter;
+        setGrid(updatedGrid);
+    }, []);
+
+    const handleAutoAlignGrid = useCallback((customElements = null) => {
+        const targetElements = customElements || elements;
+        const newGrid = new StructuralGrid(grid.spacing);
+        newGrid.autoAlign(targetElements);
+        setGrid(newGrid);
+
+        // Auto-name columns based on new grid
+        setElements(prev => prev.map(el => {
+            if (el.type === 'column') {
+                const newLabel = newGrid.getClosestIntersectionLabel(el.position.x, el.position.y);
+                if (newLabel) {
+                    return { ...el, id: newLabel };
+                }
+            }
+            return el;
+        }));
+    }, [elements, grid.spacing]);
 
     // Override setTool to ensure we are in 2D mode when drawing
     const handleToolChange = (newTool) => {
-        if (newTool !== 'select' && view === '3d') {
+        if (newTool !== 'select' && (view === '3d' || view === 'cad')) {
             setView('2d');
         }
         setTool(newTool);
     };
+
     const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
     const [showLibrary, setShowLibrary] = useState(false);
-    const [isFullScreen, setIsFullScreen] = useState(false);
+    // isFullScreen is now handled via props or local state above
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [collapsedSections, setCollapsedSections] = useState({
         layers: false,
         display: false
     });
+
+    // Layer Visibility State
+    const [layerVisibility, setLayerVisibility] = useState({
+        gridLines: true,
+        columns: true,
+        beams: true,
+        slabs: true,
+        walls: true,
+        voids: true,
+        labels: true,
+        dimensions: true
+    });
+
+    const toggleLayer = (layerName) => {
+        setLayerVisibility(prev => ({
+            ...prev,
+            [layerName]: !prev[layerName]
+        }));
+    };
 
     const handleElementClick = useCallback((element) => {
         if (tool !== 'select') return;
@@ -1065,21 +127,31 @@ const InteractiveStructureBuilder = () => {
     }, [tool]);
 
     const handleElementsAdd = useCallback((newElements) => {
-        setElements(prev => [...prev, ...newElements]);
+        setElements(prev => {
+            const updated = [...prev, ...newElements];
+            // Trigger grid update after adding elements
+            setTimeout(() => handleAutoAlignGrid(updated), 0);
+            return updated;
+        });
         setTool('select');
-    }, []);
+    }, [handleAutoAlignGrid]);
 
     const handleElementDragEnd = useCallback((elementId, newPosition) => {
-        setElements(prev => prev.map(el => {
-            if (el.id === elementId) {
-                return {
-                    ...el,
-                    position: newPosition
-                };
-            }
-            return el;
-        }));
-    }, []);
+        setElements(prev => {
+            const updated = prev.map(el => {
+                if (el.id === elementId) {
+                    return {
+                        ...el,
+                        position: newPosition
+                    };
+                }
+                return el;
+            });
+            // Re-align grid after drag
+            setTimeout(() => handleAutoAlignGrid(updated), 0);
+            return updated;
+        });
+    }, [handleAutoAlignGrid]);
 
     const handlePropertyChange = useCallback((property, value) => {
         if (!selectedElement) return;
@@ -1142,9 +214,9 @@ const InteractiveStructureBuilder = () => {
                     const y = j * y_spacing;
                     newElements.push(new StructuralElement(
                         'column',
-                        `C-F${f}-${i}-${j}`,
+                        `${String.fromCharCode(65 + j)}${i + 1}-F${f}`,
                         { x, y, z },
-                        { depth: 0.45, height: floor_height, layer: floorName }
+                        { width: 0.45, depth: 0.45, height: floor_height, layer: floorName }
                     ));
                 }
             }
@@ -1205,7 +277,10 @@ const InteractiveStructureBuilder = () => {
         setLayers(newLayers);
         setActiveLayer(Object.keys(newLayers)[0]);
         setShowLibrary(false);
-    }, []);
+
+        // Auto-align grid to the new template
+        setTimeout(() => handleAutoAlignGrid(newElements), 0);
+    }, [handleAutoAlignGrid]);
 
     const handleAction = useCallback((action) => {
         switch (action) {
@@ -1240,8 +315,8 @@ const InteractiveStructureBuilder = () => {
                 setShowLibrary(true);
                 break;
 
-            case 'library':
-                setShowLibrary(true);
+            case 'cad_view':
+                setView('cad');
                 break;
 
             case 'add_bay':
@@ -1392,7 +467,6 @@ const InteractiveStructureBuilder = () => {
 
     const handleGenerateBay = useCallback(() => {
         // Generate a standard bay with columns at corners
-        // Generate a standard bay with columns at corners
         const bayWidth = 6;
         const bayDepth = 6;
 
@@ -1471,7 +545,6 @@ const InteractiveStructureBuilder = () => {
     return (
         <div style={{
             width: isFullScreen ? '100vw' : '100%',
-            height: isFullScreen ? '100vh' : '800px',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -1480,106 +553,11 @@ const InteractiveStructureBuilder = () => {
             boxShadow: isFullScreen ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
             border: isFullScreen ? 'none' : '1px solid #ddd',
             position: isFullScreen ? 'fixed' : 'relative',
-            top: isFullScreen ? 0 : 'auto',
+            top: isFullScreen ? '96px' : 'auto',
             left: isFullScreen ? 0 : 'auto',
-            zIndex: isFullScreen ? 5000 : 1
+            height: isFullScreen ? 'calc(100vh - 96px)' : '800px',
+            zIndex: isFullScreen ? 40 : 1
         }}>
-            {/* Header */}
-            <div style={{
-                height: '60px',
-                background: '#fff',
-                borderBottom: '1px solid #ddd',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0 20px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                zIndex: 1002, // Ensure header is above everything
-                position: 'relative'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {!isFullScreen && (
-                        <Building2 size={32} color="#2196F3" />
-                    )}
-
-                    {/* Exit full screen remains here if needed or removed */}
-
-                    <button
-                        onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-                        style={{
-                            padding: '8px',
-                            background: '#2196F3',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginLeft: isFullScreen ? '10px' : '0',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                        title={isSidebarVisible ? "Hide Sidebar" : "Show Sidebar"}
-                    >
-                        {isSidebarVisible ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-                    </button>
-
-                    {!isFullScreen && (
-                        <div>
-                            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                                Interactive Structure Builder
-                            </div>
-                            <div style={{ fontSize: '11px', color: '#888' }}>
-                                Professional Structural Modeler
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    {/* File operations */}
-                    <label style={{
-                        padding: '8px 16px',
-                        background: '#fff',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '13px'
-                    }}>
-                        <FolderOpen size={16} />
-                        Open
-                        <input type="file" accept=".json" onChange={handleLoad} style={{ display: 'none' }} />
-                    </label>
-
-                    <button
-                        onClick={handleSave}
-                        style={{
-                            padding: '8px 16px',
-                            background: '#fff',
-                            border: '1px solid #ddd',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '13px'
-                        }}
-                    >
-                        <Save size={16} />
-                        Save
-                    </button>
-
-                    <div style={{ width: '1px', height: '30px', background: '#ddd' }} />
-
-                    {/* Quick actions */}
-
-
-
-                </div>
-            </div>
 
             {/* Toolbar */}
             <Toolbar
@@ -1591,6 +569,10 @@ const InteractiveStructureBuilder = () => {
                 onViewChange={setView}
                 isFullScreen={isFullScreen}
                 onFullScreenChange={setIsFullScreen}
+                isSidebarVisible={isSidebarVisible}
+                onSidebarToggle={() => setIsSidebarVisible(!isSidebarVisible)}
+                onSave={handleSave}
+                onLoad={handleLoad}
             />
 
             {/* Main content */}
@@ -1738,6 +720,28 @@ const InteractiveStructureBuilder = () => {
                                 background: '#f9f9f9',
                                 borderTop: '1px solid #eee'
                             }}>
+                                {/* Layers Visibility Panel */}
+                                <div style={{ marginBottom: '16px' }}>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            marginBottom: '8px',
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => setCollapsedSections(prev => ({ ...prev, visibility: !prev.visibility }))}
+                                    >
+                                        <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <LayersIcon size={16} /> Visibility Layers
+                                        </h4>
+                                        {collapsedSections.visibility ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                                    </div>
+
+                                    {!collapsedSections.visibility && (
+                                        <LayerControlPanel layers={layerVisibility} onToggleLayer={toggleLayer} />
+                                    )}
+                                </div>
 
                                 <label style={{
                                     display: 'flex',
@@ -1754,6 +758,30 @@ const InteractiveStructureBuilder = () => {
                                     />
                                     Show Grid
                                 </label>
+
+                                <button
+                                    onClick={handleAutoAlignGrid}
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px',
+                                        background: '#2196F3',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontSize: '12px',
+                                        marginBottom: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '6px'
+                                    }}
+                                >
+                                    <Grid3x3 size={14} />
+                                    Auto-Align Grid to Columns
+                                </button>
+
+
 
                                 <label style={{
                                     display: 'flex',
@@ -1787,6 +815,33 @@ const InteractiveStructureBuilder = () => {
                                     Show SF Diagrams
                                 </label>
 
+                                <div style={{ height: '1px', background: '#eee', margin: '12px 0' }} />
+
+                                <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#666' }}>
+                                    VISIBILITY CONTROLS
+                                </div>
+
+                                <button
+                                    onClick={() => setShowGrid(!showGrid)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '8px 12px',
+                                        width: '100%',
+                                        background: showGrid ? '#E3F2FD' : '#f5f5f5',
+                                        border: `1px solid ${showGrid ? '#2196F3' : '#ddd'}`,
+                                        borderRadius: '6px',
+                                        fontSize: '12px',
+                                        cursor: 'pointer',
+                                        marginBottom: '8px',
+                                        color: showGrid ? '#2196F3' : '#666'
+                                    }}
+                                >
+                                    {showGrid ? <Eye size={14} /> : <EyeOff size={14} />}
+                                    {showGrid ? 'Grid Visible' : 'Grid Hidden'}
+                                </button>
+
                                 <label style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1815,6 +870,51 @@ const InteractiveStructureBuilder = () => {
                                         style={{ width: '100%' }}
                                     />
                                 </div>
+
+                                <div style={{ marginTop: '16px' }}>
+                                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>
+                                        Beam Opacity: {(beamOpacity * 100).toFixed(0)}%
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="1"
+                                        step="0.05"
+                                        value={beamOpacity}
+                                        onChange={(e) => setBeamOpacity(Number(e.target.value))}
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+
+                                <div style={{ marginTop: '16px' }}>
+                                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>
+                                        Slab Opacity: {(slabOpacity * 100).toFixed(0)}%
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="1"
+                                        step="0.05"
+                                        value={slabOpacity}
+                                        onChange={(e) => setSlabOpacity(Number(e.target.value))}
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+
+                                <div style={{ marginTop: '16px' }}>
+                                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>
+                                        Ground Opacity: {(groundOpacity * 100).toFixed(0)}%
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="1"
+                                        step="0.05"
+                                        value={groundOpacity}
+                                        onChange={(e) => setGroundOpacity(Number(e.target.value))}
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
                             </div>
                         )}
                     </div>
@@ -1834,98 +934,98 @@ const InteractiveStructureBuilder = () => {
                             showForces={showForces}
                             scale={scale}
                             activeLayer={activeLayer}
+                            layerVisibility={layerVisibility}
+                            grid={grid}
+                            onGridUpdate={handleGridUpdate}
+                            beamOpacity={beamOpacity}
                         />
+                    ) : view === 'cad' ? (
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: '#fff' }}>
+                            <CadDrawingApp
+                                initialObjects={exportStructureToCAD(elements, grid)}
+                                isFullScreen={isFullScreen}
+                                onFullScreenToggle={() => setIsFullScreen(!isFullScreen)}
+                            />
+                        </div>
                     ) : (
-                        <Complete3DStructureView
-                            elements={elements}
-                            selectedElement={selectedElement}
-                            onElementClick={handleElementClick}
-                            floors={Object.keys(layers).length}
-                            floorHeight={3.5}
-                            showDiagrams={showDiagrams}
-                            showForces={showForces}
-                            layerVisibility={Object.entries(layers).reduce((acc, [name, data]) => {
-                                acc[name] = data.visible;
-                                return acc;
-                            }, {})}
+                        <StructuralVisualizationComponent
+                            componentType="tall_framed_analysis"
+                            componentData={{
+                                elements: elements,
+                                floors: Object.keys(layers).length,
+                                floorHeight: 3.5, // Changed from story_height to align with Complete3DStructureView props
+                                selectedElement: selectedElement,
+                                onElementClick: handleElementClick,
+                                showForces: showForces,
+                                showDiagrams: showDiagrams,
+                                floorVisibility: Object.entries(layers).reduce((acc, [name, data]) => {
+                                    acc[name] = data.visible;
+                                    return acc;
+                                }, {}),
+                                componentVisibility: layerVisibility
+                            }}
+                            slabOpacity={slabOpacity}
+                            setSlabOpacity={setSlabOpacity}
+                            groundOpacity={groundOpacity}
                         />
                     )}
 
-                    {/* Stats overlay */}
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '20px',
-                        left: '20px',
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        padding: '12px 16px',
-                        borderRadius: '8px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                        fontSize: '12px',
-                        display: 'flex',
-                        gap: '16px'
-                    }}>
-                        <div>
-                            <div style={{ color: '#888' }}>Columns</div>
-                            <div style={{ fontWeight: 'bold' }}>
-                                {elements.filter(el => el.type === 'column').length}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ color: '#888' }}>Beams</div>
-                            <div style={{ fontWeight: 'bold' }}>
-                                {elements.filter(el => el.type === 'beam').length}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ color: '#888' }}>Slabs</div>
-                            <div style={{ fontWeight: 'bold' }}>
-                                {elements.filter(el => el.type === 'slab').length}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ color: '#888' }}>Total</div>
-                            <div style={{ fontWeight: 'bold' }}>
-                                {elements.length}
-                            </div>
-                        </div>
-                    </div>
+                    {view === '2d' && (
+                        <>
+                            {/* Properties Panel */}
+                            {showPropertiesPanel && (
+                                <div style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    zIndex: 100
+                                }}>
+                                    <PropertiesPanel
+                                        selectedElement={selectedElement}
+                                        onPropertyChange={handlePropertyChange}
+                                        onClose={() => setSelectedElement(null)}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Library Modal */}
+                            {showLibrary && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: '80%',
+                                    height: '80%',
+                                    background: '#fff',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                                    borderRadius: '8px',
+                                    zIndex: 2000,
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{
+                                        padding: '16px',
+                                        borderBottom: '1px solid #ddd',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <h3>Structure Library</h3>
+                                        <button onClick={() => setShowLibrary(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                                            <X size={24} />
+                                        </button>
+                                    </div>
+                                    <div style={{ height: 'calc(100% - 60px)' }}>
+                                        <BuildingLibraryBrowser onSelectTemplate={handleSelectTemplate} />
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
-
-                {showPropertiesPanel ? (
-                    <PropertiesPanel
-                        selectedElement={selectedElement}
-                        onPropertyChange={handlePropertyChange}
-                        onClose={() => setShowPropertiesPanel(false)}
-                    />
-                ) : (
-                    <button
-                        onClick={() => setShowPropertiesPanel(true)}
-                        style={{
-                            position: 'absolute',
-                            right: '20px',
-                            top: '80px',
-                            padding: '10px',
-                            background: '#2196F3',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                            zIndex: 10
-                        }}
-                    >
-                        <Settings size={20} />
-                    </button>
-                )}
-
-                {showLibrary && (
-                    <BuildingLibraryBrowser
-                        onSelectTemplate={handleSelectTemplate}
-                        onClose={() => setShowLibrary(false)}
-                    />
-                )}
             </div>
-        </div>
+        </div >
     );
 };
 
