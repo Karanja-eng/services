@@ -438,11 +438,17 @@ export const StructuralCanvas = ({
 
         const { x, y } = getLogicalPos(e.target.getStage());
 
+        const getZ = (layerName) => {
+            const level = parseInt((layerName || 'Floor 1').replace('Floor ', '')) || 1;
+            return (level - 1) * 3.5;
+        };
+        const z = getZ(activeLayer);
+
         if (tool === 'column') {
             const newColumn = new StructuralElement(
                 'column',
                 `C${elements.length + 1}`,
-                { x, y, z: 0 },
+                { x, y, z },
                 { layer: activeLayer || 'Floor 1' }
             );
             onElementsAdd([newColumn]);
@@ -477,10 +483,16 @@ export const StructuralCanvas = ({
 
         const { x, y } = getLogicalPos(e.target.getStage());
 
+        const getZ = (layerName) => {
+            const level = parseInt((layerName || 'Floor 1').replace('Floor ', '')) || 1;
+            return (level - 1) * 3.5;
+        };
+        const z = getZ(activeLayer);
+
         if (tool === 'beam') {
             const newBeam = new StructuralElement('beam', `B${elements.length + 1}`, {
-                start: drawing.start,
-                end: { x, y }
+                start: { ...drawing.start, z },
+                end: { x, y, z }
             }, {
                 layer: activeLayer
             });
@@ -488,7 +500,8 @@ export const StructuralCanvas = ({
         } else if (tool === 'slab') {
             const newSlab = new StructuralElement('slab', `S${elements.length + 1}`, {
                 x: Math.min(drawing.start.x, x),
-                y: Math.min(drawing.start.y, y)
+                y: Math.min(drawing.start.y, y),
+                z
             }, {
                 width: Math.abs(x - drawing.start.x),
                 depth: Math.abs(y - drawing.start.y),
@@ -498,7 +511,8 @@ export const StructuralCanvas = ({
         } else if (tool === 'void') {
             const newVoid = new StructuralElement('void', `V${elements.length + 1}`, {
                 x: Math.min(drawing.start.x, x),
-                y: Math.min(drawing.start.y, y)
+                y: Math.min(drawing.start.y, y),
+                z
             }, {
                 width: Math.abs(x - drawing.start.x),
                 depth: Math.abs(y - drawing.start.y),

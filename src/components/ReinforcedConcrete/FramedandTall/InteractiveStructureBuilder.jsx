@@ -34,7 +34,7 @@ const InteractiveStructureBuilder = ({
     const [selectedElement, setSelectedElement] = useState(null);
     const [tool, setTool] = useState('select');
     const [showGrid, setShowGrid] = useState(true);
-    const [showDiagrams, setShowDiagrams] = useState({ moment: false, shear: false });
+    const [showDiagrams, setShowDiagrams] = useState({ moment: false, shear: false, deflection: false });
     const [showForces, setShowForces] = useState(false);
     const [slabOpacity, setSlabOpacity] = useState(0.4);
     const [beamOpacity, setBeamOpacity] = useState(1.0);
@@ -47,6 +47,7 @@ const InteractiveStructureBuilder = ({
     });
     const [activeLayer, setActiveLayer] = useState('Floor 1');
     const [view, setView] = useState('2d'); // '2d', '3d', or 'cad'
+    const [analysisMethod, setAnalysisMethod] = useState('moment_distribution'); // 'moment_distribution' or 'stiffness'
 
     // Grid State
     const [grid, setGrid] = useState(new StructuralGrid(5));
@@ -384,41 +385,91 @@ const InteractiveStructureBuilder = ({
     };
 
     const runAnalysis = useCallback(async () => {
-        console.log('Preparing structural data for analysis...');
-        const { nodes, nodeMap } = generateNodesFromElements(elements);
-        const members = generateMembersFromElements(elements, nodeMap);
+        console.log('Running detailed building analysis...');
 
-        const structuralData = {
-            nodes,
-            members,
-            loads: elements.flatMap(el => el.loads || [])
+        const getZ = (layerName) => {
+            const level = parseInt(layerName.replace('Floor ', '')) || 1;
+            return (level - 1) * 3.5;
         };
 
-        console.log('Structural Data Prepared:', structuralData);
+        const payload = {
+            elements: elements.map(el => {
+                const z = el.position?.z !== undefined ? el.position.z : getZ(el.layer || activeLayer);
 
-        // Simulate analysis delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+                let start = null;
+                let end = null;
+                let position = null;
 
-        // Add mock results
-        setElements(prev => prev.map(el => ({
-            ...el,
-            analysisResults: {
-                N: Math.random() * 1000 - 500,
-                M: Math.random() * 200,
-                V: Math.random() * 100,
-                utilization: Math.random() * 1.2,
-                sections: Array.from({ length: 21 }, (_, i) => ({
-                    ratio: i / 20,
-                    Mz: Math.sin(i / 10 * Math.PI) * 100,
-                    Vy: Math.cos(i / 10 * Math.PI) * 50,
-                    N: -300
-                }))
-            }
-        })));
+                if (el.type === 'beam' || el.type === 'wall') {
+                    start = { x: el.position.start.x, y: el.position.start.y, z: z };
+                    end = { x: el.position.end.x, y: el.position.end.y, z: z };
+                } else if (el.type === 'column') {
+                    const h = el.properties.height || 3.5;
+                    start = { x: el.position.x, y: el.position.y, z: z };
+                    end = { x: el.position.x, y: el.position.y, z: z + h };
+                } else {
+                    // Slab, Void, etc.
+                    position = { x: el.position.x, y: el.position.y, z: z };
+                }
 
-        setShowDiagrams({ moment: true, shear: false });
-        setShowForces(true);
-    }, []);
+                return {
+                    id: el.id,
+                    type: el.type,
+                    start,
+                    end,
+                    position,
+                    properties: {
+                        width: el.properties.width || 0.3,
+                        depth: el.properties.depth || 0.3,
+                        material_grade: el.properties.material || "C30",
+                        load_combined: el.properties.load_combined || 5.0
+                    },
+                    layer: el.layer
+                };
+            }),
+            method: analysisMethod,
+            slab_load: 5.0
+        };
+
+        try {
+            const response = await fetch('http://127.0.0.1:8001/api/framed_full/analyze-full', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error('Analysis failed');
+
+            const results = await response.json();
+            console.log("Full Analysis Results:", results);
+
+            // Create a map for quick lookup
+            const resultMap = new Map(results.map(r => [r.element_id, r]));
+
+            setElements(prev => prev.map(el => {
+                const res = resultMap.get(el.id);
+                if (!res) return el;
+
+                return {
+                    ...el,
+                    analysisResults: {
+                        N: res.N_max,
+                        M: res.M_max,
+                        V: res.V_max,
+                        utilization: Math.min(Math.abs(res.M_max / 200), 1.2), // Mock utilization logic
+                        sections: res.sections // Use the detailed sections from backend
+                    }
+                };
+            }));
+
+            setShowDiagrams({ moment: true, shear: true });
+            setShowForces(true);
+
+        } catch (error) {
+            console.error("Analysis Error:", error);
+            alert("Analysis failed. Ensure backend is running.");
+        }
+    }, [elements, analysisMethod]);
 
     const handleSave = useCallback(() => {
         const data = {
@@ -573,6 +624,8 @@ const InteractiveStructureBuilder = ({
                 onSidebarToggle={() => setIsSidebarVisible(!isSidebarVisible)}
                 onSave={handleSave}
                 onLoad={handleLoad}
+                analysisMethod={analysisMethod}
+                onAnalysisMethodChange={setAnalysisMethod}
             />
 
             {/* Main content */}
@@ -857,6 +910,54 @@ const InteractiveStructureBuilder = ({
                                     Show Forces
                                 </label>
 
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    marginTop: '8px'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={showDiagrams.moment}
+                                        onChange={(e) => setShowDiagrams(prev => ({ ...prev, moment: e.target.checked }))}
+                                    />
+                                    Show Moment
+                                </label>
+
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    marginTop: '8px'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={showDiagrams.shear}
+                                        onChange={(e) => setShowDiagrams(prev => ({ ...prev, shear: e.target.checked }))}
+                                    />
+                                    Show Shear
+                                </label>
+
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    marginTop: '8px'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={showDiagrams.deflection}
+                                        onChange={(e) => setShowDiagrams(prev => ({ ...prev, deflection: e.target.checked }))}
+                                    />
+                                    Show Deflection
+                                </label>
+
                                 <div style={{ marginTop: '16px' }}>
                                     <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>
                                         Scale: {scale}x
@@ -949,7 +1050,7 @@ const InteractiveStructureBuilder = ({
                         </div>
                     ) : (
                         <StructuralVisualizationComponent
-                            componentType="tall_framed_analysis"
+                            componentType={view === 'analysis_3d' ? 'tall_framed_wireframe' : 'tall_framed_analysis'}
                             componentData={{
                                 elements: elements,
                                 floors: Object.keys(layers).length,
@@ -958,6 +1059,7 @@ const InteractiveStructureBuilder = ({
                                 onElementClick: handleElementClick,
                                 showForces: showForces,
                                 showDiagrams: showDiagrams,
+                                diagramScale: scale * 0.0001,
                                 floorVisibility: Object.entries(layers).reduce((acc, [name, data]) => {
                                     acc[name] = data.visible;
                                     return acc;
@@ -967,6 +1069,9 @@ const InteractiveStructureBuilder = ({
                             slabOpacity={slabOpacity}
                             setSlabOpacity={setSlabOpacity}
                             groundOpacity={groundOpacity}
+                            setGroundOpacity={setGroundOpacity}
+                            showGrid={showGrid}
+                            setShowGrid={setShowGrid}
                         />
                     )}
 

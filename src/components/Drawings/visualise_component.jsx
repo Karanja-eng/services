@@ -126,6 +126,44 @@ const DEFAULT_OPACITY = {
 };
 
 // ============================================================================
+// ERROR BOUNDARY COMPONENT
+// ============================================================================
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("3D View Error:", error, errorInfo);
+    this.setState({ error, errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 bg-red-100 text-red-800 rounded m-4 overflow-auto max-h-screen">
+          <h2 className="font-bold text-lg mb-2">Something went wrong in the 3D View</h2>
+          <details className="whitespace-pre-wrap font-mono text-sm">
+            <summary>Error Details</summary>
+            {this.state.error && this.state.error.toString()}
+            <br />
+            {this.state.errorInfo && this.state.errorInfo.componentStack}
+          </details>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+} // End ErrorBoundary
+
+// ============================================================================
 // CAMERA CONTROLLER COMPONENT
 // ============================================================================
 
@@ -351,6 +389,8 @@ export default function StructuralVisualizationComponent({
     // Fallback to legacy ELEMENT_COMPONENTS
     Element3DComponent = ELEMENT_COMPONENTS[actualComponentType];
   }
+
+
 
   // Converts object keys into clean, readable labels
   const formatLabel = (label) => {
@@ -781,24 +821,26 @@ export default function StructuralVisualizationComponent({
               {/* ...#######################Render Sample Members ############    */}
 
               {/* Render QS Component Scene */}
-              {isQS && QSScene && (
-                <QSScene
-                  poolData={actualComponentData} // Specific prop name for Pool
-                  settings={qsSettings}          // QS specific settings
-                  {...actualComponentData}       // Spread all data for other components
-                />
-              )}
+              <ErrorBoundary>
+                {isQS && QSScene && (
+                  <QSScene
+                    poolData={actualComponentData} // Specific prop name for Pool
+                    settings={qsSettings}          // QS specific settings
+                    {...actualComponentData}       // Spread all data for other components
+                  />
+                )}
 
-              {/* Render RC Component */}
-              {Element3DComponent && (
-                <Element3DComponent
-                  {...actualComponentData}
-                  {...sharedProps}
-                  slabOpacity={slabOpacity}
-                  groundOpacity={groundOpacity}
-                  showGrid={showGrid}
-                />
-              )}
+                {/* Render RC Component */}
+                {Element3DComponent && (
+                  <Element3DComponent
+                    {...actualComponentData}
+                    {...sharedProps}
+                    slabOpacity={slabOpacity}
+                    groundOpacity={groundOpacity}
+                    showGrid={showGrid}
+                  />
+                )}
+              </ErrorBoundary>
 
               {/* Render CAD Objects if provided */}
               {actualComponentData?.objects && (

@@ -18,7 +18,6 @@ import {
   ChevronLeft,
   Upload,
   Maximize2,
-  Minimize2,
   ZoomIn,
   ZoomOut,
   Minus,
@@ -42,14 +41,7 @@ import {
   MessageCircle,
   ChevronRight,
   File,
-  MousePointer2,
-  Box,
-  Hash,
-  Share2,
-  RefreshCw,
 } from "lucide-react";
-import { cadStorageService } from "./cadStorageService";
-import * as geometry from "./cadGeometryUtils";
 import { Stage, Layer, Line as KonvaLine, Circle as KonvaCircle, Rect as KonvaRect, Text as KonvaText, Group as KonvaGroup, Transformer } from 'react-konva';
 import StructuralVisualizationComponent from "./visualise_component";
 import { BeamKonvaGroup, getBeamCADPrimitives } from "../ReinforcedConcrete/Beams/BeamDrawer";
@@ -153,6 +145,68 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   const [history, setHistory] = useState([initialObjects]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
+  // View Settings
+  const [snapSettings, setSnapSettings] = useState({
+    [SNAP_MODES.ENDPOINT]: true,
+    [SNAP_MODES.MIDPOINT]: true,
+    [SNAP_MODES.CENTER]: true,
+    [SNAP_MODES.PERPENDICULAR]: true,
+    [SNAP_MODES.TANGENT]: true,
+    [SNAP_MODES.INTERSECTION]: true,
+    [SNAP_MODES.EXTENSION]: false,
+    [SNAP_MODES.GRID]: false,
+    [SNAP_MODES.NEAREST]: false,
+  });
+  const [gridVisible, setGridVisible] = useState(true);
+  const [gridSpacing, setGridSpacing] = useState(1);
+  const [orthoMode, setOrthoMode] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+
+  // UI State
+  const [leftPanelVisible, setLeftPanelVisible] = useState(true);
+  const [copilotOpen, setCopilotOpen] = useState(true);
+  const [copilotTab, setCopilotTab] = useState("ai"); // ai, properties, history, commands
+  const [showProperties, setShowProperties] = useState(false);
+  const [showDimensions, setShowDimensions] = useState(true);
+  const [showHatchMenu, setShowHatchMenu] = useState(false);
+  const [selectedHatch, setSelectedHatch] = useState("concrete");
+  const [showCommandLine, setShowCommandLine] = useState(true);
+  const [commandInput, setCommandInput] = useState("");
+  const [commandHistory, setCommandHistory] = useState([]);
+  const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
+
+  // Toolbar State
+  const [activeToolbarTab, setActiveToolbarTab] = useState("draw"); // draw, modify, annotate, 3d, view
+
+  // Text Scaling State
+  const [annotationTextSize, setAnnotationTextSize] = useState(12); // For user-added text/dimensions
+  const [structuralTextSize, setStructuralTextSize] = useState(18); // For beam/column labels and IDs
+
+  // Drawing State
+  const stageRef = useRef(null);
+  const transformerRef = useRef(null);
+  const layerRef = useRef(null);
+  const [drawing, setDrawing] = useState(false);
+  const [startPoint, setStartPoint] = useState(null);
+  const [currentPoint, setCurrentPoint] = useState(null);
+  const [snapPoint, setSnapPoint] = useState(null);
+  const [polylinePoints, setPolylinePoints] = useState([]);
+  const [arcPoints, setArcPoints] = useState([]);
+
+  // AI State
+  const [aiMessages, setAiMessages] = useState([
+    {
+      type: "assistant",
+      text: "AI Assistant ready. Describe what you want to draw.",
+    },
+  ]);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiProcessing, setAiProcessing] = useState(false);
+
+  // API Persistence
+  const [apiConnected, setApiConnected] = useState(false);
+
   // Sync initialObjects if they change externally (e.g. on first load)
   useEffect(() => {
     if (initialObjects && initialObjects.length > 0) {
@@ -229,63 +283,6 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
     });
   };
 
-  // View Settings
-  const [snapSettings, setSnapSettings] = useState({
-    [SNAP_MODES.ENDPOINT]: true,
-    [SNAP_MODES.MIDPOINT]: true,
-    [SNAP_MODES.CENTER]: true,
-    [SNAP_MODES.PERPENDICULAR]: true,
-    [SNAP_MODES.TANGENT]: true,
-    [SNAP_MODES.INTERSECTION]: true,
-    [SNAP_MODES.EXTENSION]: false,
-    [SNAP_MODES.GRID]: false,
-    [SNAP_MODES.NEAREST]: false,
-  });
-  const [gridVisible, setGridVisible] = useState(true);
-  const [gridSpacing, setGridSpacing] = useState(1);
-  const [orthoMode, setOrthoMode] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-
-  // UI State
-  const [leftPanelVisible, setLeftPanelVisible] = useState(true);
-  const [copilotOpen, setCopilotOpen] = useState(true);
-  const [copilotTab, setCopilotTab] = useState("ai"); // ai, properties, history, commands
-  const [showProperties, setShowProperties] = useState(false);
-  const [showDimensions, setShowDimensions] = useState(true);
-  const [showHatchMenu, setShowHatchMenu] = useState(false);
-  const [selectedHatch, setSelectedHatch] = useState("concrete");
-  const [showCommandLine, setShowCommandLine] = useState(true);
-  const [commandInput, setCommandInput] = useState("");
-  const [commandHistory, setCommandHistory] = useState([]);
-  const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
-
-  // Toolbar State
-  const [activeToolbarTab, setActiveToolbarTab] = useState("draw"); // draw, modify, annotate, 3d, view
-
-  // Drawing State
-  const stageRef = useRef(null);
-  const transformerRef = useRef(null);
-  const layerRef = useRef(null);
-  const [drawing, setDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState(null);
-  const [currentPoint, setCurrentPoint] = useState(null);
-  const [snapPoint, setSnapPoint] = useState(null);
-  const [polylinePoints, setPolylinePoints] = useState([]);
-  const [arcPoints, setArcPoints] = useState([]);
-
-  // AI State
-  const [aiMessages, setAiMessages] = useState([
-    {
-      type: "assistant",
-      text: "AI Assistant ready. Describe what you want to draw.",
-    },
-  ]);
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [aiProcessing, setAiProcessing] = useState(false);
-
-  // API Persistence
-  const [apiConnected, setApiConnected] = useState(false);
 
   // ============ HATCH PATTERNS ============
   const hatchPatterns = [
@@ -383,52 +380,24 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   };
 
   // ============ API PERSISTENCE ============
-  // Load data on mount (Only if initialObjects is empty)
   useEffect(() => {
-    const loadData = async () => {
-      // If we already have objects from props, don't overwrite from backend on mount
-      if (initialObjects && initialObjects.length > 0) return;
-
+    const checkBackend = async () => {
       try {
-        // Try local storage first
-        const localObjects = cadStorageService.getObjects(projectId);
-        if (localObjects && localObjects.length > 0) {
-          setObjects(localObjects);
-          setHistory([localObjects]);
-          setHistoryIndex(0);
-          setApiConnected(true);
-          return;
-        }
-
-        // Fallback to backend for persistence
-        const response = await fetch(`http://localhost:8001/drawings/projects/default`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.objects) {
-            setObjects(data.objects);
-            setHistory([data.objects]);
-            setHistoryIndex(0);
-          }
-        }
-        setApiConnected(true);
-      } catch (error) {
-        console.error("Error loading drawing:", error);
+        const response = await fetch("http://localhost:8001/drawings/health");
+        if (response.ok) setApiConnected(true);
+      } catch (e) {
         setApiConnected(false);
       }
     };
-    loadData();
-  }, [projectId, initialObjects]);
+    checkBackend();
+  }, []);
 
   const saveToBackend = async (newObjects) => {
-    // 1. Always sync to local storage for technical logic performance
-    cadStorageService.saveObjects(projectId, newObjects);
-
-    // 2. Sync to Python backend for data persistence and history
     try {
       await fetch(`http://localhost:8001/drawings/projects/default/objects/batch`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ objects: newObjects }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ objects: newObjects })
       });
     } catch (e) {
       console.error("Failed to save to backend", e);
@@ -510,43 +479,62 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   const renderKonvaObjects = () => {
     return objects.map((obj) => {
       const layer = layers.find((l) => l.id === obj.layerId);
-      // Default to visible if layer not found
-      if (layer && !layer.visible) return null;
+      if (!layer?.visible) return null;
 
-      const color = obj.color || (layer?.color) || (isDark ? "#FFFFFF" : "#000000");
+      const color = obj.color || (isDark ? "#FFFFFF" : "#000000");
       const strokeWidth = obj.lineWidth || 2;
       const isSelected = selectedIds.includes(obj.id);
 
       const handleDragEnd = (e) => {
         const newObjects = objects.map((o) => {
           if (o.id === obj.id) {
-            if (o.type === "line" || o.type === "rectangle") {
+            if (o.type === "line" || o.type === "polyline" || o.type === "rectangle") {
               const dx = e.target.x();
               const dy = e.target.y();
+
+              if (o.points) {
+                return {
+                  ...o,
+                  points: o.points.map((p) => ({
+                    x: p.x + dx,
+                    y: p.y + dy,
+                    z: p.z || 0,
+                  })),
+                };
+              }
+
               // For shapes with start/end, we update them and reset Konva x/y to 0
               return {
                 ...o,
                 start: { x: o.start.x + dx, y: o.start.y + dy, z: o.start.z },
-                end: { x: o.end.x + dx, y: o.end.y + dy, z: o.end.z }
+                end: { x: o.end.x + dx, y: o.end.y + dy, z: o.end.z },
               };
             }
             if (o.type === "circle") {
               return {
                 ...o,
-                center: { x: o.center.x + e.target.x(), y: o.center.y + e.target.y(), z: o.center.z }
+                center: {
+                  x: o.center.x + e.target.x(),
+                  y: o.center.y + e.target.y(),
+                  z: o.center.z,
+                },
               };
             }
             if (o.type === "text") {
               return {
                 ...o,
-                position: { x: o.position.x + e.target.x(), y: o.position.y + e.target.y(), z: o.position.z }
+                position: {
+                  x: o.position.x + e.target.x(),
+                  y: o.position.y + e.target.y(),
+                  z: o.position.z,
+                },
               };
             }
             if (o.type === "member") {
               return {
                 ...o,
                 x: o.x + e.target.x(),
-                y: o.y + e.target.y()
+                y: o.y + e.target.y(),
               };
             }
           }
@@ -559,79 +547,96 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
 
       switch (obj.type) {
         case "line":
+        case "polyline":
+          if (obj.points) {
+            return (
+              <KonvaLine
+                key={obj.id}
+                id={obj.id}
+                points={obj.points.flatMap((p) => [p.x, p.y])}
+                stroke={color}
+                strokeWidth={strokeWidth}
+                closed={obj.closed}
+                fill={obj.fill}
+                draggable={!layer?.locked}
+                onDragEnd={handleDragEnd}
+              />
+            );
+          }
+          if (!obj.start || !obj.end) return null;
           return (
             <KonvaLine
               key={obj.id}
               id={obj.id}
-              points={obj.points ? obj.points.flatMap(p => [p.x, p.y]) : [obj.start.x, obj.start.y, obj.end.x, obj.end.y]}
+              points={[
+                obj.start.x || 0,
+                obj.start.y || 0,
+                obj.end.x || 0,
+                obj.end.y || 0,
+              ]}
               stroke={color}
               strokeWidth={strokeWidth}
-              fill={obj.fill}
-              closed={obj.closed}
-              dash={obj.dash}
-              draggable={!layer.locked}
+              draggable={!layer?.locked}
               onDragEnd={handleDragEnd}
             />
           );
         case "rectangle":
+          if (!obj.start || !obj.end) return null;
           return (
             <KonvaRect
               key={obj.id}
               id={obj.id}
-              x={Math.min(obj.start.x, obj.end.x)}
-              y={Math.min(obj.start.y, obj.end.y)}
-              width={Math.abs(obj.end.x - obj.start.x)}
-              height={Math.abs(obj.end.y - obj.start.y)}
+              x={Math.min(obj.start.x || 0, obj.end.x || 0)}
+              y={Math.min(obj.start.y || 0, obj.end.y || 0)}
+              width={Math.abs((obj.end.x || 0) - (obj.start.x || 0))}
+              height={Math.abs((obj.end.y || 0) - (obj.start.y || 0))}
               stroke={color}
               strokeWidth={strokeWidth}
-              fill={obj.fill}
-              opacity={obj.opacity || 1}
-              draggable={!layer.locked}
+              draggable={!layer?.locked}
               onDragEnd={handleDragEnd}
             />
           );
         case "circle":
+          if (!obj.center) return null;
           return (
             <KonvaCircle
               key={obj.id}
               id={obj.id}
-              x={obj.center.x}
-              y={obj.center.y}
-              radius={obj.radius}
+              x={obj.center.x || 0}
+              y={obj.center.y || 0}
+              radius={obj.radius || 10}
               stroke={color}
               strokeWidth={strokeWidth}
-              fill={obj.fill}
-              draggable={!layer.locked}
+              draggable={!layer?.locked}
               onDragEnd={handleDragEnd}
             />
           );
         case "text":
-          const fontSize = (obj.size || 1) * annotationTextSize;
+          // Grid labels get fixed size to fill bubbles, user text uses annotationTextSize
+          let fontSize;
+          if (obj.isGridLabel) {
+            fontSize = 60; // Fixed size to perfectly fill the 0.6*S (60px) radius circles
+          } else {
+            fontSize = (obj.size || 1) * annotationTextSize;
+          }
+
+          if (!obj.position) return null;
           return (
             <KonvaText
               key={obj.id}
               id={obj.id}
-              x={obj.position.x}
-              y={obj.position.y}
-              text={obj.text}
+              x={obj.position.x || 0}
+              y={obj.position.y || 0}
+              text={obj.text || ""}
               fontSize={fontSize}
               fill={color}
               rotation={obj.rotation || 0}
               align={obj.align || 'left'}
               verticalAlign={obj.verticalAlign || 'top'}
-              offsetX={obj.align === 'center' ? 0 : 0} // Standard Konva behavior for simple text
+              offsetX={obj.align === 'center' ? (obj.isGridLabel ? fontSize / 2 : 250) : 0}
               offsetY={obj.verticalAlign === 'middle' ? fontSize / 2 : 0}
-              // If centered, we often want to shift the X as well
-              onBeforeRender={(canvas) => {
-                if (obj.align === 'center') {
-                  // This is a bit complex in Konva without a width, 
-                  // but we can approximation with offsetX
-                }
-              }}
-              // Better approach: use width if alignment is needed
-              width={obj.align === 'center' ? 500 : undefined}
-              offsetX={obj.align === 'center' ? 250 : 0}
-              draggable={!layer.locked}
+              width={obj.align === 'center' && !obj.isGridLabel ? 500 : undefined}
+              draggable={!layer?.locked}
               onDragEnd={handleDragEnd}
               onDblClick={() => {
                 const newText = prompt("Edit text:", obj.text);
@@ -650,11 +655,11 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
                 id={obj.id}
                 config={obj.config}
                 section={obj.section || "midspan"}
-                x={obj.x}
-                y={obj.y}
+                x={obj.x || 0}
+                y={obj.y || 0}
                 scale={obj.scale || 0.4}
-                textSize={annotationTextSize / 2}
-                draggable={!layer.locked}
+                textSize={structuralTextSize}
+                draggable={!layer?.locked}
                 onDragEnd={handleDragEnd}
               />
             );
@@ -664,17 +669,17 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
               <ColumnKonvaGroup
                 key={obj.id}
                 id={obj.id}
-                width={columnProps.width}
-                depth={columnProps.depth}
-                numBars={columnProps.numBars}
-                barDia={columnProps.barDia}
-                cover={columnProps.cover}
-                tieDia={columnProps.tieDia}
-                x={obj.x}
-                y={obj.y}
+                width={columnProps.width || obj.width || 400}
+                depth={columnProps.depth || obj.depth || 400}
+                numBars={columnProps.numBars || obj.numBars || 4}
+                barDia={columnProps.barDia || obj.barDia || 20}
+                cover={columnProps.cover || obj.cover || 40}
+                tieDia={columnProps.tieDia || obj.tieDia || 10}
+                x={obj.x || 0}
+                y={obj.y || 0}
                 scale={obj.scale || 0.8}
-                textSize={annotationTextSize / 2}
-                draggable={!layer.locked}
+                textSize={structuralTextSize}
+                draggable={!layer?.locked}
                 onDragEnd={handleDragEnd}
               />
             );
@@ -685,10 +690,10 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
                 id={obj.id}
                 foundationType={obj.config?.foundation_type || obj.foundationType}
                 params={obj.config || obj.params}
-                x={obj.x}
-                y={obj.y}
+                x={obj.x || 0}
+                y={obj.y || 0}
                 scale={obj.scale || 0.15}
-                draggable={!layer.locked}
+                draggable={!layer?.locked}
                 onDragEnd={handleDragEnd}
               />
             );
@@ -771,12 +776,13 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
         if (snapSettings[SNAP_MODES.ENDPOINT]) {
           const endpoints = [];
           if (obj.type === "line") {
+            if (obj.start) endpoints.push(obj.start);
+            if (obj.end) endpoints.push(obj.end);
             if (obj.points) endpoints.push(...obj.points);
-            else endpoints.push(obj.start, obj.end);
           }
           if (obj.type === "polyline" && obj.points)
             endpoints.push(...obj.points);
-          if (obj.type === "rectangle") {
+          if (obj.type === "rectangle" && obj.start && obj.end) {
             endpoints.push(
               obj.start,
               obj.end,
@@ -786,6 +792,7 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
           }
 
           endpoints.forEach((ep) => {
+            if (!ep) return;
             const dist = Math.hypot(point.x - ep.x, point.y - ep.y);
             if (dist < closestDist) {
               closest = { ...ep, snapType: SNAP_MODES.ENDPOINT };
@@ -824,7 +831,7 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
               closestDist = dist;
             }
           }
-          if (obj.type === "rectangle" && obj.start && obj.end) {
+          if (obj.type === "rectangle") {
             const center = {
               x: (obj.start.x + obj.end.x) / 2,
               y: (obj.start.y + obj.end.y) / 2,
@@ -1650,8 +1657,6 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
     activeTool,
   ]);
 
-  const [annotationTextSize, setAnnotationTextSize] = useState(12);
-
   // Initialize history
   useEffect(() => {
     if (history.length === 0) {
@@ -1659,114 +1664,210 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
     }
   }, []);
 
-  const ToolButton = ({ tool, icon: Icon, label, onClick, isActive }) => (
-    <button
-      onClick={onClick || (() => setActiveTool(tool))}
-      className={`p-2 rounded flex flex-col items-center gap-1 min-w-[50px] transition-all ${isActive || activeTool === tool
-        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-        : isDark
-          ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200"
-          : "hover:bg-gray-200 text-gray-600 hover:text-gray-900"
-        }`}
-      title={label}
-    >
-      <Icon size={18} />
-      <span className="text-[10px] font-medium leading-none">{label}</span>
-    </button>
-  );
-
   return (
-    <div className={`flex flex-col h-full ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"}`}>
+    <div className={`flex flex-col h-screen ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"}`}>
+      {/* ============ NEW HEADER STRUCTURE ============ */}
+      <div className="flex flex-col z-40">
+        {/* 1. Main Header Strip (Tabs & Global Controls) */}
+        <div className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-b h-12 flex items-center px-3 justify-between gap-4`}>
 
-      {/* Sub Toolbar Row - Re-implemented for visibility */}
-      <div className={`flex items-center gap-2 p-1.5 border-b overflow-x-auto no-scrollbar scroll-smooth ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200 shadows-sm"}`}>
-        {/* Tab Selection */}
-        <div className="flex bg-black/5 dark:bg-white/10 rounded-lg p-1 mr-2 shrink-0">
-          {[
-            { id: 'draw', label: 'Draw' },
-            { id: 'modify', label: 'Modify' },
-            { id: '3d', label: '3D' },
-            { id: 'view', label: 'View' }
-          ].map(tab => (
+          {/* Left: Brand & Left Sidebar Toggle */}
+          <div className="flex items-center gap-3">
             <button
-              key={tab.id}
-              onClick={() => setActiveToolbarTab(tab.id)}
-              className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${activeToolbarTab === tab.id
-                ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+              onClick={() => setLeftPanelVisible(!leftPanelVisible)}
+              className={`p-1.5 rounded ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-200" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
+              title={leftPanelVisible ? "Hide Layers" : "Show Layers"}
             >
-              {tab.label}
+              <Layers size={18} />
             </button>
-          ))}
-        </div>
+            <div className="font-bold flex items-center gap-2 text-sm md:text-base">
+              <Maximize size={18} className="text-blue-500" />
+              <span className="hidden sm:inline">Universal CAD</span>
+            </div>
+          </div>
 
-        <div className="h-8 w-px bg-gray-300 dark:bg-gray-700 mx-1 shrink-0" />
-
-        {/* Dynamic Tools based on Tab */}
-        <div className="flex items-center gap-1.5 shrink-0 px-1">
-          {activeToolbarTab === 'draw' && (
-            <>
-              <ToolButton tool={null} icon={MousePointer2} label="Select" />
-              <ToolButton tool="line" icon={Minus} label="Line" />
-              <ToolButton tool="polyline" icon={Zap} label="Poly" />
-              <ToolButton tool="circle" icon={Circle} label="Circle" />
-              <ToolButton tool="rectangle" icon={Square} label="Rect" />
-              <ToolButton tool="arc" icon={RefreshCw} label="Arc" />
-              <ToolButton tool="hatch" icon={Hash} label="Hatch" onClick={() => setShowHatchMenu(!showHatchMenu)} isActive={showHatchMenu} />
-              <ToolButton tool="text" icon={Type} label="Text" onClick={() => { setActiveTool("text"); setCopilotOpen(true); setCopilotTab("properties"); }} />
-              <ToolButton tool="dimension" icon={Ruler} label="Dim" onClick={() => { setActiveTool("dimension"); setCopilotOpen(true); setCopilotTab("properties"); }} />
-            </>
-          )}
-
-          {activeToolbarTab === 'modify' && (
-            <>
-              <ToolButton tool="move" icon={Move} label="Move" onClick={handleMove} />
-              <ToolButton tool="copy" icon={Copy} label="Copy" onClick={handleCopy} isActive={copiedObjects.length > 0} />
-              <ToolButton tool="rotate" icon={RotateCw} label="Rotate" onClick={handleRotate} />
-              <ToolButton tool="scale" icon={Scale} label="Scale" onClick={handleScale} />
-              <ToolButton tool="mirror" icon={Share2} label="Mirror" onClick={handleMirror} />
-              <ToolButton tool="delete" icon={Trash2} label="Erase" onClick={handleDelete} />
-              <ToolButton tool="explode" icon={Box} label="Explode" onClick={handleExplode} />
-            </>
-          )}
-
-          {activeToolbarTab === '3d' && (
-            <>
-              <ToolButton tool="extrude" icon={Box} label="Extrude" onClick={handleExtrude} />
-              <ToolButton tool="revolve" icon={RotateCw} label="Revolve" onClick={handleRevolve} />
+          {/* Center: Toolbar Categories (Tabs) */}
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+            {[
+              { id: "file", label: "File" },
+              { id: "draw", label: "Draw" },
+              { id: "modify", label: "Modify" },
+              { id: "annotate", label: "Annotate" },
+              { id: "3d", label: "3D Tools" },
+              { id: "view", label: "View" },
+            ].map(tab => (
               <button
-                onClick={() => setMode(mode === "2D" ? "3D" : "2D")}
-                className={`p-2 rounded flex flex-col items-center gap-1 min-w-[50px] transition-all ${mode === "3D" ? "bg-blue-600 text-white" : "hover:bg-gray-200 dark:hover:bg-gray-700"}`}
+                key={tab.id}
+                onClick={() => setActiveToolbarTab(activeToolbarTab === tab.id ? null : tab.id)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-t-md transition-colors ${activeToolbarTab === tab.id
+                  ? (isDark ? "bg-gray-900 text-blue-400 border-b-2 border-blue-500" : "bg-gray-50 text-blue-600 border-b-2 border-blue-500")
+                  : (isDark ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100")
+                  }`}
               >
-                <Maximize size={18} />
-                <span className="text-[10px] font-medium leading-none">{mode === "3D" ? "2D" : "3D"} View</span>
+                {tab.label}
               </button>
-            </>
-          )}
+            ))}
+          </div>
 
-          {activeToolbarTab === 'view' && (
-            <>
-              <ToolButton tool="grid" icon={Grid3X3} label="Grid" onClick={() => setGridVisible(!gridVisible)} isActive={gridVisible} />
-              <ToolButton tool="layers" icon={Layers} label="Layers" onClick={() => setLeftPanelVisible(!leftPanelVisible)} isActive={leftPanelVisible} />
-              <ToolButton tool="copilot" icon={Sparkles} label="Copilot" onClick={() => setCopilotOpen(!copilotOpen)} isActive={copilotOpen} />
-              <ToolButton tool="ortho" icon={Minus} label="Ortho" onClick={() => setOrthoMode(!orthoMode)} isActive={orthoMode} />
-            </>
-          )}
+          {/* Right: Undo/Redo & Right Sidebar Toggle */}
+          <div className="flex items-center gap-2">
+            <div className="flex bg-gray-700/30 rounded p-0.5 mr-2">
+              <button onClick={undo} disabled={historyIndex === 0} className="p-1.5 hover:bg-gray-600/50 rounded disabled:opacity-30" title="Undo">
+                <Undo2 size={16} />
+              </button>
+              <button onClick={redo} disabled={historyIndex === history.length - 1} className="p-1.5 hover:bg-gray-600/50 rounded disabled:opacity-30" title="Redo">
+                <Redo2 size={16} />
+              </button>
+            </div>
+
+            <button
+              onClick={() => setCopilotOpen(!copilotOpen)}
+              className={`p-1.5 rounded flex items-center gap-2 ${copilotOpen
+                ? "bg-blue-600 text-white"
+                : (isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-200" : "bg-gray-100 hover:bg-gray-200 text-gray-700")}`}
+              title={copilotOpen ? "Hide Copilot" : "Show Copilot"}
+            >
+              <Sparkles size={18} />
+              <span className="text-xs hidden md:inline">Copilot</span>
+            </button>
+          </div>
         </div>
+
+        {/* 2. Sub-Header Strip (Active Tools) */}
+        {activeToolbarTab && (
+          <div className={`${isDark ? "bg-gray-900 border-gray-700" : "bg-gray-50 border-gray-200"} border-b h-10 flex items-center px-4 gap-3 overflow-x-auto`}>
+
+            {/* === FILE TAB === */}
+            {activeToolbarTab === "file" && (
+              <>
+                <button onClick={() => alert("Save")} className="tool-btn flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-700/50 text-xs">
+                  <Save size={14} /> Save
+                </button>
+                <button onClick={() => alert("Open")} className="tool-btn flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-700/50 text-xs">
+                  <Upload size={14} /> Open
+                </button>
+                <button onClick={() => alert("Export")} className="tool-btn flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-700/50 text-xs">
+                  <Download size={14} /> Export
+                </button>
+              </>
+            )}
+
+            {/* === DRAW TAB === */}
+            {activeToolbarTab === "draw" && (
+              <>
+                <button onClick={() => setActiveTool("line")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "line" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Line
+                </button>
+                <button onClick={() => { setActiveTool("polyline"); setPolylinePoints([]); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "polyline" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Polyline
+                </button>
+                <button onClick={() => setActiveTool("circle")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "circle" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  <Circle size={14} /> Circle
+                </button>
+                <button onClick={() => { setActiveTool("arc"); setArcPoints([]); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "arc" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Arc
+                </button>
+                <button onClick={() => setActiveTool("rectangle")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "rectangle" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Rectangle
+                </button>
+                <button onClick={() => setActiveTool("ellipse")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "ellipse" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Ellipse
+                </button>
+                <button onClick={() => { setActiveTool("spline"); setPolylinePoints([]); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "spline" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Spline
+                </button>
+                <div className="w-px h-4 bg-gray-600 mx-1"></div>
+                <button onClick={() => setShowHatchMenu(!showHatchMenu)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "hatch" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Hatch
+                </button>
+              </>
+            )}
+
+            {/* === MODIFY TAB === */}
+            {activeToolbarTab === "modify" && (
+              <>
+                <button onClick={handleMove} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <Move size={14} /> Move
+                </button>
+                <button onClick={handleCopy} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <Copy size={14} /> Copy
+                </button>
+                <button onClick={handleMirror} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <Maximize size={14} /> Mirror
+                </button>
+                <button onClick={handleRotate} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <RotateCw size={14} /> Rotate
+                </button>
+                <button onClick={handleScale} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                  <Maximize2 size={14} /> Scale
+                </button>
+                <div className="w-px h-4 bg-gray-600 mx-1"></div>
+                <button onClick={handleDelete} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 text-red-500 hover:bg-red-900/20 disabled:opacity-40">
+                  <Trash2 size={14} /> Delete
+                </button>
+              </>
+            )}
+
+            {/* === ANNOTATE TAB === */}
+            {activeToolbarTab === "annotate" && (
+              <>
+                <button onClick={() => setActiveTool("dimension")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "dimension" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  <Ruler size={14} /> Dimension
+                </button>
+                <button onClick={() => setActiveTool("text")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "text" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  <Type size={14} /> Text
+                </button>
+              </>
+            )}
+
+            {/* === 3D TOOLS TAB === */}
+            {activeToolbarTab === "3d" && (
+              <>
+                <button onClick={() => setMode("3D")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${mode === "3D" ? "bg-purple-600 text-white" : "hover:bg-gray-700/50"}`}>
+                  Switch to 3D View
+                </button>
+                <div className="w-px h-4 bg-gray-600 mx-1"></div>
+                {mode === "3D" && (
+                  <button onClick={() => setActiveTool("box")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "box" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                    Box
+                  </button>
+                )}
+                <button onClick={handleExtrude} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 bg-green-900/30 text-green-500 hover:bg-green-900/50 disabled:opacity-40">
+                  Extrude Selected
+                </button>
+                <button onClick={handleRevolve} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 bg-purple-900/30 text-purple-400 hover:bg-purple-900/50 disabled:opacity-40">
+                  Revolve Selected
+                </button>
+              </>
+            )}
+
+            {/* === VIEW TAB === */}
+            {activeToolbarTab === "view" && (
+              <>
+                <button onClick={() => setGridVisible(!gridVisible)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${gridVisible ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  <Grid3X3 size={14} /> Grid
+                </button>
+                <button onClick={() => setOrthoMode(!orthoMode)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${orthoMode ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  <Zap size={14} /> Ortho
+                </button>
+                <button onClick={() => setShowDimensions(!showDimensions)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${showDimensions ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  <Ruler size={14} /> Show Dimensions
+                </button>
+                <div className="w-px h-4 bg-gray-600 mx-1"></div>
+                <button onClick={() => setLeftPanelVisible(!leftPanelVisible)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${leftPanelVisible ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  Layers Panel
+                </button>
+                <button onClick={() => setCopilotOpen(!copilotOpen)} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${copilotOpen ? "bg-blue-600/20 text-blue-400" : "hover:bg-gray-700/50"}`}>
+                  Copilot Panel
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Floating Controls */}
-      {!isFullScreen && (
-        <div className="absolute top-4 right-4 z-50 flex gap-2">
-          <button
-            onClick={onFullScreenToggle}
-            className={`p-2 rounded-full shadow-lg ${isDark ? "bg-gray-800 hover:bg-gray-700 text-gray-200" : "bg-white hover:bg-gray-100 text-gray-800"}`}
-            title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"}
-          >
-            {isFullScreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-          </button>
-        </div>
-      )}
+
+
 
       {/* Hatch Menu */}
       {showHatchMenu && (
@@ -2149,23 +2250,42 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
                         <button onClick={handleScale} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Scale</button>
                         <button onClick={handleMirror} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Mirror</button>
                         <button onClick={handleExtrude} className="px-2 py-1.5 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700">Extrude 3D</button>
+                        <button onClick={handleExplode} className="px-2 py-1.5 rounded text-xs font-medium bg-amber-600 text-white hover:bg-amber-700">Explode</button>
                         <button onClick={handleDelete} className="px-2 py-1.5 rounded text-xs font-medium bg-red-600 text-white hover:bg-red-700">Delete</button>
                       </div>
                     </div>
                   )}
 
-                  {/* Always visible Annotation Settings */}
+                  {/* Always visible Text Scaling Settings */}
                   <div className={`mt-4 pt-4 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
-                    <div className={`text-xs font-bold mb-2 ${isDark ? "text-gray-300" : "text-gray-600"}`}>General Annotation Settings</div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] uppercase font-bold text-gray-500">Global Text Size</label>
+                    <div className={`text-xs font-bold mb-3 ${isDark ? "text-gray-300" : "text-gray-600"}`}>Text Scaling Controls</div>
+
+                    {/* User Annotations */}
+                    <div className="mb-3">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 block mb-1">User Text & Dimensions</label>
                       <input
                         type="number"
                         value={annotationTextSize}
                         onChange={(e) => setAnnotationTextSize(parseInt(e.target.value) || 12)}
-                        className={`w-16 px-2 py-1 text-xs rounded border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-300 shadow-sm"}`}
-                        title="Scales all labelling, dimensions and grid text"
+                        className={`w-full px-2 py-1 text-xs rounded border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-300 shadow-sm"}`}
+                        title="For manually added text and dimension labels"
                       />
+                    </div>
+
+                    {/* Structural Labels */}
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Structural Labels & IDs</label>
+                      <input
+                        type="number"
+                        value={structuralTextSize}
+                        onChange={(e) => setStructuralTextSize(parseInt(e.target.value) || 18)}
+                        className={`w-full px-2 py-1 text-xs rounded border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-300 shadow-sm"}`}
+                        title="For beam and column dimensions, IDs, and labels"
+                      />
+                    </div>
+
+                    <div className={`mt-2 text-[9px] ${isDark ? "text-gray-500" : "text-gray-400"} italic`}>
+                      Grid labels (A, B, 1, 2) are automatically sized to fill their circles
                     </div>
                   </div>
                 </div>
@@ -2286,7 +2406,7 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
           <div className={apiConnected ? "text-green-500" : "text-red-500"}>● Backend: {apiConnected ? "Live" : "Down"}</div>
         </div>
       </div>
-    </div >
+    </div>
 
   );
 }

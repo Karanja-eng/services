@@ -18,7 +18,7 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.05;
+        const scale = 0.002;
         const height = element.properties.height || floorHeight;
         const x = element.position.x;
         const y = element.position.z || 0;
@@ -39,7 +39,7 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.05;
+        const scale = 0.002;
         const height = element.properties.height || floorHeight;
         const x = element.position.x;
         const y = element.position.z || 0;
@@ -216,7 +216,7 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.05; // Scale factor for moment diagram
+        const scale = 0.002; // Scale factor for moment diagram
 
         sections.forEach(section => {
             const t = section.ratio;
@@ -239,7 +239,7 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.05; // Scale factor for shear diagram
+        const scale = 0.002; // Scale factor for shear diagram
 
         sections.forEach(section => {
             const t = section.ratio;
@@ -270,9 +270,17 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
                 }}
                 onPointerOut={() => setHovered(false)}
             >
-                <cylinderGeometry args={[depth / 2, depth / 2, length, 8]} />
+                <boxGeometry args={[width, length, depth]} />
                 <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} />
             </mesh>
+
+            {/* Beam Edges */}
+            <group position={center} quaternion={quaternion}>
+                <lineSegments>
+                    <edgesGeometry args={[new THREE.BoxGeometry(width, length, depth)]} />
+                    <lineBasicMaterial color="#000000" linewidth={1} />
+                </lineSegments>
+            </group>
 
             {/* BM diagram */}
             {bmCurve && bmCurve.length > 1 && (
@@ -317,10 +325,11 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
 // 3D SLAB COMPONENT
 // ============================================================================
 
-const Slab3D = ({ element, floorLevel, opacity, visible, onClick }) => {
+const Slab3D = ({ element, floorLevel, opacity, visible = true, onClick }) => {
     if (!visible) return null;
 
     const thickness = element.properties.thickness || 0.2;
+    console.log(`Slab3D [${element.id}] Opacity:`, opacity);
 
     return (
         <mesh
@@ -340,10 +349,13 @@ const Slab3D = ({ element, floorLevel, opacity, visible, onClick }) => {
                 element.properties.depth
             ]} />
             <meshStandardMaterial
+                key={`mat-${opacity}`}
                 color="#cccccc"
-                transparent
+                transparent={true}
+                depthWrite={true}
                 opacity={opacity}
                 roughness={0.7}
+                side={THREE.DoubleSide}
             />
         </mesh>
     );
@@ -404,8 +416,8 @@ const Foundation3D = ({ columns, visible, opacity = 1.0 }) => {
                 />
             </mesh>
 
-            {/* Piles under columns */}
-            {columns.map(column => (
+            {/* Piles under columns (Base floor only) */}
+            {columns.filter(c => c.layer === 'Floor 1' || c.position.z === 0).map(column => (
                 <Cylinder
                     key={`pile-${column.id}`}
                     args={[0.15, 0.15, 2, 16]}
@@ -530,6 +542,8 @@ export const StructureScene = ({
     const columns = elements.filter(el => el.type === 'column');
     const beams = elements.filter(el => el.type === 'beam');
     const slabs = elements.filter(el => el.type === 'slab');
+
+
 
     return (
         <group>

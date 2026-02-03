@@ -57,6 +57,7 @@ import {
 } from '../ReinforcedConcrete/Slabs/slab_THReeD';
 import { DrawRetainingWallMRW1 } from '../ReinforcedConcrete/Rwall/Retaining_Three';
 import Complete3DStructureView, { StructureScene } from '../ReinforcedConcrete/FramedandTall/Multi_storey_structure';
+import WireframeAnalysisView from '../ReinforcedConcrete/FramedandTall/wireframe';
 
 /**
  * Component Type Enum
@@ -312,6 +313,12 @@ export const RC_COMPONENTS = {
         Component: StructureScene,
         type: COMPONENT_TYPES.RC,
         name: 'Tall Frame Analysis',
+        category: 'Analysis',
+    },
+    tall_framed_wireframe: {
+        Component: WireframeAnalysisView,
+        type: COMPONENT_TYPES.RC,
+        name: 'Wireframe Analysis',
         category: 'Analysis',
     },
 };

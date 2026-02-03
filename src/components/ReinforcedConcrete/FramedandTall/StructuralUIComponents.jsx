@@ -26,7 +26,8 @@ import {
     ChevronRight,
     FolderOpen,
     Save,
-    Building2 // Added for Header if needed, though Header is in main app usually
+    Building2,
+    TrendingUp
 } from 'lucide-react';
 
 // ============================================================================
@@ -74,7 +75,11 @@ export const LayerControlPanel = ({ layers, onToggleLayer }) => {
 // TOOLBAR COMPONENT
 // ============================================================================
 
-export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewChange, isFullScreen, onFullScreenChange, isSidebarVisible, onSidebarToggle, onSave, onLoad }) => {
+export const Toolbar = ({
+    tool, onToolChange, onAction, disabled, view, onViewChange,
+    isFullScreen, onFullScreenChange, isSidebarVisible, onSidebarToggle,
+    onSave, onLoad, analysisMethod, onAnalysisMethodChange
+}) => {
     const tools = [
         { id: 'select', icon: MousePointer, label: 'Select', color: '#333' },
         { id: 'column', icon: Square, label: 'Column', color: '#2196F3' },
@@ -140,7 +145,7 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                             onClick={activeAction}
                             disabled={disabled}
                             style={{
-                                padding: '8px 16px',
+                                padding: '6px 12px',
                                 background: tool === t.id ? t.color : '#fff',
                                 color: tool === t.id ? '#fff' : '#333',
                                 border: `1px solid ${tool === t.id ? t.color : '#ddd'}`,
@@ -149,14 +154,14 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '6px',
-                                fontSize: '13px',
+                                fontSize: '12px',
                                 fontWeight: '500',
                                 opacity: disabled ? 0.5 : 1,
                                 transition: 'all 0.2s',
                                 boxShadow: tool === t.id ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
                             }}
                         >
-                            {React.createElement(activeIcon, { size: 16 })}
+                            {React.createElement(activeIcon, { size: 14 })}
                             {activeLabel}
                         </button>
                     );
@@ -170,7 +175,7 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                 onClick={() => onAction('delete')}
                 disabled={disabled}
                 style={{
-                    padding: '8px 16px',
+                    padding: '6px 12px',
                     background: '#fff',
                     color: '#f44336',
                     border: '1px solid #ddd',
@@ -179,11 +184,11 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    fontSize: '13px',
+                    fontSize: '12px',
                     opacity: disabled ? 0.5 : 1
                 }}
             >
-                <Trash2 size={16} />
+                <Trash2 size={14} />
                 Delete
             </button>
 
@@ -191,7 +196,7 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                 onClick={() => onAction('copy')}
                 disabled={disabled}
                 style={{
-                    padding: '8px 16px',
+                    padding: '6px 12px',
                     background: '#fff',
                     border: '1px solid #ddd',
                     borderRadius: '6px',
@@ -199,18 +204,18 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    fontSize: '13px',
+                    fontSize: '12px',
                     opacity: disabled ? 0.5 : 1
                 }}
             >
-                <Copy size={16} />
+                <Copy size={14} />
                 Copy
             </button>
 
             <button
                 onClick={() => onAction('library')}
                 style={{
-                    padding: '8px 16px',
+                    padding: '6px 12px',
                     background: '#fff',
                     border: '1px solid #ddd',
                     borderRadius: '6px',
@@ -218,10 +223,10 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    fontSize: '13px'
+                    fontSize: '12px'
                 }}
             >
-                <Library size={16} />
+                <Library size={14} />
                 Library
             </button>
 
@@ -230,7 +235,7 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
             {/* File Operations */}
             <div style={{ display: 'flex', gap: '4px' }}>
                 <label style={{
-                    padding: '8px 12px',
+                    padding: '6px 10px',
                     background: '#fff',
                     border: '1px solid #ddd',
                     borderRadius: '6px',
@@ -238,9 +243,9 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    fontSize: '13px'
+                    fontSize: '12px'
                 }}>
-                    <FolderOpen size={16} />
+                    <FolderOpen size={14} />
                     Open
                     <input type="file" accept=".json" onChange={onLoad} style={{ display: 'none' }} />
                 </label>
@@ -248,7 +253,7 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                 <button
                     onClick={onSave}
                     style={{
-                        padding: '8px 12px',
+                        padding: '6px 10px',
                         background: '#fff',
                         border: '1px solid #ddd',
                         borderRadius: '6px',
@@ -256,15 +261,81 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        fontSize: '13px'
+                        fontSize: '12px'
                     }}
                 >
-                    <Save size={16} />
+                    <Save size={14} />
                     Save
                 </button>
             </div>
 
             <div style={{ flex: 1 }} />
+
+            {/* Analysis Controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '4px' }}>
+                <select
+                    value={analysisMethod}
+                    onChange={(e) => onAnalysisMethodChange(e.target.value)}
+                    style={{
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid #ddd',
+                        fontSize: '12px',
+                        background: '#f8f9fa',
+                        color: '#333',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        fontWeight: '500'
+                    }}
+                >
+                    <option value="moment_distribution">Moment Distribution</option>
+                    <option value="stiffness">Stiffness Matrix (FEM)</option>
+                </select>
+
+                <button
+                    onClick={() => onAction('analyze')}
+                    style={{
+                        padding: '8px 16px',
+                        background: '#4CAF50',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                >
+                    <Play size={16} />
+                    Run Analysis
+                </button>
+
+                <button
+                    onClick={() => onViewChange('analysis_3d')}
+                    style={{
+                        padding: '8px 16px',
+                        background: view === 'analysis_3d' ? '#2196F3' : '#fff',
+                        color: view === 'analysis_3d' ? '#fff' : '#2196F3',
+                        border: `1px solid #2196F3`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                >
+                    <TrendingUp size={16} />
+                    Analysis 3D
+                </button>
+            </div>
+
+            <div style={{ width: '1px', height: '40px', background: '#ddd' }} />
 
             {/* View toggle */}
             <div style={{
@@ -277,20 +348,20 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                 <button
                     onClick={() => onViewChange(view === '2d' ? '3d' : '2d')}
                     style={{
-                        padding: '8px 16px',
+                        padding: '6px 12px',
                         background: '#fff',
-                        color: view === '3d' ? '#9C27B0' : '#333',
-                        border: `1px solid ${view === '3d' ? '#9C27B0' : '#ddd'}`,
+                        color: (view === '3d' || view === 'analysis_3d') ? '#9C27B0' : '#333',
+                        border: `1px solid ${(view === '3d' || view === 'analysis_3d') ? '#9C27B0' : '#ddd'}`,
                         borderRadius: '6px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: '500'
                     }}
                 >
-                    {view === '2d' ? <Grid3x3 size={16} /> : <Box size={16} />}
+                    {view === '2d' ? <Grid3x3 size={14} /> : <Box size={14} />}
                     {view === '2d' ? '3D View' : '2D View'}
                 </button>
 
@@ -316,30 +387,6 @@ export const Toolbar = ({ tool, onToolChange, onAction, disabled, view, onViewCh
                     </button>
                 )}
             </div>
-
-            <div style={{ width: '1px', height: '40px', background: '#ddd' }} />
-
-            {/* Analysis */}
-            <button
-                onClick={() => onAction('analyze')}
-                style={{
-                    padding: '10px 20px',
-                    background: '#4CAF50',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-            >
-                <Play size={18} />
-                Run Analysis
-            </button>
         </div>
     );
 };

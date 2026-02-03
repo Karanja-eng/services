@@ -408,6 +408,9 @@ from calculations.tall_framed.tall_framed_backend import router as legacy_frame_
 app.include_router(tall_framed_router, prefix="/api/framed", tags=["tall_framed_buildings"])
 app.include_router(legacy_frame_router, prefix="/api/framed", tags=["legacy_frame_analysis"])
 
+from calculations.tall_framed.full_building_analysis import router as full_analysis_router
+app.include_router(full_analysis_router, prefix="/api/framed_full", tags=["full_building_analysis"])
+
 
 ##stairs
 # app.include_router(stairs_design_router, prefix="/stairs", tags=["stairs_designs"])
