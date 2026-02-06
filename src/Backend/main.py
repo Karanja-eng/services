@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
@@ -23,6 +24,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    import json
+    body = await request.body()
+    try:
+        body_str = body.decode()
+        body_json = json.loads(body_str)
+    except:
+        body_json = str(body)
+    
+    print("\n" + "!"*60)
+    print("VALIDATION ERROR (422)")
+    print(f"Path: {request.url.path}")
+    print(f"Errors: {exc.errors()}")
+    print(f"Body: {body_json}")
+    print("!"*60 + "\n")
+    
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": body_json},
+    )
 
 # Static files paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -410,6 +433,9 @@ app.include_router(legacy_frame_router, prefix="/api/framed", tags=["legacy_fram
 
 from calculations.tall_framed.full_building_analysis import router as full_analysis_router
 app.include_router(full_analysis_router, prefix="/api/framed_full", tags=["full_building_analysis"])
+
+from calculations.tall_framed.automated_design import router as automated_design_router
+app.include_router(automated_design_router, prefix="/api/automated_design", tags=["automated_design"])
 
 
 ##stairs

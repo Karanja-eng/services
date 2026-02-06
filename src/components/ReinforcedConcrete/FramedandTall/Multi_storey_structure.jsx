@@ -8,30 +8,28 @@ import { Eye, EyeOff, Layers, TrendingUp, Activity } from 'lucide-react';
 // 3D COLUMN COMPONENT WITH FORCES
 // ============================================================================
 
-const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, onClick, showDiagrams = { moment: false, shear: false }, showLabels = true }) => {
+const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, onClick, showDiagrams = { moment: false, shear: false }, showLabels = true, diagramScale = 0.002 }) => {
     const meshRef = useRef();
     const [hovered, setHovered] = useState(false);
 
-    // Generate BM diagram points for column
+    const height = element.properties.height || floorHeight;
+
+    // Generate BM diagram points for column (LOCAL coordinates)
     const bmCurve = useMemo(() => {
         if (!showDiagrams.moment || !element.analysisResults?.sections) return null;
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.002;
-        const height = element.properties.height || floorHeight;
-        const x = element.position.x;
-        const y = element.position.z || 0;
-        const z = element.position.y;
 
         sections.forEach(section => {
             const t = section.ratio;
-            const offset = (section.Mz || 0) * scale;
-            points.push(new THREE.Vector3(x + offset, y + t * height, z));
+            const offset = (section.Mz || 0) * diagramScale;
+            // Local to column group (center at y=0, height/2)
+            points.push(new THREE.Vector3(offset, t * height - height / 2, 0));
         });
 
         return points;
-    }, [showDiagrams.moment, element.analysisResults, element.position, element.properties, floorHeight]);
+    }, [showDiagrams.moment, element.analysisResults, height, diagramScale]);
 
     // Generate SF diagram points for column
     const sfCurve = useMemo(() => {
@@ -39,24 +37,18 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.002;
-        const height = element.properties.height || floorHeight;
-        const x = element.position.x;
-        const y = element.position.z || 0;
-        const z = element.position.y;
 
         sections.forEach(section => {
             const t = section.ratio;
-            const offset = (section.Vy || 0) * scale;
-            points.push(new THREE.Vector3(x + offset, y + t * height, z));
+            const offset = (section.Vy || 0) * diagramScale;
+            points.push(new THREE.Vector3(offset, t * height - height / 2, 0));
         });
 
         return points;
-    }, [showDiagrams.shear, element.analysisResults, element.position, element.properties, floorHeight]);
+    }, [showDiagrams.shear, element.analysisResults, height, diagramScale]);
 
     const width = element.properties.width;
     const depth = element.properties.depth;
-    const height = element.properties.height || floorHeight;
 
     const x = element.position.x;
     const y = element.position.z || 0; // Floor level
@@ -118,8 +110,8 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
                         <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{element.id}</div>
                         {element.analysisResults && (
                             <>
-                                <div>N: {element.analysisResults.N?.toFixed(0)} kN</div>
-                                <div>M: {element.analysisResults.M?.toFixed(0)} kNm</div>
+                                <div>N: {element.analysisResults.N_max?.toFixed(0)} kN</div>
+                                <div>M: {element.analysisResults.M_max?.toFixed(0)} kNm</div>
                                 <div>Util: {(element.analysisResults.utilization * 100)?.toFixed(0)}%</div>
                             </>
                         )}
@@ -177,7 +169,7 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
 // 3D BEAM COMPONENT WITH BM DIAGRAM
 // ============================================================================
 
-const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabels = true }) => {
+const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabels = true, diagramScale = 0.002 }) => {
     const [hovered, setHovered] = useState(false);
 
     const start = new THREE.Vector3(
@@ -216,22 +208,20 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.002; // Scale factor for moment diagram
 
         sections.forEach(section => {
             const t = section.ratio;
             const pos = new THREE.Vector3().lerpVectors(start, end, t);
 
-            // Offset perpendicular to beam (upward/downward or sideways)
-            // For frames, we usually show it in the plane of the frame (local Y)
-            const offset = (section.Mz || 0) * scale;
+            // Offset perpendicular to beam (upward/downward)
+            const offset = (section.Mz || 0) * diagramScale;
             pos.y += offset;
 
             points.push(pos);
         });
 
         return points;
-    }, [showDiagrams.moment, element.analysisResults, start, end]);
+    }, [showDiagrams.moment, element.analysisResults, start, end, diagramScale]);
 
     // Generate SF diagram points
     const sfCurve = useMemo(() => {
@@ -239,20 +229,19 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
 
         const points = [];
         const sections = element.analysisResults.sections;
-        const scale = 0.002; // Scale factor for shear diagram
 
         sections.forEach(section => {
             const t = section.ratio;
             const pos = new THREE.Vector3().lerpVectors(start, end, t);
 
-            const offset = (section.Vy || 0) * scale;
+            const offset = (section.Vy || 0) * diagramScale;
             pos.y += offset;
 
             points.push(pos);
         });
 
         return points;
-    }, [showDiagrams.shear, element.analysisResults, start, end]);
+    }, [showDiagrams.shear, element.analysisResults, start, end, diagramScale]);
 
     return (
         <group>
@@ -537,13 +526,26 @@ export const StructureScene = ({
     groundOpacity = 1.0,
     showGrid = true,
     showFoundation = true,
-    showFloorLabels = true
+    showFloorLabels = true,
+    diagramScale = 25
 }) => {
     const columns = elements.filter(el => el.type === 'column');
     const beams = elements.filter(el => el.type === 'beam');
     const slabs = elements.filter(el => el.type === 'slab');
 
 
+
+    // Calculate a better diagram scale based on building max moment
+    const effectiveScale = useMemo(() => {
+        let maxM = 0;
+        elements.forEach(el => {
+            const m = Math.abs(el.analysisResults?.M_max || 0);
+            if (m > maxM) maxM = m;
+        });
+        if (maxM < 0.01) return 0.1;
+        // Scale so max moment is roughly 1.5 meters, modified by zoom scale
+        return (0.8 / maxM) * (diagramScale / 25);
+    }, [elements, diagramScale]);
 
     return (
         <group>
@@ -595,6 +597,7 @@ export const StructureScene = ({
                                 showForces={showForces}
                                 showDeflection={showDeflection}
                                 showDiagrams={showDiagrams}
+                                diagramScale={effectiveScale}
                                 selected={selectedElement?.id === column.id}
                                 onClick={onElementClick}
                                 showLabels={componentVisibility.labels}
@@ -608,6 +611,7 @@ export const StructureScene = ({
                                 element={beam}
                                 floorLevel={floorZ + floorHeight}
                                 showDiagrams={showDiagrams}
+                                diagramScale={effectiveScale}
                                 selected={selectedElement?.id === beam.id}
                                 onClick={onElementClick}
                                 showLabels={componentVisibility.labels}

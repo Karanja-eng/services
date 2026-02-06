@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
     Plus, Trash2, Grid3x3, Move, Copy, Layers as LayersIcon, Eye, EyeOff, Settings, Save, FolderOpen, Play,
-    MousePointer, Square, Minus, RotateCw, Maximize2, Minimize2, Box, Download, Upload, Zap, TrendingUp, Grid, Home, Columns,
+    MousePointer, Square, Minus, RotateCw, Maximize2, Minimize2, Box, Download, Upload, Zap, TrendingUp, Grid, Home, Columns, Hammer,
     Edit2, Layout, Library, Calculator, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X
 } from 'lucide-react';
 
@@ -15,7 +15,11 @@ import { BuildingLibraryBrowser, LoadAssignmentPanel } from './Building_library'
 
 import { StructuralGrid, StructuralElement } from './StructuralClasses';
 import { StructuralCanvas } from './StructuralCanvas';
-import { Toolbar, PropertiesPanel, LayerControlPanel } from './StructuralUIComponents';
+import { PropertiesPanel, LayerControlPanel } from './StructuralUIComponents';
+import StructureBuilderToolbar from './StructureBuilderToolbar';
+import DesignDashboard from './DesignDashboard';
+import WireframeAnalysisView from './wireframe';
+import axios from 'axios';
 
 // ============================================================================
 // MAIN APPLICATION
@@ -48,6 +52,10 @@ const InteractiveStructureBuilder = ({
     const [activeLayer, setActiveLayer] = useState('Floor 1');
     const [view, setView] = useState('2d'); // '2d', '3d', or 'cad'
     const [analysisMethod, setAnalysisMethod] = useState('moment_distribution'); // 'moment_distribution' or 'stiffness'
+    const [analysisResults, setAnalysisResults] = useState(null);
+    const [designResults, setDesignResults] = useState(null);
+    const [isDesigning, setIsDesigning] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Grid State
     const [grid, setGrid] = useState(new StructuralGrid(5));
@@ -126,6 +134,124 @@ const InteractiveStructureBuilder = ({
         })));
         setSelectedElement(element);
     }, [tool]);
+
+    const preparePayload = useCallback(() => {
+        const getZ = (layerName) => {
+            const level = parseInt((layerName || 'Floor 1').replace('Floor ', '')) || 1;
+            return (level - 1) * 3.5;
+        };
+
+        return {
+            elements: elements.map(el => {
+                const z = el.position?.z !== undefined ? el.position.z : getZ(el.layer || activeLayer);
+                let start = null;
+                let end = null;
+                let position = null;
+
+                if (el.type === 'beam' || el.type === 'wall') {
+                    const s = el.position?.start || el.position || { x: 0, y: 0, z: 0 };
+                    const e = el.position?.end || el.position || { x: 5, y: 0, z: 0 };
+                    start = { x: Number(s.x) || 0, y: Number(s.y) || 0, z: Number(s.z) !== undefined && !isNaN(s.z) ? s.z : z };
+                    end = { x: Number(e.x) || 0, y: Number(e.y) || 0, z: Number(e.z) !== undefined && !isNaN(e.z) ? e.z : z };
+                } else if (el.type === 'column') {
+                    const h = el.properties?.height || 3.5;
+                    const pos = el.position || { x: 0, y: 0, z: 0 };
+                    start = { x: Number(pos.x) || 0, y: Number(pos.y) || 0, z: Number(pos.z) !== undefined && !isNaN(pos.z) ? pos.z : z };
+                    end = { x: Number(pos.x) || 0, y: Number(pos.y) || 0, z: (Number(pos.z) !== undefined && !isNaN(pos.z) ? pos.z : z) + h };
+                } else {
+                    const pos = el.position || { x: 0, y: 0, z: 0 };
+                    position = { x: Number(pos.x) || 0, y: Number(pos.y) || 0, z: Number(pos.z) !== undefined && !isNaN(pos.z) ? pos.z : z };
+                }
+
+                return {
+                    id: String(el.id),
+                    type: el.type,
+                    start,
+                    end,
+                    position,
+                    properties: {
+                        width: Number(el.properties?.width) || 0.3,
+                        depth: Number(el.properties?.depth) || 0.3,
+                        height: Number(el.properties?.height) || 3.5,
+                        material_grade: el.properties?.material || "C30",
+                        load_combined: Number(el.properties?.load) || 0
+                    },
+                    layer: String(el.layer || activeLayer)
+                };
+            }),
+            method: analysisMethod,
+            slab_load: 5.0
+        };
+    }, [elements, activeLayer, analysisMethod]);
+
+    const runAnalysis = useCallback(async () => {
+        setIsAnalyzing(true);
+        try {
+            const payload = preparePayload();
+            const response = await axios.post('http://127.0.0.1:8001/api/framed_full/analyze-full', payload);
+            setAnalysisResults(response.data);
+
+            const resultMap = new Map(response.data.map(r => [r.element_id, r]));
+            setElements(prev => prev.map(el => {
+                const res = resultMap.get(el.id);
+                if (!res) return el;
+                return {
+                    ...el,
+                    analysisResults: {
+                        N_max: res.N_max,
+                        M_max: res.M_max,
+                        V_max: res.V_max,
+                        utilization: Math.min(Math.abs(res.M_max / 200), 1.2),
+                        sections: res.sections
+                    }
+                };
+            }));
+
+            setShowDiagrams({ moment: true, shear: true });
+            setShowForces(true);
+            alert("Analysis completed successfully!");
+        } catch (error) {
+            console.error("Analysis failed:", error);
+            alert("Analysis failed: " + (error.response?.data?.detail || error.message));
+        } finally {
+            setIsAnalyzing(false);
+        }
+    }, [preparePayload, setAnalysisResults, setElements, setShowDiagrams, setShowForces]);
+
+    const handleRunDesign = useCallback(async () => {
+        setIsDesigning(true);
+        try {
+            const payload = preparePayload();
+            const response = await axios.post('http://127.0.0.1:8001/api/automated_design/run-design', payload);
+            setDesignResults(response.data);
+            setView('2d');
+        } catch (error) {
+            console.error("Design failed:", error);
+            alert("Design failed: " + (error.response?.data?.detail || error.message));
+        } finally {
+            setIsDesigning(false);
+        }
+    }, [preparePayload, setDesignResults, setView]);
+
+    const handleExportCAD = async (item) => {
+        try {
+            const type = item.foundation_type ? 'foundation' : (item.span_id ? 'beam' : (item.wallType ? 'wall' : 'column'));
+            let endpoint = '/api/export-dxf';
+            if (type === 'foundation') endpoint = '/api/export-foundation-dxf';
+            if (type === 'wall') endpoint = '/api/export-wall-dxf';
+
+            const response = await axios.post(`http://127.0.0.1:8001${endpoint}`, item, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${type}_${item.id}.dxf`);
+            document.body.appendChild(link);
+            link.click();
+        } catch (error) {
+            console.error("CAD Export failed:", error);
+            alert("CAD Export failed");
+        }
+    };
 
     const handleElementsAdd = useCallback((newElements) => {
         setElements(prev => {
@@ -283,239 +409,6 @@ const InteractiveStructureBuilder = ({
         setTimeout(() => handleAutoAlignGrid(newElements), 0);
     }, [handleAutoAlignGrid]);
 
-    const handleAction = useCallback((action) => {
-        switch (action) {
-            case 'delete':
-                setElements(prev => prev.filter(el => !el.selected));
-                setSelectedElement(null);
-                break;
-
-            case 'copy':
-                const selected = elements.find(el => el.selected);
-                if (selected) {
-                    const copy = new StructuralElement(
-                        selected.type,
-                        `${selected.type[0].toUpperCase()}${elements.length + 1}`,
-                        selected.type === 'beam'
-                            ? {
-                                start: { x: selected.position.start.x + 2, y: selected.position.start.y + 2 },
-                                end: { x: selected.position.end.x + 2, y: selected.position.end.y + 2 }
-                            }
-                            : { x: selected.position.x + 2, y: selected.position.y + 2, z: selected.position.z || 0 },
-                        { ...selected.properties }
-                    );
-                    handleElementsAdd([copy]);
-                }
-                break;
-
-            case 'analyze':
-                runAnalysis();
-                break;
-
-            case 'library':
-                setShowLibrary(true);
-                break;
-
-            case 'cad_view':
-                setView('cad');
-                break;
-
-            case 'add_bay':
-                handleGenerateBay();
-                break;
-
-            default:
-                break;
-        }
-    }, [elements, handleElementsAdd]);
-
-    const generateNodesFromElements = (elements) => {
-        const nodes = [];
-        const nodeMap = new Map();
-
-        const getOrAddNode = (x, y, z) => {
-            const key = `${Number(x).toFixed(3)},${Number(y).toFixed(3)},${Number(z).toFixed(3)}`;
-            if (nodeMap.has(key)) return nodeMap.get(key);
-
-            const nodeId = nodes.length + 1;
-            nodes.push({ id: nodeId, x, y, z });
-            nodeMap.set(key, nodeId);
-            return nodeId;
-        };
-
-        elements.forEach(el => {
-            if (el.type === 'column') {
-                getOrAddNode(el.position.x, el.position.y, el.position.z || 0);
-                getOrAddNode(el.position.x, el.position.y, (el.position.z || 0) + el.properties.height);
-            } else if (el.type === 'beam') {
-                getOrAddNode(el.position.start.x, el.position.start.y, el.position.start.z || 0);
-                getOrAddNode(el.position.end.x, el.position.end.y, el.position.end.z || 0);
-            }
-        });
-
-        return { nodes, nodeMap };
-    };
-
-    const generateMembersFromElements = (elements, nodeMap) => {
-        const members = [];
-        elements.forEach((el) => {
-            if (el.type === 'column') {
-                const n1 = nodeMap.get(`${Number(el.position.x).toFixed(3)},${Number(el.position.y).toFixed(3)},${(Number(el.position.z) || 0).toFixed(3)}`);
-                const n2 = nodeMap.get(`${Number(el.position.x).toFixed(3)},${Number(el.position.y).toFixed(3)},${((Number(el.position.z) || 0) + Number(el.properties.height)).toFixed(3)}`);
-                members.push({
-                    id: el.id,
-                    type: 'column',
-                    node1: n1,
-                    node2: n2,
-                    properties: el.properties
-                });
-            } else if (el.type === 'beam') {
-                const n1 = nodeMap.get(`${Number(el.position.start.x).toFixed(3)},${Number(el.position.start.y).toFixed(3)},${(Number(el.position.start.z) || 0).toFixed(3)}`);
-                const n2 = nodeMap.get(`${Number(el.position.end.x).toFixed(3)},${Number(el.position.end.y).toFixed(3)},${(Number(el.position.end.z) || 0).toFixed(3)}`);
-                members.push({
-                    id: el.id,
-                    type: 'beam',
-                    node1: n1,
-                    node2: n2,
-                    properties: el.properties
-                });
-            }
-        });
-        return members;
-    };
-
-    const runAnalysis = useCallback(async () => {
-        console.log('Running detailed building analysis...');
-
-        const getZ = (layerName) => {
-            const level = parseInt(layerName.replace('Floor ', '')) || 1;
-            return (level - 1) * 3.5;
-        };
-
-        const payload = {
-            elements: elements.map(el => {
-                const z = el.position?.z !== undefined ? el.position.z : getZ(el.layer || activeLayer);
-
-                let start = null;
-                let end = null;
-                let position = null;
-
-                if (el.type === 'beam' || el.type === 'wall') {
-                    start = { x: el.position.start.x, y: el.position.start.y, z: z };
-                    end = { x: el.position.end.x, y: el.position.end.y, z: z };
-                } else if (el.type === 'column') {
-                    const h = el.properties.height || 3.5;
-                    start = { x: el.position.x, y: el.position.y, z: z };
-                    end = { x: el.position.x, y: el.position.y, z: z + h };
-                } else {
-                    // Slab, Void, etc.
-                    position = { x: el.position.x, y: el.position.y, z: z };
-                }
-
-                return {
-                    id: el.id,
-                    type: el.type,
-                    start,
-                    end,
-                    position,
-                    properties: {
-                        width: el.properties.width || 0.3,
-                        depth: el.properties.depth || 0.3,
-                        material_grade: el.properties.material || "C30",
-                        load_combined: el.properties.load_combined || 5.0
-                    },
-                    layer: el.layer
-                };
-            }),
-            method: analysisMethod,
-            slab_load: 5.0
-        };
-
-        try {
-            const response = await fetch('http://127.0.0.1:8001/api/framed_full/analyze-full', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) throw new Error('Analysis failed');
-
-            const results = await response.json();
-            console.log("Full Analysis Results:", results);
-
-            // Create a map for quick lookup
-            const resultMap = new Map(results.map(r => [r.element_id, r]));
-
-            setElements(prev => prev.map(el => {
-                const res = resultMap.get(el.id);
-                if (!res) return el;
-
-                return {
-                    ...el,
-                    analysisResults: {
-                        N: res.N_max,
-                        M: res.M_max,
-                        V: res.V_max,
-                        utilization: Math.min(Math.abs(res.M_max / 200), 1.2), // Mock utilization logic
-                        sections: res.sections // Use the detailed sections from backend
-                    }
-                };
-            }));
-
-            setShowDiagrams({ moment: true, shear: true });
-            setShowForces(true);
-
-        } catch (error) {
-            console.error("Analysis Error:", error);
-            alert("Analysis failed. Ensure backend is running.");
-        }
-    }, [elements, analysisMethod]);
-
-    const handleSave = useCallback(() => {
-        const data = {
-            elements: elements.map(el => ({
-                type: el.type,
-                id: el.id,
-                position: el.position,
-                properties: el.properties,
-                layer: el.layer
-            })),
-            layers,
-            metadata: {
-                created: new Date().toISOString(),
-                version: '1.0'
-            }
-        };
-
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `structure_${Date.now()}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-    }, [elements, layers]);
-
-    const handleLoad = useCallback((e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const data = JSON.parse(event.target.result);
-                const loadedElements = data.elements.map(el =>
-                    new StructuralElement(el.type, el.id, el.position, el.properties)
-                );
-                setElements(loadedElements);
-                if (data.layers) setLayers(data.layers);
-            } catch (error) {
-                alert('Error loading file: ' + error.message);
-            }
-        };
-        reader.readAsText(file);
-    }, []);
-
     const handleGenerateBay = useCallback(() => {
         // Generate a standard bay with columns at corners
         const bayWidth = 6;
@@ -591,7 +484,154 @@ const InteractiveStructureBuilder = ({
         });
 
         handleElementsAdd(newElements);
-    }, [elements, handleElementsAdd]);
+    }, [elements, handleElementsAdd, layers]);
+
+    const handleAction = useCallback((action) => {
+        switch (action) {
+            case 'delete':
+                setElements(prev => prev.filter(el => !el.selected));
+                setSelectedElement(null);
+                break;
+
+            case 'copy':
+                const selected = elements.find(el => el.selected);
+                if (selected) {
+                    const copy = new StructuralElement(
+                        selected.type,
+                        `${selected.type[0].toUpperCase()}${elements.length + 1}`,
+                        selected.type === 'beam'
+                            ? {
+                                start: { x: selected.position.start.x + 2, y: selected.position.start.y + 2 },
+                                end: { x: selected.position.end.x + 2, y: selected.position.end.y + 2 }
+                            }
+                            : { x: selected.position.x + 2, y: selected.position.y + 2, z: selected.position.z || 0 },
+                        { ...selected.properties }
+                    );
+                    handleElementsAdd([copy]);
+                }
+                break;
+
+            case 'analyze':
+                runAnalysis();
+                break;
+
+            case 'library':
+                setShowLibrary(true);
+                break;
+
+            case 'cad_view':
+                setView('cad');
+                break;
+
+            case 'add_bay':
+                handleGenerateBay();
+                break;
+
+            default:
+                break;
+        }
+    }, [elements, handleElementsAdd, runAnalysis, handleGenerateBay]);
+
+    const generateNodesFromElements = (elements) => {
+        const nodes = [];
+        const nodeMap = new Map();
+
+        const getOrAddNode = (x, y, z) => {
+            const key = `${Number(x).toFixed(3)},${Number(y).toFixed(3)},${Number(z).toFixed(3)}`;
+            if (nodeMap.has(key)) return nodeMap.get(key);
+
+            const nodeId = nodes.length + 1;
+            nodes.push({ id: nodeId, x, y, z });
+            nodeMap.set(key, nodeId);
+            return nodeId;
+        };
+
+        elements.forEach(el => {
+            if (el.type === 'column') {
+                getOrAddNode(el.position.x, el.position.y, el.position.z || 0);
+                getOrAddNode(el.position.x, el.position.y, (el.position.z || 0) + el.properties.height);
+            } else if (el.type === 'beam') {
+                getOrAddNode(el.position.start.x, el.position.start.y, el.position.start.z || 0);
+                getOrAddNode(el.position.end.x, el.position.end.y, el.position.end.z || 0);
+            }
+        });
+
+        return { nodes, nodeMap };
+    };
+
+    const generateMembersFromElements = (elements, nodeMap) => {
+        const members = [];
+        elements.forEach((el) => {
+            if (el.type === 'column') {
+                const n1 = nodeMap.get(`${Number(el.position.x).toFixed(3)},${Number(el.position.y).toFixed(3)},${(Number(el.position.z) || 0).toFixed(3)}`);
+                const n2 = nodeMap.get(`${Number(el.position.x).toFixed(3)},${Number(el.position.y).toFixed(3)},${((Number(el.position.z) || 0) + Number(el.properties.height)).toFixed(3)}`);
+                members.push({
+                    id: el.id,
+                    type: 'column',
+                    node1: n1,
+                    node2: n2,
+                    properties: el.properties
+                });
+            } else if (el.type === 'beam') {
+                const n1 = nodeMap.get(`${Number(el.position.start.x).toFixed(3)},${Number(el.position.start.y).toFixed(3)},${(Number(el.position.start.z) || 0).toFixed(3)}`);
+                const n2 = nodeMap.get(`${Number(el.position.end.x).toFixed(3)},${Number(el.position.end.y).toFixed(3)},${(Number(el.position.end.z) || 0).toFixed(3)}`);
+                members.push({
+                    id: el.id,
+                    type: 'beam',
+                    node1: n1,
+                    node2: n2,
+                    properties: el.properties
+                });
+            }
+        });
+        return members;
+    };
+
+
+    const handleSave = useCallback(() => {
+        const data = {
+            elements: elements.map(el => ({
+                type: el.type,
+                id: el.id,
+                position: el.position,
+                properties: el.properties,
+                layer: el.layer
+            })),
+            layers,
+            metadata: {
+                created: new Date().toISOString(),
+                version: '1.0'
+            }
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `structure_${Date.now()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    }, [elements, layers]);
+
+    const handleLoad = useCallback((e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                const loadedElements = data.elements.map(el =>
+                    new StructuralElement(el.type, el.id, el.position, el.properties)
+                );
+                setElements(loadedElements);
+                if (data.layers) setLayers(data.layers);
+            } catch (error) {
+                alert('Error loading file: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    }, []);
 
     return (
         <div style={{
@@ -611,21 +651,19 @@ const InteractiveStructureBuilder = ({
         }}>
 
             {/* Toolbar */}
-            <Toolbar
+            <StructureBuilderToolbar
                 tool={tool}
                 onToolChange={handleToolChange}
                 onAction={handleAction}
-                disabled={false}
                 view={view}
                 onViewChange={setView}
                 isFullScreen={isFullScreen}
                 onFullScreenChange={setIsFullScreen}
-                isSidebarVisible={isSidebarVisible}
                 onSidebarToggle={() => setIsSidebarVisible(!isSidebarVisible)}
                 onSave={handleSave}
                 onLoad={handleLoad}
-                analysisMethod={analysisMethod}
-                onAnalysisMethodChange={setAnalysisMethod}
+                onRunAnalysis={runAnalysis}
+                onRunDesign={handleRunDesign}
             />
 
             {/* Main content */}
@@ -1048,32 +1086,44 @@ const InteractiveStructureBuilder = ({
                                 onFullScreenToggle={() => setIsFullScreen(!isFullScreen)}
                             />
                         </div>
-                    ) : (
-                        <StructuralVisualizationComponent
-                            componentType={view === 'analysis_3d' ? 'tall_framed_wireframe' : 'tall_framed_analysis'}
-                            componentData={{
-                                elements: elements,
-                                floors: Object.keys(layers).length,
-                                floorHeight: 3.5, // Changed from story_height to align with Complete3DStructureView props
-                                selectedElement: selectedElement,
-                                onElementClick: handleElementClick,
-                                showForces: showForces,
-                                showDiagrams: showDiagrams,
-                                diagramScale: scale * 0.0001,
-                                floorVisibility: Object.entries(layers).reduce((acc, [name, data]) => {
-                                    acc[name] = data.visible;
-                                    return acc;
-                                }, {}),
-                                componentVisibility: layerVisibility
-                            }}
+                    ) : view === '3d' ? (
+                        <Complete3DStructureView
+                            elements={elements}
+                            floors={Object.keys(layers).length}
+                            floorHeight={3.5}
+                            selectedElement={selectedElement}
+                            onElementClick={handleElementClick}
+                            showForces={showForces}
+                            showDiagrams={showDiagrams}
+                            diagramScale={scale}
+                            floorVisibility={Object.entries(layers).reduce((acc, [name, data]) => {
+                                acc[name] = data.visible;
+                                return acc;
+                            }, {})}
+                            componentVisibility={layerVisibility}
                             slabOpacity={slabOpacity}
                             setSlabOpacity={setSlabOpacity}
                             groundOpacity={groundOpacity}
                             setGroundOpacity={setGroundOpacity}
+                        />
+                    ) : view === 'analysis_3d' ? (
+                        <StructuralVisualizationComponent
+                            componentType="tall_framed_wireframe"
+                            componentData={{
+                                elements: elements,
+                                showDiagrams: showDiagrams,
+                                showForces: showForces,
+                                floorHeight: 3.5,
+                                diagramScale: scale
+                            }}
                             showGrid={showGrid}
                             setShowGrid={setShowGrid}
+                            slabOpacity={slabOpacity}
+                            setSlabOpacity={setSlabOpacity}
+                            groundOpacity={groundOpacity}
+                            setGroundOpacity={setGroundOpacity}
                         />
-                    )}
+                    ) : null}
 
                     {view === '2d' && (
                         <>
@@ -1130,7 +1180,78 @@ const InteractiveStructureBuilder = ({
                     )}
                 </div>
             </div>
-        </div >
+
+            {/* Design Dashboard Overlay */}
+            {designResults && (
+                <DesignDashboard
+                    results={designResults}
+                    onClose={() => setDesignResults(null)}
+                    onExportCAD={handleExportCAD}
+                    onViewCrossSection={(item) => alert("Cross section view for " + item.id + " coming soon!")}
+                />
+            )}
+
+            {/* Loading Overlay */}
+            {(isDesigning || isAnalyzing) && (
+                <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', zIndex: 3000
+                }}>
+                    <div style={{ position: 'relative', marginBottom: '40px' }}>
+                        <Hammer
+                            className="animate-hit origin-top text-blue-600"
+                            size={64}
+                            style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}
+                        />
+                        <div style={{
+                            marginTop: '-10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: '#fff',
+                            padding: '8px 16px',
+                            borderRadius: '12px',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            border: '1px solid #eef2f6'
+                        }}>
+                            <Box size={20} className="text-blue-600" />
+                            <h2 style={{
+                                margin: 0,
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                color: '#1a73e8',
+                                letterSpacing: '-0.5px'
+                            }}>Fundi <span style={{ color: '#5f6368', fontWeight: '500' }}>Analysing</span></h2>
+                        </div>
+                    </div>
+
+                    <h3 style={{ margin: '0 0 8px 0', color: '#1a73e8', fontSize: '18px' }}>
+                        {isDesigning ? 'Automated Design Suite' : 'Full Building Analysis'}
+                    </h3>
+                    <p style={{ margin: 0, color: '#5f6368', fontSize: '14px' }}>
+                        {isDesigning ? 'Optimizing reinforcement and sections...' : 'Calculating load distribution and frame matrices...'}
+                    </p>
+
+                    <div style={{
+                        marginTop: '24px',
+                        width: '200px',
+                        height: '4px',
+                        background: '#e8eaed',
+                        borderRadius: '2px',
+                        overflow: 'hidden'
+                    }}>
+                        <div className="animate-pulse" style={{
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(90deg, #1a73e8, #8ab4f8, #1a73e8)',
+                            backgroundSize: '200% 100%'
+                        }} />
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

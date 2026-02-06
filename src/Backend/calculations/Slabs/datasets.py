@@ -182,8 +182,8 @@ for panel in panel_types:
             data["Shear Coefficient, β_sx"].append(sx_value)
             data["Shear Coefficient, β_sy"].append(sy_value)
 
-# Create DataFrame
-df = pd.DataFrame(data)
+# Create Shear Coefficient DataFrame
+shear_df = pd.DataFrame(data)
 
 # Fill NaN values with the last valid observation forward where applicablez
 # df["Shear Coefficient, β_sx"] = df["Shear Coefficient, β_sx"].fillna(method='ffill')
@@ -193,20 +193,33 @@ df = pd.DataFrame(data)
 
 
 # Save to CSV
-# df.to_csv("shear_force_coefficients.csv", index=False)
+# shear_df.to_csv("shear_force_coefficients.csv", index=False)
 
 
 def get_shear_coefficients(panel_type, edge_condition, ly_lx):
+    # Normalize panel type to match shear dataset
+    # SlabDesignRequest might use "Four edges continuous" while dataset uses it too.
+    # But moments uses "Interior panels". We'll handle mapping in the caller if needed
+    # or just make them robust here.
+    
+    # Mapping for common inconsistencies
+    name_map = {
+        "Interior panels": "Four edges continuous",
+        "Three edges discontinuous (one edge continuous)": "Three edges discontinuous (one edge continuous)",
+        "Three edges discontinuous - one long edge continuous": "Three edges discontinuous (one edge continuous)",
+    }
+    panel_type = name_map.get(panel_type, panel_type)
+    
     full_type = f"{panel_type} - {edge_condition}"
-    row = df[df["Type of Panel and Location"] == full_type]
+    row = shear_df[shear_df["Type of Panel and Location"] == full_type]
     
     if row.empty:
-        return f"Error: Invalid panel type or edge condition: {full_type}"
+        raise ValueError(f"Invalid panel type or edge condition: {full_type}")
     
     # Get the closest l_y/l_x value
     available_ratios = row["l_y/l_x"].values
     if not available_ratios.size:
-        return f"Error: No data available for {full_type}"
+        raise ValueError(f"No data available for {full_type}")
     closest_ratio = min(available_ratios, key=lambda x: abs(x - ly_lx))
     
     # Get the coefficients for the closest ratio
@@ -325,8 +338,8 @@ for panel in panel_types:
             data["Short Span Coefficient, β_sx"].append(sx_value)
             data["Long Span Coefficient, β_sy"].append(sy_value)
 
-# Create DataFrame
-df = pd.DataFrame(data)
+# Create Moment Coefficient DataFrame
+moment_df = pd.DataFrame(data)
 
 # Fill NaN values with the last valid observation forward where applicable
 # df["Long Span Coefficient, β_sy"] = df["Long Span Coefficient, β_sy"].fillna(method='ffill')
@@ -335,15 +348,23 @@ df = pd.DataFrame(data)
 # print(df)
 
 # Save to CSV
-df.to_csv("bending_moment_coefficients.csv", index=False)
+moment_df.to_csv("bending_moment_coefficients.csv", index=False)
 
 # Function to get bending moment coefficient
 def get_bending_moment_coefficient(panel_type, moment_type, ly_lx):
+    # Mapping for common inconsistencies between shear and moment naming
+    # SlabDesignRequest uses "Four edges continuous", Moment table uses "Interior panels"
+    name_map = {
+        "Four edges continuous": "Interior panels",
+        "Three edges discontinuous (one edge continuous)": "Three edges discontinuous - one long edge continuous",
+    }
+    panel_type = name_map.get(panel_type, panel_type)
+    
     full_type = f"{panel_type} - {moment_type}"
-    row = df[df["Type of Panel and Moments Considered"] == full_type]
+    row = moment_df[moment_df["Type of Panel and Moments Considered"] == full_type]
     
     if row.empty:
-        return f"Error: Invalid panel type or moment type: {full_type}"
+        raise ValueError(f"Invalid panel type or moment type: {full_type}")
     
     # Get the closest l_y/l_x value
     available_ratios = row["l_y/l_x"].values
@@ -355,9 +376,10 @@ def get_bending_moment_coefficient(panel_type, moment_type, ly_lx):
     
     # If ly_lx is out of range, use long span coefficient
     if ly_lx <= min(available_ratios) or ly_lx >= max(available_ratios):
-        return long_span_coeff
+        return float(long_span_coeff)
     
-    return coefficient if not np.isnan(coefficient) else long_span_coeff
+    val = coefficient if not np.isnan(coefficient) else long_span_coeff
+    return float(val)
 
 
 

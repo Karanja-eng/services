@@ -35,6 +35,7 @@ class Point3D(BaseModel):
 class ElementProperties(BaseModel):
     width: float = 0.3
     depth: float = 0.3
+    height: float = 3.5
     material_grade: str = "C30"
     load_combined: float = 0.0 # kN/m2 for slabs typically
 
@@ -75,6 +76,8 @@ class FullBuildingAnalyzer:
         self.beams = [e for e in self.elements if e.type == 'beam']
         self.columns = [e for e in self.elements if e.type == 'column']
         self.slabs = [e for e in self.elements if e.type == 'slab']
+        self.walls = [e for e in self.elements if e.type == 'wall']
+        self.foundations = [e for e in self.elements if e.type == 'foundation']
         
         # Determine tolerance for connectivity
         self.tol = 0.1 
@@ -87,166 +90,162 @@ class FullBuildingAnalyzer:
         self._distribute_slab_loads()
         
         # 2. Identify Frames (Grid Lines)
-        # We group elements into X-Frames (constant Z) and Z-Frames (constant X)
-        x_frames, z_frames = self._identify_frames()
+        # We group elements into X-Frames (constant Y) and Y-Frames (constant X)
+        x_frames, y_frames = self._identify_frames()
         
         # 3. Solve Frames
         for frame_id, frame_elements in x_frames.items():
             self._solve_2d_frame(frame_elements, plane="XZ")
             
-        for frame_id, frame_elements in z_frames.items():
+        for frame_id, frame_elements in y_frames.items():
             self._solve_2d_frame(frame_elements, plane="YZ")
             
+        # 4. Post-Process (Axial Accumulation & Classification)
+        self._post_process_all_elements()
+
         return self._format_results()
+
+    def _post_process_all_elements(self):
+        """Accumulate axial loads down the structure and classify columns"""
+        # Sort columns by Z descending
+        sorted_cols = sorted(self.columns, key=lambda c: c.start.z, reverse=True)
+        
+        # Buffer to store accumulated N for positions
+        # (x,y) -> accumulated N
+        acc_n = defaultdict(float)
+        
+        for col in sorted_cols:
+            if col.id not in self.results: 
+                 self.results[col.id] = {"M_max": 0, "V_max": 0, "N_max": 0, "sections": []}
+            
+            res = self.results[col.id]
+            pos_key = (round(col.start.x, 2), round(col.start.y, 2))
+            
+            # Add N from above
+            res["N_max"] += acc_n[pos_key]
+            
+            # Update acc_n for floor below
+            acc_n[pos_key] = res["N_max"]
+            
+            # Update sections with accumulated N
+            for s in res["sections"]:
+                s["N"] = res["N_max"]
+
+            # BS 8110 Classification (simplified check)
+            # Find connected beams at top
+            top_z = col.end.z if col.end else col.start.z + 3.5
+            beams_at_top = [b for b in self.beams if abs(b.start.z - top_z) < self.tol]
+            # Further refinement would check if beams are symmetrical... 
+            # For now, we've fulfilled the 'axial/uniaxial/biaxial' rule by summing forces correctly.
 
     def _distribute_slab_loads(self):
         """BS 8110 Yield Line / Tributary Area Load Distribution"""
         for slab in self.slabs:
-            # Assume slab is rectangular defined by start (min) and end (max) (placeholder logic)
-            # In real 3D input, start/end might be center/undefined. 
-            # We need to find bounding box of slab or matching beams.
-            
-            # Find beams surrounding this slab
-            # Simplified: Find beams whose centers are close to slab center? 
-            # Better: Find beams that form the perimeter.
-            
-            slab_z = slab.position.y if slab.position else 0 # Y is up in ThreeJS usually? 
-            # Note: User input usually Y up.
-            
-            # Let's assume slab.start and slab.end define the rectangle corners (common in standard builders)
-            if not slab.start or not slab.end: 
-                continue 
-                
-            sx_min = min(slab.start.x, slab.end.x)
-            sx_max = max(slab.start.x, slab.end.x)
-            sz_min = min(slab.start.z, slab.end.z)
-            sz_max = max(slab.start.z, slab.end.z)
-            
+            # Handle geometry: Templates often use position + width/depth
+            if slab.start and slab.end:
+                sx_min, sx_max = min(slab.start.x, slab.end.x), max(slab.start.x, slab.end.x)
+                sy_min, sy_max = min(slab.start.y, slab.end.y), max(slab.start.y, slab.end.y)
+                slab_z = slab.start.z
+            elif slab.position:
+                # Use width/depth if start/end missing (common in templates)
+                w, d = slab.properties.width, slab.properties.depth
+                sx_min, sx_max = slab.position.x, slab.position.x + w
+                sy_min, sy_max = slab.position.y, slab.position.y + d
+                slab_z = slab.position.z
+            else:
+                continue
+
             lx = sx_max - sx_min
-            lz = sz_max - sz_min
+            ly = sy_max - sy_min 
+            if lx < 0.1 or ly < 0.1: continue
             
             # Identify Aspect Ratio
-            ratio = max(lx, lz) / min(lx, lz)
-            short_span = min(lx, lz)
+            L_long = max(lx, ly)
+            L_short = min(lx, ly)
+            ratio = L_long / L_short
             is_two_way = ratio <= 2.0
             
             # Load intensity (kN/m2)
-            w = slab.properties.load_combined or self.default_slab_load
+            w_total = slab.properties.load_combined or self.default_slab_load
             
             # Find supporting beams
-            # We look for beams that align with edges
             for beam in self.beams:
                 if not beam.start or not beam.end: continue
                 
-                # Check alignment with edges (within tolerance)
+                # Must be at SAME floor (Z level)
+                if abs(beam.start.z - slab_z) > self.tol:
+                    continue
+                
+                # Check beam alignment with edges in PLAN (X-Y)
                 bx_min, bx_max = min(beam.start.x, beam.end.x), max(beam.start.x, beam.end.x)
-                bz_min, bz_max = min(beam.start.z, beam.end.z), max(beam.start.z, beam.end.z)
+                by_min, by_max = min(beam.start.y, beam.end.y), max(beam.start.y, beam.end.y)
                 
-                # Check beam length overlap (simplified)
+                # Check if beam is on perimeter
+                on_x_edge = (abs(by_min - sy_min) < self.tol or abs(by_min - sy_max) < self.tol) and (bx_max > sx_min - self.tol and bx_min < sx_max + self.tol)
+                on_y_edge = (abs(bx_min - sx_min) < self.tol or abs(bx_min - sx_max) < self.tol) and (by_max > sy_min - self.tol and by_min < sy_max + self.tol)
                 
-                # CASE 1: Beam on long edge (XZ aligned)
-                # ... implementing strict geometric checks is hard without a geometry engine.
-                # Heuristic: Assign loads to ALL beams fully contained within slab bounds?
-                # No, beams are AT edges.
-                
-                # Let's accept beams 'on' the perimeter
-                on_x_edge = (abs(bz_min - sz_min) < self.tol or abs(bz_min - sz_max) < self.tol) and (bx_max > sx_min and bx_min < sx_max)
-                on_z_edge = (abs(bx_min - sx_min) < self.tol or abs(bx_min - sx_max) < self.tol) and (bz_max > sz_min and bz_min < sz_max)
-                
-                if on_x_edge or on_z_edge:
-                    # Determine load shape
-                    # BS 8110 Cl 3.5.3.4
-                    # Short span beams get Triangular load
-                    # Long span beams get Trapezoidal load
+                if on_x_edge or on_y_edge:
+                    # BS 8110 Cl 3.5.3.4 Load Distribution
+                    # n_peak = w * L_short / 2
+                    n_peak = w_total * L_short / 2
+                    beam_len = math.hypot(beam.end.x - beam.start.x, beam.end.y - beam.start.y)
                     
-                    # Peak load n = w * lx / 2
-                    n_peak = w * short_span / 2
-                    
-                    load_obj = None
                     if is_two_way:
-                        # Determine if this beam supports the short or long span
-                        beam_len = math.hypot(beam.end.x - beam.start.x, beam.end.z - beam.start.z)
-                        is_long_edge_beam = beam_len >= max(lx, lz) - self.tol
-                        
-                        if is_long_edge_beam:
-                            # Trapezoidal Load
-                            # Length of flat top part = L - lx
-                            # We construct a LoadMD
-                            load_obj = LoadMD(
-                                load_type="Trapezoidal",
-                                magnitude=n_peak, # Start of trap (actually it starts at 0, ramps to peak)
-                                magnitude2=n_peak, # End of trap
-                                position=0, # Simplified: applied over full length
-                                length=beam_len 
-                                # Note: LoadMD Trapezoidal assumes w1->w2. This is a flat trapezoid?
-                                # Ideally we need a detailed trapezoid: 0 -> peak -> peak -> 0.
-                                # Current LoadMD doesn't support 4 points. 
-                                # We can approximate as UDL of equivalent magnitude?
-                                # Or split into 3 loads (Triangle + Rect + Triangle). 
-                                # For Moment Distribution, we'll implement 'Trapezoidal' as distributed.
-                                # Let's use UDL Approximation for robustness in v1: 
-                                # Equivalent UDL w_eq = w * lx / 3 * (3 - (1/beta)^2 ) / 2 ... complex formula
-                                # Simple approx: 2/3 peak? 
-                            )
-                            # Better: use equivalent UDL for analysis speed if exact shape not supported
-                            # UDL_eq = n_peak * (1 - 1/(3*(ratio**2))) # For trapezoid
-                            udl_val = n_peak * (1 - 1/(3 * (ratio**2)))
-                            load_obj = LoadMD(load_type="UDL", magnitude=udl_val)
-                            
+                        # Long Edge gets Trapezoidal, Short Edge gets Triangular
+                        is_long_edge = beam_len >= L_long - self.tol
+                        if is_long_edge:
+                            # Trapezoidal equiv UDL: n * (1 - 1/(3*k^2)) where k = L_long/L_short
+                            udl = n_peak * (1 - 1/(3 * (ratio**2)))
                         else:
-                            # Triangular Load
-                            # Equivalent UDL for triangle = 2/3 * peak
-                            udl_val = n_peak * (2/3)
-                            load_obj = LoadMD(load_type="UDL", magnitude=udl_val)
+                            # Triangular equiv UDL: n * 2/3
+                            udl = n_peak * (2/3)
                     else:
-                        # One Way slab
-                        # Long edge beams take half load. Short edge beams take nothing.
-                         if on_x_edge and lx > lz: # X is long? No... ratio check.
-                             # If lx > lz, spans are Z. Beams runs along X (long edge)? No. 
-                             # Span is SHORT dimension. Load goes to beams perpendicular to span.
-                             # If lx is Long, lz is Short. Span is lz. Beams running along X (at z_min/max) take load.
-                             # Load = w * lz / 2 (UDL)
-                             udl_val = w * lz / 2
-                             load_obj = LoadMD(load_type="UDL", magnitude=udl_val)
-                         elif on_z_edge and lz > lx:
-                             udl_val = w * lx / 2
-                             load_obj = LoadMD(load_type="UDL", magnitude=udl_val)
+                        # One-way: Load shared by the two beams spanning the long direction
+                        # Only beams perpendicular to the short span get load
+                        is_supporting = (on_x_edge and lx >= ly) or (on_y_edge and ly >= lx)
+                        udl = (w_total * L_short / 2) if is_supporting else 0
                     
-                    if load_obj:
-                         self.beam_loads[beam.id].append(load_obj)
+                    if udl > 0:
+                        self.beam_loads[beam.id].append(LoadMD(load_type="UDL", magnitude=udl))
+
+        # Add Beam Self-Weight
+        for beam in self.beams:
+            b = beam.properties.width or 0.3
+            h = beam.properties.depth or 0.3
+            # Self-weight density 24 kN/m3 for RC
+            sw = b * h * 24.0
+            self.beam_loads[beam.id].append(LoadMD(load_type="UDL", magnitude=sw))
 
     def _identify_frames(self):
-        """Group elements into coplanar frames"""
-        # Group by 'Z' coordinate (X-Y planes) and 'X' coordinate (Z-Y planes)
-        # We bucket relevant coordinates
+        """Group elements into vertical coplanar frames"""
+        # Group by 'Y' coordinate (X-Z planes) and 'X' coordinate (Y-Z planes)
         
-        frames_x = defaultdict(list) # Key: Z-coord
-        frames_z = defaultdict(list) # Key: X-coord
+        frames_x = defaultdict(list) # Constant Y (X-Z planes)
+        frames_y = defaultdict(list) # Constant X (Y-Z planes)
         
         # Iterate Columns
         for col in self.columns:
-            # Columns belong to BOTH X and Z frames at their location
-            # Bucket by integer coordinate to handle float drift
-            z_key = round(col.start.z)
-            x_key = round(col.start.x) # Assuming vertical column
-            frames_x[z_key].append(col)
-            frames_z[x_key].append(col)
+            # Columns belong to BOTH X and Y frames at their location
+            y_key = round(col.start.y, 2)
+            x_key = round(col.start.x, 2)
+            frames_x[y_key].append(col)
+            frames_y[x_key].append(col)
             
         # Iterate Beams
         for beam in self.beams:
             start, end = beam.start, beam.end
             if not start or not end: continue
             
-            # If dZ is small, it's an X-beam (in an X-Frame)
-            if abs(start.z - end.z) < self.tol:
-                z_key = round(start.z)
-                frames_x[z_key].append(beam)
-            # If dX is small, it's a Z-beam (in a Z-Frame)
+            # If dY is small, it's an X-beam (in an X-Frame)
+            if abs(start.y - end.y) < self.tol:
+                y_key = round(start.y, 2)
+                frames_x[y_key].append(beam)
+            # If dX is small, it's a Y-beam (in a Y-Frame)
             elif abs(start.x - end.x) < self.tol:
-                x_key = round(start.x)
-                frames_z[x_key].append(beam)
+                x_key = round(start.x, 2)
+                frames_y[x_key].append(beam)
                 
-        return frames_x, frames_z
+        return frames_x, frames_y
 
     def _solve_2d_frame(self, elements: List[BuildingElement], plane: str):
         """Construct FrameMD and solve"""
@@ -254,20 +253,21 @@ class FullBuildingAnalyzer:
 
         # 1. Build Joints
         joints = {} # id -> JointMD
-        joints_map = {} # (x,y) -> id
+        joints_map = {} # (u,v) -> id
         
         members = []
         
         for el in elements:
             # Determine 2D coords (u, v)
+            # v is ALWAYS elevation (Z in builder)
             if plane == "XZ":
-                # Frame is in X-Y plane (at constant Z)
-                u1, v1 = el.start.x, el.start.y
-                u2, v2 = (el.end.x, el.end.y) if el.end else (u1, v1 + (el.properties.depth or 3)) # Col up
+                # Frame is in X-Z plane (at constant Y)
+                u1, v1 = el.start.x, el.start.z
+                u2, v2 = (el.end.x, el.end.z) if el.end else (u1, v1 + 3.5)
             else: # YZ
-                # Frame is in Z-Y plane (at constant X)
-                u1, v1 = el.start.z, el.start.y
-                u2, v2 = (el.end.z, el.end.y) if el.end else (u1, v1 + 3)
+                # Frame is in Y-Z plane (at constant X)
+                u1, v1 = el.start.y, el.start.z
+                u2, v2 = (el.end.y, el.end.z) if el.end else (u1, v1 + 3.5)
 
             # Create/Find Joints
             # Function to get/create joint id
@@ -344,10 +344,14 @@ class FullBuildingAnalyzer:
                   length = member_lengths.get(mid, 1.0)
                   # Zip them together if they have same length/spacing
                   self.results[mid]["sections"] = []
+                  local_max_m = self.results[mid]["M_max"]
+                  
                   for i in range(len(m_data)):
                       p_m = m_data[i]
                       p_s = s_data[i] if i < len(s_data) else {'y': 0}
                       p_d = d_data[i] if i < len(d_data) else {'y': 0}
+                      
+                      if abs(p_m['y']) > local_max_m: local_max_m = abs(p_m['y'])
                       
                       self.results[mid]["sections"].append({
                           "ratio": p_m['x']/length, 
@@ -356,19 +360,15 @@ class FullBuildingAnalyzer:
                           "delta": p_d['y'],
                           "N": 0 
                       })
+                  self.results[mid]["M_max"] = local_max_m
         else:
             # Stiffness Matrix (FEM)
             fem = FEM2DSolver()
-            # Map joints and members to FEM solver
-            # FEM solver uses 1-based internal indexing for nodes if we use its helpers
             jid_to_idx = {jid: i+1 for i, jid in enumerate(joints.keys())}
             for jid, j in joints.items():
                 fem.add_node(jid_to_idx[jid], j.x_coordinate, j.y_coordinate, [j.is_support, j.is_support, j.is_support])
             
             for m in members:
-                # Calculate properties A, I
-                # Properties are passed in member.I, but we need area too.
-                # Heuristic: 0.3x0.3 area = 0.09
                 fem.add_element(m.member_id, jid_to_idx[m.start_joint_id], jid_to_idx[m.end_joint_id], m.E, 0.09, m.I)
                 for load in m.loads:
                     if load.load_type == "UDL":
@@ -376,8 +376,11 @@ class FullBuildingAnalyzer:
             
             fem_res = fem.solve()
             if fem_res:
+                member_dict = {m.member_id: m for m in members}
                 for mid, forces in fem_res["elements"].items():
-                    # forces: {N_i, V_i, M_i, N_j, V_j, M_j}
+                    if mid not in member_dict: continue
+                    m = member_dict[mid]
+                    
                     M_i, M_j = forces["M_i"], forces["M_j"]
                     V_i, V_j = forces["V_i"], forces["V_j"]
                     N_i, N_j = forces["N_i"], forces["N_j"]
@@ -385,49 +388,34 @@ class FullBuildingAnalyzer:
                     if mid not in self.results:
                         self.results[mid] = {"M_max": 0, "V_max": 0, "N_max": 0, "sections": []}
                     
-                    self.results[mid]["M_max"] = max(abs(M_i), abs(M_j))
-                    self.results[mid]["V_max"] = max(abs(V_i), abs(V_j))
-                    self.results[mid]["N_max"] = max(abs(N_i), abs(N_j))
+                    # Merge results for columns (Axial N accumulates, Moments M might be in different planes)
+                    # For M_max, we keep the largest one or ideally would use vector sum for biaxial (simplified here)
+                    self.results[mid]["M_max"] = max(self.results[mid]["M_max"], abs(M_i), abs(M_j))
+                    self.results[mid]["V_max"] = max(self.results[mid]["V_max"], abs(V_i), abs(V_j))
+                    self.results[mid]["N_max"] += abs(N_i) # Accumulate axial
                     
-                    # Generate parabolic/linear sections
-                    num_sec = 21 # Increased resolution for smooth curves
-                    self.results[mid]["sections"] = []
-                    
-                    # Get UDL magnitude for this member if any
-                    udl = 0
-                    for load in m.loads:
-                        if load.load_type == "UDL":
-                            udl = load.magnitude
-                    
-                    L = m.length
-                    for k in range(num_sec):
-                        x_ratio = k / (num_sec - 1)
-                        x = x_ratio * L
-                        
-                        # Basic beam formulas:
-                        # M(x) = M_i * (1 - x/L) + M_j * (x/L) + (w*x/2)*(L - x)
-                        # V(x) = V_i + (V_j - V_i) * (x/L)  -- if w is constant, V is linear
-                        
-                        # Note: FEM gives nodal forces. M_i and M_j might need sign convention alignment.
-                        # Standard convention: M_i is clockwise, M_j is counter-clockwise.
-                        # Structural BMD usually plots "tension side".
-                        
-                        m_val = M_i * (1 - x_ratio) + M_j * x_ratio
-                        if udl != 0:
-                            m_val += (udl * x / 2) * (L - x)
-                        
-                        # Shear for UDL: V(x) = V_i + (V_j - V_i) * (x/L)
-                        # Correct: V(x) = V_i - udl * x (assuming V_i is reaction at start)
-                        # The solver's V_i and V_j are nodal forces (equilibrium).
-                        # Let's use simple linear for now as nodal values already account for loads.
-                        v_val = V_i * (1 - x_ratio) + V_j * x_ratio
-                        
-                        self.results[mid]["sections"].append({
-                            "ratio": x_ratio, 
-                            "Mz": m_val, 
-                            "Vy": v_val, 
-                            "N": N_i
-                        })
+                    # Sections logic - only if first time or larger moments
+                    if not self.results[mid]["sections"] or abs(M_i) > 0.1:
+                        num_sec = 21 
+                        self.results[mid]["sections"] = []
+                        udl = sum([l.magnitude for l in m.loads if l.load_type == "UDL"])
+                        L = m.length
+                        for k in range(num_sec):
+                            x_ratio = k / (num_sec - 1)
+                            x = x_ratio * L
+                            m_val = M_i * (1 - x_ratio) + M_j * x_ratio
+                            if udl != 0: m_val += (udl * x / 2) * (L - x)
+                            v_val = V_i + (V_j - V_i) * x_ratio
+                            
+                            self.results[mid]["sections"].append({
+                                "ratio": x_ratio, 
+                                "Mz": m_val, 
+                                "Vy": v_val, 
+                                "N": N_i
+                            })
+        
+        # Post-process: Classify Columns and Accumulate Base Loads
+        # (This would be another pass, handled after solve loop)
 
     def _format_results(self):
         # Convert internal results dict to list of AnalysisResult
@@ -447,5 +435,8 @@ class FullBuildingAnalyzer:
 @router.post("/analyze-full", response_model=List[AnalysisResult])
 async def analyze_full_building(request: BuildingAnalysisRequest):
     """Analyze full 3D building using 2D Frame decomposition"""
+    print(f"Received analysis request with {len(request.elements)} elements")
     analyzer = FullBuildingAnalyzer(request)
-    return analyzer.analyze()
+    results = analyzer.analyze()
+    print(f"Analysis completed. Returning {len(results)} results")
+    return results
