@@ -668,6 +668,51 @@ class ColumnDesignResponse(BaseModel):
     moment_ratio: float
     interaction: float
     passed: bool
+    dimensions: Optional[Dict[str, float]] = None
+
+@router.post("/api/beam-design/auto", response_model=BeamDesignResponse)
+async def auto_design_beam_endpoint(request: BeamDesignRequest):
+    """Iteratively find the lightest passing beam section"""
+    return auto_design_beam(request)
+
+def auto_design_beam(request: BeamDesignRequest) -> BeamDesignResponse:
+    """Iterative section optimization for beams"""
+    sections = UB_SECTIONS if request.section_type == "UB" else UC_SECTIONS
+    # Sort by area (weight) ascending
+    sorted_sections = sorted(sections, key=lambda s: s.area)
+    
+    last_result = None
+    for sec in sorted_sections:
+        req = request.copy(update={"section": sec.designation})
+        # Note: we need to call the internal logic, not the async endpoint
+        # Let's refactor the logic out of the endpoint
+        result = run_beam_checks(req)
+        last_result = result
+        if result.passed:
+            return result
+            
+    return last_result
+
+@router.post("/api/column-design/auto", response_model=ColumnDesignResponse)
+async def auto_design_column_endpoint(request: ColumnDesignRequest):
+    """Iteratively find the lightest passing column section"""
+    return auto_design_column(request)
+
+def auto_design_column(request: ColumnDesignRequest) -> ColumnDesignResponse:
+    """Iterative section optimization for columns"""
+    sections = UC_SECTIONS if request.section_type == "UC" else UB_SECTIONS
+    # Sort by area (weight) ascending
+    sorted_sections = sorted(sections, key=lambda s: s.area)
+    
+    last_result = None
+    for sec in sorted_sections:
+        req = request.copy(update={"section": sec.designation})
+        result = run_column_checks(req)
+        last_result = result
+        if result.passed:
+            return result
+            
+    return last_result
 
 
 class DiagramPoint(BaseModel):
@@ -756,9 +801,12 @@ async def get_sections(section_type: str):
 
 
 @router.post("/api/beam-design", response_model=BeamDesignResponse)
-async def design_beam(request: BeamDesignRequest):
+async def design_beam_endpoint(request: BeamDesignRequest):
     """Design steel beam according to BS 5950"""
+    return run_beam_checks(request)
 
+def run_beam_checks(request: BeamDesignRequest) -> BeamDesignResponse:
+    """Internal beam check logic"""
     # Get section properties
     section = get_section(request.section_type, request.section)
     material = MATERIAL_PROPERTIES[request.grade]
@@ -837,9 +885,12 @@ async def design_beam(request: BeamDesignRequest):
 
 
 @router.post("/api/column-design", response_model=ColumnDesignResponse)
-async def design_column(request: ColumnDesignRequest):
+async def design_column_endpoint(request: ColumnDesignRequest):
     """Design steel column according to BS 5950"""
+    return run_column_checks(request)
 
+def run_column_checks(request: ColumnDesignRequest) -> ColumnDesignResponse:
+    """Internal column check logic"""
     # Get section properties
     section = get_section(request.section_type, request.section)
     material = MATERIAL_PROPERTIES[request.grade]
@@ -861,8 +912,12 @@ async def design_column(request: ColumnDesignRequest):
 
     # Compression resistance (BS 5950 Cl 4.7.4)
     lambda_0 = math.pi * math.sqrt(material["E"] / py)
-    phi = 0.5 * (1 + 0.001 * lambda_ * (lambda_ - lambda_0) + (lambda_ / lambda_0) ** 2)
-    chi = min(1.0, 1 / (phi + math.sqrt(phi**2 - (lambda_ / lambda_0) ** 2)))
+    # Avoid division by zero for very short columns or infinite stiffness
+    l_ratio = (lambda_ / lambda_0)
+    phi = 0.5 * (1 + 0.001 * lambda_ * (lambda_ - lambda_0) + l_ratio ** 2)
+    
+    sqrt_val = phi**2 - l_ratio**2
+    chi = min(1.0, 1 / (phi + math.sqrt(max(0, sqrt_val))))
     pc = chi * py
     Pc = (section.area * 100 * pc) / 1000  # kN
 
@@ -871,8 +926,8 @@ async def design_column(request: ColumnDesignRequest):
     Mcy = (section.Zy * py) / 1_000_000  # kNm
 
     # Interaction check (BS 5950 Cl 4.8.3.3)
-    axial_ratio = P / Pc
-    moment_ratio = (Mx / Mcx) + (My / Mcy)
+    axial_ratio = P / Pc if Pc > 0 else 100
+    moment_ratio = (Mx / Mcx if Mcx > 0 else 0) + (My / Mcy if Mcy > 0 else 0)
     interaction = axial_ratio + moment_ratio
 
     passed = interaction <= 1.0 and axial_ratio <= 1.0
@@ -893,6 +948,12 @@ async def design_column(request: ColumnDesignRequest):
         moment_ratio=round(moment_ratio * 100, 1),
         interaction=round(interaction * 100, 1),
         passed=passed,
+        dimensions={
+            "depth": section.depth,
+            "width": section.width,
+            "tw": section.tw,
+            "tf": section.tf
+        }
     )
 
 

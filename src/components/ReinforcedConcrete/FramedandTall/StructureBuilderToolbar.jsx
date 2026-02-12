@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import {
     Eye, Play, Box, Layout, Plus, Square, Minus, Grid, X,
     MousePointer, Save, FolderOpen, Maximize2, Minimize2,
-    ChevronDown, Settings, Calculator, Library, Trash2, Copy, Activity
+    ChevronDown, Settings, Calculator, Library, Trash2, Copy, Activity, Layers
 } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 const StructureBuilderToolbar = ({
     tool,
@@ -18,7 +19,13 @@ const StructureBuilderToolbar = ({
     onSave,
     onLoad,
     onRunAnalysis,
-    onRunDesign
+    onRunDesign,
+    hasAnalysisResults,
+    hasDesignResults,
+    onViewAnalysisResults,
+    onViewDesignResults,
+    analysisMethod = 'moment_distribution',
+    onAnalysisMethodChange
 }) => {
     const [activeTab, setActiveTab] = useState('view'); // 'view', 'design', 'members', 'edit'
 
@@ -69,12 +76,47 @@ const StructureBuilderToolbar = ({
                             label="Run Analysis"
                             color="#2196F3"
                         />
+                        {hasAnalysisResults && (
+                            <ToolbarButton
+                                onClick={onViewAnalysisResults}
+                                icon={Activity}
+                                label="View Analysis"
+                                color="#1976D2"
+                            />
+                        )}
+                        <div style={{ width: '1px', height: '20px', background: '#ddd', margin: '0 8px' }} />
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f5f5f5', borderRadius: '4px', padding: '2px' }}>
+                            <ToolbarButton
+                                active={analysisMethod === 'moment_distribution'}
+                                onClick={() => onAnalysisMethodChange('moment_distribution')}
+                                icon={Box}
+                                label="Moment Dist."
+                                color={analysisMethod === 'moment_distribution' ? '#2196F3' : '#666'}
+                            />
+                            <ToolbarButton
+                                active={analysisMethod === 'stiffness'}
+                                onClick={() => onAnalysisMethodChange('stiffness')}
+                                icon={Layers}
+                                label="Stiffness Matrix"
+                                color={analysisMethod === 'stiffness' ? '#2196F3' : '#666'}
+                            />
+                        </div>
+
                         <ToolbarButton
                             onClick={onRunDesign}
                             icon={Play}
                             label="Run Design"
                             color="#4CAF50"
                         />
+                        {hasDesignResults && (
+                            <ToolbarButton
+                                onClick={onViewDesignResults}
+                                icon={CheckCircle}
+                                label="View Design"
+                                color="#388E3C"
+                            />
+                        )}
                     </div>
                 );
             case 'members':

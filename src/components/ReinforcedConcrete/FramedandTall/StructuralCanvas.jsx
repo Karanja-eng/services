@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect, Circle, Line, Text, Group, Transformer } from 'react-konva';
 import { StructuralGrid, StructuralElement } from './StructuralClasses';
+import { ISectionColumn, ISectionBeam, RectangularSection, CircularSection, getSteelSectionColor } from '../../SteelDesign/SteelSectionKonva';
 
 // ============================================================================
 // KONVA COMPONENTS FOR STRUCTURAL ELEMENTS
@@ -88,7 +89,7 @@ const GridComponent = ({ grid, visible, scale, onGridLineDragEnd, width, height 
     );
 };
 
-const ColumnComponent = ({ element, scale, onClick, onDragEnd, showForces, layerVisibility }) => {
+const ColumnComponent = ({ element, scale, onClick, onDragEnd, showForces, layerVisibility, sectionDisplayType = 'rectangle' }) => {
 
     const shapeRef = useRef();
     const trRef = useRef();
@@ -104,45 +105,98 @@ const ColumnComponent = ({ element, scale, onClick, onDragEnd, showForces, layer
     const width = element.properties.width * scale; // already in meters
     const depth = element.properties.depth * scale;
 
-    const x = element.position.x * scale - width / 2;
-    const y = element.position.y * scale - depth / 2;
+    const x = element.position.x * scale;
+    const y = element.position.y * scale;
+
+    // Use steel color if analyzing steel (could enhance this logic)
+    const fillColor = sectionDisplayType === 'I-section' ? '#708090' : '#000000';
+    const strokeColor = sectionDisplayType === 'I-section' ? '#2F4F4F' : '#000000';
 
     return (
         <Group>
             {/* Background for selection/hover */}
             <Rect
-                x={x - 2}
-                y={y - 2}
+                x={x - width / 2 - 2}
+                y={y - depth / 2 - 2}
                 width={width + 4}
                 height={depth + 4}
                 fill={element.selected ? '#4CAF5033' : 'transparent'}
                 cornerRadius={2}
             />
 
-            <Rect
-                ref={shapeRef}
-                x={element.position.x * scale}
-                y={element.position.y * scale}
-                offsetX={width / 2}
-                offsetY={depth / 2}
-                width={width}
-                height={depth}
-                fill="#000000" // Solid Black
-                stroke="#000000"
-                strokeWidth={0}
-                draggable
-                onClick={() => onClick(element)}
-                onDragStart={() => setIsDragging(true)}
-                onDragEnd={(e) => {
-                    setIsDragging(false);
-                    onDragEnd(element.id, {
-                        x: e.target.x() / scale,
-                        y: e.target.y() / scale
-                    });
-                    // Reset position to let element position drive the render
-                    e.target.position({ x: 0, y: 0 });
-                }}
-            />
+            {sectionDisplayType === 'I-section' ? (
+                <ISectionColumn
+                    x={x}
+                    y={y}
+                    width={width}
+                    depth={depth}
+                    fill={fillColor}
+                    stroke={strokeColor}
+                    strokeWidth={0.5}
+                />
+            ) : sectionDisplayType === 'circle' ? (
+                <CircularSection
+                    x={x}
+                    y={y}
+                    diameter={Math.max(width, depth)}
+                    fill={fillColor}
+                    stroke={strokeColor}
+                    strokeWidth={0.5}
+                />
+            ) : (
+                /* ORIGINAL RC RENDERING (PRESERVED) */
+                <Rect
+                    ref={shapeRef}
+                    x={x}
+                    y={y}
+                    offsetX={width / 2}
+                    offsetY={depth / 2}
+                    width={width}
+                    height={depth}
+                    fill={fillColor}
+                    stroke={strokeColor}
+                    strokeWidth={0}
+                    draggable
+                    onClick={() => onClick(element)}
+                    onDragStart={() => setIsDragging(true)}
+                    onDragEnd={(e) => {
+                        setIsDragging(false);
+                        onDragEnd(element.id, {
+                            x: e.target.x() / scale,
+                            y: e.target.y() / scale
+                        });
+                        // Reset position to let element position drive the render
+                        e.target.position({ x: 0, y: 0 });
+                    }}
+                />
+            )}
+
+            {/* Invisible hit area for dragging non-rect shapes */}
+            {(sectionDisplayType !== 'rectangle') && (
+                <Rect
+                    x={x - width / 2}
+                    y={y - depth / 2}
+                    width={width}
+                    height={depth}
+                    fill="transparent"
+                    draggable
+                    onClick={() => onClick(element)}
+                    onDragStart={() => setIsDragging(true)}
+                    onDragEnd={(e) => {
+                        setIsDragging(false);
+                        // Convert center-based coordinates back to model coordinates
+                        const newX = (e.target.x() + width / 2) / scale;
+                        const newY = (e.target.y() + depth / 2) / scale;
+
+                        // For transform/drag logic, keep it simple: just use center position
+                        onDragEnd(element.id, {
+                            x: e.target.x() / scale, // Elements store center position
+                            y: e.target.y() / scale
+                        });
+                        e.target.position({ x: x, y: y }); // Reset to current pos, let parent update
+                    }}
+                />
+            )}
 
             {/* Column label tag */}
             {layerVisibility.labels && (
@@ -181,10 +235,10 @@ const ColumnComponent = ({ element, scale, onClick, onDragEnd, showForces, layer
     );
 };
 
-const BeamComponent = ({ element, scale, onClick, onDragEnd, showDiagrams, layerVisibility, opacity = 1.0 }) => {
+const BeamComponent = ({ element, scale, onClick, onDragEnd, showDiagrams, layerVisibility, opacity = 1.0, sectionDisplayType = 'rectangle' }) => {
 
     const { start, end } = element.position;
-    const depth = element.properties.depth * scale; // Width of beam in plan view
+    const depth = element.properties.depth * scale; // Width of beam in plan view (or actual depth if I-section)
 
     const dx = end.x - start.x;
     const dy = end.y - start.y;
@@ -196,7 +250,9 @@ const BeamComponent = ({ element, scale, onClick, onDragEnd, showDiagrams, layer
     const sfPoints = [];
     const diagramScale = 0.5;
 
+    // ... diagram calculations ...
     if (showDiagrams.moment && element.analysisResults?.sections) {
+        // ... existing logic
         const sections = element.analysisResults.sections;
         sections.forEach(section => {
             const t = section.ratio;
@@ -213,6 +269,7 @@ const BeamComponent = ({ element, scale, onClick, onDragEnd, showDiagrams, layer
     }
 
     if (showDiagrams.shear && element.analysisResults?.sections) {
+        // ... existing logic
         const sections = element.analysisResults.sections;
         sections.forEach(section => {
             const t = section.ratio;
@@ -230,32 +287,85 @@ const BeamComponent = ({ element, scale, onClick, onDragEnd, showDiagrams, layer
 
     const halfDepth = depth / 2;
 
+    // Determine colors
+    const fillColor = sectionDisplayType === 'I-section' ? '#708090' : '#ffffff';
+    const strokeColor = sectionDisplayType === 'I-section' ? '#2F4F4F' : '#000000';
+
     return (
         <Group opacity={opacity}>
-            {/* White Filled Rectangle (Mask) */}
-            <Rect
-                x={start.x * scale}
-                y={start.y * scale}
-                offsetY={halfDepth}
-                width={length * scale}
-                height={depth}
-                fill="#ffffff" // White fill to mask grid lines
-                stroke="#000000" // Black outline
-                strokeWidth={1.5}
-                rotation={angle}
-                onClick={() => onClick(element)}
-                draggable
-                onDragEnd={(e) => {
-                    // Calc relative movement
-                    const deltaX = e.target.x() / scale - start.x;
-                    const deltaY = e.target.y() / scale - start.y;
-                    onDragEnd(element.id, {
-                        start: { x: start.x + deltaX, y: start.y + deltaY },
-                        end: { x: end.x + deltaX, y: end.y + deltaY }
-                    });
-                    e.target.position({ x: 0, y: 0 });
-                }}
-            />
+            {sectionDisplayType === 'I-section' ? (
+                <ISectionBeam
+                    x={start.x * scale}
+                    y={start.y * scale}
+                    length={length * scale}
+                    depth={depth}
+                    rotation={angle}
+                    fill={fillColor}
+                    stroke={strokeColor}
+                    strokeWidth={1}
+                    opacity={1.0}
+                />
+            ) : sectionDisplayType === 'circle' ? (
+                <CircularSection
+                    x={(start.x + dx / 2) * scale}
+                    y={(start.y + dy / 2) * scale}
+                    diameter={depth}
+                    fill={fillColor}
+                    stroke={strokeColor}
+                    strokeWidth={1}
+                />
+            ) : (
+                /* ORIGINAL RC RENDERING (PRESERVED) */
+                /* White Filled Rectangle (Mask) for RC */
+                <Rect
+                    x={start.x * scale}
+                    y={start.y * scale}
+                    offsetY={halfDepth}
+                    width={length * scale}
+                    height={depth}
+                    fill={fillColor} // White fill to mask grid lines
+                    stroke={strokeColor} // Black outline
+                    strokeWidth={1.5}
+                    rotation={angle}
+                    onClick={() => onClick(element)}
+                    draggable
+                    onDragEnd={(e) => {
+                        // Calc relative movement
+                        const deltaX = e.target.x() / scale - start.x;
+                        const deltaY = e.target.y() / scale - start.y;
+                        onDragEnd(element.id, {
+                            start: { x: start.x + deltaX, y: start.y + deltaY },
+                            end: { x: end.x + deltaX, y: end.y + deltaY }
+                        });
+                        e.target.position({ x: 0, y: 0 });
+                    }}
+                />
+            )}
+
+            {/* Invisible hit/drag area for I-section */}
+            {sectionDisplayType !== 'rectangle' && (
+                <Rect
+                    x={start.x * scale}
+                    y={start.y * scale}
+                    offsetY={halfDepth}
+                    width={length * scale}
+                    height={depth}
+                    fill="transparent"
+                    rotation={angle}
+                    onClick={() => onClick(element)}
+                    draggable
+                    onDragEnd={(e) => {
+                        // Calc relative movement
+                        const deltaX = e.target.x() / scale - start.x;
+                        const deltaY = e.target.y() / scale - start.y;
+                        onDragEnd(element.id, {
+                            start: { x: start.x + deltaX, y: start.y + deltaY },
+                            end: { x: end.x + deltaX, y: end.y + deltaY }
+                        });
+                        e.target.position({ x: 0, y: 0 });
+                    }}
+                />
+            )}
 
             {/* BM diagram */}
             {bmPoints.length > 0 && (
@@ -378,7 +488,8 @@ export const StructuralCanvas = ({
     layerVisibility,
     grid, // Passed from parent
     onGridUpdate, // Callback to update grid in parent
-    beamOpacity // Added opacity for beams
+    beamOpacity, // Added opacity for beams
+    sectionDisplayType = 'rectangle' // NEW: 'rectangle', 'I-section', 'circle'
 }) => {
     const stageRef = useRef();
     const [drawing, setDrawing] = useState(null);
@@ -582,6 +693,7 @@ export const StructuralCanvas = ({
                         showDiagrams={showDiagrams}
                         layerVisibility={layerVisibility}
                         opacity={beamOpacity}
+                        sectionDisplayType={sectionDisplayType}
                     />
                 ))}
 
@@ -595,6 +707,7 @@ export const StructuralCanvas = ({
                         onDragEnd={onElementDragEnd}
                         showForces={showForces}
                         layerVisibility={layerVisibility}
+                        sectionDisplayType={sectionDisplayType}
                     />
                 ))}
 

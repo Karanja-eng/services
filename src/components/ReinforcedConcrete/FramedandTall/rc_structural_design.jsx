@@ -496,24 +496,8 @@ const RCStructuralDesign = ({ isDark = false }) => {
 
         {/* Main Content */}
         <main className={`flex-1 ${activeModule === 'builder' ? (builderFullScreen ? 'h-[calc(100vh-96px)] overflow-hidden p-0' : 'h-screen overflow-hidden') : 'p-6'}`}>
-          {activeModule === 'builder' && !builderFullScreen && (
-            <div className={`flex items-center gap-4 px-6 py-3 border-b ${borderColor} ${cardBg} sticky top-0 z-50`}>
-              <button
-                onClick={() => setActiveModule('design_dashboard')}
-                className="flex items-center gap-2 text-blue-600 font-bold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                <ArrowLeft size={18} />
-                Back to Dashboard
-              </button>
-              <div className="w-px h-6 bg-gray-300 mx-2" />
-              <div className="flex items-center gap-2">
-                {React.createElement(modules.find(m => m.id === activeModule)?.icon || Box, { size: 20, className: "text-blue-600" })}
-                <span className="font-bold">{modules.find(m => m.id === activeModule)?.label}</span>
-              </div>
-            </div>
-          )}
 
-          <div className={activeModule === 'builder' ? "h-[calc(100vh-56px)] w-full" : "w-full max-w-none space-y-6"}>
+          <div className={activeModule === 'builder' ? "h-full w-full" : "w-full max-w-none space-y-6"}>
             {/* Load Combinations Module */}
             {activeModule === 'loads' && (
               <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>

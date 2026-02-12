@@ -47,7 +47,8 @@ class ColumnDesignBS8110:
         self.epscu = 0.0035
         self.alpha_c = 0.45
         self.alpha_s = 0.87
-        self.min_rho = max(0.002, 0.1 * N / (fy * self.Ac)) / 100
+        self.min_rho = max(0.004, 0.15 * N / (fy * self.Ac)) if shape == 'rectangular' else 0.004
+
         self.max_rho = 0.04
         self.max_lap_rho = 0.08
         self.min_bars = 6 if shape=='circular' else 4
@@ -67,7 +68,7 @@ class ColumnDesignBS8110:
         self.is_biaxial = self.M_x > 0 and self.M_y > 0
         self.is_plain = self.check_plain()
         self.rho = self.min_rho if self.is_plain else self.calc_rho()
-        self.Asc_req = self.rho * self.Ac if not self.is_plain else 0
+        self.Asc_req = self.rho * self.Ac  # Always provide minimum reinforcement
         self.select_bars_links()
         self.calc_laps_anch()
 
@@ -122,7 +123,10 @@ class ColumnDesignBS8110:
         self.Madd_y = self.N * au_y * Ky
 
     def check_plain(self):
-        return self.N <= 0.45 * self.fcu * self.Ac + 0.1 * self.fcu * self.Ac  # approx no reinf
+        # Plain concrete only for very lightly loaded columns
+        # BS8110: Plain concrete max stress ~0.4*fcu, very conservative
+        # In practice, almost all columns need reinforcement
+        return self.N <= 0.1 * self.fcu * self.Ac  # Much more conservative threshold
 
     def calc_rho(self):
         d = self.h - self.cover - self.tie_dia - 16 / 2  # assume dia
@@ -135,12 +139,13 @@ class ColumnDesignBS8110:
             def eq(rho):
                 self.Asc = rho * self.Ac
                 self.Asc_prime = self.Asc / 2
+                Cc = self.alpha_c * self.fcu * self.b * 0.9 * x if x < h_dim else self.alpha_c * self.fcu * self.b * h_dim
+
                 def find_x(x):
                     eps_s_prime = self.epscu * (x - d_prime) / x
                     eps_s = self.epscu * (d - x) / x
                     fs_prime = np.clip(self.Es * eps_s_prime, -self.alpha_s * self.fy, self.alpha_s * self.fy)
                     fs = np.clip(self.Es * eps_s, -self.alpha_s * self.fy, self.alpha_s * self.fy)
-                    Cc = self.alpha_c * self.fcu * self.b * 0.9 * x if x < h_dim else self.alpha_c * self.fcu * self.b * h_dim
                     return Cc + fs_prime * self.Asc_prime - fs * self.Asc - self.N
                 x = fsolve(find_x, h_dim / 2)[0]
                 zc = h_dim / 2 - 0.45 * min(x, h_dim)
@@ -158,9 +163,13 @@ class ColumnDesignBS8110:
                 My_prime = self.M_y + beta * (self.b / self.h) * self.M_x
                 Mx_prime = 0
             # Design as uniaxial with max(Mx_prime, My_prime)
-            M_eq = max(Mx_prime, My_prime)
-            # Call uniaxial calc with M_eq, h
-            return self.calc_rho()  # recursive, but adjust
+            self.M_x = Mx_prime
+            self.M_y = My_prime
+            self.is_biaxial = False
+            self.is_uniaxial = True
+            
+            # Call uniaxial calc with equivalent uniaxial moment
+            return self.calc_rho()
 
     def select_bars_links(self):
         # 1. Main Reinforcement

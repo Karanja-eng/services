@@ -106,37 +106,86 @@ class FullBuildingAnalyzer:
         return self._format_results()
 
     def _post_process_all_elements(self):
-        """Accumulate axial loads down the structure and classify columns"""
-        # Sort columns by Z descending
+        """Accumulate axial loads down the structure (Load Takedown)"""
+        # 1. Sort columns by Z descending (Top to Bottom)
         sorted_cols = sorted(self.columns, key=lambda c: c.start.z, reverse=True)
         
-        # Buffer to store accumulated N for positions
-        # (x,y) -> accumulated N
-        acc_n = defaultdict(float)
+        # Buffer to store accumulated N leaving the bottom of a column at (x,y)
+        # Key: (x, y) -> Value: Load passed to element below
+        load_transfer_map = defaultdict(float)
         
+        # Helper: Get reaction from beams connected to a specific point (x,y,z)
+        def get_beam_reactions_at(x, y, z):
+            reaction = 0.0
+            for vid, res in self.results.items():
+                # Only check beams
+                if not any(b.id == vid for b in self.beams): continue
+                
+                beam_el = next((b for b in self.beams if b.id == vid), None)
+                if not beam_el: continue
+                
+                # Check if this beam connects to (x,y,z)
+                # Beams are in X-Z or Y-Z planes, so Z must match
+                if abs(beam_el.start.z - z) > self.tol: continue
+                
+                # Check start connection
+                if math.hypot(beam_el.start.x - x, beam_el.start.y - y) < self.tol:
+                     # Reaction is V at start
+                     # In Frame analysis, V_i is shear at start.
+                     # We take max V usually, but strictly it's the specific end shear.
+                     # Simplified: Use V_max / 2 or exact if available. 
+                     # For MD, we stored V_max but let's try to get more specific if possible.
+                     # fallback: Use V_max from results
+                     reaction += res.get("V_max", 0) 
+                     
+                # Check end connection
+                elif math.hypot(beam_el.end.x - x, beam_el.end.y - y) < self.tol:
+                     # Reaction is V at end
+                     reaction += res.get("V_max", 0)
+            return reaction
+
         for col in sorted_cols:
             if col.id not in self.results: 
                  self.results[col.id] = {"M_max": 0, "V_max": 0, "N_max": 0, "sections": []}
             
             res = self.results[col.id]
-            pos_key = (round(col.start.x, 2), round(col.start.y, 2))
             
-            # Add N from above
-            res["N_max"] += acc_n[pos_key]
+            # Column Position (Plan)
+            cx, cy = round(col.start.x, 2), round(col.start.y, 2)
             
-            # Update acc_n for floor below
-            acc_n[pos_key] = res["N_max"]
+            # Column Top/Bottom Z
+            z_top = col.end.z if col.end else col.start.z + col.properties.height
+            z_bot = col.start.z
             
-            # Update sections with accumulated N
+            # 1. Load from Column Above
+            # The column above would have registered its output at (cx, cy)
+            # However, we must ensure we pick up the load from the column whose BOTTOM is near this column's TOP
+            # Since we iterate sorted by Z descending, the upper column is already processed.
+            # But we need to use z_top as the key to find what's coming down?
+            # Actually simplest is: map[(x,y)] stores the load travelling down this continuous column line.
+            
+            axial_from_above = load_transfer_map[(cx, cy)]
+            
+            # 2. Load from Beams at Top of this Column
+            beam_reaction = get_beam_reactions_at(col.start.x, col.start.y, z_top)
+            
+            # 3. Self Weight of this Column
+            # 24 kN/m3 * b * d * h
+            w, d, h = col.properties.width, col.properties.depth, col.properties.height
+            self_weight = 24.0 * w * d * h
+            
+            # Total Axial Load for this column
+            total_N = axial_from_above + beam_reaction + self_weight
+            
+            # Update Result
+            res["N_max"] = total_N
+            
+            # Update Sections
             for s in res["sections"]:
-                s["N"] = res["N_max"]
-
-            # BS 8110 Classification (simplified check)
-            # Find connected beams at top
-            top_z = col.end.z if col.end else col.start.z + 3.5
-            beams_at_top = [b for b in self.beams if abs(b.start.z - top_z) < self.tol]
-            # Further refinement would check if beams are symmetrical... 
-            # For now, we've fulfilled the 'axial/uniaxial/biaxial' rule by summing forces correctly.
+                s["N"] = total_N
+                
+            # Pass load to next level
+            load_transfer_map[(cx, cy)] = total_N
 
     def _distribute_slab_loads(self):
         """BS 8110 Yield Line / Tributary Area Load Distribution"""

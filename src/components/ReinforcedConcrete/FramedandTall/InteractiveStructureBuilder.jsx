@@ -19,6 +19,7 @@ import { PropertiesPanel, LayerControlPanel } from './StructuralUIComponents';
 import StructureBuilderToolbar from './StructureBuilderToolbar';
 import DesignDashboard from './DesignDashboard';
 import WireframeAnalysisView from './wireframe';
+import { AnalysisResultsViewer, DesignResultsViewer } from './StructuralResultViewers';
 import axios from 'axios';
 
 // ============================================================================
@@ -27,9 +28,15 @@ import axios from 'axios';
 
 const InteractiveStructureBuilder = ({
     isFullScreen: propFullScreen,
-    onFullScreenChange
+    onFullScreenChange,
+    customAnalysisHandler,
+    customDesignHandler,
+    materialType = 'concrete',
+    sectionDisplayType: propSectionDisplayType // Receive as prop but maybe override by default
 }) => {
-    // Override local isFullScreen if props are provided
+    // Determine the effective section display type based on material and prop
+    const sectionDisplayType = propSectionDisplayType || (materialType === 'steel' ? 'I-section' : 'rectangle');
+
     const [localFullScreen, setLocalFullScreen] = useState(false);
     const isFullScreen = propFullScreen !== undefined ? propFullScreen : localFullScreen;
     const setIsFullScreen = onFullScreenChange || setLocalFullScreen;
@@ -56,6 +63,8 @@ const InteractiveStructureBuilder = ({
     const [designResults, setDesignResults] = useState(null);
     const [isDesigning, setIsDesigning] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [viewAnalysisResults, setViewAnalysisResults] = useState(false);
+    const [viewDesignResults, setViewDesignResults] = useState(false);
 
     // Grid State
     const [grid, setGrid] = useState(new StructuralGrid(5));
@@ -188,7 +197,18 @@ const InteractiveStructureBuilder = ({
         setIsAnalyzing(true);
         try {
             const payload = preparePayload();
-            const response = await axios.post('http://127.0.0.1:8001/api/framed_full/analyze-full', payload);
+
+            // Use custom handler if provided (for steel), otherwise use RC endpoint
+            let response;
+            if (customAnalysisHandler) {
+                // Steel or custom analysis
+                const results = await customAnalysisHandler(payload.elements, payload.method);
+                response = { data: results };
+            } else {
+                // RC analysis
+                response = await axios.post('http://127.0.0.1:8001/api/framed_full/analyze-full', payload);
+            }
+
             setAnalysisResults(response.data);
 
             const resultMap = new Map(response.data.map(r => [r.element_id, r]));
@@ -216,13 +236,24 @@ const InteractiveStructureBuilder = ({
         } finally {
             setIsAnalyzing(false);
         }
-    }, [preparePayload, setAnalysisResults, setElements, setShowDiagrams, setShowForces]);
+    }, [preparePayload, customAnalysisHandler, setAnalysisResults, setElements, setShowDiagrams, setShowForces]);
 
     const handleRunDesign = useCallback(async () => {
         setIsDesigning(true);
         try {
             const payload = preparePayload();
-            const response = await axios.post('http://127.0.0.1:8001/api/automated_design/run-design', payload);
+
+            // Use custom handler if provided (for steel), otherwise use RC endpoint
+            let response;
+            if (customDesignHandler) {
+                // Steel or custom design
+                const results = await customDesignHandler(elements);
+                response = { data: results };
+            } else {
+                // RC design
+                response = await axios.post('http://127.0.0.1:8001/api/automated_design/run-design', payload);
+            }
+
             setDesignResults(response.data);
             setView('2d');
         } catch (error) {
@@ -231,7 +262,7 @@ const InteractiveStructureBuilder = ({
         } finally {
             setIsDesigning(false);
         }
-    }, [preparePayload, setDesignResults, setView]);
+    }, [preparePayload, customDesignHandler, elements, setDesignResults, setView]);
 
     const handleExportCAD = async (item) => {
         try {
@@ -633,6 +664,9 @@ const InteractiveStructureBuilder = ({
         reader.readAsText(file);
     }, []);
 
+    const handleViewAnalysisResults = () => setViewAnalysisResults(true);
+    const handleViewDesignResults = () => setViewDesignResults(true);
+
     return (
         <div style={{
             width: isFullScreen ? '100vw' : '100%',
@@ -664,6 +698,8 @@ const InteractiveStructureBuilder = ({
                 onLoad={handleLoad}
                 onRunAnalysis={runAnalysis}
                 onRunDesign={handleRunDesign}
+                analysisMethod={analysisMethod}
+                onAnalysisMethodChange={setAnalysisMethod}
             />
 
             {/* Main content */}
@@ -1077,6 +1113,7 @@ const InteractiveStructureBuilder = ({
                             grid={grid}
                             onGridUpdate={handleGridUpdate}
                             beamOpacity={beamOpacity}
+                            sectionDisplayType={sectionDisplayType}
                         />
                     ) : view === 'cad' ? (
                         <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: '#fff' }}>
@@ -1087,26 +1124,32 @@ const InteractiveStructureBuilder = ({
                             />
                         </div>
                     ) : view === '3d' ? (
-                        <Complete3DStructureView
-                            elements={elements}
-                            floors={Object.keys(layers).length}
-                            floorHeight={3.5}
-                            selectedElement={selectedElement}
-                            onElementClick={handleElementClick}
-                            showForces={showForces}
-                            showDiagrams={showDiagrams}
-                            diagramScale={scale}
-                            floorVisibility={Object.entries(layers).reduce((acc, [name, data]) => {
-                                acc[name] = data.visible;
-                                return acc;
-                            }, {})}
-                            componentVisibility={layerVisibility}
+                        <StructuralVisualizationComponent
+                            componentType="tall_framed_analysis"
+                            componentData={{
+                                elements: elements,
+                                floors: Object.keys(layers).length,
+                                floorHeight: 3.5,
+                                selectedElement: selectedElement,
+                                onElementClick: handleElementClick,
+                                showForces: showForces,
+                                showDiagrams: showDiagrams,
+                                diagramScale: scale,
+                                floorVisibility: Object.entries(layers).reduce((acc, [name, data]) => {
+                                    acc[name] = data.visible;
+                                    return acc;
+                                }, {}),
+                                layerVisibility: layerVisibility,
+                                sectionDisplayType: sectionDisplayType,
+                                materialType: materialType
+                            }}
                             slabOpacity={slabOpacity}
                             setSlabOpacity={setSlabOpacity}
                             groundOpacity={groundOpacity}
                             setGroundOpacity={setGroundOpacity}
                         />
                     ) : view === 'analysis_3d' ? (
+
                         <StructuralVisualizationComponent
                             componentType="tall_framed_wireframe"
                             componentData={{

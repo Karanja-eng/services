@@ -268,6 +268,8 @@ from calculations.steel_design.connections_api import router as connections_rout
 from calculations.steel_design.steel_design_backend import (
     router as stell_backend_router,
 )
+from calculations.steel_design.steel_structure_analysis import router as steel_structure_analysis_router
+from calculations.steel_design.steel_structure_design import router as steel_structure_design_router
 
 
 app.include_router(
@@ -275,6 +277,9 @@ app.include_router(
 )
 
 app.include_router(stell_backend_router, prefix="/steel_backend", tags=["steel_router"])
+
+app.include_router(steel_structure_analysis_router, tags=["steel_structure_analysis"])
+app.include_router(steel_structure_design_router, tags=["steel_structure_design"])
 
 
 #########################################   R . C ###########################

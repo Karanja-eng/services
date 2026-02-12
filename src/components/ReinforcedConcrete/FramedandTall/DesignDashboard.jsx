@@ -13,6 +13,7 @@ const DesignDashboard = ({ results, onClose, onExportCAD, onViewCrossSection }) 
     const tabs = [
         { id: 'columns', label: 'Columns', icon: Box, count: results.columns?.length || 0 },
         { id: 'beams', label: 'Beams', icon: MinusIcon, count: results.beams?.length || 0 },
+        { id: 'joints', label: 'Joints', icon: Shield, count: results.joints?.length || 0 },
         { id: 'slabs', label: 'Slabs', icon: Layers, count: results.slabs?.length || 0 },
         { id: 'foundations', label: 'Foundations', icon: Layout, count: results.foundations?.length || 0 },
         { id: 'walls', label: 'Walls', icon: Box, count: results.walls?.length || 0 },
@@ -38,10 +39,10 @@ const DesignDashboard = ({ results, onClose, onExportCAD, onViewCrossSection }) 
                     <tbody>
                         {data.map((item, idx) => (
                             <tr key={idx}>
-                                <td><span style={idBadgeStyle}>{item.id || `M-${idx + 1}`}</span></td>
-                                <td><span style={floorBadgeStyle}>{item.floor || 'N/A'}</span></td>
+                                <td><span style={idBadgeStyle}>{item.id || item.type || `M-${idx + 1}`}</span></td>
+                                <td><span style={floorBadgeStyle}>{item.floor || (item.position ? `${Math.round(item.position[0])}, ${Math.round(item.position[1])}, ${Math.round(item.position[2])}` : 'N/A')}</span></td>
                                 <td>
-                                    {item.status === 'PASS' || item.all_spans_ok || item.summary?.all_designs_ok ? (
+                                    {(item.status === 'PASS' || item.all_spans_ok || item.summary?.all_designs_ok) ? (
                                         <div style={passBadgeStyle}><CheckCircle size={14} /> PASS</div>
                                     ) : (
                                         <div style={failBadgeStyle}><AlertCircle size={14} /> FAIL</div>
@@ -58,13 +59,13 @@ const DesignDashboard = ({ results, onClose, onExportCAD, onViewCrossSection }) 
                                 </td>
                                 <td>
                                     <div style={progressContainerStyle}>
-                                        <div style={{ ...progressBarStyle, width: `${(item.utilization_ratio || item.steel_percentage || 50) * 100}%`, background: (item.utilization_ratio || 0.5) > 0.9 ? '#ff4d4f' : '#52c41a' }} />
+                                        <div style={{ ...progressBarStyle, width: `${Math.min(100, (item.utilization_ratio || item.utilization || item.steel_percentage || 0.5) * 100)}%`, background: (item.utilization_ratio || item.utilization || 0.5) > 0.9 ? '#ff4d4f' : '#52c41a' }} />
                                     </div>
-                                    <span style={{ fontSize: '11px' }}>{Math.round((item.utilization_ratio || item.steel_percentage / 4 || 0.5) * 100)}%</span>
+                                    <span style={{ fontSize: '11px' }}>{Math.round((item.utilization_ratio || item.utilization || item.steel_percentage / 4 || 0.5) * 100)}%</span>
                                 </td>
                                 <td>
                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button onClick={() => onViewCrossSection(item)} style={actionButtonStyle} title="View Cross Section">
+                                        <button onClick={() => onViewCrossSection(item)} style={actionButtonStyle} title="View Details">
                                             <Eye size={14} />
                                         </button>
                                         <button onClick={() => onExportCAD(item)} style={actionButtonStyle} title="Export CAD">
@@ -83,18 +84,24 @@ const DesignDashboard = ({ results, onClose, onExportCAD, onViewCrossSection }) 
     return (
         <div style={overlayStyle}>
             <div style={modalStyle}>
-                <div style={headerStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Shield style={{ color: '#2196F3' }} />
-                        <h2 style={{ margin: 0, fontSize: '20px', letterSpacing: '-0.5px' }}>Structural Design Report</h2>
-                        <div style={summaryBadgeStyle}>
-                            {results.summary.passed} Passed / {results.summary.failed} Failed
-                        </div>
-                    </div>
-                    <button onClick={onClose} style={closeButtonStyle}>
-                        <X size={20} />
-                    </button>
-                </div>
+                <button onClick={onClose} style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    background: 'white',
+                    border: '1px solid #ddd',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                    <X size={20} />
+                </button>
 
                 <div style={contentStyle}>
                     {/* Sidebar Tabs */}
@@ -147,7 +154,7 @@ const overlayStyle = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1000,
+    zIndex: 10000,
     backdropFilter: 'blur(4px)'
 };
 

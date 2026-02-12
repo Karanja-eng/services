@@ -8,91 +8,140 @@ import { Eye, EyeOff, Layers, TrendingUp, Activity } from 'lucide-react';
 // 3D COLUMN COMPONENT WITH FORCES
 // ============================================================================
 
-const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, onClick, showDiagrams = { moment: false, shear: false }, showLabels = true, diagramScale = 0.002 }) => {
+const Column3D = ({
+    element,
+    floorHeight,
+    showForces,
+    showDeflection,
+    selected,
+    onClick,
+    showDiagrams = { moment: false, shear: false },
+    showLabels = true,
+    diagramScale = 0.002,
+    wireframe = false,
+    sectionDisplayType = 'rectangle'
+}) => {
     const meshRef = useRef();
     const [hovered, setHovered] = useState(false);
 
     const height = element.properties.height || floorHeight;
 
-    // Generate BM diagram points for column (LOCAL coordinates)
+    // diagrams
     const bmCurve = useMemo(() => {
         if (!showDiagrams.moment || !element.analysisResults?.sections) return null;
+        return element.analysisResults.sections.map(s => [
+            s.ratio * 0, // Simplified for column verticality
+            s.ratio * height - height / 2,
+            s.Mz * diagramScale
+        ]);
+    }, [element.analysisResults, showDiagrams.moment, height, diagramScale]);
 
-        const points = [];
-        const sections = element.analysisResults.sections;
-
-        sections.forEach(section => {
-            const t = section.ratio;
-            const offset = (section.Mz || 0) * diagramScale;
-            // Local to column group (center at y=0, height/2)
-            points.push(new THREE.Vector3(offset, t * height - height / 2, 0));
-        });
-
-        return points;
-    }, [showDiagrams.moment, element.analysisResults, height, diagramScale]);
-
-    // Generate SF diagram points for column
     const sfCurve = useMemo(() => {
         if (!showDiagrams.shear || !element.analysisResults?.sections) return null;
-
-        const points = [];
-        const sections = element.analysisResults.sections;
-
-        sections.forEach(section => {
-            const t = section.ratio;
-            const offset = (section.Vy || 0) * diagramScale;
-            points.push(new THREE.Vector3(offset, t * height - height / 2, 0));
-        });
-
-        return points;
-    }, [showDiagrams.shear, element.analysisResults, height, diagramScale]);
+        return element.analysisResults.sections.map(s => [
+            s.Vy * diagramScale,
+            s.ratio * height - height / 2,
+            0
+        ]);
+    }, [element.analysisResults, showDiagrams.shear, height, diagramScale]);
 
     const width = element.properties.width;
     const depth = element.properties.depth;
 
     const x = element.position.x;
-    const y = element.position.z || 0; // Floor level
+    const y = element.position.z || 0;
     const z = element.position.y;
 
-    // Color based on forces
     let color = '#888888';
     if (selected) color = '#4CAF50';
     else if (hovered) color = '#FF9800';
     else if (showForces && element.analysisResults) {
         const utilization = element.analysisResults.utilization || 0;
-        if (utilization > 1.0) color = '#f44336'; // Over-stressed
-        else if (utilization > 0.8) color = '#FF9800'; // High stress
-        else if (utilization > 0.5) color = '#FFC107'; // Medium stress
-        else color = '#4CAF50'; // Low stress
+        if (utilization > 1.0) color = '#f44336';
+        else if (utilization > 0.8) color = '#FF9800';
+        else if (utilization > 0.5) color = '#FFC107';
+        else color = '#4CAF50';
     }
 
+    // Proportions for steel sections
+    const sWidth = width; // Plan X
+    const sDepth = depth; // Plan Z
+    const flangeThickness = sDepth / 10;
+    const webThickness = sWidth / 15;
+
+    const renderColumnCore = () => {
+        if (sectionDisplayType === 'I-section') {
+            return (
+                <group>
+                    {/* Flanges are along Z (sDepth), Web is along X (sWidth) */}
+                    {/* Left Flange (Z-) */}
+                    <mesh position={[0, 0, -sDepth / 2 + flangeThickness / 2]}>
+                        <boxGeometry args={[sWidth, height, flangeThickness]} />
+                        <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                    </mesh>
+                    {/* Web - spans along X (sWidth) */}
+                    <mesh position={[0, 0, 0]}>
+                        <boxGeometry args={[webThickness, height, sDepth - 2 * flangeThickness]} />
+                        <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                    </mesh>
+                    {/* Right Flange (Z+) */}
+                    <mesh position={[0, 0, sDepth / 2 - flangeThickness / 2]}>
+                        <boxGeometry args={[sWidth, height, flangeThickness]} />
+                        <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                    </mesh>
+                </group>
+            );
+        } else if (sectionDisplayType === 'circle') {
+            return (
+                <Cylinder args={[Math.max(sWidth, sDepth) / 2, Math.max(sWidth, sDepth) / 2, height, 16]}>
+                    <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                </Cylinder>
+            );
+        } else {
+            return (
+                <mesh
+                    ref={meshRef}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClick(element);
+                    }}
+                >
+                    <boxGeometry args={[width, height, depth]} />
+                    <meshStandardMaterial
+                        color={color}
+                        roughness={0.5}
+                        metalness={0.2}
+                        wireframe={wireframe}
+                    />
+                </mesh>
+            );
+        }
+    };
+
     return (
-        <group position={[x, y + height / 2, z]}>
-            <mesh
-                ref={meshRef}
-                onClick={(e) => {
+        <group
+            position={[x, y + height / 2, z]}
+            onClick={(e) => {
+                if (sectionDisplayType !== 'rectangle') {
                     e.stopPropagation();
                     onClick(element);
-                }}
-                onPointerOver={(e) => {
-                    e.stopPropagation();
-                    setHovered(true);
-                }}
-                onPointerOut={() => setHovered(false)}
-            >
-                <boxGeometry args={[width, height, depth]} />
-                <meshStandardMaterial
-                    color={color}
-                    roughness={0.5}
-                    metalness={0.2}
-                />
-            </mesh>
+                }
+            }}
+            onPointerOver={(e) => {
+                e.stopPropagation();
+                setHovered(true);
+            }}
+            onPointerOut={() => setHovered(false)}
+        >
+            {renderColumnCore()}
 
-            {/* Edges */}
-            <lineSegments>
-                <edgesGeometry args={[new THREE.BoxGeometry(width, height, depth)]} />
-                <lineBasicMaterial color="#000000" linewidth={1} />
-            </lineSegments>
+            {/* Edges - Only for rectangle to keep it clean, or adapt for others */}
+            {sectionDisplayType === 'rectangle' && (
+                <lineSegments>
+                    <edgesGeometry args={[new THREE.BoxGeometry(width, height, depth)]} />
+                    <lineBasicMaterial color="#000000" linewidth={1} />
+                </lineSegments>
+            )}
 
             {/* Label */}
             {(showLabels || hovered || selected) && (
@@ -119,7 +168,8 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
                 </Html>
             )}
 
-            {/* Deflection visualization */}
+            {/* diagrams/deflection omitted for brevity but should be kept in real implementation if possible. 
+                Wait, I should not omit them if I'm replacing the whole block. I will include them. */}
             {showDeflection && element.analysisResults?.deflection && (
                 <arrowHelper
                     args={[
@@ -169,7 +219,17 @@ const Column3D = ({ element, floorHeight, showForces, showDeflection, selected, 
 // 3D BEAM COMPONENT WITH BM DIAGRAM
 // ============================================================================
 
-const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabels = true, diagramScale = 0.002 }) => {
+const Beam3D = ({
+    element,
+    floorLevel,
+    showDiagrams,
+    selected,
+    onClick,
+    showLabels = true,
+    diagramScale = 0.002,
+    wireframe = false,
+    sectionDisplayType = 'rectangle'
+}) => {
     const [hovered, setHovered] = useState(false);
 
     const start = new THREE.Vector3(
@@ -191,88 +251,121 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
     const width = element.properties.width;
     const depth = element.properties.depth;
 
-    // Rotation to align cylinder with beam direction
-    const quaternion = new THREE.Quaternion();
-    quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        direction.clone().normalize()
+
+    const bmCurve = useMemo(() => {
+        if (!showDiagrams.moment || !element.analysisResults?.sections) return null;
+        return element.analysisResults.sections.map(s => {
+            const t = s.ratio;
+            const pos = new THREE.Vector3().lerpVectors(start, end, t).sub(center);
+            const offset = new THREE.Vector3(0, s.Mz * diagramScale, 0); // Vertical offset for beam BM
+            return pos.add(offset);
+        });
+    }, [element.analysisResults, showDiagrams.moment, start, end, center, diagramScale]);
+
+    const sfCurve = useMemo(() => {
+        if (!showDiagrams.shear || !element.analysisResults?.sections) return null;
+        return element.analysisResults.sections.map(s => {
+            const t = s.ratio;
+            const pos = new THREE.Vector3().lerpVectors(start, end, t).sub(center);
+            const offset = new THREE.Vector3(0, s.Vy * diagramScale, 0);
+            return pos.add(offset);
+        });
+    }, [element.analysisResults, showDiagrams.shear, start, end, center, diagramScale]);
+
+    /**
+     * BEAM ORIENTATION LOGIC
+     * We want the beam's "depth" (height) to be vertical (along Global Y).
+     * The quaternion rotates Local Y (beam axis) to the direction vector.
+     * To keep it upright, we calculate the horizontal angle and rotate around Y,
+     * then handle any slope.
+     */
+    const angleY = Math.atan2(direction.x, direction.z);
+    const slope = Math.asin(direction.y / length);
+
+    // Construct rotation: first rotate to face direction in XZ plane, then tilt for slope
+    const rotation = new THREE.Euler(
+        -Math.PI / 2 + slope, // tilt up/down (and compensate for initial Y-up cylinder/box)
+        angleY,               // rotate around Y axis
+        0,                    // no roll
+        'YXZ'
     );
 
     let color = '#666666';
     if (selected) color = '#4CAF50';
     else if (hovered) color = '#FF9800';
 
-    // Generate BM diagram points
-    const bmCurve = useMemo(() => {
-        if (!showDiagrams.moment || !element.analysisResults?.sections) return null;
-
-        const points = [];
-        const sections = element.analysisResults.sections;
-
-        sections.forEach(section => {
-            const t = section.ratio;
-            const pos = new THREE.Vector3().lerpVectors(start, end, t);
-
-            // Offset perpendicular to beam (upward/downward)
-            const offset = (section.Mz || 0) * diagramScale;
-            pos.y += offset;
-
-            points.push(pos);
-        });
-
-        return points;
-    }, [showDiagrams.moment, element.analysisResults, start, end, diagramScale]);
-
-    // Generate SF diagram points
-    const sfCurve = useMemo(() => {
-        if (!showDiagrams.shear || !element.analysisResults?.sections) return null;
-
-        const points = [];
-        const sections = element.analysisResults.sections;
-
-        sections.forEach(section => {
-            const t = section.ratio;
-            const pos = new THREE.Vector3().lerpVectors(start, end, t);
-
-            const offset = (section.Vy || 0) * diagramScale;
-            pos.y += offset;
-
-            points.push(pos);
-        });
-
-        return points;
-    }, [showDiagrams.shear, element.analysisResults, start, end, diagramScale]);
+    const renderBeamCore = () => {
+        // In this rotation setup (Euler), Local Y is along beam, Local Z is vertical, Local X is horizontal
+        // Width is along Local X, Depth is along Local Z, Length is along Local Y
+        if (sectionDisplayType === 'I-section') {
+            const flangeThickness = depth / 10;
+            const webThickness = width / 15;
+            return (
+                <group rotation={rotation}>
+                    {/* Top Flange (Local Z+) */}
+                    <mesh position={[0, 0, depth / 2 - flangeThickness / 2]}>
+                        <boxGeometry args={[width, length, flangeThickness]} />
+                        <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                    </mesh>
+                    {/* Web (Center) */}
+                    <mesh position={[0, 0, 0]}>
+                        <boxGeometry args={[webThickness, length, depth - 2 * flangeThickness]} />
+                        <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                    </mesh>
+                    {/* Bottom Flange (Local Z-) */}
+                    <mesh position={[0, 0, -depth / 2 + flangeThickness / 2]}>
+                        <boxGeometry args={[width, length, flangeThickness]} />
+                        <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                    </mesh>
+                </group>
+            );
+        } else if (sectionDisplayType === 'circle') {
+            return (
+                <group rotation={rotation}>
+                    <Cylinder args={[Math.max(width, depth) / 2, Math.max(width, depth) / 2, length, 16]}>
+                        <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                    </Cylinder>
+                </group>
+            );
+        } else {
+            return (
+                <mesh
+                    rotation={rotation}
+                >
+                    <boxGeometry args={[width, length, depth]} />
+                    <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} wireframe={wireframe} />
+                </mesh>
+            );
+        }
+    };
 
     return (
-        <group>
-            {/* Main beam */}
-            <mesh
-                position={center}
-                quaternion={quaternion}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onClick(element);
-                }}
-                onPointerOver={(e) => {
-                    e.stopPropagation();
-                    setHovered(true);
-                }}
-                onPointerOut={() => setHovered(false)}
-            >
-                <boxGeometry args={[width, length, depth]} />
-                <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} />
-            </mesh>
+        <group
+            position={center}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick(element);
+            }}
+            onPointerOver={(e) => {
+                e.stopPropagation();
+                setHovered(true);
+            }}
+            onPointerOut={() => setHovered(false)}
+        >
+            {renderBeamCore()}
 
-            {/* Beam Edges */}
-            <group position={center} quaternion={quaternion}>
-                <lineSegments>
-                    <edgesGeometry args={[new THREE.BoxGeometry(width, length, depth)]} />
-                    <lineBasicMaterial color="#000000" linewidth={1} />
-                </lineSegments>
-            </group>
+            {/* Beam Edges - Only for rectangle */}
+            {sectionDisplayType === 'rectangle' && (
+                <group rotation={rotation}>
+                    <lineSegments>
+                        <edgesGeometry args={[new THREE.BoxGeometry(width, length, depth)]} />
+                        <lineBasicMaterial color="#000000" linewidth={1} />
+                    </lineSegments>
+                </group>
+            )}
 
             {/* BM diagram */}
-            {bmCurve && bmCurve.length > 1 && (
+            {bmCurve && (
                 <Line
                     points={bmCurve}
                     color="#ff0000"
@@ -281,7 +374,7 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
             )}
 
             {/* SF diagram */}
-            {sfCurve && sfCurve.length > 1 && (
+            {sfCurve && (
                 <Line
                     points={sfCurve}
                     color="#0000ff"
@@ -291,7 +384,7 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
 
             {/* Label */}
             {(showLabels || hovered || selected) && (
-                <Html position={center} center>
+                <Html position={[0, 0, 0]} center>
                     <div style={{
                         background: 'rgba(0,0,0,0.85)',
                         color: 'white',
@@ -314,7 +407,7 @@ const Beam3D = ({ element, floorLevel, showDiagrams, selected, onClick, showLabe
 // 3D SLAB COMPONENT
 // ============================================================================
 
-const Slab3D = ({ element, floorLevel, opacity, visible = true, onClick }) => {
+const Slab3D = ({ element, floorLevel, opacity, visible = true, onClick, wireframe = false }) => {
     if (!visible) return null;
 
     const thickness = element.properties.thickness || 0.2;
@@ -338,13 +431,14 @@ const Slab3D = ({ element, floorLevel, opacity, visible = true, onClick }) => {
                 element.properties.depth
             ]} />
             <meshStandardMaterial
-                key={`mat-${opacity}`}
+                key={`mat-${opacity}-${wireframe}`}
                 color="#cccccc"
                 transparent={true}
                 depthWrite={true}
                 opacity={opacity}
                 roughness={0.7}
                 side={THREE.DoubleSide}
+                wireframe={wireframe}
             />
         </mesh>
     );
@@ -508,6 +602,94 @@ const StructuralGrid3D = ({ size = 100, spacing = 5, visible = true }) => {
 };
 
 // ============================================================================
+// 3D WALL COMPONENT
+// ============================================================================
+
+const Wall3D = ({ element, floorLevel, floorHeight, opacity = 1, selected, onClick, showLabels = true, wireframe = false, diagramScale = 25, sectionDisplayType = 'rectangle' }) => {
+    const [hovered, setHovered] = useState(false);
+
+    const start = new THREE.Vector3(
+        element.position.start.x,
+        floorLevel,
+        element.position.start.y
+    );
+
+    const end = new THREE.Vector3(
+        element.position.end.x,
+        floorLevel,
+        element.position.end.y
+    );
+
+    const direction = new THREE.Vector3().subVectors(end, start);
+    const length = direction.length();
+    const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    const height = element.properties.height || floorHeight;
+    const thickness = element.properties.thickness || 0.20;
+
+    const quaternion = new THREE.Quaternion();
+    quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 0, 1),
+        direction.clone().normalize()
+    );
+
+    let color = '#a0a0a0'; // Grey for walls
+    if (selected) color = '#4CAF50';
+    else if (hovered) color = '#FF9800';
+
+    return (
+        <group>
+            <mesh
+                position={[center.x, floorLevel + height / 2, center.z]}
+                quaternion={quaternion}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClick(element);
+                }}
+                onPointerOver={(e) => {
+                    e.stopPropagation();
+                    setHovered(true);
+                }}
+                onPointerOut={() => setHovered(false)}
+            >
+                <boxGeometry args={[thickness, height, length]} />
+                <meshStandardMaterial
+                    color={color}
+                    transparent={opacity < 1}
+                    opacity={opacity}
+                    roughness={0.5}
+                    wireframe={wireframe}
+                />
+            </mesh>
+
+            {/* Edge highlights */}
+            <group position={[center.x, floorLevel + height / 2, center.z]} quaternion={quaternion}>
+                <lineSegments>
+                    <edgesGeometry args={[new THREE.BoxGeometry(thickness, height, length)]} />
+                    <lineBasicMaterial color="#000000" linewidth={1} />
+                </lineSegments>
+            </group>
+
+            {/* Label */}
+            {(showLabels || hovered || selected) && (
+                <Html position={[center.x, floorLevel + height + 0.5, center.z]} center>
+                    <div style={{
+                        background: 'rgba(0,0,0,0.85)',
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        whiteSpace: 'nowrap',
+                        pointerEvents: 'none'
+                    }}>
+                        {element.id}
+                    </div>
+                </Html>
+            )}
+        </group>
+    );
+};
+
+// ============================================================================
 // STRUCTURAL SCENE COMPONENTS
 // ============================================================================
 
@@ -521,19 +703,36 @@ export const StructureScene = ({
     showForces = false,
     showDeflection = false,
     floorVisibility = {},
-    componentVisibility = { columns: true, beams: true, slabs: true, gridLines: true, voids: true, labels: true },
+    layerVisibility = { columns: true, beams: true, slabs: true, gridLines: true, voids: true, labels: true },
     slabOpacity = 0.4,
     groundOpacity = 1.0,
     showGrid = true,
     showFoundation = true,
     showFloorLabels = true,
-    diagramScale = 25
+    diagramScale = 25,
+    // Universal props from StructuralVisualizationComponent
+    showConcrete = true,
+    showRebar = true,
+    showDimensions = true,
+    wireframe = false,
+    sectionDisplayType = 'rectangle'
 }) => {
     const columns = elements.filter(el => el.type === 'column');
     const beams = elements.filter(el => el.type === 'beam');
     const slabs = elements.filter(el => el.type === 'slab');
+    const walls = elements.filter(el => el.type === 'wall');
+    const voids = elements.filter(el => el.type === 'void');
 
-
+    // Merge universal toggles with layer visibility
+    const activeLayerVisibility = useMemo(() => ({
+        ...layerVisibility,
+        columns: layerVisibility.columns && showConcrete,
+        beams: layerVisibility.beams && showConcrete,
+        slabs: layerVisibility.slabs && showConcrete,
+        walls: layerVisibility.walls && showConcrete,
+        labels: layerVisibility.labels && showDimensions,
+        gridLines: layerVisibility.gridLines && showGrid
+    }), [layerVisibility, showConcrete, showDimensions, showGrid]);
 
     // Calculate a better diagram scale based on building max moment
     const effectiveScale = useMemo(() => {
@@ -543,17 +742,12 @@ export const StructureScene = ({
             if (m > maxM) maxM = m;
         });
         if (maxM < 0.01) return 0.1;
-        // Scale so max moment is roughly 1.5 meters, modified by zoom scale
         return (0.8 / maxM) * (diagramScale / 25);
     }, [elements, diagramScale]);
 
     return (
         <group>
-            {/* Lighting (Optional if provided by parent, but safe here) */}
-            {/* Parent Canvas often provides lighting, but we can keep it for standalone robustness if needed */}
-            {/* For use in StructuralVisualizationComponent, we might allow parent to handle lighting */}
-
-            {/* Ground plane (Site surface) */}
+            {/* Ground plane */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
                 <planeGeometry args={[100, 100]} />
                 <meshStandardMaterial
@@ -564,8 +758,8 @@ export const StructureScene = ({
                 />
             </mesh>
 
-            {/* Custom Labeled Grid */}
-            <StructuralGrid3D size={100} spacing={5} visible={showGrid} />
+            {/* Grid */}
+            <StructuralGrid3D size={100} spacing={5} visible={activeLayerVisibility.gridLines} />
 
             {/* Foundation */}
             <Foundation3D columns={columns} visible={showFoundation} opacity={groundOpacity} />
@@ -580,7 +774,6 @@ export const StructureScene = ({
 
                 return (
                     <group key={floorName}>
-                        {/* Floor level indicator */}
                         <FloorLevelIndicator
                             level={floorIndex}
                             height={floorZ}
@@ -588,8 +781,7 @@ export const StructureScene = ({
                             visible={showFloorLabels}
                         />
 
-                        {/* Columns */}
-                        {componentVisibility.columns && columns.filter(el => el.layer === floorName).map(column => (
+                        {activeLayerVisibility.columns && columns.filter(el => el.layer === floorName).map(column => (
                             <Column3D
                                 key={column.id}
                                 element={column}
@@ -598,42 +790,57 @@ export const StructureScene = ({
                                 showDeflection={showDeflection}
                                 showDiagrams={showDiagrams}
                                 diagramScale={effectiveScale}
-                                selected={selectedElement?.id === column.id}
                                 onClick={onElementClick}
-                                showLabels={componentVisibility.labels}
+                                showLabels={activeLayerVisibility.labels}
+                                wireframe={wireframe}
+                                sectionDisplayType={sectionDisplayType}
                             />
                         ))}
 
-                        {/* Beams */}
-                        {componentVisibility.beams && beams.filter(el => el.layer === floorName).map(beam => (
+                        {activeLayerVisibility.beams && beams.filter(el => el.layer === floorName).map(beam => (
                             <Beam3D
                                 key={`${beam.id}-${floorIndex}`}
                                 element={beam}
                                 floorLevel={floorZ + floorHeight}
                                 showDiagrams={showDiagrams}
                                 diagramScale={effectiveScale}
-                                selected={selectedElement?.id === beam.id}
                                 onClick={onElementClick}
-                                showLabels={componentVisibility.labels}
+                                showLabels={activeLayerVisibility.labels}
+                                wireframe={wireframe}
+                                sectionDisplayType={sectionDisplayType}
                             />
                         ))}
 
-                        {/* Slabs */}
-                        {componentVisibility.slabs && slabs.filter(el => el.layer === floorName).map(slab => (
+                        {activeLayerVisibility.slabs && slabs.filter(el => el.layer === floorName).map(slab => (
                             <Slab3D
                                 key={slab.id}
                                 element={slab}
                                 floorLevel={floorZ + floorHeight}
                                 opacity={slabOpacity}
+                                visible={!voids.some(v => v.layer === floorName && v.id === `void-${slab.id}`)}
                                 selected={selectedElement?.id === slab.id}
                                 onClick={onElementClick}
+                                wireframe={wireframe}
+                            />
+                        ))}
+
+                        {activeLayerVisibility.walls && walls.filter(el => el.layer === floorName).map(wall => (
+                            <Wall3D
+                                key={wall.id}
+                                element={wall}
+                                floorLevel={floorZ}
+                                floorHeight={floorHeight}
+                                opacity={1.0}
+                                selected={selectedElement?.id === wall.id}
+                                onClick={onElementClick}
+                                showLabels={activeLayerVisibility.labels}
+                                wireframe={wireframe}
                             />
                         ))}
                     </group>
                 );
             })}
 
-            {/* Axes helper */}
             <axesHelper args={[5]} />
         </group>
     );
@@ -648,11 +855,15 @@ const Complete3DStructureView = ({
     showDiagrams = { moment: false, shear: false },
     showForces = false,
     showDeflection = false,
-    layerVisibility = {}
+    floorVisibility = {},
+    layerVisibility = {},
+    groundOpacity = 1.0,
+    setGroundOpacity,
+    slabOpacity = 0.4,
+    setSlabOpacity,
+    sectionDisplayType = 'rectangle'
 }) => {
     const [controlsEnabled, setControlsEnabled] = useState(true);
-    const [slabOpacity, setSlabOpacity] = useState(0.4);
-    const [groundOpacity, setGroundOpacity] = useState(1.0);
     const [showFoundation, setShowFoundation] = useState(true);
     const [showFloorLabels, setShowFloorLabels] = useState(true);
 
@@ -689,6 +900,7 @@ const Complete3DStructureView = ({
                     showDiagrams={showDiagrams}
                     showForces={showForces}
                     showDeflection={showDeflection}
+                    floorVisibility={floorVisibility}
                     layerVisibility={layerVisibility}
                     slabOpacity={slabOpacity}
                     groundOpacity={groundOpacity}

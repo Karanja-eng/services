@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Calculator, Save, FileText, AlertCircle, CheckCircle, Menu, X, Loader2, Zap, Shield, GitBranch } from 'lucide-react';
+import { Calculator, Save, FileText, AlertCircle, CheckCircle, Menu, X, Loader2, Zap, Shield, GitBranch, Building2 } from 'lucide-react';
 import MomentDistributionCalculator from '../ReinforcedConcrete/Beams/distribution';
+import SteelStructureBuilderWrapper from './SteelStructureBuilderWrapper';
 
 const API_BASE_URL = "http://localhost:8001/steel_backend";
 
@@ -91,6 +92,13 @@ const SteelDesignApp = ({ isDark = false }) => {
     spans: [{ length: 6, load: 50 }, { length: 8, load: 60 }],
     supports: ['fixed', 'pinned', 'pinned']
   });
+
+  // Steel Structure Builder States
+  const [steelGrade, setSteelGrade] = useState('S275');
+  const [defaultBeamSection, setDefaultBeamSection] = useState('305x165x54');
+  const [defaultColumnSection, setDefaultColumnSection] = useState('203x203x60');
+  const [isBuilderFullScreen, setIsBuilderFullScreen] = useState(false);
+  const [sectionDisplayType, setSectionDisplayType] = useState('I-section'); // NEW: Section display type
 
   const calculateBeamDesign = () => {
     const section = steelSections[beamData.sectionType].find(s => s.designation === beamData.section);
@@ -1003,7 +1011,7 @@ const SteelDesignApp = ({ isDark = false }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-green-600 text-white shadow-2xl">
         <div className="container mx-auto px-4 py-6">
@@ -1025,15 +1033,15 @@ const SteelDesignApp = ({ isDark = false }) => {
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
-        {sidebarOpen && (
-          <aside className="w-64 bg-white dark:bg-slate-800 shadow-xl min-h-screen border-r-2 border-gray-200 dark:border-slate-700">
+        {/* Sidebar - Hidden when Structure Builder is in full-screen */}
+        {sidebarOpen && !isBuilderFullScreen && (
+          <aside className="w-64 bg-gray-800 text-white shadow-xl min-h-screen border-r-2 border-gray-700">
             <nav className="p-4 space-y-2">
               <button
                 onClick={() => { setActiveModule('beam'); setResults(null); }}
                 className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${activeModule === 'beam'
-                  ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-600 text-white shadow-lg'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
               >
                 Beam Design
@@ -1042,8 +1050,8 @@ const SteelDesignApp = ({ isDark = false }) => {
               <button
                 onClick={() => { setActiveModule('column'); setResults(null); }}
                 className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${activeModule === 'column'
-                  ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-600 text-white shadow-lg'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
               >
                 Column Design
@@ -1052,12 +1060,86 @@ const SteelDesignApp = ({ isDark = false }) => {
               <button
                 onClick={() => { setActiveModule('frame'); setResults(null); }}
                 className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${activeModule === 'frame'
-                  ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-600 text-white shadow-lg'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
               >
                 Frame Analysis
               </button>
+
+              <button
+                onClick={() => {
+                  setActiveModule('structure-builder');
+                  setResults(null);
+                  setIsBuilderFullScreen(true); // Automatically go fullscreen
+                }}
+                className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${activeModule === 'structure-builder'
+                  ? 'bg-gray-600 text-white shadow-lg'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+              >
+                <Building2 size={18} />
+                Structure Builder
+              </button>
+
+              {/* Steel Configuration - Only show when Structure Builder is active */}
+              {activeModule === 'structure-builder' && (
+                <div className="mt-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
+                  <h3 className="font-semibold text-white mb-3 text-sm">Steel Configuration</h3>
+
+                  <label className="block mb-3">
+                    <span className="text-xs text-gray-300">Steel Grade</span>
+                    <select
+                      value={steelGrade}
+                      onChange={e => setSteelGrade(e.target.value)}
+                      className="w-full mt-1 px-2 py-1.5 text-sm bg-gray-600 text-white border border-gray-500 rounded focus:outline-none focus:border-gray-400"
+                    >
+                      <option value="S275">S275</option>
+                      <option value="S355">S355</option>
+                      <option value="S450">S450</option>
+                    </select>
+                  </label>
+
+                  <label className="block mb-3">
+                    <span className="text-xs text-gray-300">Default Beam (UB)</span>
+                    <select
+                      value={defaultBeamSection}
+                      onChange={e => setDefaultBeamSection(e.target.value)}
+                      className="w-full mt-1 px-2 py-1.5 text-sm bg-gray-600 text-white border border-gray-500 rounded focus:outline-none focus:border-gray-400"
+                    >
+                      {steelSections.UB.map(s => (
+                        <option key={s.designation} value={s.designation}>{s.designation}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block">
+                    <span className="text-xs text-gray-300">Default Column (UC)</span>
+                    <select
+                      value={defaultColumnSection}
+                      onChange={e => setDefaultColumnSection(e.target.value)}
+                      className="w-full mt-1 px-2 py-1.5 text-sm bg-gray-600 text-white border border-gray-500 rounded focus:outline-none focus:border-gray-400"
+                    >
+                      {steelSections.UC.map(s => (
+                        <option key={s.designation} value={s.designation}>{s.designation}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block mt-3">
+                    <span className="text-xs text-gray-300">Section Display</span>
+                    <select
+                      value={sectionDisplayType}
+                      onChange={e => setSectionDisplayType(e.target.value)}
+                      className="w-full mt-1 px-2 py-1.5 text-sm bg-gray-600 text-white border border-gray-500 rounded focus:outline-none focus:border-gray-400"
+                    >
+                      <option value="I-section">I-Section (Steel)</option>
+                      <option value="rectangle">Rectangle (RC)</option>
+                      <option value="circle">Circle (Tubular)</option>
+                    </select>
+                  </label>
+                </div>
+              )}
 
               <div className="pt-4 mt-4 border-t-2 border-gray-200">
                 <button
@@ -1083,12 +1165,28 @@ const SteelDesignApp = ({ isDark = false }) => {
           </aside>
         )}
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
+        {/* Main Content - Full width when Structure Builder is active */}
+        <main className={isBuilderFullScreen ? "w-full p-0" : "flex-1 p-6"}>
+          <div className={isBuilderFullScreen ? "w-full h-full" : "max-w-7xl mx-auto"}>
             {activeModule === 'beam' && renderBeamModule()}
             {activeModule === 'column' && renderColumnModule()}
             {activeModule === 'frame' && renderFrameModule()}
+            {activeModule === 'structure-builder' && (
+              <SteelStructureBuilderWrapper
+                steelGrade={steelGrade}
+                defaultBeamSection={defaultBeamSection}
+                defaultColumnSection={defaultColumnSection}
+                sectionDisplayType={sectionDisplayType}
+                isFullScreen={isBuilderFullScreen}
+                onFullScreenChange={(fullScreen) => {
+                  setIsBuilderFullScreen(fullScreen);
+                  if (!fullScreen) {
+                    // Return to beam module when exiting full-screen
+                    setActiveModule('beam');
+                  }
+                }}
+              />
+            )}
 
             {renderResults()}
           </div>
