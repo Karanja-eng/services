@@ -1017,12 +1017,14 @@ def create_3d_scene(
         # Create main slab
         floor_mesh = create_floor_slab(floor.walls)
         if floor_mesh:
+            floor_mesh.metadata["bimMetadata"] = {"System": "architecture", "Subsystem": "floors", "Layer": "floors"}
             scene.add_geometry(floor_mesh, node_name="floor_base")
             
         # Create individual room floor meshes (Heatmap)
         for i, room in enumerate(floor.rooms):
             room_mesh = create_room_floor_mesh(room)
             if room_mesh:
+                room_mesh.metadata["bimMetadata"] = {"System": "architecture", "Subsystem": "rooms", "Layer": room.type}
                 scene.add_geometry(room_mesh, node_name=f"room_{i}_{room.type}")
 
     # Estimate average wall thickness for openings if not uniform
@@ -1031,18 +1033,21 @@ def create_3d_scene(
     for i, wall in enumerate(floor.walls):
         meshes = create_wall_with_openings(wall, height, floor.doors, floor.windows)
         for j, mesh in enumerate(meshes):
+            mesh.metadata["bimMetadata"] = wall.metadata.get("bimMetadata", {"System": "architecture", "Subsystem": "walls", "Layer": "walls"})
             scene.add_geometry(mesh, node_name=f"wall_{i}_{j}")
 
     for i, door in enumerate(floor.doors):
         # Use wall thickness for door depth
         mesh = create_door_mesh(door, height, avg_thickness)
         if mesh:
+            mesh.metadata["bimMetadata"] = door.metadata.get("bimMetadata", {"System": "architecture", "Subsystem": "doors", "Layer": "doors"})
             scene.add_geometry(mesh, node_name=f"door_{i}")
 
     for i, window in enumerate(floor.windows):
          # Use wall thickness for window depth
         mesh = create_window_mesh(window, height, avg_thickness)
         if mesh:
+            mesh.metadata["bimMetadata"] = window.metadata.get("bimMetadata", {"System": "architecture", "Subsystem": "windows", "Layer": "windows"})
             scene.add_geometry(mesh, node_name=f"window_{i}")
 
     if show_roof:
@@ -1082,6 +1087,9 @@ async def upload(file: UploadFile = File(...)):
         path = UPLOADS / f"{file_id}_{file.filename}"
 
         content = await file.read()
+        nparr = np.frombuffer(content, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
         with open(path, "wb") as f:
             f.write(content)
 
@@ -1098,7 +1106,7 @@ async def upload(file: UploadFile = File(...)):
                 {"file_id": file_id, "filename": file.filename, "width": w, "height": h, "type": "image"}
             )
         else:
-            if file.filename.lower().endswith(('.dxf', '.ifc')):
+            if file.filename.lower().endswith(('.dxf', '.ifc', '.dwg', '.dwf', '.pln', '.bpn', '.bat')):
                 uploaded_files[file_id] = {
                     "path": str(path),
                     "filename": file.filename,
@@ -1111,7 +1119,7 @@ async def upload(file: UploadFile = File(...)):
                 )
             else:
                 path.unlink()
-                raise HTTPException(400, "Invalid file type. Supported: Images, DXF, IFC")
+                raise HTTPException(400, "Invalid file type. Supported: Images, DXF, IFC, DWG, PLN, BPN, BAT")
     except Exception as e:
         raise HTTPException(500, str(e))
 
@@ -1218,6 +1226,7 @@ async def process(
         # Post-process walls to include segments for frontend & generate IDs
         for i, wall in enumerate(walls):
             wall.id = f"wall_{i}"
+            wall.metadata = {"bimMetadata": {"System": "architecture", "Subsystem": "walls", "Layer": "walls"}}
             wall.segments = get_wall_segments(wall, wall_height, doors, windows)
 
         floors = []
@@ -1297,6 +1306,7 @@ async def generate_3d(
         # Apply IDs and segments
         for i, wall in enumerate(walls):
             wall.id = f"wall_{i}"
+            wall.metadata = {"bimMetadata": {"System": "architecture", "Subsystem": "walls", "Layer": "walls"}}
             wall.segments = get_wall_segments(wall, wall_height, doors, windows)
 
         floor = FloorPlan(
@@ -1311,6 +1321,9 @@ async def generate_3d(
             railings=railings,
             dimensions={},
         )
+        # Apply metadata to openings
+        for d in doors: d.metadata["bimMetadata"] = {"System": "architecture", "Subsystem": "doors", "Layer": "doors"}
+        for w in windows: w.metadata["bimMetadata"] = {"System": "architecture", "Subsystem": "windows", "Layer": "windows"}
 
         model = BuildingModel(
             floors=[floor],
@@ -1356,5 +1369,109 @@ async def delete_file(file_id: str):
         del uploaded_files[file_id]
         return {"status": "deleted"}
     raise HTTPException(404, "File not found")
+
+
+@router.post("/api/generate-bim-component")
+async def generate_bim_component(
+    payload: str = Form(...),
+    category: str = Form(...)
+):
+    try:
+        import json
+        data = json.loads(payload)
+        
+        # Create a temporary BuildingModel with one floor containing our new component
+        # This is a simplified version for small component generation
+        from .models import BuildingModel, FloorPlan, Wall, Opening
+        
+        floor = FloorPlan(
+            level=0,
+            walls=[],
+            doors=[],
+            windows=[],
+            rooms=[]
+        )
+        
+        if category == "wall":
+            # Map payload to Wall model
+            wall = Wall(
+                id=f"gen_wall_{uuid.uuid4().hex[:4]}",
+                start=[0, 0],
+                end=[data.get('length', 5.0), 0],
+                thickness=data.get('thickness', 0.15),
+                length=data.get('length', 5.0),
+                metadata={"bimMetadata": {"System": "architecture", "Subsystem": "walls", "Layer": "walls"}}
+            )
+            floor.walls.append(wall)
+            
+            # Add openings if provided
+            for op in data.get('openings', []):
+                floor.doors.append(Opening(
+                    id=op.get('id', 'door'),
+                    position=op.get('position', [0, 0]),
+                    width=1.0, height=2.1, rotation=0, type='door',
+                    metadata={"bimMetadata": {"System": "architecture", "Subsystem": f"{op.get('type')}s", "Layer": f"{op.get('type')}s"}}
+                ))
+        
+        elif category == "column":
+            from .models import Column
+            col = Column(
+                id=f"gen_col_{uuid.uuid4().hex[:4]}",
+                position=[0, 0],
+                size=data.get('width', 0.3),
+                height=data.get('height', 3.0),
+                metadata={"bimMetadata": {"System": "structural", "Subsystem": "columns", "Layer": "columns"}}
+            )
+            floor.columns.append(col)
+
+        elif category == "beam":
+            from .models import Wall as BeamLikeWall
+            # Beams are often modeled as walls in simplified 2D->3D
+            beam = BeamLikeWall(
+                id=f"gen_beam_{uuid.uuid4().hex[:4]}",
+                start=[0, 0],
+                end=[data.get('length', 5.0), 0],
+                thickness=data.get('width', 0.2), # Beam width
+                length=data.get('length', 5.0),
+                metadata={"bimMetadata": {"System": "structural", "Subsystem": "beams", "Layer": "beams"}}
+            )
+            floor.walls.append(beam)
+
+        elif category == "slab":
+            from .models import Room as SlabRoom
+            # Slabs can be modeled by room bounding boxes
+            slab = SlabRoom(
+                id=f"gen_slab_{uuid.uuid4().hex[:4]}",
+                name=data.get('mark', "Slab"),
+                type="slab",
+                polygon=[[0,0], [data.get('width', 5.0), 0], [data.get('width', 5.0), data.get('depth', 5.0)], [0, data.get('depth', 5.0)]],
+                area=data.get('area', 25.0),
+                metadata={"bimMetadata": {"System": "structural", "Subsystem": "slabs", "Layer": "slabs"}}
+            )
+            floor.rooms.append(slab)
+        
+        model = BuildingModel(
+            floors=[floor],
+            totalFloors=1,
+            wallHeight=data.get('height', 3.0)
+        )
+        
+        # Generate GLB
+        output_filename = f"gen_{uuid.uuid4().hex}.glb"
+        output_path = GENERATED / output_filename
+        
+        # Use Blender if possible
+        success = await run_blender_generation(model, str(output_path))
+        if not success:
+            scene = create_3d_scene(floor, data.get('height', 3.0), True, False)
+            scene.export(file_type="glb", file_obj=str(output_path))
+            
+        return {
+            "glb_url": f"/generated/{output_filename}",
+            "metadata": {"category": category, "status": "success"}
+        }
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 

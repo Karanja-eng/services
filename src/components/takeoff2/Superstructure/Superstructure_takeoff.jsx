@@ -4,7 +4,7 @@ import axios from "axios";
 import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
-import Superstructure3DScene from "./Superstructure3DScene";
+import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 console.log("🚀 API BASE URL:", API_BASE);
@@ -143,6 +143,10 @@ const SuperstructureTakeoffApp = () => {
     fd.append("file", file);
     try {
       const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || "Upload failed");
+      }
       const data = await res.json();
       setFileId(data.file_id);
 
@@ -150,6 +154,7 @@ const SuperstructureTakeoffApp = () => {
       await processFloorplan(data.file_id);
     } catch (err) {
       console.error("❌ Upload failed:", err);
+      alert("Upload failed: " + err.message);
     } finally {
       setProcessing(false);
     }
@@ -168,7 +173,7 @@ const SuperstructureTakeoffApp = () => {
   };
 
   const autoFillInputs = (data) => {
-    if (!data || !data.floors[0]) return;
+    if (!data || !data.floors || !data.floors[0]) return;
     const floor = data.floors[0];
 
     // 1. Walls Logic
@@ -243,8 +248,9 @@ const SuperstructureTakeoffApp = () => {
       columns.forEach(c => {
         const count = parseInt(c.count) || 0;
         for (let i = 0; i < count; i++) {
+          const safeId = (typeof c.id === 'number') ? c.id + i : `${c.id}_${i}`;
           explodedColumns.push({
-            id: parseInt(c.id) + i,
+            id: safeId,
             width: parseFloat(c.width) || 0.2,
             depth: parseFloat(c.depth) || 0.2,
             height: parseFloat(c.height) || 3.0,
@@ -257,8 +263,9 @@ const SuperstructureTakeoffApp = () => {
       beams.forEach(b => {
         const count = parseInt(b.count) || 0;
         for (let i = 0; i < count; i++) {
+          const safeId = (typeof b.id === 'number') ? b.id + i : `${b.id}_${i}`;
           explodedBeams.push({
-            id: parseInt(b.id) + i,
+            id: safeId,
             length: parseFloat(b.length) || 1.0,
             width: parseFloat(b.width) || 0.2,
             depth: parseFloat(b.depth) || 0.4,
@@ -271,8 +278,8 @@ const SuperstructureTakeoffApp = () => {
         columns: explodedColumns,
         beams: explodedBeams,
         // Slabs usually count=1 per entry in this logic
-        slabs: slabs.filter(s => s.area).map(s => ({
-          id: parseInt(s.id) || 1,
+        slabs: slabs.filter(s => s.area).map((s, i) => ({
+          id: (typeof s.id === 'number' || !isNaN(parseInt(s.id))) ? parseInt(s.id) : `slab_${i}`,
           area: parseFloat(s.area) || 10.0,
           thickness: parseFloat(s.thickness) || 0.15,
           mark: s.mark || "S1"
@@ -402,9 +409,9 @@ const SuperstructureTakeoffApp = () => {
                       </div>
                       <div className="text-center">
                         <h3 className="text-lg font-bold text-gray-900">AI Floorplan Extraction</h3>
-                        <p className="text-sm text-gray-500 max-w-sm">Upload your floor plan (PNG, JPG, DXF, IFC) to automatically extract wall lengths, door/window counts, and column positions.</p>
+                        <p className="text-sm text-gray-500 max-w-sm">Upload your floor plan (Images, DXF, IFC, DWG, ArchiCAD) to automatically extract project data.</p>
                       </div>
-                      <input type="file" id="takeoff-upload" className="hidden" accept="image/*,.dxf,.ifc" onChange={handleUpload} />
+                      <input type="file" id="takeoff-upload" className="hidden" accept="image/*,.dxf,.ifc,.dwg,.dwf,.pln,.bpn,.bat" onChange={handleUpload} />
                       <label htmlFor="takeoff-upload" className="cursor-pointer bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200">
                         Select Plan (Image/CAD)
                       </label>
@@ -667,15 +674,12 @@ const SuperstructureTakeoffApp = () => {
                     </button>
                   </div>
 
-                  <Canvas shadows dpr={[1, 2]}>
-                    <Suspense fallback={null}>
-                      <Superstructure3DScene
-                        buildingData={buildingData}
-                        selectedId={selectedElement?.id}
-                        onSelect={setSelectedElement}
-                      />
-                    </Suspense>
-                  </Canvas>
+                  <StructuralVisualizationComponent
+                    componentType="superstructure"
+                    buildingData={buildingData}
+                    selectedId={selectedElement?.id}
+                    onSelect={setSelectedElement}
+                  />
                 </>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">

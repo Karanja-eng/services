@@ -8,6 +8,7 @@ from pathlib import Path
 # Optional libraries for CAD formats
 try:
     import ezdxf
+    from ezdxf.addons import odafc
     EZDXF_OK = True
 except ImportError:
     EZDXF_OK = False
@@ -27,6 +28,8 @@ class CADFileProcessor:
     def __init__(self):
         self.ppm = 100 
         self.unit_factor = 1.0 # Default to meters
+        # Optional: Configure ODA path if needed
+        # odafc.win_exec_path = r"C:\Program Files\ODA\ODAFileConverter.exe"
 
     def _auto_detect_unit(self, dims: List[float]) -> float:
         # Heuristic: if dimensions are very large (thousands), assume mm
@@ -34,16 +37,38 @@ class CADFileProcessor:
             return 0.001
         return 1.0
 
-    def extract_from_file(self, file_path: str) -> Optional[FloorPlan]:
+    def extract_from_file(self, file_path: str) -> Optional[List[FloorPlan]]:
         suffix = Path(file_path).suffix.lower()
         if suffix == '.dxf':
             result = self.extract_from_dxf(file_path)
             return [result] if result else []
+        elif suffix in ('.dwg', '.dwf'):
+            result = self.extract_from_dwg(file_path)
+            return [result] if result else []
         elif suffix in ['.ifc']:
             return self.extract_from_ifc(file_path)
+        elif suffix in ['.bat']:
+            logger.warning(f"Batch/Unsupported AutoCAD format detected: {suffix}.")
+            raise ValueError(f"Direct parsing of {suffix} is limited. Please use .DXF or .DWG.")
+        elif suffix in ['.pln', '.bpn']:
+            logger.warning(f"ArchiCAD format detected: {suffix}.")
+            raise ValueError(f"ArchiCAD project files ({suffix}) are difficult to parse directly. Please export them to IFC format and upload again.")
         else:
             logger.error(f"Unsupported CAD file format: {suffix}")
             return None
+
+    def extract_from_dwg(self, file_path: str) -> Optional[FloorPlan]:
+        if not EZDXF_OK:
+            logger.error("ezdxf/odafc not installed")
+            return None
+        
+        try:
+            # odafc converts DWG to DXF internally using ODA File Converter
+            doc = odafc.readfile(file_path)
+            return self._process_ezdxf_doc(doc)
+        except Exception as e:
+            logger.error(f"ODA File Converter failed or not found. Ensure ODAFileConverter is installed. Error: {e}")
+            raise ValueError(f"Failed to parse DWG: {e}. Please ensure ODA File Converter is installed or export to DXF.")
 
     def extract_from_dxf(self, file_path: str) -> Optional[FloorPlan]:
         if not EZDXF_OK:
@@ -52,66 +77,103 @@ class CADFileProcessor:
         
         try:
             doc = ezdxf.readfile(file_path)
-            msp = doc.modelspace()
-            
-            # Detect unit from bounds
-            limits = doc.header.get('$LIMMAX', [10, 10])
-            self.unit_factor = self._auto_detect_unit([limits[0], limits[1]])
-            
-            walls, doors, windows, rooms = [], [], [], []
-            
-            # Refined layer patterns
-            WALL_PATTERNS = ["WALL", "STRUCT", "BRICK", "PARTITION"]
-            DOOR_PATTERNS = ["DOOR", "OPENING", "ENTRY"]
-            WINDOW_PATTERNS = ["WIND", "GLAZ", "SASH"]
-
-            def matches(layer, patterns):
-                return any(p in layer.upper() for p in patterns)
-
-            for entity in msp.query('LINE LWPOLYLINE POLYLINE'):
-                layer = entity.dxf.layer.upper()
-                
-                if matches(layer, WALL_PATTERNS):
-                    if entity.dxftype() == 'LINE':
-                        start = [entity.dxf.start.x * self.unit_factor, entity.dxf.start.y * self.unit_factor]
-                        end = [entity.dxf.end.x * self.unit_factor, entity.dxf.end.y * self.unit_factor]
-                        length = ((start[0]-end[0])**2 + (start[1]-end[1])**2)**0.5
-                        walls.append(Wall(
-                            id=f"wall_dxf_{len(walls)}",
-                            start=start,
-                            end=end,
-                            thickness=0.15,
-                            length=round(length, 2)
-                        ))
-            
-            for block_ref in msp.query('INSERT'):
-                name = block_ref.dxf.name.upper()
-                pos = [block_ref.dxf.insert.x * self.unit_factor, block_ref.dxf.insert.y * self.unit_factor]
-                rot = block_ref.dxf.rotation
-                
-                if matches(name, DOOR_PATTERNS):
-                    doors.append(Opening(
-                        id=f"door_dxf_{len(doors)}",
-                        position=pos,
-                        width=0.9, height=2.1, rotation=rot, type="door"
-                    ))
-                elif matches(name, WINDOW_PATTERNS):
-                    windows.append(Opening(
-                        id=f"window_dxf_{len(windows)}",
-                        position=pos,
-                        width=1.2, height=1.2, rotation=rot, type="window"
-                    ))
-
-            return FloorPlan(
-                level=0,
-                walls=walls,
-                doors=doors,
-                windows=windows,
-                rooms=rooms
-            )
+            return self._process_ezdxf_doc(doc)
         except Exception as e:
             logger.exception(f"Error parsing DXF: {e}")
             return None
+
+    def _process_ezdxf_doc(self, doc) -> FloorPlan:
+        msp = doc.modelspace()
+        
+        # Detect unit from bounds or header
+        unit_code = doc.header.get('$INSUNITS', 0)
+        # 0=Unspecified, 1=Inches, 4=Millimeters, 6=Meters, etc.
+        if unit_code == 4: self.unit_factor = 0.001
+        elif unit_code == 6: self.unit_factor = 1.0
+        else:
+            limits = doc.header.get('$LIMMAX', [10, 10])
+            self.unit_factor = self._auto_detect_unit([limits[0], limits[1]])
+        
+        walls, doors, windows, rooms, columns, beams = [], [], [], [], [], []
+        
+        # Refined layer/block patterns
+        WALL_PATTERNS = ["WALL", "STRUCT", "BRICK", "PARTITION", "A-WALL"]
+        DOOR_PATTERNS = ["DOOR", "OPENING", "ENTRY", "A-DOOR"]
+        WINDOW_PATTERNS = ["WIND", "GLAZ", "SASH", "A-GLAZ"]
+        COLUMN_PATTERNS = ["COLU", "PILLAR", "POST", "A-COLS"]
+        BEAM_PATTERNS = ["BEAM", "GIRD", "S-BEAM"]
+
+        def matches(tag, patterns):
+            tag = tag.upper()
+            return any(p in tag for p in patterns)
+
+        # 1. Geometry Extraction
+        for entity in msp.query('LINE LWPOLYLINE POLYLINE CIRCLE ARC'):
+            layer = entity.dxf.layer.upper()
+            etype = entity.dxftype()
+            
+            # Handle Walls / Lines
+            if matches(layer, WALL_PATTERNS):
+                if etype == 'LINE':
+                    start = [entity.dxf.start.x * self.unit_factor, entity.dxf.start.y * self.unit_factor]
+                    end = [entity.dxf.end.x * self.unit_factor, entity.dxf.end.y * self.unit_factor]
+                    length = ((start[0]-end[0])**2 + (start[1]-end[1])**2)**0.5
+                    walls.append(Wall(
+                        id=f"wall_dxf_{len(walls)}",
+                        start=start, end=end,
+                        thickness=0.15, length=round(length, 2)
+                    ))
+                elif etype in ('LWPOLYLINE', 'POLYLINE'):
+                    points = [(p[0] * self.unit_factor, p[1] * self.unit_factor) for p in entity.get_points()]
+                    for i in range(len(points) - 1):
+                        p1, p2 = points[i], points[i+1]
+                        length = ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)**0.5
+                        if length < 0.05: continue # Skip tiny segments
+                        walls.append(Wall(
+                            id=f"wall_dxf_{len(walls)}",
+                            start=list(p1), end=list(p2),
+                            thickness=0.15, length=round(length, 2)
+                        ))
+
+        # 2. Block Reference Extraction (Doors, Windows, Columns)
+        for block_ref in msp.query('INSERT'):
+            name = block_ref.dxf.name.upper()
+            layer = block_ref.dxf.layer.upper()
+            pos = [block_ref.dxf.insert.x * self.unit_factor, block_ref.dxf.insert.y * self.unit_factor]
+            rot = block_ref.dxf.rotation
+            
+            if matches(name, DOOR_PATTERNS) or matches(layer, DOOR_PATTERNS):
+                doors.append(Opening(id=f"door_dxf_{len(doors)}", position=pos, width=0.9, height=2.1, rotation=rot, type="door"))
+            elif matches(name, WINDOW_PATTERNS) or matches(layer, WINDOW_PATTERNS):
+                windows.append(Opening(id=f"window_dxf_{len(windows)}", position=pos, width=1.2, height=1.2, rotation=rot, type="window"))
+            elif matches(name, COLUMN_PATTERNS) or matches(layer, COLUMN_PATTERNS):
+                columns.append({"id": f"col_dxf_{len(columns)}", "position": pos, "size": 0.2})
+            elif matches(name, BEAM_PATTERNS) or matches(layer, BEAM_PATTERNS):
+                beams.append({"id": f"beam_dxf_{len(beams)}", "position": pos, "length": 1.0})
+
+        # 3. Text/Room Extraction
+        for text_ent in msp.query('TEXT MTEXT'):
+            content = text_ent.plain_text().strip() if hasattr(text_ent, 'plain_text') else text_ent.dxf.text.strip()
+            if len(content) > 1 and not content.replace('.','').isdigit():
+                # Likely a room label
+                pos = [text_ent.dxf.insert.x * self.unit_factor, text_ent.dxf.insert.y * self.unit_factor]
+                rooms.append(Room(
+                    id=f"room_dxf_{len(rooms)}",
+                    name=content,
+                    center=pos,
+                    type="room",
+                    area=10.0 # Placeholder area
+                ))
+
+        return FloorPlan(
+            level=0,
+            walls=walls,
+            doors=doors,
+            windows=windows,
+            rooms=rooms,
+            columns=columns,
+            beams=beams
+        )
 
     def extract_from_ifc(self, file_path: str) -> List[FloorPlan]:
         if not IFC_OK:

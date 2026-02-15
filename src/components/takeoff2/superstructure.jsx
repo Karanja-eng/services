@@ -19,6 +19,7 @@ import {
 import axios from "axios";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
+import StructuralVisualizationComponent from '../Drawings/visualise_component';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 
@@ -154,10 +155,17 @@ const RCCSuperstructureApp = () => {
     fd.append("file", file);
     try {
       const res = await fetch(`${API_BASE}/arch_pro/upload`, { method: "POST", body: fd });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || "Upload failed");
+      }
       const data = await res.json();
       setFileId(data.file_id);
       await processFloorplan(data.file_id);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+      alert("Upload failed: " + err.message);
+    }
     setProcessing(false);
   };
 
@@ -174,7 +182,7 @@ const RCCSuperstructureApp = () => {
   };
 
   const autoFillRCInputs = (data) => {
-    if (!data || !data.floors[0]) return;
+    if (!data || !data.floors || !data.floors[0]) return;
     const floor = data.floors[0];
 
     // 1. Columns: Map directly (assuming CV returns individual columns)
@@ -476,7 +484,7 @@ const RCCSuperstructureApp = () => {
         <UniversalTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+          tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
         />
       </div>
 
@@ -896,6 +904,27 @@ const RCCSuperstructureApp = () => {
         {activeTab === "boq" && (
           <div className="h-full">
             <UniversalBOQ items={takeoffData} />
+          </div>
+        )}
+
+        {activeTab === "3d-view" && (
+          <div className="h-full bg-slate-900 rounded-2xl overflow-hidden relative border border-slate-800 shadow-2xl">
+            {buildingData ? (
+              <StructuralVisualizationComponent
+                componentType="rccSuperstructure"
+                buildingData={buildingData}
+              />
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center space-y-4 text-slate-400">
+                <div className="p-8 bg-slate-800 rounded-full">
+                  <Eye className="w-16 h-16 opacity-20" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-slate-200 uppercase tracking-widest">3D Model Pending</h3>
+                  <p className="text-sm max-w-xs">Upload a plan to generate the architectural visualization.</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

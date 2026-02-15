@@ -16,6 +16,7 @@ class Wall(BaseModel):
     polygon: Optional[List[List[float]]] = None
     holes: Optional[List[List[List[float]]]] = None
     segments: Optional[List[WallSegment]] = None
+    metadata: Dict = {}
 
 class Opening(BaseModel):
     id: str
@@ -26,6 +27,7 @@ class Opening(BaseModel):
     type: str # door_swing, window_regular, etc.
     sillHeight: Optional[float] = 0.9
     confidence: Optional[float] = 1.0
+    metadata: Dict = {}
 
 class Furniture(BaseModel):
     id: str
@@ -35,6 +37,7 @@ class Furniture(BaseModel):
     type: str # bed, chair, sink, tub, etc.
     category: str = "general" # plumbing, electrical, furniture
     confidence: Optional[float] = 1.0
+    metadata: Dict = {}
 
 class TechnicalPoint(BaseModel):
     id: str
@@ -43,12 +46,14 @@ class TechnicalPoint(BaseModel):
     category: str # electrical, plumbing
     height: float # height from floor
     rotation: float = 0.0
+    metadata: Dict = {}
 
 class Conduit(BaseModel):
     id: str
     path: List[List[float]] # List of [x, y, z] points
     type: str # electrical, water, waste
     diameter: float = 0.02
+    metadata: Dict = {}
 
 class Room(BaseModel):
     id: str
@@ -60,6 +65,7 @@ class Room(BaseModel):
     holes: Optional[List[List[List[float]]]] = None
     items: List[str] = [] # IDs of items in this room
     confidence: Optional[float] = 1.0
+    metadata: Dict = {}
 
 class FloorPlan(BaseModel):
     level: int

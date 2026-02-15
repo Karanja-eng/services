@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Download, Printer, Plus, Trash2, Edit2, Copy, Eye, X } from "lucide-react";
 import descriptionsData from "../../takeoff2/descriptions";
 
@@ -6,33 +6,24 @@ import descriptionsData from "../../takeoff2/descriptions";
 const ALL_DESCRIPTIONS = Object.values(descriptionsData).flat();
 
 const EditableDescription = ({ value, onChange, placeholder }) => {
-  const [inputValue, setInputValue] = useState(value);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef(null);
 
-  // Sync internal state if prop value changes externally
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
   const filteredSuggestions = useMemo(() => {
-    if (!inputValue) return [];
-    const lowerInput = inputValue.toLowerCase();
+    if (!value) return [];
+    const lowerInput = value.toLowerCase();
     return ALL_DESCRIPTIONS.filter((desc) =>
       desc.toLowerCase().includes(lowerInput)
-    ).slice(0, 10); // Limit to top 10 matches for performance
-  }, [inputValue]);
+    ).slice(0, 10);
+  }, [value]);
 
   const handleSelect = (desc) => {
-    setInputValue(desc);
     onChange(desc);
     setShowSuggestions(false);
   };
 
   const handleChange = (e) => {
-    const newVal = e.target.value;
-    setInputValue(newVal);
-    onChange(newVal);
+    onChange(e.target.value);
     setShowSuggestions(true);
   };
 
@@ -55,7 +46,7 @@ const EditableDescription = ({ value, onChange, placeholder }) => {
     >
       <input
         type="text"
-        value={inputValue}
+        value={value || ""}
         onChange={handleChange}
         onFocus={() => setShowSuggestions(true)}
         placeholder={placeholder}
@@ -250,19 +241,20 @@ export default function EnglishMethodTakeoffSheet({
 
   const [takeoffItems, setTakeoffItems] = useState(initialItems);
 
+  // Use a ref to keep the latest onChange callback without triggering the effect loop
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
   // Notify parent of changes whenever items update
   useEffect(() => {
-    if (onChange) {
-      onChange(takeoffItems);
+    if (onChangeRef.current) {
+      onChangeRef.current(takeoffItems);
     }
-  }, [takeoffItems, onChange]);
+  }, [takeoffItems]);
 
-  // Sync internal state if initialItems prop changes
-  useEffect(() => {
-    if (initialItems && initialItems !== takeoffItems) {
-      setTakeoffItems(initialItems);
-    }
-  }, [initialItems]);
+
 
   const calculateDimensionTotal = (dimensions) => {
     if (!dimensions || dimensions.length === 0) return 0;
@@ -281,125 +273,128 @@ export default function EnglishMethodTakeoffSheet({
     }, 0);
   };
 
-  const addNewClass = () => {
-    // Find the next Bill No logic could be improved, simplistic for now
-    const lastItem = takeoffItems[takeoffItems.length - 1];
-    const nextBillNo = lastItem
-      ? String.fromCharCode(lastItem.billNo.charCodeAt(0) + 1)
-      : "A";
+  const addNewClass = useCallback(() => {
+    setTakeoffItems((prevItems) => {
+      const lastItem = prevItems[prevItems.length - 1];
+      const nextBillNo = lastItem
+        ? String.fromCharCode(lastItem.billNo.charCodeAt(0) + 1)
+        : "A";
 
-    const newHeader = {
-      id: Date.now(),
-      billNo: nextBillNo,
-      itemNo: "",
-      description: "NEW WORK CLASS",
-      dimensions: [],
-      quantity: null,
-      unit: "",
-      rate: null,
-      amount: null,
-      isHeader: true,
-    };
+      const newHeader = {
+        id: Date.now(),
+        billNo: nextBillNo,
+        itemNo: "",
+        description: "NEW WORK CLASS",
+        dimensions: [],
+        quantity: null,
+        unit: "",
+        rate: null,
+        amount: null,
+        isHeader: true,
+      };
 
-    // Add start item for this class
-    const newItem = {
-      id: Date.now() + 1,
-      billNo: nextBillNo,
-      itemNo: "1",
-      description: "Description of work...",
-      dimensions: [
-        {
-          id: 1,
-          length: "",
-          width: "",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 0,
-      unit: "m²",
-      rate: 0,
-      amount: 0,
-      isHeader: false,
-    };
+      const newItem = {
+        id: Date.now() + 1,
+        billNo: nextBillNo,
+        itemNo: "1",
+        description: "Description of work...",
+        dimensions: [
+          {
+            id: 1,
+            length: "",
+            width: "",
+            height: "",
+            number: "1",
+            deduction: false,
+          },
+        ],
+        quantity: 0,
+        unit: "m²",
+        rate: 0,
+        amount: 0,
+        isHeader: false,
+      };
+      return [...prevItems, newHeader, newItem];
+    });
+  }, []);
 
-    setTakeoffItems([...takeoffItems, newHeader, newItem]);
-  };
-
-  const updateItemNo = (id, newNo) => {
+  const updateItemNo = useCallback((id, newNo) => {
     setTakeoffItems((items) =>
       items.map((item) => (item.id === id ? { ...item, itemNo: newNo } : item))
     );
-  };
+  }, []);
 
-  const addNewItem = () => {
-    const newItem = {
-      id: Date.now(),
-      billNo: "A",
-      itemNo: "",
-      description: "New item",
-      dimensions: [
-        {
-          id: 1,
-          length: "",
-          width: "",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 0,
-      unit: "m²",
-      rate: 0,
-      amount: 0,
-      isHeader: false,
-    };
-    setTakeoffItems([...takeoffItems, newItem]);
-  };
+  const addNewItem = useCallback(() => {
+    setTakeoffItems((prevItems) => [
+      ...prevItems,
+      {
+        id: Date.now(),
+        billNo: "A",
+        itemNo: "",
+        description: "New item",
+        dimensions: [
+          {
+            id: 1,
+            length: "",
+            width: "",
+            height: "",
+            number: "1",
+            deduction: false,
+          },
+        ],
+        quantity: 0,
+        unit: "m²",
+        rate: 0,
+        amount: 0,
+        isHeader: false,
+      },
+    ]);
+  }, []);
 
-  const addItemBelow = (index) => {
-    const newItem = {
-      id: Date.now(),
-      billNo: takeoffItems[index].billNo, // Inherit Bill No
-      itemNo: "",
-      description: "",
-      dimensions: [
-        {
-          id: 1,
-          length: "",
-          width: "",
-          height: "",
-          number: "1",
-          deduction: false,
-        },
-      ],
-      quantity: 0,
-      unit: "m²",
-      rate: 0,
-      amount: 0,
-      isHeader: false,
-    };
-    const newItems = [...takeoffItems];
-    newItems.splice(index + 1, 0, newItem);
-    setTakeoffItems(newItems);
-  };
+  const addItemBelow = useCallback((index) => {
+    setTakeoffItems((prevItems) => {
+      const newItem = {
+        id: Date.now(),
+        billNo: prevItems[index].billNo,
+        itemNo: "",
+        description: "",
+        dimensions: [
+          {
+            id: 1,
+            length: "",
+            width: "",
+            height: "",
+            number: "1",
+            deduction: false,
+          },
+        ],
+        quantity: 0,
+        unit: "m²",
+        rate: 0,
+        amount: 0,
+        isHeader: false,
+      };
+      const newItems = [...prevItems];
+      newItems.splice(index + 1, 0, newItem);
+      return newItems;
+    });
+  }, []);
 
-  const deleteItem = (id) => {
-    setTakeoffItems(takeoffItems.filter((item) => item.id !== id));
-  };
+  const deleteItem = useCallback((id) => {
+    setTakeoffItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  }, []);
 
-  const updateItemDescription = (id, newDesc) => {
-    setTakeoffItems(
-      takeoffItems.map((item) =>
+  const updateItemDescription = useCallback((id, newDesc) => {
+    setTakeoffItems((prevItems) =>
+      prevItems.map((item) =>
         item.id === id ? { ...item, description: newDesc } : item
       )
     );
-  };
+  }, []);
 
-  const updateRate = (itemId, newRate) => {
-    setTakeoffItems(
-      takeoffItems.map((item) => {
+  const updateRate = useCallback((itemId, newRate) => {
+    setTakeoffItems((prevItems) =>
+      prevItems.map((item) => {
         if (item.id === itemId) {
           const rate = parseFloat(newRate) || 0;
           const amount = item.quantity ? item.quantity * rate : 0;
@@ -408,11 +403,11 @@ export default function EnglishMethodTakeoffSheet({
         return item;
       })
     );
-  };
+  }, []);
 
-  const updateDimension = (itemId, dimId, field, value) => {
-    setTakeoffItems(
-      takeoffItems.map((item) => {
+  const updateDimension = useCallback((itemId, dimId, field, value) => {
+    setTakeoffItems((prevItems) =>
+      prevItems.map((item) => {
         if (item.id === itemId) {
           const updatedDimensions = item.dimensions.map((dim) =>
             dim.id === dimId ? { ...dim, [field]: value } : dim
@@ -429,11 +424,11 @@ export default function EnglishMethodTakeoffSheet({
         return item;
       })
     );
-  };
+  }, []);
 
-  const addDimension = (itemId) => {
-    setTakeoffItems(
-      takeoffItems.map((item) => {
+  const addDimension = useCallback((itemId) => {
+    setTakeoffItems((prevItems) =>
+      prevItems.map((item) => {
         if (item.id === itemId) {
           return {
             ...item,
@@ -453,7 +448,7 @@ export default function EnglishMethodTakeoffSheet({
         return item;
       })
     );
-  };
+  }, []);
 
   const handlePrint = () => {
     window.print();

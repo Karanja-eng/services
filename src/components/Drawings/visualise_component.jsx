@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useRef, useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import CadObjects3D from "./CadObjects3D";
 import {
@@ -30,6 +30,7 @@ import {
   Crosshair,
   Minimize2,
   Code,
+  LayoutGrid,
 } from "lucide-react";
 import * as THREE_CONST from "three";
 
@@ -40,6 +41,13 @@ import {
   isRCComponent,
   COMPONENT_TYPES
 } from "./componentRegistry";
+
+// BIM Integration Imports
+import { panelRegistry } from "../../ui-state/PanelRegistry";
+import { taskbarController } from "../../ui-state/TaskbarController";
+import { layerController } from "../../ui-state/LayerController";
+import { registerAllPanels } from "../../ui-state/PanelRegistryConfig";
+import ComponentsPanel from "../ui-panels/components/ComponentsPanel";
 
 // RC Settings Component
 import RCSettings from "./RCSettings";
@@ -77,6 +85,9 @@ import {
   DrawSlabMS3,
 } from "../ReinforcedConcrete/Slabs/slab_THReeD";
 import { DrawRetainingWallMRW1 } from "../ReinforcedConcrete/Rwall/Retaining_Three";
+
+// Register all BIM panels on module load
+registerAllPanels();
 
 // Legacy ELEMENT_COMPONENTS - kept for backward compatibility
 // New components should use the COMPONENT_REGISTRY instead
@@ -129,6 +140,38 @@ const DEFAULT_OPACITY = {
 // ERROR BOUNDARY COMPONENT
 // ============================================================================
 
+const BimModel = ({ url }) => {
+  const { scene } = useGLTF(url);
+
+  useEffect(() => {
+    if (scene) {
+      // Automatically register objects with layers based on their name or extras
+      scene.traverse(node => {
+        if (node.isMesh) {
+          // Check for glTF extras (metadata we attached in the backend)
+          const metadata = node.userData.bimMetadata || node.userData.gltfExtras?.bimMetadata;
+          if (metadata) {
+            layerController.registerNode(node, metadata);
+          } else {
+            // Fallback: Try to infer from name if metadata missing
+            const name = node.name.toLowerCase();
+            if (name.includes('wall')) layerController.registerNode(node, { System: 'architecture', Subsystem: 'walls', Layer: 'walls' });
+            else if (name.includes('door')) layerController.registerNode(node, { System: 'architecture', Subsystem: 'doors', Layer: 'doors' });
+            else if (name.includes('window')) layerController.registerNode(node, { System: 'architecture', Subsystem: 'windows', Layer: 'windows' });
+          }
+        }
+      });
+      return () => {
+        scene.traverse(node => {
+          if (node.isMesh) layerController.unregisterNode(node);
+        });
+      };
+    }
+  }, [scene]);
+
+  return <primitive object={scene} />;
+};
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -168,8 +211,25 @@ class ErrorBoundary extends React.Component {
 // ============================================================================
 
 function CameraController({ viewMode, resetTrigger }) {
-  const { camera, gl } = useThree();
+  const { camera, gl, scene } = useThree();
   const controlsRef = useRef();
+
+  // BIM Scene Observer - Automatically registers nodes with metadata
+  useEffect(() => {
+    const registerMetadataNodes = () => {
+      scene.traverse(node => {
+        if (node.userData && node.userData.metadata) {
+          layerController.registerNode(node, node.userData.metadata);
+        }
+      });
+    };
+
+    // Run on initial load and whenever the scene structure might have changed
+    registerMetadataNodes();
+
+    // Optional: Setup a MutationObserver or similar if needed, 
+    // but for R3F, useEffect with scene is usually enough for static updates.
+  }, [scene]);
 
   useEffect(() => {
     if (!camera) return;
@@ -226,7 +286,7 @@ function CameraController({ viewMode, resetTrigger }) {
   return (
     <OrbitControls
       ref={controlsRef}
-      enableDamping={true}
+      enableDamping={false}
       dampingFactor={0.05}
       enableZoom={true}
       enablePan={true}
@@ -508,6 +568,20 @@ export default function StructuralVisualizationComponent({
     return {};
   });
 
+  // BIM Integration State
+  const [componentsOpen, setComponentsOpen] = useState(false);
+  const [registeredPanels, setRegisteredPanels] = useState([]);
+  const [generatedModels, setGeneratedModels] = useState([]);
+
+  useEffect(() => {
+    const unsubComponents = taskbarController.subscribe(state => setComponentsOpen(state.componentsPanelOpen));
+    const unsubPanels = panelRegistry.subscribe(setRegisteredPanels);
+    return () => {
+      unsubComponents();
+      unsubPanels();
+    };
+  }, []);
+
   // ========== HANDLERS ==========
   const handleResetView = () => {
     setViewMode("perspective");
@@ -531,6 +605,37 @@ export default function StructuralVisualizationComponent({
       onPrint();
     } else {
       console.log("Printing...");
+    }
+  };
+
+  const handlePanelGenerate = async (id, payload) => {
+    try {
+      console.log(`Generating for ${id}:`, payload);
+
+      // Call backend generate-3d endpoint
+      const formData = new FormData();
+      formData.append("payload", JSON.stringify(payload));
+      formData.append("category", payload.category);
+
+      // Note: In a real app, use a proper API client and env vars
+      const response = await fetch("http://localhost:8001/api/generate-bim-component", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Failed to generate component");
+
+      const result = await response.json();
+      if (result.glb_url) {
+        setGeneratedModels(prev => [...prev, {
+          id: `${id}_${Date.now()}`,
+          url: `http://localhost:8001${result.glb_url}`,
+          metadata: result.metadata
+        }]);
+      }
+    } catch (error) {
+      console.error("Generation error:", error);
+      alert(`Error generating ${id}: ${error.message}`);
     }
   };
 
@@ -730,6 +835,21 @@ export default function StructuralVisualizationComponent({
             <button className={`p-2 rounded ${hoverBg}`} title="Zoom Extents">
               <Maximize2 className="w-4 h-4" />
             </button>
+
+            <div
+              className={`h-6 w-px ${isDark ? "bg-gray-700" : "bg-gray-300"}`}
+            ></div>
+
+            {/* BIM Layers Toggle */}
+            <button
+              onClick={() => taskbarController.toggleComponents()}
+              className={`p-2 rounded transition-colors flex items-center space-x-1 ${componentsOpen ? "bg-blue-600 text-white" : hoverBg
+                }`}
+              title="Components & Layers"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="text-sm">Components</span>
+            </button>
           </div>
 
           {/* Center Section - Member Info */}
@@ -851,6 +971,11 @@ export default function StructuralVisualizationComponent({
               {/* ...#######################Render Sample Members ############    */}
 
               {/* .............................Render Sample Members .............................                                  */}
+
+              {/* Render Generated BIM Models */}
+              {generatedModels.map(model => (
+                <BimModel key={model.id} url={model.url} />
+              ))}
 
               <PerspectiveCamera makeDefault position={[5, 3, 5]} />
               {/* Camera Controller */}
@@ -1079,6 +1204,25 @@ export default function StructuralVisualizationComponent({
               </div>
             </div>
           )}
+
+          {/* BIM Panels */}
+          <ComponentsPanel
+            isOpen={componentsOpen}
+            onClose={() => taskbarController.setComponentsOpen(false)}
+          />
+
+          {registeredPanels.map(({ id, isOpen, component: PanelComponent, label }) => {
+            if (!isOpen || !PanelComponent) return null;
+            return (
+              <PanelComponent
+                key={id}
+                isOpen={isOpen}
+                onClose={() => panelRegistry.togglePanel(id)}
+                onGenerate={(payload) => handlePanelGenerate(id, payload)}
+                selectedElementId={null} // Placeholder for selection system integration
+              />
+            );
+          })}
         </div>
       </div>
 

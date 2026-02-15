@@ -24,6 +24,7 @@ import { StaircaseScene } from '../takeoff2/Stairs/StaircaseScene';
 import { StaircaseSettings, defaultStaircaseSettings } from '../takeoff2/Stairs/StaircaseSettings';
 import { SepticScene } from '../takeoff2/septik/SepticScene';
 import { SepticSettings, defaultSepticSettings } from '../takeoff2/septik/SepticSettings';
+import { Superstructure3DScene } from '../takeoff2/Superstructure/Superstructure3DScene';
 
 // Import RC Components (existing)
 import {
@@ -155,6 +156,18 @@ export const QS_COMPONENTS = {
         type: COMPONENT_TYPES.QS,
         name: 'External Works & Paving',
         category: 'QS Takeoff - External Works',
+    },
+    superstructure: {
+        Scene: Superstructure3DScene,
+        type: COMPONENT_TYPES.QS,
+        name: 'Superstructure Takeoff',
+        category: 'QS Takeoff - Superstructure',
+    },
+    rccSuperstructure: {
+        Scene: Superstructure3DScene,
+        type: COMPONENT_TYPES.QS,
+        name: 'RCC Superstructure',
+        category: 'RC Design - Superstructure',
     },
     // Add more QS components here as they are refactored
 };

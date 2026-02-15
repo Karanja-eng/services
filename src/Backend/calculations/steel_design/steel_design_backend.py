@@ -8,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 import math
+import json
+import os
+from pathlib import Path
 from enum import Enum
 from calculations.Beams.moment_distribution_backend import (
     MomentDistributionSolver,
@@ -40,538 +43,69 @@ class SteelSection(BaseModel):
     ry: float  # mm
 
 
-# Universal Beams
-UB_SECTIONS = [
-    SteelSection(
-        designation="914x419x388",
-        depth=921.0,
-        width=420.5,
-        tw=21.4,
-        tf=36.6,
-        r=24.1,
-        area=494.0,
-        Ix=504000,
-        Iy=47200,
-        Zx=11000,
-        Zy=2250,
-        rx=319,
-        ry=97.9,
-    ),
-    SteelSection(
-        designation="914x305x289",
-        depth=926.6,
-        width=307.7,
-        tw=19.5,
-        tf=32.0,
-        r=19.1,
-        area=368.0,
-        Ix=404000,
-        Iy=20500,
-        Zx=8720,
-        Zy=1330,
-        rx=331,
-        ry=74.6,
-    ),
-    SteelSection(
-        designation="838x292x226",
-        depth=850.9,
-        width=293.8,
-        tw=16.1,
-        tf=26.8,
-        r=17.8,
-        area=288.0,
-        Ix=285000,
-        Iy=16500,
-        Zx=6700,
-        Zy=1120,
-        rx=315,
-        ry=75.7,
-    ),
-    SteelSection(
-        designation="762x267x197",
-        depth=769.8,
-        width=268.0,
-        tw=15.6,
-        tf=25.4,
-        r=16.5,
-        area=251.0,
-        Ix=204000,
-        Iy=12800,
-        Zx=5300,
-        Zy=953,
-        rx=285,
-        ry=71.4,
-    ),
-    SteelSection(
-        designation="686x254x170",
-        depth=692.9,
-        width=255.8,
-        tw=14.5,
-        tf=23.7,
-        r=15.2,
-        area=217.0,
-        Ix=150000,
-        Iy=10200,
-        Zx=4330,
-        Zy=800,
-        rx=263,
-        ry=68.5,
-    ),
-    SteelSection(
-        designation="610x305x238",
-        depth=633.0,
-        width=311.4,
-        tw=18.6,
-        tf=31.4,
-        r=16.5,
-        area=303.0,
-        Ix=198000,
-        Iy=23100,
-        Zx=6260,
-        Zy=1480,
-        rx=256,
-        ry=87.4,
-    ),
-    SteelSection(
-        designation="610x229x140",
-        depth=617.2,
-        width=230.2,
-        tw=13.1,
-        tf=19.6,
-        r=12.7,
-        area=179.0,
-        Ix=98400,
-        Iy=5960,
-        Zx=3190,
-        Zy=518,
-        rx=234,
-        ry=57.7,
-    ),
-    SteelSection(
-        designation="533x210x122",
-        depth=544.5,
-        width=211.9,
-        tw=12.7,
-        tf=21.3,
-        r=12.7,
-        area=155.0,
-        Ix=73700,
-        Iy=5500,
-        Zx=2710,
-        Zy=519,
-        rx=218,
-        ry=59.6,
-    ),
-    SteelSection(
-        designation="457x191x98",
-        depth=467.2,
-        width=192.8,
-        tw=11.4,
-        tf=19.6,
-        r=10.2,
-        area=125.0,
-        Ix=49500,
-        Iy=4050,
-        Zx=2120,
-        Zy=421,
-        rx=199,
-        ry=56.9,
-    ),
-    SteelSection(
-        designation="457x152x82",
-        depth=465.1,
-        width=153.5,
-        tw=10.5,
-        tf=18.9,
-        r=10.2,
-        area=105.0,
-        Ix=41100,
-        Iy=1870,
-        Zx=1770,
-        Zy=243,
-        rx=198,
-        ry=42.2,
-    ),
-    SteelSection(
-        designation="406x178x74",
-        depth=412.8,
-        width=179.5,
-        tw=9.5,
-        tf=16.0,
-        r=10.2,
-        area=94.5,
-        Ix=30800,
-        Iy=2920,
-        Zx=1490,
-        Zy=326,
-        rx=181,
-        ry=55.6,
-    ),
-    SteelSection(
-        designation="356x171x67",
-        depth=363.4,
-        width=173.2,
-        tw=9.1,
-        tf=15.7,
-        r=10.2,
-        area=85.5,
-        Ix=22200,
-        Iy=2490,
-        Zx=1220,
-        Zy=287,
-        rx=161,
-        ry=53.9,
-    ),
-    SteelSection(
-        designation="305x165x54",
-        depth=310.4,
-        width=166.9,
-        tw=7.9,
-        tf=13.7,
-        r=8.9,
-        area=68.4,
-        Ix=12400,
-        Iy=1870,
-        Zx=802,
-        Zy=224,
-        rx=135,
-        ry=52.3,
-    ),
-    SteelSection(
-        designation="305x127x48",
-        depth=311.0,
-        width=125.2,
-        tw=9.0,
-        tf=14.0,
-        r=8.9,
-        area=61.0,
-        Ix=10900,
-        Iy=816,
-        Zx=703,
-        Zy=130,
-        rx=134,
-        ry=36.6,
-    ),
-    SteelSection(
-        designation="254x146x43",
-        depth=259.6,
-        width=147.3,
-        tw=7.2,
-        tf=12.7,
-        r=7.6,
-        area=54.8,
-        Ix=7840,
-        Iy=1450,
-        Zx=604,
-        Zy=197,
-        rx=120,
-        ry=51.4,
-    ),
-    SteelSection(
-        designation="254x102x28",
-        depth=260.4,
-        width=102.2,
-        tw=6.3,
-        tf=10.0,
-        r=7.6,
-        area=36.0,
-        Ix=4010,
-        Iy=358,
-        Zx=308,
-        Zy=70.1,
-        rx=105,
-        ry=31.5,
-    ),
-    SteelSection(
-        designation="203x133x30",
-        depth=206.8,
-        width=133.9,
-        tw=6.4,
-        tf=9.6,
-        r=7.6,
-        area=38.2,
-        Ix=3070,
-        Iy=786,
-        Zx=297,
-        Zy=117,
-        rx=89.6,
-        ry=45.4,
-    ),
-    SteelSection(
-        designation="178x102x19",
-        depth=177.8,
-        width=101.2,
-        tw=4.8,
-        tf=7.9,
-        r=7.6,
-        area=24.3,
-        Ix=1360,
-        Iy=250,
-        Zx=153,
-        Zy=49.4,
-        rx=74.9,
-        ry=32.1,
-    ),
-    SteelSection(
-        designation="152x89x16",
-        depth=152.4,
-        width=88.7,
-        tw=4.5,
-        tf=7.7,
-        r=7.6,
-        area=20.3,
-        Ix=834,
-        Iy=155,
-        Zx=109,
-        Zy=34.9,
-        rx=64.1,
-        ry=27.6,
-    ),
-    SteelSection(
-        designation="127x76x13",
-        depth=127.0,
-        width=76.0,
-        tw=4.0,
-        tf=7.6,
-        r=7.6,
-        area=16.5,
-        Ix=473,
-        Iy=104,
-        Zx=74.5,
-        Zy=27.3,
-        rx=53.6,
-        ry=25.1,
-    ),
-]
+# Helper to load steel sections from JSON
+def load_sections_from_json(file_path: str, root_key: str) -> List[SteelSection]:
+    sections = []
+    try:
+        # Resolve path relative to this file
+        current_dir = Path(__file__).parent
+        abs_path = current_dir / file_path
+        
+        if not abs_path.exists():
+            print(f"Warning: Steel section file not found: {abs_path}")
+            return []
+            
+        with open(abs_path, "r") as f:
+            data = json.load(f)
+            raw_sections = data.get(root_key, [])
+            
+            for s in raw_sections:
+                try:
+                    # Mapping based on the provided JSON structure
+                    # Plastic Modulus in JSON is Zxx/Zyy in BS codes
+                    # Radius of gyration is in cm, converting to mm
+                    sections.append(SteelSection(
+                        designation=str(s.get("Serial_Size", "Unknown")),
+                        depth=float(s.get("Depth_D_mm", 0)),
+                        width=float(s.get("Width_B_mm", 0)),
+                        tw=float(s.get("Thickness_Web_t_mm", 0)),
+                        tf=float(s.get("Thickness_Flange_T_mm", 0)),
+                        r=float(s.get("Root_Radius_r_mm", 0)),
+                        area=float(s.get("Area_section_cm2", 0)),
+                        Ix=float(s.get("Second_moment_area_x-x_cm4", 0)),
+                        Iy=float(s.get("Second_moment_area_y-y_cm4", 0)),
+                        Zx=float(s.get("Plastic_Modulus_x-x_cm3", 0)),
+                        Zy=float(s.get("Plastic_Modulus_y-y_cm3", 0)),
+                        rx=float(s.get("Radius_of_gyration_x-x_cm", 0)) * 10,
+                        ry=float(s.get("Radius_of_gyration_y-y_cm", 0)) * 10
+                    ))
+                except (ValueError, TypeError) as e:
+                    continue
+    except Exception as e:
+        print(f"Failed to load steel sections from {file_path}: {e}")
+    return sections
 
-# Universal Columns
-UC_SECTIONS = [
-    SteelSection(
-        designation="356x406x634",
-        depth=474.6,
-        width=424.0,
-        tw=47.6,
-        tf=77.0,
-        r=15.2,
-        area=808.0,
-        Ix=272000,
-        Iy=131000,
-        Zx=11500,
-        Zy=6180,
-        rx=581,
-        ry=403,
-    ),
-    SteelSection(
-        designation="356x406x551",
-        depth=455.6,
-        width=418.5,
-        tw=42.1,
-        tf=67.5,
-        r=15.2,
-        area=702.0,
-        Ix=228000,
-        Iy=111000,
-        Zx=10000,
-        Zy=5310,
-        rx=570,
-        ry=397,
-    ),
-    SteelSection(
-        designation="356x368x202",
-        depth=374.6,
-        width=374.7,
-        tw=19.9,
-        tf=30.2,
-        r=15.2,
-        area=257.0,
-        Ix=84800,
-        Iy=39800,
-        Zx=4530,
-        Zy=2130,
-        rx=575,
-        ry=393,
-    ),
-    SteelSection(
-        designation="305x305x283",
-        depth=365.3,
-        width=321.8,
-        tw=26.9,
-        tf=44.1,
-        r=15.2,
-        area=361.0,
-        Ix=111000,
-        Iy=52100,
-        Zx=6070,
-        Zy=3240,
-        rx=554,
-        ry=380,
-    ),
-    SteelSection(
-        designation="305x305x240",
-        depth=352.5,
-        width=318.4,
-        tw=23.0,
-        tf=37.7,
-        r=15.2,
-        area=306.0,
-        Ix=92700,
-        Iy=43600,
-        Zx=5260,
-        Zy=2740,
-        rx=550,
-        ry=377,
-    ),
-    SteelSection(
-        designation="305x305x198",
-        depth=339.9,
-        width=314.5,
-        tw=19.1,
-        tf=31.4,
-        r=15.2,
-        area=252.0,
-        Ix=75500,
-        Iy=35600,
-        Zx=4440,
-        Zy=2260,
-        rx=547,
-        ry=376,
-    ),
-    SteelSection(
-        designation="254x254x167",
-        depth=289.1,
-        width=265.2,
-        tw=19.2,
-        tf=31.7,
-        r=12.7,
-        area=213.0,
-        Ix=49100,
-        Iy=23200,
-        Zx=3400,
-        Zy=1750,
-        rx=480,
-        ry=330,
-    ),
-    SteelSection(
-        designation="254x254x132",
-        depth=276.3,
-        width=261.3,
-        tw=15.3,
-        tf=25.3,
-        r=12.7,
-        area=168.0,
-        Ix=38700,
-        Iy=18300,
-        Zx=2800,
-        Zy=1400,
-        rx=480,
-        ry=330,
-    ),
-    SteelSection(
-        designation="254x254x107",
-        depth=266.7,
-        width=258.8,
-        tw=12.8,
-        tf=20.5,
-        r=12.7,
-        area=137.0,
-        Ix=31000,
-        Iy=14700,
-        Zx=2320,
-        Zy=1140,
-        rx=476,
-        ry=328,
-    ),
-    SteelSection(
-        designation="203x203x86",
-        depth=222.2,
-        width=209.1,
-        tw=12.7,
-        tf=20.5,
-        r=10.2,
-        area=110.0,
-        Ix=18300,
-        Iy=8640,
-        Zx=1650,
-        Zy=827,
-        rx=408,
-        ry=280,
-    ),
-    SteelSection(
-        designation="203x203x71",
-        depth=215.8,
-        width=206.4,
-        tw=10.3,
-        tf=17.3,
-        r=10.2,
-        area=90.8,
-        Ix=15100,
-        Iy=7150,
-        Zx=1400,
-        Zy=693,
-        rx=408,
-        ry=281,
-    ),
-    SteelSection(
-        designation="203x203x60",
-        depth=209.6,
-        width=205.2,
-        tw=9.4,
-        tf=14.2,
-        r=10.2,
-        area=75.8,
-        Ix=12400,
-        Iy=5880,
-        Zx=1180,
-        Zy=573,
-        rx=404,
-        ry=278,
-    ),
-    SteelSection(
-        designation="152x152x37",
-        depth=161.8,
-        width=154.4,
-        tw=8.0,
-        tf=11.5,
-        r=7.6,
-        area=47.4,
-        Ix=4880,
-        Iy=2320,
-        Zx=603,
-        Zy=301,
-        rx=321,
-        ry=221,
-    ),
-    SteelSection(
-        designation="152x152x30",
-        depth=157.6,
-        width=152.9,
-        tw=6.5,
-        tf=9.4,
-        r=7.6,
-        area=38.2,
-        Ix=3990,
-        Iy=1900,
-        Zx=506,
-        Zy=248,
-        rx=323,
-        ry=223,
-    ),
-    SteelSection(
-        designation="152x152x23",
-        depth=152.4,
-        width=152.2,
-        tw=5.8,
-        tf=6.8,
-        r=7.6,
-        area=29.8,
-        Ix=2900,
-        Iy=1390,
-        Zx=381,
-        Zy=183,
-        rx=312,
-        ry=216,
-    ),
-]
+# Load Sections Dynamically
+UB_SECTIONS = load_sections_from_json("universal_beams_sections.json", "Universal_Beams")
+UC_SECTIONS = load_sections_from_json("universal_columns.json", "Universal_Columns")
+
+# Fallback if JSONs are empty or missing
+if not UB_SECTIONS:
+    UB_SECTIONS = [
+        SteelSection(
+            designation="305x165x54",
+            depth=310.4, width=166.9, tw=7.9, tf=13.7, r=8.9, 
+            area=68.8, Ix=11696, Iy=1063, Zx=846, Zy=196, rx=130, ry=39.3
+        )
+    ]
+if not UC_SECTIONS:
+    UC_SECTIONS = [
+        SteelSection(
+            designation="203x203x60",
+            depth=209.6, width=205.8, tw=9.4, tf=14.2, r=12.7, 
+            area=76.9, Ix=6162, Iy=2065, Zx=660, Zy=306, rx=89.5, ry=51.8
+        )
+    ]
 
 STEEL_SECTIONS = {
     "UB": {s.designation: s for s in UB_SECTIONS},
@@ -834,7 +368,7 @@ def run_beam_checks(request: BeamDesignRequest) -> BeamDesignResponse:
     classification = classify_section(section, py)
 
     # Moment capacity (BS 5950 Cl 4.2.5)
-    Mc = (section.Zx * py) / 1_000_000  # kNm
+    Mc = (section.Zx * 1000 * py) / 1_000_000  # kNm (Zx is cm3, *1000 for mm3)
 
     # Shear capacity (BS 5950 Cl 4.2.3)
     Av = section.depth * section.tw  # mm²
@@ -843,7 +377,7 @@ def run_beam_checks(request: BeamDesignRequest) -> BeamDesignResponse:
     # Lateral torsional buckling (BS 5950 Cl 4.3)
     lambda_LT = (L / section.ry) * math.sqrt(py / 275)
     pb = py / (1 + 0.0005 * lambda_LT**2)  # Simplified
-    Mb = (section.Zx * pb) / 1_000_000  # kNm
+    Mb = (section.Zx * 1000 * pb) / 1_000_000  # kNm
 
     # Deflection check (serviceability)
     I = section.Ix * 10000  # mm⁴
@@ -874,9 +408,9 @@ def run_beam_checks(request: BeamDesignRequest) -> BeamDesignResponse:
         Pv=round(Pv, 2),
         delta_max=round(delta_max, 2),
         delta_limit=round(delta_limit, 2),
-        bending_ratio=round(bending_ratio * 100, 1),
-        shear_ratio=round(shear_ratio * 100, 1),
-        deflection_ratio=round(deflection_ratio * 100, 1),
+        bending_ratio=round(bending_ratio, 3),
+        shear_ratio=round(shear_ratio, 3),
+        deflection_ratio=round(deflection_ratio, 3),
         passed=passed,
         py=py,
         epsilon=round(math.sqrt(275 / py), 3),
@@ -922,8 +456,8 @@ def run_column_checks(request: ColumnDesignRequest) -> ColumnDesignResponse:
     Pc = (section.area * 100 * pc) / 1000  # kN
 
     # Moment capacities
-    Mcx = (section.Zx * py) / 1_000_000  # kNm
-    Mcy = (section.Zy * py) / 1_000_000  # kNm
+    Mcx = (section.Zx * 1000 * py) / 1_000_000  # kNm
+    Mcy = (section.Zy * 1000 * py) / 1_000_000  # kNm
 
     # Interaction check (BS 5950 Cl 4.8.3.3)
     axial_ratio = P / Pc if Pc > 0 else 100
@@ -944,9 +478,9 @@ def run_column_checks(request: ColumnDesignRequest) -> ColumnDesignResponse:
         lambda_x=round(lambda_x, 1),
         lambda_y=round(lambda_y, 1),
         pc=round(pc, 1),
-        axial_ratio=round(axial_ratio * 100, 1),
-        moment_ratio=round(moment_ratio * 100, 1),
-        interaction=round(interaction * 100, 1),
+        axial_ratio=round(axial_ratio, 3),
+        moment_ratio=round(moment_ratio, 3),
+        interaction=round(interaction, 3),
         passed=passed,
         dimensions={
             "depth": section.depth,
