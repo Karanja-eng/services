@@ -39,6 +39,15 @@
 !3D_INTEGRATION_GUIDE.js
 !builderCADExporter.js
 !StructuralClasses.js
+!cadGeometryUtils.js
+!cadStorageService.js
+!componentRegistry.js
+!builderCADExporter.js
+!StructuralClasses.js
+!SteelAnalysisAdapter.js
+!SteelPipelineAdapter.js
+!SteelStructureAdapter.js
+
 
 !universal_beams_sections.json
 !universal_bearing_piles.json

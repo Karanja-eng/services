@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Book, Plus, Search, Tag, Building, Home, School, Hospital, Briefcase, ShoppingCart } from 'lucide-react';
+import { Book, Plus, Search, Tag, Building, Home, School, Hospital, Briefcase, ShoppingCart, Box } from 'lucide-react';
 
 // ============================================================================
 // BS 6399 BUILDING CLASSIFICATION & LOADS
@@ -163,6 +163,27 @@ const BS6399_BUILDING_CLASSES = {
                 description: 'Halls, conference rooms'
             }
         }
+    },
+    steel_systems: {
+        icon: Box,
+        name: 'Steel Systems',
+        color: '#778899',
+        categories: {
+            roof_truss: {
+                name: 'Pitched Roof Trusses',
+                imposed_load: 0.75,
+                dead_load_typical: 0.5,
+                partition_allowance: 0.0,
+                description: 'Industrial and commercial roof systems'
+            },
+            floor_truss: {
+                name: 'Large Span Floors',
+                imposed_load: 3.5,
+                dead_load_typical: 2.0,
+                partition_allowance: 1.0,
+                description: 'Open web steel joists'
+            }
+        }
     }
 };
 
@@ -256,6 +277,23 @@ const BUILDING_TEMPLATES = [
         },
         structural_system: 'frame',
         thumbnail: '🏬'
+    },
+    {
+        id: 'pratt_truss_12m',
+        name: '12m Pratt Roof Truss',
+        category: 'steel_systems',
+        subcategory: 'roof_truss',
+        description: 'Standard 6-panel Pratt truss for industrial spans',
+        floors: 1,
+        bay_config: {
+            truss_type: 'Pratt',
+            span: 12.0,
+            depth: 1.5,
+            num_panels: 6,
+            pitch_angle: 15.0
+        },
+        structural_system: 'steel_truss',
+        thumbnail: '📐'
     }
 ];
 

@@ -31,6 +31,7 @@ const InteractiveStructureBuilder = ({
     onFullScreenChange,
     customAnalysisHandler,
     customDesignHandler,
+    customTemplateHandler,
     materialType = 'concrete',
     sectionDisplayType: propSectionDisplayType // Receive as prop but maybe override by default
 }) => {
@@ -348,7 +349,26 @@ const InteractiveStructureBuilder = ({
         }));
     }, [selectedElement]);
 
-    const handleSelectTemplate = useCallback((template) => {
+    const handleSelectTemplate = useCallback(async (template) => {
+        // Check for custom template handler (e.g. Steel BIM Pipeline)
+        if (customTemplateHandler) {
+            try {
+                const results = await customTemplateHandler(template);
+                if (results) {
+                    setElements(results.elements);
+                    if (results.analysis_results) setAnalysisResults(results.analysis_results);
+                    if (results.design_results) setDesignResults(results.design_results);
+                    setShowLibrary(false);
+                    // Use the elements from results to align the grid
+                    setTimeout(() => handleAutoAlignGrid(results.elements), 0);
+                    return;
+                }
+            } catch (err) {
+                console.error("Custom template selection failed:", err);
+                alert("Failed to generate system: " + err.message);
+            }
+        }
+
         const { bay_config, floors } = template;
         const { x_bays, y_bays, x_spacing, y_spacing, floor_height } = bay_config;
 

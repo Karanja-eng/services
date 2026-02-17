@@ -86,22 +86,30 @@ class FullBuildingAnalyzer:
         self.results = {}
 
     def analyze(self):
+        print("Starting analysis...")
         # 1. Distribute Slab Loads to Beams
         self._distribute_slab_loads()
+        print("Slab loads distributed.")
         
         # 2. Identify Frames (Grid Lines)
         # We group elements into X-Frames (constant Y) and Y-Frames (constant X)
         x_frames, y_frames = self._identify_frames()
+        print(f"Identified {len(x_frames)} X-frames and {len(y_frames)} Y-frames.")
         
         # 3. Solve Frames
         for frame_id, frame_elements in x_frames.items():
+            print(f"Solving X-frame {frame_id} with {len(frame_elements)} elements...")
             self._solve_2d_frame(frame_elements, plane="XZ")
+            print(f"Solved X-frame {frame_id}.")
             
         for frame_id, frame_elements in y_frames.items():
+            print(f"Solving Y-frame {frame_id} with {len(frame_elements)} elements...")
             self._solve_2d_frame(frame_elements, plane="YZ")
+            print(f"Solved Y-frame {frame_id}.")
             
         # 4. Post-Process (Axial Accumulation & Classification)
         self._post_process_all_elements()
+        print("Post-processing complete.")
 
         return self._format_results()
 
@@ -423,8 +431,9 @@ class FullBuildingAnalyzer:
                     if load.load_type == "UDL":
                         fem.add_udl(m.member_id, load.magnitude)
             
+            print(f"Calling FEM solve for {len(members)} members...")
             fem_res = fem.solve()
-            if fem_res:
+            print("FEM solve returned.")
                 member_dict = {m.member_id: m for m in members}
                 for mid, forces in fem_res["elements"].items():
                     if mid not in member_dict: continue

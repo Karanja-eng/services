@@ -23,6 +23,10 @@ from calculations.Beams.moment_distribution_backend import (
     EndCondition,
 )
 
+# Import Orchestration Engine
+from .bim_orchestrator import run_steel_pipeline
+from . import module_registration # Ensure modules are registered
+
 router = APIRouter()
 
 
@@ -165,6 +169,13 @@ class FrameAnalysisRequest(BaseModel):
     method: str = Field(..., description="moment-distribution or slope-deflection")
     spans: List[SpanData]
     supports: List[str]
+
+
+class PipelineRequest(BaseModel):
+    generator: str
+    params: Dict[str, Any]
+    analysis_method: str = "matrix_stiffness"
+    design_code: str = "BS5950"
 
 
 class BeamDesignResponse(BaseModel):
@@ -319,8 +330,36 @@ async def root():
             "column_design": "/api/column-design",
             "frame_analysis": "/api/frame-analysis",
             "sections": "/api/sections",
+            "pipeline_run": "/api/steel_structure/pipeline/run",
         },
     }
+
+
+@router.post("/api/steel_structure/pipeline/run")
+async def run_pipeline_endpoint(request: PipelineRequest):
+    """
+    Run the full BIM pipeline (Generation -> Analysis -> Design -> Drawing)
+    """
+    try:
+        # Run the pipeline (module_registration handles the bridging)
+        model = await run_steel_pipeline(
+            generator_name=request.generator,
+            params=request.params,
+            analysis_method=request.analysis_method,
+            design_code=request.design_code
+        )
+        
+        return {
+            "success": True,
+            "nodes": model.nodes,
+            "members": model.members,
+            "analysis_results": model.analysis_results,
+            "design_results": model.design_results,
+            "drawing_data": model.drawing_data,
+            "metadata": model.metadata
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Pipeline execution failed: {str(e)}")
 
 
 @router.get("/api/sections/{section_type}")

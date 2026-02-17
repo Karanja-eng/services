@@ -74,6 +74,19 @@ const CATEGORIES = [
         ]
     },
     {
+        id: 'structural',
+        label: 'Structural',
+        icon: LayoutGrid,
+        panels: [
+            { id: 'struct_foundations', label: 'Foundations' },
+        ],
+        layers: [
+            { id: 'pad_foundation', label: 'Pad foundations' },
+            { id: 'strip_foundation', label: 'Strip foundations' },
+            { id: 'raft_foundation', label: 'Raft foundations' },
+        ]
+    },
+    {
         id: 'external',
         label: 'External Works',
         icon: Trees,

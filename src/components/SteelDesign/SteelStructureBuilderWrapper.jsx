@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import InteractiveStructureBuilder from '../ReinforcedConcrete/FramedandTall/InteractiveStructureBuilder';
 import { callSteelAnalysis, callSteelDesign, prepareAnalysisPayload, prepareDesignPayload } from './SteelStructureAdapter';
+import { runSteelPipeline, transformPipelineResults } from './SteelPipelineAdapter';
 
 /**
  * Steel Structure Builder Wrapper
@@ -88,12 +89,42 @@ const SteelStructureBuilderWrapper = ({
         }
     }, [steelGrade, defaultBeamSection, defaultColumnSection]);
 
+    /**
+     * Custom template selector for steel systems (trusses, etc.)
+     */
+    const handleTemplateSelect = useCallback(async (template) => {
+        if (template.structural_system === 'steel_truss') {
+            try {
+                // Run the full BIM pipeline for the truss
+                const results = await runSteelPipeline('truss', {
+                    truss_type: template.bay_config.truss_type,
+                    span: template.bay_config.span * 1000,
+                    depth: template.bay_config.depth * 1000,
+                    num_panels: template.bay_config.num_panels,
+                    pitch_angle: template.bay_config.pitch_angle,
+                    grade: steelGrade,
+                    top_chord_section: defaultBeamSection,
+                    bottom_chord_section: defaultBeamSection,
+                    web_section: defaultBeamSection // Simplified for now
+                });
+
+                const transformed = transformPipelineResults(results);
+                return transformed;
+            } catch (error) {
+                console.error('Failed to generate steel system:', error);
+                throw error;
+            }
+        }
+        return null; // Fallback to RC default logic
+    }, [steelGrade, defaultBeamSection]);
+
     return (
         <InteractiveStructureBuilder
             isFullScreen={isFullScreen}
             onFullScreenChange={onFullScreenChange}
             customAnalysisHandler={handleSteelAnalysis}
             customDesignHandler={handleSteelDesign}
+            customTemplateHandler={handleTemplateSelect}
             materialType="steel"
             sectionDisplayType={sectionDisplayType}
         />

@@ -1449,6 +1449,61 @@ async def generate_bim_component(
                 metadata={"bimMetadata": {"System": "structural", "Subsystem": "slabs", "Layer": "slabs"}}
             )
             floor.rooms.append(slab)
+
+        elif category == "foundation":
+            # Direct GLB generation for foundations using Foundation_BIM module
+            from .Drawing_elements.Foundation_BIM.foundation_factory import FoundationFactory
+            
+            f_type = data.get("type", "pad")
+            soil_cap = data.get("soil_capacity", 200.0)
+            
+            output_filename = f"gen_foundation_{uuid.uuid4().hex}.glb"
+            output_path = GENERATED / output_filename
+            
+            foundation_obj = None
+            if f_type == "pad":
+                from .Drawing_elements.Foundation_BIM.pad_foundation import PadFoundation
+                foundation_obj = PadFoundation(
+                    position=(0, 0),
+                    column_size=(data.get("col_width", 0.4), data.get("col_depth", 0.4)),
+                    column_load=data.get("load", 500.0),
+                    soil_capacity=soil_cap,
+                    pad_depth=data.get("depth", 0.6)
+                )
+            elif f_type == "strip":
+                from .Drawing_elements.Foundation_BIM.strip_foundation import StripFoundation
+                foundation_obj = StripFoundation(
+                    wall_start=(0, 0),
+                    wall_end=(data.get("length", 5.0), 0),
+                    wall_thickness=data.get("wall_thickness", 0.2),
+                    wall_load=data.get("load", 100.0),
+                    soil_capacity=soil_cap,
+                    depth=data.get("depth", 0.6)
+                )
+            elif f_type == "raft":
+                from .Drawing_elements.Foundation_BIM.raft_foundation import RaftFoundation
+                w = data.get("width", 5.0)
+                d = data.get("depth_dim", 5.0)
+                foundation_obj = RaftFoundation(
+                    footprint=[(0,0), (w, 0), (w, d), (0, d)],
+                    slab_thickness=data.get("thickness", 0.3),
+                    total_load=data.get("load", 2000.0),
+                    soil_capacity=soil_cap
+                )
+            
+            if foundation_obj:
+                # Export directly to GLB
+                mesh = foundation_obj.to_trimesh()
+                # Attach metadata to trimesh extras
+                mesh.metadata.update(foundation_obj.get_metadata())
+                mesh.export(str(output_path), file_type="glb")
+                
+                return {
+                    "glb_url": f"/generated/{output_filename}",
+                    "metadata": {"category": "foundation", "status": "success", "foundation_type": f_type}
+                }
+            else:
+                raise HTTPException(status_code=400, detail=f"Unsupported foundation type: {f_type}")
         
         model = BuildingModel(
             floors=[floor],
