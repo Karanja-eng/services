@@ -5,10 +5,10 @@ Registers all structural steel modules with the Orchestration Registry.
 Bridges data formats between new BIM modules and legacy analysis/design engines.
 """
 
-from .bim_orchestrator import registry, BIMModel
-from .Steel_BIM import Point3D, Line3D
-from ..Atomationmodels.arch_pro.Drawing_elements.Steel_BIM.truss_generator import TrussGenerator, TrussParameters, TrussType
-from ..Atomationmodels.arch_pro.Drawing_elements.Steel_BIM.drawing_primitives import MemberVisualization
+from calculations.steel_design.bim_orchestrator import registry, BIMModel
+from calculations.steel_design.Steel_BIM import Point3D, Line3D
+from calculations.Atomationmodels.arch_pro.Drawing_elements.Steel_BIM.truss_generator import TrussGenerator, TrussParameters, TrussType
+from calculations.Atomationmodels.arch_pro.Drawing_elements.Steel_BIM.drawing_primitives import MemberVisualization
 import asyncio
 
 # --- GENERATORS ---

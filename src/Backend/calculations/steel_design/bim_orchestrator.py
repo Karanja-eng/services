@@ -12,6 +12,7 @@ Provides a registry for modules and manages the 5-step data flow:
 
 import uuid
 from typing import List, Dict, Any, Callable, Optional, Type
+import asyncio
 from dataclasses import dataclass, field
 from .Steel_BIM import Point3D, Line3D, Vector3D
 
@@ -69,7 +70,12 @@ class SteelBIMPipeline:
         # Generators are typically sync, but we support both
         gen_func = self.registry.generators[generator_name]
         bim_data = gen_func(**params)
-        model = BIMModel(**bim_data)
+        
+        # Filter bim_data to only include fields defined in BIMModel
+        from dataclasses import fields
+        model_fields = {f.name for f in fields(BIMModel)}
+        filtered_data = {k: v for k, v in bim_data.items() if k in model_fields}
+        model = BIMModel(**filtered_data)
         
         # 2. Structural Analysis (Legacy) - likely async
         if analysis_method in self.registry.analysis_engines:

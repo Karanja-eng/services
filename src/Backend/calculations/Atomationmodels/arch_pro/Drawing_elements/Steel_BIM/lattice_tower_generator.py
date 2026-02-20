@@ -10,9 +10,9 @@ from typing import List, Dict, Any, Tuple
 from enum import Enum
 import numpy as np
 
-from ..core.geometry import Point3D, Line3D
-from ..members.member import Member, MemberType
-from ..sections.section_properties import get_section_properties
+from .geometry import Point3D, Line3D
+from .member import Member, MemberType
+from .section_properties import get_section_properties
 
 
 class TowerType(Enum):

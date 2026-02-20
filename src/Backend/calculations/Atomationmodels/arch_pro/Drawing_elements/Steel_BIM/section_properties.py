@@ -287,7 +287,7 @@ BS_PFC = {
     "200x90x30PFC": SectionProperties(
         designation="200x90x30PFC",
         section_type=SectionType.PFC,
-        depth=200.0, width=90.0, web_thickness=7.0, flangle_thickness=14.0,
+        depth=200.0, width=90.0, web_thickness=7.0, flange_thickness=14.0,
         root_radius=9.0, area=38.2, mass_per_meter=30.0,
         Iyy=6290.0, Izz=497.0, Wyy=629.0, Wzz=83.3,
         iyy=12.8, izz=3.61, torsional_constant=10.4

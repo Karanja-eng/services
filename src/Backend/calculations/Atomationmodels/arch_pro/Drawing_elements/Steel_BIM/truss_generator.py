@@ -10,9 +10,9 @@ from typing import List, Tuple, Dict, Any, Optional
 from enum import Enum
 import numpy as np
 
-from ..core.geometry import Point3D, Line3D
-from ..members.member import Member, MemberType, EndCondition
-from ..sections.section_properties import SectionProperties, get_section_properties
+from .geometry import Point3D, Line3D
+from .member import Member, MemberType, EndCondition
+from .section_properties import SectionProperties, get_section_properties
 
 
 class TrussType(Enum):

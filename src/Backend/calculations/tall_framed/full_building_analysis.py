@@ -434,17 +434,17 @@ class FullBuildingAnalyzer:
             print(f"Calling FEM solve for {len(members)} members...")
             fem_res = fem.solve()
             print("FEM solve returned.")
-                member_dict = {m.member_id: m for m in members}
-                for mid, forces in fem_res["elements"].items():
-                    if mid not in member_dict: continue
-                    m = member_dict[mid]
-                    
-                    M_i, M_j = forces["M_i"], forces["M_j"]
-                    V_i, V_j = forces["V_i"], forces["V_j"]
-                    N_i, N_j = forces["N_i"], forces["N_j"]
-                    
-                    if mid not in self.results:
-                        self.results[mid] = {"M_max": 0, "V_max": 0, "N_max": 0, "sections": []}
+            member_dict = {m.member_id: m for m in members}
+            for mid, forces in fem_res["elements"].items():
+                if mid not in member_dict: continue
+                m = member_dict[mid]
+                
+                M_i, M_j = forces["M_i"], forces["M_j"]
+                V_i, V_j = forces["V_i"], forces["V_j"]
+                N_i, N_j = forces["N_i"], forces["N_j"]
+                
+                if mid not in self.results:
+                    self.results[mid] = {"M_max": 0, "V_max": 0, "N_max": 0, "sections": []}
                     
                     # Merge results for columns (Axial N accumulates, Moments M might be in different planes)
                     # For M_max, we keep the largest one or ideally would use vector sum for biaxial (simplified here)

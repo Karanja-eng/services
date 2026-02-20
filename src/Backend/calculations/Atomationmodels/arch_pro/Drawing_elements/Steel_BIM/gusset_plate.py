@@ -11,8 +11,8 @@ from enum import Enum
 import numpy as np
 import uuid
 
-from ..core.geometry import Point3D, Vector3D, Line3D
-from ..members.member import Member
+from .geometry import Point3D, Vector3D, Line3D
+from .member import Member
 
 
 class ConnectionType(Enum):

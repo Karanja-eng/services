@@ -6,21 +6,21 @@ FastAPI Backend for Steel Beam, Column, and Frame Analysis
 from fastapi import APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 import math
 import json
 import os
 from pathlib import Path
 from enum import Enum
 from calculations.Beams.moment_distribution_backend import (
-    MomentDistributionSolver,
-    FrameMD,
     JointMD,
     MemberMD,
-    LoadMD,
-    MemberType,
-    JointType,
-    EndCondition,
+    MomentDistributionSolver
+)
+from calculations.tall_framed.full_building_analysis import (
+    analyze_full_building, 
+    BuildingAnalysisRequest,
+    AnalysisResult
 )
 
 # Import Orchestration Engine
@@ -281,8 +281,8 @@ class FrameAnalysisResponse(BaseModel):
     distribution_factors: Optional[Dict[str, Dict[str, float]]] = None
     final_moments: Optional[Dict[str, Dict[str, float]]] = None
     fixed_end_moments: Optional[Dict[str, Dict[str, float]]] = None
-    joints: Optional[List[JointMD]] = None
-    members: Optional[List[MemberMD]] = None
+    joints: Optional[List["JointMD"]] = None
+    members: Optional[List["MemberMD"]] = None
 
 
 # Helper Functions

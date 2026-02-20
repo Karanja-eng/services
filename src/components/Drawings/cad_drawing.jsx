@@ -47,6 +47,10 @@ import StructuralVisualizationComponent from "./visualise_component";
 import { BeamKonvaGroup, getBeamCADPrimitives } from "../ReinforcedConcrete/Beams/BeamDrawer";
 import { ColumnKonvaGroup, getColumnCADPrimitives } from "../ReinforcedConcrete/Columns/ColumnDrawer";
 import { FoundationKonvaGroup, getFoundationCADPrimitives } from "../ReinforcedConcrete/Foundations/Foundation_viewer";
+import { CadEngine } from "./engine/CadEngine";
+import { Vector2 } from "./engine/Geometry";
+import { LineCommand, CircleCommand, ArcCommand, PolylineCommand, RectangleCommand } from "./engine/commands/DrawCommands";
+import { MoveCommand, CopyCommand, RotateCommand, ScaleCommand, MirrorCommand } from "./engine/commands/ModifyCommands";
 
 // ============ SNAP MODES ============
 const SNAP_MODES = {
@@ -163,6 +167,20 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
+  // CAD Engine Initialization
+  const engine = React.useMemo(() => new CadEngine(), []);
+  const [engineState, setEngineState] = useState(0); // Trigger re-renders on engine changes
+
+  useEffect(() => {
+    const unsubscribe = engine.subscribe(() => {
+      setEngineState(prev => prev + 1);
+      setObjects([...engine.objects]); // Keep local objects state in sync for rendering
+    });
+    return unsubscribe;
+  }, [engine]);
+
+
+
   // UI State
   const [leftPanelVisible, setLeftPanelVisible] = useState(true);
   const [copilotOpen, setCopilotOpen] = useState(true);
@@ -174,6 +192,39 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   const [showCommandLine, setShowCommandLine] = useState(true);
   const [commandInput, setCommandInput] = useState("");
   const [commandHistory, setCommandHistory] = useState([]);
+
+
+
+  useEffect(() => {
+    engine.activeLayerId = activeLayerId;
+    const layer = layers.find(l => l.id === activeLayerId);
+    if (layer) engine.activeColor = layer.color;
+
+    engine.snapEngine.updateSettings(snapSettings);
+  }, [activeLayerId, layers, snapSettings, engine]);
+
+  // Sync activeTool from engine if it changes (e.g. via Space Repeat or Esc)
+  useEffect(() => {
+    const unsubscribe = engine.subscribe(() => {
+      const activeCmd = engine.commandController.activeCommand;
+      if (activeCmd) {
+        // Map engine command to UI tool button highlight
+        const cmdName = activeCmd.constructor.name;
+        const toolMap = {
+          "LineCommand": "line",
+          "CircleCommand": "circle",
+          "RectangleCommand": "rectangle",
+          "PolylineCommand": "polyline",
+          "ArcCommand": "arc",
+          "MoveCommand": "move"
+        };
+        setActiveTool(toolMap[cmdName] || null);
+      } else {
+        setActiveTool(null);
+      }
+    });
+    return unsubscribe;
+  }, [engine]);
   const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
 
   // Toolbar State
@@ -210,17 +261,18 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   // Sync initialObjects if they change externally (e.g. on first load)
   useEffect(() => {
     if (initialObjects && initialObjects.length > 0) {
-      console.log("CadDrawer: Setting objects from props", initialObjects.length);
-      setObjects(initialObjects);
-      setHistory([initialObjects]);
+      console.log("CadDrawer: Setting objects from props into engine", initialObjects.length);
+      engine.objects = JSON.parse(JSON.stringify(initialObjects));
+      setObjects(engine.objects);
+      setHistory([engine.objects]);
       setHistoryIndex(0);
 
       // Auto-fit on load
       setTimeout(() => {
-        zoomToFit(initialObjects);
+        zoomToFit(engine.objects);
       }, 100);
     }
-  }, [initialObjects]);
+  }, [initialObjects, engine]);
 
   const zoomToFit = (targetObjects = objects) => {
     if (!targetObjects || targetObjects.length === 0) return;
@@ -477,72 +529,23 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
 
   // ============ RENDER KONVA OBJECTS ============
   const renderKonvaObjects = () => {
-    return objects.map((obj) => {
+    const allObjects = engine.getCombinedObjects();
+    return allObjects.map((obj) => {
       const layer = layers.find((l) => l.id === obj.layerId);
-      if (!layer?.visible) return null;
+      // skip visibility filter for preview objects
+      if (obj.layerId && !layer?.visible) return null;
 
-      const color = obj.color || (isDark ? "#FFFFFF" : "#000000");
-      const strokeWidth = obj.lineWidth || 2;
+      const color = obj.color || (layer?.color) || (isDark ? "#FFFFFF" : "#000000");
+      const strokeWidth = obj.lineWidth || (obj.id.startsWith("preview") ? 1 : 2);
       const isSelected = selectedIds.includes(obj.id);
 
       const handleDragEnd = (e) => {
-        const newObjects = objects.map((o) => {
-          if (o.id === obj.id) {
-            if (o.type === "line" || o.type === "polyline" || o.type === "rectangle") {
-              const dx = e.target.x();
-              const dy = e.target.y();
+        const dx = e.target.x();
+        const dy = e.target.y();
+        if (dx === 0 && dy === 0) return;
 
-              if (o.points) {
-                return {
-                  ...o,
-                  points: o.points.map((p) => ({
-                    x: p.x + dx,
-                    y: p.y + dy,
-                    z: p.z || 0,
-                  })),
-                };
-              }
-
-              // For shapes with start/end, we update them and reset Konva x/y to 0
-              return {
-                ...o,
-                start: { x: o.start.x + dx, y: o.start.y + dy, z: o.start.z },
-                end: { x: o.end.x + dx, y: o.end.y + dy, z: o.end.z },
-              };
-            }
-            if (o.type === "circle") {
-              return {
-                ...o,
-                center: {
-                  x: o.center.x + e.target.x(),
-                  y: o.center.y + e.target.y(),
-                  z: o.center.z,
-                },
-              };
-            }
-            if (o.type === "text") {
-              return {
-                ...o,
-                position: {
-                  x: o.position.x + e.target.x(),
-                  y: o.position.y + e.target.y(),
-                  z: o.position.z,
-                },
-              };
-            }
-            if (o.type === "member") {
-              return {
-                ...o,
-                x: o.x + e.target.x(),
-                y: o.y + e.target.y(),
-              };
-            }
-          }
-          return o;
-        });
-        // Important: reset internal konva position to 0 because we updated world coordinates
+        engine.moveObjects([obj.id], { x: dx, y: dy });
         e.target.position({ x: 0, y: 0 });
-        addToHistory(newObjects);
       };
 
       switch (obj.type) {
@@ -569,14 +572,15 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
               key={obj.id}
               id={obj.id}
               points={[
-                obj.start.x || 0,
-                obj.start.y || 0,
-                obj.end.x || 0,
-                obj.end.y || 0,
+                obj.start.x ?? 0,
+                obj.start.y ?? 0,
+                obj.end.x ?? 0,
+                obj.end.y ?? 0,
               ]}
               stroke={color}
               strokeWidth={strokeWidth}
-              draggable={!layer?.locked}
+              dash={obj.dash}
+              draggable={!layer?.locked && !obj.id.startsWith("preview")}
               onDragEnd={handleDragEnd}
             />
           );
@@ -607,7 +611,34 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
               radius={obj.radius || 10}
               stroke={color}
               strokeWidth={strokeWidth}
-              draggable={!layer?.locked}
+              dash={obj.dash}
+              draggable={!layer?.locked && !obj.id.startsWith("preview")}
+              onDragEnd={handleDragEnd}
+            />
+          );
+        case "arc":
+          // handle both center-radius and 3-point arcs
+          const arcPoints = [];
+          if (obj.points) {
+            // 3 point arc or list of points
+            obj.points.forEach(p => arcPoints.push(p.x, p.y));
+          } else if (obj.center && obj.radius) {
+            // center-radius-angle arc
+            for (let a = obj.startAngle; a <= obj.endAngle; a += 0.1) {
+              arcPoints.push(obj.center.x + obj.radius * Math.cos(a));
+              arcPoints.push(obj.center.y + obj.radius * Math.sin(a));
+            }
+          }
+          if (arcPoints.length < 2) return null;
+
+          return (
+            <KonvaLine
+              key={obj.id}
+              points={arcPoints}
+              stroke={color}
+              strokeWidth={strokeWidth}
+              dash={obj.dash}
+              draggable={!layer?.locked && !obj.id.startsWith("preview")}
               onDragEnd={handleDragEnd}
             />
           );
@@ -855,232 +886,58 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   const handleCanvasMouseDown = (e) => {
     if (mode === "3D") return;
     const point = getKonvaCoords(e);
+    const worldPoint = Vector2.fromObject(point);
 
-    // Selection mode
-    if (!activeTool) {
-      const clickedOnEmpty = e.target === e.target.getStage();
-      if (clickedOnEmpty) {
-        setSelectedIds([]);
-        transformerRef.current?.nodes([]);
-      } else {
-        const id = e.target.id();
-        if (id) {
-          const isSelected = selectedIds.includes(id);
-          if (e.evt.shiftKey) {
-            setSelectedIds(prev => isSelected ? prev.filter(i => i !== id) : [...prev, id]);
-          } else {
-            setSelectedIds([id]);
-          }
-          transformerRef.current?.nodes([e.target]);
-        }
-      }
+    if (activeTool) {
+      engine.handleMouseDown(worldPoint, e);
       return;
     }
 
-    setDrawing(true);
-    setStartPoint(point);
-    setCurrentPoint(point);
-
-    if (activeTool === "polyline") {
-      setPolylinePoints([...polylinePoints, point]);
-    } else if (activeTool === "arc") {
-      setArcPoints([...arcPoints, point]);
-    } else if (activeTool === "spline") {
-      setPolylinePoints([...polylinePoints, point]);
+    // Selection mode
+    const clickedOnEmpty = e.target === e.target.getStage();
+    if (clickedOnEmpty) {
+      setSelectedIds([]);
+      transformerRef.current?.nodes([]);
+    } else {
+      const id = e.target.id();
+      if (id) {
+        const isSelected = selectedIds.includes(id);
+        if (e.evt.shiftKey) {
+          setSelectedIds(prev => isSelected ? prev.filter(i => i !== id) : [...prev, id]);
+        } else {
+          setSelectedIds([id]);
+        }
+        transformerRef.current?.nodes([e.target]);
+      }
     }
   };
 
   const handleCanvasMouseMove = (e) => {
     if (mode === "3D") return;
     const point = getKonvaCoords(e);
+    const worldPoint = Vector2.fromObject(point);
 
-    // Find snap point
-    const snap = findSnapPoint(point);
+    // Engine Snap
+    const snap = engine.getSnapPoint(worldPoint);
     setSnapPoint(snap);
 
-    setCurrentPoint(snap || point);
+    const finalPoint = snap ? snap.point : worldPoint;
+    setCurrentPoint(finalPoint.toObject());
+
+    if (activeTool) {
+      engine.handleMouseMove(finalPoint, e);
+    }
   };
 
   const handleCanvasMouseUp = (e) => {
     if (mode === "3D") return;
-    if (!drawing || !activeTool || !startPoint) return;
-
-    const endPoint = snapPoint || currentPoint || getKonvaCoords(e);
-    const layer = layers.find((l) => l.id === activeLayerId);
-    let newObj = null;
-
-    switch (activeTool) {
-      default:
-        break;
-      case "line":
-        newObj = {
-          id: Date.now().toString() + Math.random(),
-          type: "line",
-          start: startPoint,
-          end: endPoint,
-          color: layer.color,
-          layerId: activeLayerId,
-          lineWidth: 2,
-        };
-        break;
-
-      case "circle":
-        const radius = Math.hypot(
-          endPoint.x - startPoint.x,
-          endPoint.y - startPoint.y
-        );
-        newObj = {
-          id: Date.now().toString() + Math.random(),
-          type: "circle",
-          center: startPoint,
-          radius,
-          color: layer.color,
-          layerId: activeLayerId,
-        };
-        break;
-
-      case "ellipse":
-        const radiusX = Math.abs(endPoint.x - startPoint.x);
-        const radiusY = Math.abs(endPoint.y - startPoint.y);
-        newObj = {
-          id: Date.now().toString() + Math.random(),
-          type: "ellipse",
-          center: startPoint,
-          radiusX,
-          radiusY,
-          color: layer.color,
-          layerId: activeLayerId,
-        };
-        break;
-
-      case "rectangle":
-        newObj = {
-          id: Date.now().toString() + Math.random(),
-          type: "rectangle",
-          start: startPoint,
-          end: endPoint,
-          color: layer.color,
-          layerId: activeLayerId,
-        };
-        break;
-
-      case "hatch":
-        newObj = {
-          id: Date.now().toString() + Math.random(),
-          type: "hatch",
-          start: startPoint,
-          end: endPoint,
-          pattern: selectedHatch,
-          color:
-            hatchPatterns.find((p) => p.id === selectedHatch)?.color ||
-            layer.color,
-          layerId: activeLayerId,
-          opacity: 0.5,
-        };
-        break;
-
-      case "dimension":
-        const distance = Math.hypot(
-          endPoint.x - startPoint.x,
-          endPoint.y - startPoint.y
-        );
-        newObj = {
-          id: Date.now().toString() + Math.random(),
-          type: "dimension",
-          start: startPoint,
-          end: endPoint,
-          value: distance.toFixed(2),
-          unit: "units",
-          color: "#00FF00",
-          layerId: activeLayerId,
-        };
-        break;
-
-      case "text":
-        const text = prompt("Enter text:");
-        if (text) {
-          newObj = {
-            id: Date.now().toString() + Math.random(),
-            type: "text",
-            position: startPoint,
-            text,
-            size: 1,
-            rotation: 0,
-            color: layer.color,
-            layerId: activeLayerId,
-          };
-        }
-        break;
-
-      case "box":
-        const width = Math.abs(endPoint.x - startPoint.x);
-        const height = Math.abs(endPoint.y - startPoint.y);
-        newObj = {
-          id: Date.now().toString() + Math.random(),
-          type: "box",
-          position: {
-            x: (startPoint.x + endPoint.x) / 2,
-            y: (startPoint.y + endPoint.y) / 2,
-            z: 1,
-          },
-          width,
-          height,
-          depth: 2,
-          color: layer.color,
-          layerId: activeLayerId,
-        };
-        break;
-    }
-
-    if (newObj) {
-      const updated = [...objects, newObj];
-      addToHistory(updated);
-    }
-
-    if (
-      activeTool !== "polyline" &&
-      activeTool !== "arc" &&
-      activeTool !== "spline"
-    ) {
-      setDrawing(false);
-      setStartPoint(null);
-      setCurrentPoint(null);
-      setActiveTool(null);
-    }
+    // CadEngine usually handles finalization on click or Enter, 
+    // but some tools might need mouseUp if we use drag-drop (not standard AutoCAD though).
   };
 
   const handleCanvasDoubleClick = () => {
-    if (activeTool === "polyline" && polylinePoints.length > 1) {
-      const layer = layers.find((l) => l.id === activeLayerId);
-      const newObj = {
-        id: Date.now().toString() + Math.random(),
-        type: "polyline",
-        points: polylinePoints,
-        closed: false,
-        color: layer.color,
-        layerId: activeLayerId,
-      };
-      const updated = [...objects, newObj];
-      addToHistory(updated);
-      setPolylinePoints([]);
-      setDrawing(false);
-      setActiveTool(null);
-    }
-
-    if (activeTool === "spline" && polylinePoints.length > 2) {
-      const layer = layers.find((l) => l.id === activeLayerId);
-      const newObj = {
-        id: Date.now().toString() + Math.random(),
-        type: "spline",
-        points: polylinePoints,
-        closed: false,
-        color: layer.color,
-        layerId: activeLayerId,
-      };
-      const updated = [...objects, newObj];
-      addToHistory(updated);
-      setPolylinePoints([]);
-      setDrawing(false);
+    if (activeTool) {
+      engine.commandController.confirmActive();
       setActiveTool(null);
     }
   };
@@ -1224,10 +1081,10 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   }, [objects, selectedIds, addToHistory]);
 
   const handleDelete = useCallback(() => {
-    const filtered = objects.filter((o) => !selectedIds.includes(o.id));
-    addToHistory(filtered);
+    if (selectedIds.length === 0) return;
+    selectedIds.forEach(id => engine.deleteObject(id));
     setSelectedIds([]);
-  }, [objects, selectedIds, addToHistory]);
+  }, [engine, selectedIds]);
 
   const handleMove = () => {
     const dx = parseFloat(prompt("Move X distance:", "0")) || 0;
@@ -1504,35 +1361,31 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
       if (command) {
         if (command.tool) {
           setActiveTool(command.tool);
-          if (command.tool === "polyline" || command.tool === "spline") {
-            setPolylinePoints([]);
-          }
-          if (command.tool === "arc") {
-            setArcPoints([]);
+
+          // Execute engine command
+          switch (command.tool) {
+            case "line": engine.executeCommand(new LineCommand(engine)); break;
+            case "polyline": engine.executeCommand(new PolylineCommand(engine)); break;
+            case "circle": engine.executeCommand(new CircleCommand(engine)); break;
+            case "arc": engine.executeCommand(new ArcCommand(engine)); break;
+            case "rectangle": engine.executeCommand(new RectangleCommand(engine)); break;
+            case "move": engine.executeCommand(new MoveCommand(engine, selectedIds)); break;
+            case "copy": engine.executeCommand(new CopyCommand(engine, selectedIds)); break;
+            case "rotate": engine.executeCommand(new RotateCommand(engine, selectedIds)); break;
+            case "scale": engine.executeCommand(new ScaleCommand(engine, selectedIds)); break;
+            case "mirror": engine.executeCommand(new MirrorCommand(engine, selectedIds)); break;
           }
         } else if (command.action) {
           switch (command.action) {
-            case "undo":
-              undo();
-              break;
+            case "undo": engine.commandController.undo(); break;
+            case "redo": engine.commandController.redo(); break;
             case "delete":
-              handleDelete();
+              selectedIds.forEach(id => engine.deleteObject(id));
+              setSelectedIds([]);
               break;
-            case "toggleGrid":
-              setGridVisible(!gridVisible);
-              break;
-            case "toggleOrtho":
-              setOrthoMode(!orthoMode);
-              break;
-            case "extrude":
-              handleExtrude();
-              break;
-            case "revolve":
-              handleRevolve();
-              break;
-            default:
-              console.warn(`Unhandled command action: ${command.action}`);
-              break;
+            case "toggleGrid": setGridVisible(!gridVisible); break;
+            case "toggleOrtho": setOrthoMode(!orthoMode); break;
+            case "zoom": zoomToFit(); break;
           }
         }
       }
@@ -1609,35 +1462,39 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
   // ============ KEYBOARD SHORTCUTS ============
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
+      // Don't intercept if typing in another input
+      if ((e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") && !activeTool)
         return;
 
+      // Delegate to engine (handles Space, Esc, Tab, Numeric entry, etc.)
+      if (engine.handleKeyDown(e)) {
+        e.preventDefault();
+        return;
+      }
+
+      // Selection & Modification shortcuts
       if (e.ctrlKey || e.metaKey) {
         if (e.key === "z") {
           e.preventDefault();
-          undo();
+          engine.commandController.undo();
         } else if (e.key === "y") {
           e.preventDefault();
-          redo();
-        } else if (e.key === "c") {
-          e.preventDefault();
-          if (selectedIds.length > 0) handleCopy();
+          engine.commandController.redo();
         } else if (e.key === "s") {
           e.preventDefault();
-          alert("Save functionality - connect to backend");
+          alert("Project saved locally.");
         }
       } else if (e.key === "Delete" || e.key === "Backspace") {
         if (selectedIds.length > 0) {
           e.preventDefault();
-          handleDelete();
+          selectedIds.forEach(id => engine.deleteObject(id));
+          setSelectedIds([]);
         }
       } else if (e.key === "Escape") {
         setActiveTool(null);
-        setPolylinePoints([]);
-        setArcPoints([]);
-        setDrawing(false);
         setSelectedIds([]);
-      } else if (e.key === "g" || e.key === "G") {
+      }
+      else if (e.key === "g" || e.key === "G") {
         setGridVisible(!gridVisible);
       } else if (e.key === "o" || e.key === "O") {
         setOrthoMode(!orthoMode);
@@ -1712,10 +1569,10 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
           {/* Right: Undo/Redo & Right Sidebar Toggle */}
           <div className="flex items-center gap-2">
             <div className="flex bg-gray-700/30 rounded p-0.5 mr-2">
-              <button onClick={undo} disabled={historyIndex === 0} className="p-1.5 hover:bg-gray-600/50 rounded disabled:opacity-30" title="Undo">
+              <button onClick={() => engine.commandController.undo()} disabled={engine.commandController.history.length === 0} className="p-1.5 hover:bg-gray-600/50 rounded disabled:opacity-30" title="Undo">
                 <Undo2 size={16} />
               </button>
-              <button onClick={redo} disabled={historyIndex === history.length - 1} className="p-1.5 hover:bg-gray-600/50 rounded disabled:opacity-30" title="Redo">
+              <button onClick={() => engine.commandController.redo()} disabled={engine.commandController.redoStack.length === 0} className="p-1.5 hover:bg-gray-600/50 rounded disabled:opacity-30" title="Redo">
                 <Redo2 size={16} />
               </button>
             </div>
@@ -1755,19 +1612,19 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
             {/* === DRAW TAB === */}
             {activeToolbarTab === "draw" && (
               <>
-                <button onClick={() => setActiveTool("line")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "line" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                <button onClick={() => { setActiveTool("line"); engine.executeCommand(new LineCommand(engine)); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "line" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
                   Line
                 </button>
-                <button onClick={() => { setActiveTool("polyline"); setPolylinePoints([]); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "polyline" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                <button onClick={() => { setActiveTool("polyline"); engine.executeCommand(new PolylineCommand(engine)); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "polyline" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
                   Polyline
                 </button>
-                <button onClick={() => setActiveTool("circle")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "circle" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                <button onClick={() => { setActiveTool("circle"); engine.executeCommand(new CircleCommand(engine)); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "circle" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
                   <Circle size={14} /> Circle
                 </button>
-                <button onClick={() => { setActiveTool("arc"); setArcPoints([]); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "arc" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                <button onClick={() => { setActiveTool("arc"); engine.executeCommand(new ArcCommand(engine)); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "arc" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
                   Arc
                 </button>
-                <button onClick={() => setActiveTool("rectangle")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "rectangle" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
+                <button onClick={() => { setActiveTool("rectangle"); engine.executeCommand(new RectangleCommand(engine)); }} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "rectangle" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
                   Rectangle
                 </button>
                 <button onClick={() => setActiveTool("ellipse")} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${activeTool === "ellipse" ? "bg-blue-600 text-white" : "hover:bg-gray-700/50"}`}>
@@ -1786,10 +1643,10 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
             {/* === MODIFY TAB === */}
             {activeToolbarTab === "modify" && (
               <>
-                <button onClick={handleMove} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                <button onClick={() => { setActiveTool("move"); engine.executeCommand(new MoveCommand(engine, selectedIds)); }} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
                   <Move size={14} /> Move
                 </button>
-                <button onClick={handleCopy} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
+                <button onClick={() => { setActiveTool("copy"); engine.executeCommand(new CopyCommand(engine, selectedIds)); }} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
                   <Copy size={14} /> Copy
                 </button>
                 <button onClick={handleMirror} disabled={selectedIds.length === 0} className="px-2 py-1 rounded text-xs flex items-center gap-1 hover:bg-gray-700/50 disabled:opacity-40">
@@ -2047,6 +1904,76 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
                   </KonvaGroup>
                 )}
                 {renderKonvaObjects()}
+
+                {/* Snap Indicator */}
+                {snapPoint && (
+                  <KonvaGroup x={snapPoint.point.x} y={snapPoint.point.y}>
+                    <KonvaLine
+                      points={[-5 / zoomLevel, -5 / zoomLevel, 5 / zoomLevel, 5 / zoomLevel]}
+                      stroke="#00ff00"
+                      strokeWidth={1 / zoomLevel}
+                    />
+                    <KonvaLine
+                      points={[5 / zoomLevel, -5 / zoomLevel, -5 / zoomLevel, 5 / zoomLevel]}
+                      stroke="#00ff00"
+                      strokeWidth={1 / zoomLevel}
+                    />
+                    <KonvaRect
+                      x={-4 / zoomLevel}
+                      y={-4 / zoomLevel}
+                      width={8 / zoomLevel}
+                      height={8 / zoomLevel}
+                      stroke="#00ff00"
+                      strokeWidth={1 / zoomLevel}
+                    />
+                  </KonvaGroup>
+                )}
+
+                {/* Cursor Crosshair */}
+                {currentPoint && activeTool && (
+                  <KonvaGroup x={currentPoint.x} y={currentPoint.y}>
+                    <KonvaLine
+                      points={[-1000 / zoomLevel, 0, 1000 / zoomLevel, 0]}
+                      stroke={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"}
+                      strokeWidth={0.5 / zoomLevel}
+                    />
+                    <KonvaLine
+                      points={[0, -1000 / zoomLevel, 0, 1000 / zoomLevel]}
+                      stroke={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"}
+                      strokeWidth={0.5 / zoomLevel}
+                    />
+                  </KonvaGroup>
+                )}
+                {/* Dynamic Input Overlay */}
+                {activeTool && engine.commandController.activeCommand?.getDynamicInputSpecs() && (
+                  <KonvaGroup
+                    x={currentPoint.x + 15 / zoomLevel}
+                    y={currentPoint.y + 15 / zoomLevel}
+                    listening={false}
+                  >
+                    {engine.commandController.activeCommand.getDynamicInputSpecs().fields.map((field, idx) => (
+                      <KonvaGroup key={field.name} y={idx * (25 / zoomLevel)}>
+                        <KonvaRect
+                          width={100 / zoomLevel}
+                          height={20 / zoomLevel}
+                          fill={field.active ? "rgba(37, 99, 235, 0.9)" : "rgba(31, 41, 55, 0.8)"}
+                          cornerRadius={2 / zoomLevel}
+                          stroke="#ffffff"
+                          strokeWidth={0.5 / zoomLevel}
+                        />
+                        <KonvaText
+                          text={`${field.label}: ${field.value}`}
+                          fontSize={12 / zoomLevel}
+                          fill="#ffffff"
+                          x={5 / zoomLevel}
+                          y={4 / zoomLevel}
+                          fontFamily="monospace"
+                        />
+                      </KonvaGroup>
+                    ))}
+                  </KonvaGroup>
+                )}
+
                 {/* Transformer for Selection */}
                 <Transformer
                   ref={transformerRef}
@@ -2111,14 +2038,21 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
             <div className="bg-gray-800 border-t border-gray-700 p-2">
               <div className="flex items-center gap-2">
                 <Command size={16} className="text-gray-400" />
-                <input
-                  type="text"
-                  value={commandInput}
-                  onChange={(e) => setCommandInput(e.target.value)}
-                  onKeyDown={handleCommand}
-                  placeholder="Command: L (Line), C (Circle), R (Rectangle), PL (Polyline)..."
-                  className="flex-1 bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm border border-gray-700 focus:outline-none focus:border-blue-500 font-mono"
-                />
+                <div className="flex-1 flex items-center bg-gray-900 rounded border border-gray-700 focus-within:border-blue-500 overflow-hidden">
+                  {engine.commandController.activeCommand && (
+                    <span className="px-3 py-2 text-blue-400 font-mono text-sm whitespace-nowrap bg-gray-850 border-r border-gray-700">
+                      {engine.commandController.activeCommand.prompt}
+                    </span>
+                  )}
+                  <input
+                    type="text"
+                    value={commandInput}
+                    onChange={(e) => setCommandInput(e.target.value)}
+                    onKeyDown={handleCommand}
+                    placeholder={!engine.commandController.activeCommand ? "Command: L (Line), C (Circle), R (Rectangle), PL (Polyline)..." : ""}
+                    className="flex-1 bg-transparent text-gray-100 px-3 py-2 text-sm focus:outline-none font-mono"
+                  />
+                </div>
                 <button
                   onClick={() => setShowCommandLine(false)}
                   className="p-2 hover:bg-gray-700 rounded"
@@ -2244,11 +2178,11 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
                         Selected: {selectedIds.length} object(s)
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        <button onClick={handleCopy} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Copy</button>
-                        <button onClick={handleMove} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Move</button>
-                        <button onClick={handleRotate} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Rotate</button>
-                        <button onClick={handleScale} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Scale</button>
-                        <button onClick={handleMirror} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Mirror</button>
+                        <button onClick={() => engine.executeCommand(new CopyCommand(engine, selectedIds))} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Copy</button>
+                        <button onClick={() => engine.executeCommand(new MoveCommand(engine, selectedIds))} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Move</button>
+                        <button onClick={() => engine.executeCommand(new RotateCommand(engine, selectedIds))} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Rotate</button>
+                        <button onClick={() => engine.executeCommand(new ScaleCommand(engine, selectedIds))} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Scale</button>
+                        <button onClick={() => engine.executeCommand(new MirrorCommand(engine, selectedIds))} className={`px-2 py-1.5 rounded text-xs font-medium border ${isDark ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-white border-gray-300 hover:bg-gray-50"}`}>Mirror</button>
                         <button onClick={handleExtrude} className="px-2 py-1.5 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700">Extrude 3D</button>
                         <button onClick={handleExplode} className="px-2 py-1.5 rounded text-xs font-medium bg-amber-600 text-white hover:bg-amber-700">Explode</button>
                         <button onClick={handleDelete} className="px-2 py-1.5 rounded text-xs font-medium bg-red-600 text-white hover:bg-red-700">Delete</button>

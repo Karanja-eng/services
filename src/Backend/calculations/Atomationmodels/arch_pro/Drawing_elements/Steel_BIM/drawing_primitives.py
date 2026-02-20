@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from enum import Enum
 import numpy as np
 
-from ..core.geometry import Point3D, Line3D
+from .geometry import Point3D, Line3D
 
 
 class PrimitiveType(Enum):

@@ -9,8 +9,8 @@ from typing import Optional, Dict, Any
 from enum import Enum
 import uuid
 
-from ..core.geometry import Point3D, Line3D, Vector3D, CoordinateSystem
-from ..sections.section_properties import SectionProperties
+from .geometry import Point3D, Line3D, Vector3D, CoordinateSystem
+from .section_properties import SectionProperties
 
 
 class MemberType(Enum):
