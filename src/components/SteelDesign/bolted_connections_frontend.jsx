@@ -73,7 +73,7 @@ const BoltedConnectionsModule = () => {
   const calculateHsfgBolts = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/api/bolted-connections/hsfg-bolts",
+        "http://localhost:8001/api/bolted-connections/hsfg-bolts",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -111,7 +111,7 @@ const BoltedConnectionsModule = () => {
       };
 
       const response = await fetch(
-        "http://localhost:8000/api/bolted-connections/bolt-group",
+        "http://localhost:8001/api/bolted-connections/bolt-group",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -734,8 +734,8 @@ class CompositeBeamDesign:
     
     def calculate_plastic_moment_capacity_positive_partial_shear(
         self,
-        design_strength_steel: float,  # py, N/mm²
-        design_strength_concrete: float  # fcu, N/mm²
+        design_strength_steel: float,  # py, N/mm2
+        design_strength_concrete: float,  # fcu, N/mm2
         shear_connector_resistance: float,  # Rq, N
         beam_center_to_support: float  # mm - distance from max positive moment to support
     ) -> float:

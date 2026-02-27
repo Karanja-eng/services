@@ -1,3 +1,4 @@
+print("TRACE: bim_orchestrator.py loading")
 """
 bim_orchestrator.py
 
@@ -52,6 +53,8 @@ class BIMModel:
     design_results: Optional[Dict[str, Any]] = None
     connection_results: Optional[Dict[str, Any]] = None
     drawing_data: Optional[Dict[str, Any]] = None
+    draw_2d: List[Dict[str, Any]] = field(default_factory=list)
+    draw_3d: List[Dict[str, Any]] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 class SteelBIMPipeline:

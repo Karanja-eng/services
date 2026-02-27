@@ -12,6 +12,8 @@ import Complete3DStructureView from './Multi_storey_structure';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
 import { COMPONENT_TYPES } from '../../Drawings/componentRegistry';
 import { BuildingLibraryBrowser, LoadAssignmentPanel } from './Building_library';
+import SteelBIM from '../../SteelDesign/SteelBIM';
+import { STRUCTURE_REGISTRY } from '../../SteelDesign/SteelBIM_Generators';
 
 import { StructuralGrid, StructuralElement } from './StructuralClasses';
 import { StructuralCanvas } from './StructuralCanvas';
@@ -20,6 +22,7 @@ import StructureBuilderToolbar from './StructureBuilderToolbar';
 import DesignDashboard from './DesignDashboard';
 import WireframeAnalysisView from './wireframe';
 import { AnalysisResultsViewer, DesignResultsViewer } from './StructuralResultViewers';
+import AdvancedSteelDesignResults from '../../SteelDesign/AdvancedSteelDesignResults';
 import axios from 'axios';
 
 // ============================================================================
@@ -69,6 +72,9 @@ const InteractiveStructureBuilder = ({
 
     // Grid State
     const [grid, setGrid] = useState(new StructuralGrid(5));
+    const [connections, setConnections] = useState([]); // BIM Connections
+    const [showSteelBimPanel, setShowSteelBimPanel] = useState(false);
+    const [libraryCategory, setLibraryCategory] = useState(null);
 
     const handleGridUpdate = useCallback((newGrid) => {
         // Create a new instance with the same properties to trigger re-render
@@ -142,6 +148,13 @@ const InteractiveStructureBuilder = ({
             ...el,
             selected: el.id === element?.id
         })));
+
+        // Handle connection selection
+        setConnections(prev => prev.map(cn => ({
+            ...cn,
+            selected: cn.id === element?.id
+        })));
+
         setSelectedElement(element);
     }, [tool]);
 
@@ -212,25 +225,36 @@ const InteractiveStructureBuilder = ({
 
             setAnalysisResults(response.data);
 
-            const resultMap = new Map(response.data.map(r => [r.element_id, r]));
-            setElements(prev => prev.map(el => {
-                const res = resultMap.get(el.id);
-                if (!res) return el;
-                return {
-                    ...el,
-                    analysisResults: {
-                        N_max: res.N_max,
-                        M_max: res.M_max,
-                        V_max: res.V_max,
-                        utilization: Math.min(Math.abs(res.M_max / 200), 1.2),
-                        sections: res.sections
-                    }
-                };
-            }));
+            // Normalize: RC backend returns a flat array; steel pipeline returns { success, analysis_results, ... }
+            let resultsArray = [];
+            if (Array.isArray(response.data)) {
+                resultsArray = response.data;
+            } else if (response.data?.analysis_results) {
+                const ar = response.data.analysis_results;
+                resultsArray = Array.isArray(ar) ? ar : Object.values(ar);
+            }
+
+            if (resultsArray.length > 0) {
+                const resultMap = new Map(resultsArray.map(r => [r.element_id || r.id, r]));
+                setElements(prev => prev.map(el => {
+                    const res = resultMap.get(el.id);
+                    if (!res) return el;
+                    return {
+                        ...el,
+                        analysisResults: {
+                            N_max: res.N_max,
+                            M_max: res.M_max,
+                            V_max: res.V_max,
+                            utilization: Math.min(Math.abs((res.M_max || 0) / 200), 1.2),
+                            sections: res.sections
+                        }
+                    };
+                }));
+            }
 
             setShowDiagrams({ moment: true, shear: true });
             setShowForces(true);
-            alert("Analysis completed successfully!");
+            // alert("Analysis completed successfully!");
         } catch (error) {
             console.error("Analysis failed:", error);
             alert("Analysis failed: " + (error.response?.data?.detail || error.message));
@@ -285,13 +309,16 @@ const InteractiveStructureBuilder = ({
         }
     };
 
-    const handleElementsAdd = useCallback((newElements) => {
+    const handleElementsAdd = useCallback((newElements, newConnections = []) => {
         setElements(prev => {
             const updated = [...prev, ...newElements];
             // Trigger grid update after adding elements
             setTimeout(() => handleAutoAlignGrid(updated), 0);
             return updated;
         });
+        if (newConnections.length > 0) {
+            setConnections(prev => [...prev, ...newConnections]);
+        }
         setTool('select');
     }, [handleAutoAlignGrid]);
 
@@ -567,7 +594,21 @@ const InteractiveStructureBuilder = ({
                 break;
 
             case 'library':
+                setLibraryCategory(materialType === 'steel' ? 'steel_systems' : null);
                 setShowLibrary(true);
+                break;
+
+            case 'steel_catalog':
+                setLibraryCategory('steel_systems');
+                setShowLibrary(true);
+                break;
+
+            case 'steel_bim_panel':
+                setView('steel_bim');
+                break;
+
+            case 'cad_view':
+                setView('cad');
                 break;
 
             case 'cad_view':
@@ -576,6 +617,10 @@ const InteractiveStructureBuilder = ({
 
             case 'add_bay':
                 handleGenerateBay();
+                break;
+
+            case 'steel_bim_panel':
+                setShowSteelBimPanel(true);
                 break;
 
             default:
@@ -720,6 +765,7 @@ const InteractiveStructureBuilder = ({
                 onRunDesign={handleRunDesign}
                 analysisMethod={analysisMethod}
                 onAnalysisMethodChange={setAnalysisMethod}
+                materialType={materialType}
             />
 
             {/* Main content */}
@@ -1120,6 +1166,7 @@ const InteractiveStructureBuilder = ({
                     {view === '2d' ? (
                         <StructuralCanvas
                             elements={elements}
+                            connections={connections}
                             onElementClick={handleElementClick}
                             onElementDragEnd={handleElementDragEnd}
                             onElementsAdd={handleElementsAdd}
@@ -1186,6 +1233,10 @@ const InteractiveStructureBuilder = ({
                             groundOpacity={groundOpacity}
                             setGroundOpacity={setGroundOpacity}
                         />
+                    ) : view === 'steel_bim' ? (
+                        <StructuralVisualizationComponent
+                            componentType="steel_bim"
+                        />
                     ) : null}
 
                     {view === '2d' && (
@@ -1203,6 +1254,7 @@ const InteractiveStructureBuilder = ({
                                         selectedElement={selectedElement}
                                         onPropertyChange={handlePropertyChange}
                                         onClose={() => setSelectedElement(null)}
+                                        materialType={materialType}
                                     />
                                 </div>
                             )}
@@ -1235,7 +1287,57 @@ const InteractiveStructureBuilder = ({
                                         </button>
                                     </div>
                                     <div style={{ height: 'calc(100% - 60px)' }}>
-                                        <BuildingLibraryBrowser onSelectTemplate={handleSelectTemplate} />
+                                        <BuildingLibraryBrowser
+                                            onSelectTemplate={handleSelectTemplate}
+                                            initialCategory={libraryCategory}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Steel BIM Panel Modal */}
+                            {showSteelBimPanel && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '5%',
+                                    left: '5%',
+                                    width: '90%',
+                                    height: '90%',
+                                    background: '#fff',
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                                    borderRadius: '12px',
+                                    zIndex: 5000,
+                                    overflow: 'hidden',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}>
+                                    <div style={{
+                                        padding: '12px 20px',
+                                        background: '#2c3e50',
+                                        color: '#ecf0f1',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <Box size={20} />
+                                            <span style={{ fontWeight: '600' }}>Steel BIM Structural Engine</span>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowSteelBimPanel(false)}
+                                            style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '20px' }}
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                                        <SteelBIM
+                                            embedded={true}
+                                            onElementsGenerated={(elems, conns) => {
+                                                handleElementsAdd(elems, conns);
+                                                setShowSteelBimPanel(false);
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -1246,12 +1348,19 @@ const InteractiveStructureBuilder = ({
 
             {/* Design Dashboard Overlay */}
             {designResults && (
-                <DesignDashboard
-                    results={designResults}
-                    onClose={() => setDesignResults(null)}
-                    onExportCAD={handleExportCAD}
-                    onViewCrossSection={(item) => alert("Cross section view for " + item.id + " coming soon!")}
-                />
+                materialType === 'steel' ? (
+                    <AdvancedSteelDesignResults
+                        results={designResults}
+                        onClose={() => setDesignResults(null)}
+                    />
+                ) : (
+                    <DesignDashboard
+                        results={designResults}
+                        onClose={() => setDesignResults(null)}
+                        onExportCAD={handleExportCAD}
+                        onViewCrossSection={(item) => alert("Cross section view for " + item.id + " coming soon!")}
+                    />
+                )
             )}
 
             {/* Loading Overlay */}

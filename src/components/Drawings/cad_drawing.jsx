@@ -40,9 +40,10 @@ import {
   Sparkles,
   MessageCircle,
   ChevronRight,
-  File,
+  File, Box
 } from "lucide-react";
 import { Stage, Layer, Line as KonvaLine, Circle as KonvaCircle, Rect as KonvaRect, Text as KonvaText, Group as KonvaGroup, Transformer } from 'react-konva';
+import SteelStructure2D from "../SteelDesign/SteelStructure2D";
 import StructuralVisualizationComponent from "./visualise_component";
 import { BeamKonvaGroup, getBeamCADPrimitives } from "../ReinforcedConcrete/Beams/BeamDrawer";
 import { ColumnKonvaGroup, getColumnCADPrimitives } from "../ReinforcedConcrete/Columns/ColumnDrawer";
@@ -65,7 +66,18 @@ const SNAP_MODES = {
   NEAREST: "nearest",
 };
 
-export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, onFullScreenToggle }) {
+export default function CadDrawer({
+  isDark,
+  initialObjects = [],
+  isFullScreen,
+  onFullScreenToggle,
+  isSteelBIM = false,
+  steelStructure = null,
+  viewMode = 'top',
+  onViewChange = () => { },
+  selectedSteelIds = [],
+  onSelectSteelIds = () => { }
+}) {
   // ============ STATE MANAGEMENT ============
   const [projectId] = useState(Date.now().toString());
   const [projectName, setProjectName] = useState("Untitled Project");
@@ -1905,6 +1917,17 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
                 )}
                 {renderKonvaObjects()}
 
+                {/* HIGH-FIDELITY STEEL STRUCTURE */}
+                {isSteelBIM && steelStructure && (
+                  <SteelStructure2D
+                    structure={steelStructure}
+                    viewMode={viewMode}
+                    selectedIds={selectedSteelIds}
+                    onSelect={(id) => onSelectSteelIds(id ? [id] : [])}
+                    isDark={isDark}
+                  />
+                )}
+
                 {/* Snap Indicator */}
                 {snapPoint && (
                   <KonvaGroup x={snapPoint.point.x} y={snapPoint.point.y}>
@@ -2332,6 +2355,18 @@ export default function CadDrawer({ isDark, initialObjects = [], isFullScreen, o
           >
             <Home size={14} />
           </button>
+
+          {isSteelBIM && (
+            <button
+              onClick={() => onViewChange('perspective')}
+              className="ml-4 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-bold uppercase flex items-center gap-1"
+              title="Switch to 3D Dashboard"
+            >
+              <Box size={12} />
+              3D View
+            </button>
+          )}
+
         </div>
 
         <div className="ml-auto flex gap-4 text-gray-500 italic">

@@ -51,6 +51,10 @@ import ComponentsPanel from "../ui-panels/components/ComponentsPanel";
 
 // RC Settings Component
 import RCSettings from "./RCSettings";
+import SteelBIMSidebar from "../SteelDesign/SteelBIMSidebar";
+import SteelBIMInspector from "../SteelDesign/SteelBIMInspector";
+import SteelStructure3D from "../SteelDesign/SteelStructure3D";
+import { STRUCTURE_REGISTRY } from "../SteelDesign/SteelBIM_Generators";
 
 // Legacy imports for backward compatibility (will be removed after full migration)
 import {
@@ -404,31 +408,55 @@ function MeasurementGrid({
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
+const StructuralVisualizationComponent = React.memo((props) => {
+  const {
+    theme = "light",
+    componentType = null,
+    componentData = null,
+    elementType = null,
+    elementData = null,
+    onExport,
+    onPrint,
+    onMeasure,
+    visible = true,
+    onClose = () => { },
+    stairProps = null,
+    slabOpacity: externalSlabOpacity,
+    setSlabOpacity: externalSetSlabOpacity,
+    groundOpacity: externalGroundOpacity,
+    setGroundOpacity: externalSetGroundOpacity,
+    showGrid: externalShowGrid,
+    setShowGrid: externalSetShowGrid,
+    buildingData,
+    onProgress,
+  } = props;
 
-export default function StructuralVisualizationComponent({
-  theme = "light",
-  componentType = null, // e.g., "pool", "column_MC1", etc.
-  componentData = null, // Component-specific data
-  elementType = null, // Legacy prop for backward compatibility
-  elementData = null, // Legacy prop for backward compatibility
-  onExport,
-  onPrint,
-  onMeasure,
-  visible = true,
-  onClose = () => { },
-  stairProps = null,
-  slabOpacity: externalSlabOpacity,
-  setSlabOpacity: externalSetSlabOpacity,
-  groundOpacity: externalGroundOpacity,
-  setGroundOpacity: externalSetGroundOpacity,
-  showGrid: externalShowGrid,
-  setShowGrid: externalSetShowGrid,
-}) {
+  const actualComponentType = componentType || elementType || (buildingData ? 'building' : 'unknown');
+  const actualComponentData = componentData || elementData || buildingData || {};
+
+  // Extract visualization props from componentData
+  const {
+    elements = [],
+    nodes = [],
+    floors = 1,
+    floorHeight = 3.5,
+    selectedElement: externalSelectedElement,
+    onElementClick: externalOnElementClick,
+    showForces: externalShowForces,
+    showDiagrams: externalShowDiagrams,
+    diagramScale: externalDiagramScale,
+    floorVisibility = {},
+    layerVisibility = {},
+    sectionDisplayType = "I-section",
+    materialType = "concrete"
+  } = actualComponentData;
+
+  // Sync external diagrams props
+  const showDiagrams = externalShowDiagrams || { moment: false, shear: false, axial: false };
+  const diagramScale = externalDiagramScale || 1;
   const isDark = theme === "dark";
 
   // Get component configuration from registry
-  const actualComponentType = componentType || elementType;
-  const actualComponentData = componentData || elementData;
   const componentConfig = getComponentConfig(actualComponentType);
 
   // Determine if this is a QS or RC component
@@ -523,6 +551,20 @@ export default function StructuralVisualizationComponent({
   const [viewMode, setViewMode] = useState("perspective");
   const [resetTrigger, setResetTrigger] = useState(0);
 
+  // Sidebar Tabs & Sections
+  const [sidebarTab, setSidebarTab] = useState(() => isSteelBIM ? 'steel' : 'general');
+  const [expandedSections, setExpandedSections] = useState({
+    colors: false,
+    rendering: false,
+    display: true,
+    lighting: false,
+    analysis: false
+  });
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   // Display controls (RC-specific)
   const [showConcrete, setShowConcrete] = useState(true);
   const [showRebar, setShowRebar] = useState(true);
@@ -572,6 +614,53 @@ export default function StructuralVisualizationComponent({
   const [componentsOpen, setComponentsOpen] = useState(false);
   const [registeredPanels, setRegisteredPanels] = useState([]);
   const [generatedModels, setGeneratedModels] = useState([]);
+
+  // ========== Steel BIM Integration State ==========
+  const [activeCategory, setActiveCategory] = useState("trusses");
+  const [activeStructureId, setActiveStructureId] = useState(null);
+  const [steelStructure, setSteelStructure] = useState(null);
+  const [selectedSteelIds, setSelectedSteelIds] = useState([]);
+  const [steelLayers, setSteelLayers] = useState({
+    STRUCTURE: true, TRUSS: true, PORTAL: true, BRIDGE: true, TOWER: true, DOME: true, SECONDARY: true, SUPPORT: true, CRANE: true
+  });
+
+  const isSteelBIM = actualComponentType === 'steel_bim';
+
+  const loadSteelStructure = (cat, id) => {
+    const entry = STRUCTURE_REGISTRY[cat]?.find(e => e.id === id);
+    if (entry) {
+      const result = entry.gen(entry.cfg);
+      setSteelStructure(result);
+    }
+  };
+
+  const currentSteelItem = React.useMemo(() => {
+    if (!selectedSteelIds.length || !steelStructure) return null;
+    const id = selectedSteelIds[0];
+    return steelStructure.members.find(m => m.id === id) || steelStructure.connections.find(c => c.id === id);
+  }, [selectedSteelIds, steelStructure]);
+
+  const handleSteelChange = (id, key, value) => {
+    setSteelStructure(prev => {
+      if (!prev) return prev;
+      const updMembers = prev.members.map(m => {
+        if (m.id !== id) return m;
+        const updated = { ...m };
+        if (key.includes('.')) {
+          const [a, b] = key.split('.');
+          updated[a] = { ...updated[a], [b]: value };
+        } else {
+          updated[key] = value;
+        }
+        return updated;
+      });
+      const updConns = prev.connections.map(c => {
+        if (c.id !== id) return c;
+        return { ...c, [key]: value };
+      });
+      return { ...prev, members: updMembers, connections: updConns };
+    });
+  };
 
   useEffect(() => {
     const unsubComponents = taskbarController.subscribe(state => setComponentsOpen(state.componentsPanelOpen));
@@ -710,6 +799,22 @@ export default function StructuralVisualizationComponent({
               </button>
             </div>
 
+            {/* Sidebar Tab Bar */}
+            <div className={`flex p-2 border-b ${borderColor} gap-2`}>
+              <button
+                onClick={() => setSidebarTab('general')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${sidebarTab === 'general' ? 'bg-blue-600 text-white shadow-md' : hoverBg}`}
+              >
+                General
+              </button>
+              <button
+                onClick={() => setSidebarTab('steel')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${sidebarTab === 'steel' ? 'bg-blue-600 text-white shadow-md' : hoverBg}`}
+              >
+                Steel BIM
+              </button>
+            </div>
+
             {/* Sidebar Content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Component Info Banner */}
@@ -724,49 +829,149 @@ export default function StructuralVisualizationComponent({
                 </div>
               )}
 
-              {/* Dynamic Settings based on component type */}
-              {isQS && QSSettingsComponent ? (
-                // Render QS-specific settings
-                <QSSettingsComponent
-                  settings={qsSettings}
-                  onSettingsChange={setQsSettings}
-                  isDark={isDark}
-                />
+              {/* Dynamic Settings content based on tab selection */}
+              {sidebarTab === 'steel' ? (
+                <div className="space-y-4">
+                  {isSteelBIM ? (
+                    <SteelBIMSidebar
+                      activeCategory={activeCategory}
+                      setActiveCategory={setActiveCategory}
+                      activeStructure={activeStructureId}
+                      setActiveStructure={setActiveStructureId}
+                      loadStructure={loadSteelStructure}
+                      layers={steelLayers}
+                      setLayers={setSteelLayers}
+                      isDark={isDark}
+                    />
+                  ) : (
+                    <div className={`p-6 text-center text-xs ${textSecondary} italic`}>
+                      Steel BIM structures not available for this component.
+                    </div>
+                  )}
+                </div>
               ) : (
-                // Render RC settings
-                <RCSettings
-                  showConcrete={showConcrete}
-                  setShowConcrete={setShowConcrete}
-                  showRebar={showRebar}
-                  setShowRebar={setShowRebar}
-                  slabOpacity={slabOpacity}
-                  setSlabOpacity={setSlabOpacity}
-                  groundOpacity={groundOpacity}
-                  setGroundOpacity={setGroundOpacity}
-                  showGrid={showGrid}
-                  setShowGrid={setShowGrid}
-                  showAxis={showAxis}
-                  setShowAxis={setShowAxis}
-                  showDimensions={showDimensions}
-                  setShowDimensions={setShowDimensions}
-                  showAnnotations={showAnnotations}
-                  setShowAnnotations={setShowAnnotations}
-                  colors={colors}
-                  handleColorChange={handleColorChange}
-                  wireframe={wireframe}
-                  setWireframe={setWireframe}
-                  shadows={shadows}
-                  setShadows={setShadows}
-                  antialiasing={antialiasing}
-                  setAntialiasing={setAntialiasing}
-                  snapToGrid={snapToGrid}
-                  setSnapToGrid={setSnapToGrid}
-                  ambientIntensity={ambientIntensity}
-                  setAmbientIntensity={setAmbientIntensity}
-                  directionalIntensity={directionalIntensity}
-                  setDirectionalIntensity={setDirectionalIntensity}
-                  isDark={isDark}
-                />
+                <div className="space-y-2">
+                  {/* COLLAPSIBLE DISPLAY OPTIONS */}
+                  <section className={`border-b ${borderColor} pb-2`}>
+                    <button
+                      onClick={() => toggleSection('display')}
+                      className={`w-full flex items-center justify-between py-2 text-sm font-bold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Eye size={14} />
+                        Display Options
+                      </div>
+                      <ChevronRight size={14} className={`transition-transform ${expandedSections.display ? 'rotate-90' : ''}`} />
+                    </button>
+                    {expandedSections.display && (
+                      <div className="space-y-2 mt-2 pl-2">
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm">Concrete</span>
+                          <input type="checkbox" checked={showConcrete} onChange={(e) => setShowConcrete(e.target.checked)} className="w-4 h-4 rounded" />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm">Reinforcement</span>
+                          <input type="checkbox" checked={showRebar} onChange={(e) => setShowRebar(e.target.checked)} className="w-4 h-4 rounded" />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm">Grid</span>
+                          <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} className="w-4 h-4 rounded" />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm">Axis Lines</span>
+                          <input type="checkbox" checked={showAxis} onChange={(e) => setShowAxis(e.target.checked)} className="w-4 h-4 rounded" />
+                        </label>
+                        <div className="pt-2">
+                          <div className="flex justify-between text-[10px] mb-1 opacity-70">
+                            <span>Opacity</span>
+                            <span>{(slabOpacity * 100).toFixed(0)}%</span>
+                          </div>
+                          <input type="range" min="0" max="1" step="0.05" value={slabOpacity} onChange={(e) => setSlabOpacity(Number(e.target.value))} className="w-full h-1" />
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  {/* COLLAPSIBLE MATERIAL COLORS */}
+                  <section className={`border-b ${borderColor} pb-2`}>
+                    <button
+                      onClick={() => toggleSection('colors')}
+                      className={`w-full flex items-center justify-between py-2 text-sm font-bold uppercase tracking-wider ${isDark ? 'text-orange-400' : 'text-orange-600'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Tag size={14} />
+                        Material Colors
+                      </div>
+                      <ChevronRight size={14} className={`transition-transform ${expandedSections.colors ? 'rotate-90' : ''}`} />
+                    </button>
+                    {expandedSections.colors && (
+                      <div className="space-y-3 mt-2 pl-2">
+                        {Object.entries(colors).map(([key, value]) => (
+                          <div key={key} className="flex items-center justify-between">
+                            <label className="text-xs capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</label>
+                            <input type="color" value={value} onChange={(e) => handleColorChange(key, e.target.value)} className="w-8 h-6 rounded border-none bg-transparent cursor-pointer" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* COLLAPSIBLE RENDERING */}
+                  <section className={`border-b ${borderColor} pb-2`}>
+                    <button
+                      onClick={() => toggleSection('rendering')}
+                      className={`w-full flex items-center justify-between py-2 text-sm font-bold uppercase tracking-wider ${isDark ? 'text-green-400' : 'text-green-600'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Settings size={14} />
+                        Rendering
+                      </div>
+                      <ChevronRight size={14} className={`transition-transform ${expandedSections.rendering ? 'rotate-90' : ''}`} />
+                    </button>
+                    {expandedSections.rendering && (
+                      <div className="space-y-2 mt-2 pl-2">
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm">Wireframe</span>
+                          <input type="checkbox" checked={wireframe} onChange={(e) => setWireframe(e.target.checked)} className="w-4 h-4 rounded" />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm">Shadows</span>
+                          <input type="checkbox" checked={shadows} onChange={(e) => setShadows(e.target.checked)} className="w-4 h-4 rounded" />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm">Anti-aliasing</span>
+                          <input type="checkbox" checked={antialiasing} onChange={(e) => setAntialiasing(e.target.checked)} className="w-4 h-4 rounded" />
+                        </label>
+                      </div>
+                    )}
+                  </section>
+
+                  {/* COLLAPSIBLE LIGHTING */}
+                  <section className={`border-b ${borderColor} pb-2`}>
+                    <button
+                      onClick={() => toggleSection('lighting')}
+                      className={`w-full flex items-center justify-between py-2 text-sm font-bold uppercase tracking-wider ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sun size={14} />
+                        Lighting
+                      </div>
+                      <ChevronRight size={14} className={`transition-transform ${expandedSections.lighting ? 'rotate-90' : ''}`} />
+                    </button>
+                    {expandedSections.lighting && (
+                      <div className="space-y-4 mt-2 pl-2">
+                        <div>
+                          <label className="text-xs block mb-1">Ambient: {ambientIntensity.toFixed(2)}</label>
+                          <input type="range" min="0" max="1" step="0.1" value={ambientIntensity} onChange={(e) => setAmbientIntensity(parseFloat(e.target.value))} className="w-full h-1" />
+                        </div>
+                        <div>
+                          <label className="text-xs block mb-1">Directional: {directionalIntensity.toFixed(2)}</label>
+                          <input type="range" min="0" max="2" step="0.1" value={directionalIntensity} onChange={(e) => setDirectionalIntensity(parseFloat(e.target.value))} className="w-full h-1" />
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                </div>
               )}
             </div>
 
@@ -847,7 +1052,7 @@ export default function StructuralVisualizationComponent({
                 }`}
               title="Components & Layers"
             >
-              <LayoutGrid className="w-4 h-4" />
+              <Grid3x3 className="w-4 h-4" />
               <span className="text-sm">Components</span>
             </button>
           </div>
@@ -861,7 +1066,16 @@ export default function StructuralVisualizationComponent({
               {/* {memberType.charAt(0).toUpperCase() + memberType.slice(1)} */}
             </div>
             <div className={`text-sm ${textSecondary}`}>
-              View: {viewModes.find((v) => v.id === viewMode)?.name}
+              <button
+                onClick={() => setViewMode(viewMode === 'perspective' ? 'top' : 'perspective')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'perspective'
+                  ? 'bg-orange-500/10 text-orange-600 border border-orange-500/20'
+                  : 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
+                  } hover:scale-105 active:scale-95`}
+              >
+                {viewMode === 'perspective' ? <Box size={12} /> : <LayoutGrid size={12} />}
+                View: {viewMode === 'perspective' ? '3D' : '2D Plan'}
+              </button>
             </div>
           </div>
 
@@ -947,6 +1161,7 @@ export default function StructuralVisualizationComponent({
                     poolData={actualComponentData} // Specific prop name for Pool
                     settings={qsSettings}          // QS specific settings
                     {...actualComponentData}       // Spread all data for other components
+                    {...props}                     // Pass down buildingData and other props
                   />
                 )}
 
@@ -977,7 +1192,31 @@ export default function StructuralVisualizationComponent({
                 <BimModel key={model.id} url={model.url} />
               ))}
 
-              <PerspectiveCamera makeDefault position={[5, 3, 5]} />
+              {/* Render Steel Structure (BIM Mode) */}
+              {/* Main 3D Model Rendering */}
+              {isSteelBIM || materialType === 'steel' ? (
+                <SteelStructure3D
+                  structure={steelStructure || elements}
+                  selectedIds={selectedSteelIds.length > 0 ? selectedSteelIds : (externalSelectedElement ? [externalSelectedElement.id] : [])}
+                  onSelect={(id) => {
+                    if (externalOnElementClick) externalOnElementClick({ id });
+                    setSelectedSteelIds([id]);
+                  }}
+                  layers={isSteelBIM ? steelLayers : layerVisibility}
+                  showDiagrams={showDiagrams}
+                  diagramScale={diagramScale}
+                />
+              ) : componentType === "tall_framed_analysis" ||
+                componentType === "tall_framed_wireframe" ? (
+                <FrameScene
+                  elements={elements}
+                  showDiagrams={showDiagrams}
+                  showForces={externalShowForces}
+                  diagramScale={diagramScale}
+                  floorHeight={floorHeight}
+                />
+              ) : (
+                <PerspectiveCamera makeDefault position={[5, 3, 5]} />
               {/* Camera Controller */}
               <CameraController
                 viewMode={viewMode}
@@ -1026,7 +1265,7 @@ export default function StructuralVisualizationComponent({
                     }`}
                   title="Front Elevation"
                 >
-                  Top
+                  F
                 </button>
 
                 <button
@@ -1274,7 +1513,13 @@ export default function StructuralVisualizationComponent({
             </div>
 
             {/* === UNIVERSAL PROPERTY VIEWER === */}
-            {elementData && (
+            {isSteelBIM ? (
+              <SteelBIMInspector
+                item={currentSteelItem}
+                onChange={handleSteelChange}
+                isDark={isDark}
+              />
+            ) : elementData && (
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold mb-3 uppercase tracking-wide">
                   Inputs
@@ -1361,4 +1606,6 @@ export default function StructuralVisualizationComponent({
       {/* Can be toggled with a help button */}
     </div>
   );
-}
+});
+
+export default StructuralVisualizationComponent;

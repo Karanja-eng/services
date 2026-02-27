@@ -25,15 +25,17 @@ const StructureBuilderToolbar = ({
     onViewAnalysisResults,
     onViewDesignResults,
     analysisMethod = 'moment_distribution',
-    onAnalysisMethodChange
+    onAnalysisMethodChange,
+    materialType = 'concrete'
 }) => {
-    const [activeTab, setActiveTab] = useState('view'); // 'view', 'design', 'members', 'edit'
+    const [activeTab, setActiveTab] = useState('view'); // 'view', 'design', 'members', 'edit', 'steel_bim'
 
     const tabs = [
         { id: 'view', label: 'View', icon: Eye },
         { id: 'design', label: 'Design', icon: Play },
         { id: 'members', label: 'Members', icon: Box },
         { id: 'edit', label: 'Edit', icon: Layout },
+        ...(materialType === 'steel' ? [{ id: 'steel_bim', label: 'Steel BIM', icon: Layout }] : [])
     ];
 
     const renderSubToolbar = () => {
@@ -166,6 +168,24 @@ const StructureBuilderToolbar = ({
                         />
                     </div>
                 );
+            case 'steel_bim':
+                return (
+                    <div style={subToolbarStyle}>
+                        <ToolbarButton
+                            active={view === 'steel_bim'}
+                            onClick={() => onViewChange('steel_bim')}
+                            icon={Box}
+                            label="3D Dashboard"
+                            color="#f97316"
+                        />
+                        <ToolbarButton
+                            active={false}
+                            onClick={() => onAction('steel_catalog')}
+                            icon={Library}
+                            label="Steel Catalog"
+                        />
+                    </div>
+                );
             case 'edit':
                 return (
                     <div style={subToolbarStyle}>
@@ -200,6 +220,22 @@ const StructureBuilderToolbar = ({
                             onClick={onLoad}
                             icon={FolderOpen}
                             label="Open"
+                        />
+                    </div>
+                );
+            case 'steel_bim':
+                return (
+                    <div style={subToolbarStyle}>
+                        <ToolbarButton
+                            onClick={() => onAction('steel_bim_panel')}
+                            icon={Layout}
+                            label="BIM Dashboard"
+                            color="#e67e22"
+                        />
+                        <ToolbarButton
+                            onClick={() => onAction('library')}
+                            icon={Library}
+                            label="Steel Catalog"
                         />
                     </div>
                 );

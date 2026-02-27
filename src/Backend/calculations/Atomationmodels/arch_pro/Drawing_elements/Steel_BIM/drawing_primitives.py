@@ -290,7 +290,7 @@ class MemberVisualization:
         Convert a Member object to 3D rendering primitives.
         Returns list of primitive dictionaries for Three.js rendering.
         """
-        from ..sections.section_properties import SectionType
+        from .section_properties import SectionType
         
         primitives = []
         section = member.section

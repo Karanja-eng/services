@@ -69,7 +69,7 @@ const WeldedJointsModule = () => {
   const calculateButtWeld = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/api/welded-joints/butt-weld",
+        "http://localhost:8001/api/welded-joints/butt-weld",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -87,7 +87,7 @@ const WeldedJointsModule = () => {
   const calculateLapJoint = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/api/welded-joints/lap-joint",
+        "http://localhost:8001/api/welded-joints/lap-joint",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -105,7 +105,7 @@ const WeldedJointsModule = () => {
   const calculateTeeJoint = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/api/welded-joints/tee-joint",
+        "http://localhost:8001/api/welded-joints/tee-joint",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

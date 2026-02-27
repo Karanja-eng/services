@@ -435,7 +435,7 @@ class FullBuildingAnalyzer:
             fem_res = fem.solve()
             print("FEM solve returned.")
             member_dict = {m.member_id: m for m in members}
-            for mid, forces in fem_res["elements"].items():
+            for mid, forces in fem_res.get("member_forces", fem_res.get("elements", {})).items():
                 if mid not in member_dict: continue
                 m = member_dict[mid]
                 

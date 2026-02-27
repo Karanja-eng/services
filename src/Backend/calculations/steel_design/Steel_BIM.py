@@ -1,3 +1,4 @@
+print("TRACE: Steel_BIM.py loading")
 """
 structural_steel_bim/core/geometry.py
 

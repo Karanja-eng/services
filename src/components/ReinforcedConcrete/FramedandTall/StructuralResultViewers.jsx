@@ -82,7 +82,7 @@ export const AnalysisResultsViewer = ({ elements, results, onClose }) => {
     const [filterType, setFilterType] = useState('all');
 
     const filteredElements = elements.filter(el => {
-        const matchesSearch = el.id.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = String(el.id).toLowerCase().includes(searchTerm.toLowerCase());
         const matchesType = filterType === 'all' || el.type === filterType;
         return matchesSearch && matchesType;
     });
@@ -192,7 +192,7 @@ export const DesignResultsViewer = ({ elements, results, onClose }) => {
 
     const filteredElements = elements.filter(el =>
         (el.type === 'column' || el.type === 'beam' || el.type === 'slab') &&
-        el.id.toLowerCase().includes(searchTerm.toLowerCase())
+        String(el.id).toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (

@@ -182,6 +182,13 @@ const BS6399_BUILDING_CLASSES = {
                 dead_load_typical: 2.0,
                 partition_allowance: 1.0,
                 description: 'Open web steel joists'
+            },
+            dome: {
+                name: 'Large Span Domes',
+                imposed_load: 0.6,
+                dead_load_typical: 0.4,
+                partition_allowance: 0.0,
+                description: 'Spherical and specialized dome systems'
             }
         }
     }
@@ -294,6 +301,153 @@ const BUILDING_TEMPLATES = [
         },
         structural_system: 'steel_truss',
         thumbnail: '📐'
+    },
+    {
+        id: 'portal_warehouse_18m',
+        name: 'Industrial Warehouse - 18m Portal',
+        category: 'steel_systems',
+        subcategory: 'roof_truss',
+        description: 'Clear-span portal frame with haunch detailing and baseplates.',
+        floors: 1,
+        bay_config: {
+            generator: 'portal_frame',
+            span: 18.0,
+            eave_height: 6.0,
+            ridge_height: 8.5,
+            num_bays: 5,
+            bay_spacing: 6.0
+        },
+        structural_system: 'portal_frame',
+        thumbnail: '🏭'
+    },
+    {
+        id: 'dual_portal_industrial',
+        name: 'Dual-Span Industrial Complex',
+        category: 'steel_systems',
+        subcategory: 'roof_truss',
+        description: 'Heavy-duty dual portal frame for large scale storage.',
+        floors: 1,
+        bay_config: {
+            generator: 'portal_frame',
+            span: 40.0,
+            eave_height: 8.0,
+            ridge_height: 11.0,
+            num_bays: 8,
+            bay_spacing: 7.5
+        },
+        structural_system: 'portal_frame',
+        thumbnail: '🏢'
+    },
+    {
+        id: 'residential_truss_house',
+        name: 'Modern House - Steel Truss Roof',
+        category: 'residential',
+        subcategory: 'domestic',
+        description: 'Residential layout with detailed cold-formed steel roof trusses.',
+        floors: 1,
+        bay_config: {
+            generator: 'house_truss',
+            span: 12.0,
+            depth: 15.0,
+            height: 3.0
+        },
+        structural_system: 'house_truss',
+        thumbnail: '🏠'
+    },
+    {
+        id: 'pratt_bridge_25m',
+        name: 'Pedestrian Bridge - 25m Pratt',
+        category: 'steel_systems',
+        subcategory: 'floor_truss',
+        description: 'All-steel pedestrian bridge using Pratt truss configuration.',
+        floors: 1,
+        bay_config: {
+            generator: 'bridge',
+            span: 25.0,
+            width: 3.5,
+            height: 3.0
+        },
+        structural_system: 'bridge',
+        thumbnail: '🌉'
+    },
+    {
+        id: 'lattice_tower_30m',
+        name: 'Telecom Tower - 30m Lattice',
+        category: 'steel_systems',
+        subcategory: 'roof_truss',
+        description: 'Self-supporting triangular lattice tower with X-bracing.',
+        floors: 1,
+        bay_config: {
+            generator: 'lattice_tower',
+            total_height: 30.0
+        },
+        structural_system: 'lattice_tower',
+        thumbnail: '🗼'
+    },
+    {
+        id: 'north_light_factory',
+        name: 'Shed - North Light Industrial',
+        category: 'steel_systems',
+        subcategory: 'roof_truss',
+        description: 'Specialized asymmetrical roof for natural lighting environments.',
+        floors: 1,
+        bay_config: {
+            generator: 'truss',
+            truss_type: 'North Light',
+            span: 15.0,
+            depth: 2.5,
+            num_panels: 8
+        },
+        structural_system: 'steel_truss',
+        thumbnail: '🏬'
+    },
+    {
+        id: 'heavy_girder_factory',
+        name: 'Heavy Industry - Plate Girder Frame',
+        category: 'steel_systems',
+        subcategory: 'floor_truss',
+        description: 'Large span industrial building using deep plate girders.',
+        floors: 1,
+        bay_config: {
+            generator: 'portal_frame',
+            span: 30.0,
+            eave_height: 12.0,
+            ridge_height: 14.0,
+            is_heavy: true
+        },
+        structural_system: 'portal_frame',
+        thumbnail: '🛠️'
+    },
+    {
+        id: 'schwedler_dome_40m',
+        name: '40m Schwedler Dome',
+        category: 'steel_systems',
+        subcategory: 'dome',
+        description: 'Large span ribbed dome for stadiums or auditoriums.',
+        floors: 1,
+        bay_config: {
+            generator: 'schwedler_dome',
+            radius: 20.0,
+            rings: 6,
+            segments: 16
+        },
+        structural_system: 'dome',
+        thumbnail: '🏟️'
+    },
+    {
+        id: 'geodesic_dome_24m',
+        name: '24m Geodesic Dome',
+        category: 'steel_systems',
+        subcategory: 'dome',
+        description: 'High-frequency geodesic structure for greenhouses or event spaces.',
+        floors: 1,
+        bay_config: {
+            generator: 'geodesic_dome',
+            radius: 12.0,
+            frequency: 3
+        },
+        structural_system: 'dome',
+        thumbnail: '🌐'
     }
 ];
 
@@ -301,8 +455,8 @@ const BUILDING_TEMPLATES = [
 // LIBRARY BROWSER COMPONENT
 // ============================================================================
 
-const BuildingLibraryBrowser = ({ onSelectTemplate, onClose }) => {
-    const [selectedCategory, setSelectedCategory] = useState(null);
+const BuildingLibraryBrowser = ({ onSelectTemplate, onClose, initialCategory = null }) => {
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredTemplates = BUILDING_TEMPLATES.filter(template => {

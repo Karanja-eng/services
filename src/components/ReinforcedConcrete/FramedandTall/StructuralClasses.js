@@ -55,10 +55,12 @@ export class StructuralGrid {
         const coordsY = [];
 
         elements.forEach(el => {
-            if (el.type === 'column') {
+            if (!el.position) return;
+
+            if (el.type === 'column' || el.type === 'foundation') {
                 coordsX.push(el.position.x);
                 coordsY.push(el.position.y);
-            } else if (el.type === 'wall') {
+            } else if (el.type === 'wall' || el.type === 'beam') {
                 if (el.position.start) {
                     coordsX.push(el.position.start.x);
                     coordsY.push(el.position.start.y);

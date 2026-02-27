@@ -23,7 +23,7 @@ const EurocodeBeamDesign = ({ theme = 'light' }) => {
 
   const calculateBeam = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/eurocode/beams/design', {
+      const response = await fetch('http://localhost:8001/api/eurocode/beams/design', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(beamData)
@@ -299,11 +299,11 @@ const EurocodeBeamDesign = ({ theme = 'light' }) => {
               <h4 className={`font-bold text-lg ${textColor} border-b-2 ${borderColor} pb-2`}>
                 Utilization Ratios
               </h4>
-              
+
               <div>
                 <p className={`font-semibold mb-1 ${textColor}`}>Bending: {results.bending_utilization}%</p>
                 <div className={`w-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-3`}>
-                  <div 
+                  <div
                     className={`h-3 rounded-full ${parseFloat(results.bending_utilization) > 100 ? 'bg-red-600' : parseFloat(results.bending_utilization) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                     style={{ width: `${Math.min(parseFloat(results.bending_utilization), 100)}%` }}
                   ></div>
@@ -313,7 +313,7 @@ const EurocodeBeamDesign = ({ theme = 'light' }) => {
               <div>
                 <p className={`font-semibold mb-1 ${textColor}`}>Shear: {results.shear_utilization}%</p>
                 <div className={`w-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-3`}>
-                  <div 
+                  <div
                     className={`h-3 rounded-full ${parseFloat(results.shear_utilization) > 100 ? 'bg-red-600' : parseFloat(results.shear_utilization) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                     style={{ width: `${Math.min(parseFloat(results.shear_utilization), 100)}%` }}
                   ></div>
@@ -323,7 +323,7 @@ const EurocodeBeamDesign = ({ theme = 'light' }) => {
               <div>
                 <p className={`font-semibold mb-1 ${textColor}`}>Deflection: {results.deflection_utilization}%</p>
                 <div className={`w-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-3`}>
-                  <div 
+                  <div
                     className={`h-3 rounded-full ${parseFloat(results.deflection_utilization) > 100 ? 'bg-red-600' : parseFloat(results.deflection_utilization) > 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
                     style={{ width: `${Math.min(parseFloat(results.deflection_utilization), 100)}%` }}
                   ></div>

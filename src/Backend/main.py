@@ -158,6 +158,22 @@ async def database_status(db: Session = Depends(get_db)):
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+######## Timber #######
+from calculations.timber_design.timber_api import router as timber_router
+
+app.include_router(timber_router, prefix="/timber_router", tags=["timber_router"])
+
+######## Timber #######
+
+######## Masonry ########
+
+from calculations.masonry.masonry_api import router as masonry_router
+
+app.include_router(masonry_router, prefix="/masonry_router", tags=["masonry_router"])
+
+######## Masonry ########   
+
 #######  Surveying #####
 
 from calculations.surveying.surveying_backend import router as surveying_backend_router
@@ -270,6 +286,7 @@ from calculations.steel_design.steel_design_backend import (
 )
 from calculations.steel_design.steel_structure_analysis import router as steel_structure_analysis_router
 from calculations.steel_design.steel_structure_design import router as steel_structure_design_router
+from calculations.steel_design.steel_design_backend_v2 import router as steel_backend_v2_router
 
 
 app.include_router(
@@ -280,6 +297,7 @@ app.include_router(stell_backend_router, prefix="/steel_backend", tags=["steel_r
 
 app.include_router(steel_structure_analysis_router, tags=["steel_structure_analysis"])
 app.include_router(steel_structure_design_router, tags=["steel_structure_design"])
+app.include_router(steel_backend_v2_router, tags=["steel_router_v2"])
 
 
 #########################################   R . C ###########################

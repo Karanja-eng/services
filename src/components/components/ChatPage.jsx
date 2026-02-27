@@ -56,20 +56,56 @@ const ChatPage = ({ renderSearch, isDark }) => {
             { label: "Weld Connections", path: "/structural/automatic/weld_connections" },
             { label: "Bolt Connections", path: "/structural/automatic/bolt_connections" },
           ]
-        }
+        },
+        {
+          id: "soil",
+          title: "Soil Mechanics",
+          type: "section",
+          items: [
+            { label: "Soil Mechanics", path: "/surveying/soil-mechanics" }
+          ]
+        },
+        {
+          id: "precast",
+          title: "Precast /PreStressed ",
+          type: "section",
+          items: [
+            { label: "Member Design", path: "/structural/manual/steel" },
+            { label: "Weld Connections", path: "/structural/automatic/weld_connections" },
+            { label: "Bolt Connections", path: "/structural/automatic/bolt_connections" },
+          ]
+        },
+        {
+          id: "timber",
+          title: "Timber Design",
+          type: "section",
+          items: [
+            { label: "Member Design", path: "/structural/manual/Timber_design" },
+
+          ]
+        },
+        {
+          id: "masonry",
+          title: "Masonry Design",
+          type: "section",
+          items: [
+            { label: "Member Design", path: "/structural/manual/Masonry_design" },
+
+          ]
+        },
       ]
     },
     {
-      id: "quantity",
-      title: "Quantity Survey",
+      id: "surveying",
+      title: "Surveying",
       icon: Calculator,
       color: "from-emerald-500 to-emerald-700",
       bg: "bg-emerald-50 dark:bg-emerald-900/20 ",
-      description: "Taking off & BOQ",
+      description: "Quantity & General Surveying",
       children: [
         {
           id: "qs_manual",
-          title: "Manual Taking Off",
+          title: "Quantity Surveying",
           type: "section",
           items: [
             { label: "Taking Off", path: "/quantity/manual/taking-off" },
@@ -92,17 +128,7 @@ const ChatPage = ({ renderSearch, isDark }) => {
             { label: "Swimming Pool", path: "/quantity/manual/swimming-pool-taking-off" },
 
           ]
-        }
-      ]
-    },
-    {
-      id: "surveying_tools",
-      title: "Surveying & CAD",
-      icon: Ruler,
-      color: "from-amber-500 to-amber-700",
-      bg: "bg-amber-50 dark:bg-amber-900/20",
-      description: "Map & Draw",
-      children: [
+        },
         {
           id: "surveying_main",
           title: "Surveying Tools",
@@ -116,9 +142,20 @@ const ChatPage = ({ renderSearch, isDark }) => {
             { label: "Geoid & GNSS", path: "/surveying/geoid-model" },
             { label: "Road & Railway Design", path: "/surveying/road-railway" },
             { label: "Utilities & Infrastructure", path: "/surveying/utilities" },
-            { label: "Soil Mechanics", path: "/surveying/soil-mechanics" }
+
           ]
-        },
+        }
+      ]
+    },
+    {
+      id: "surveying_tools",
+      title: "CAD",
+      icon: Ruler,
+      color: "from-amber-500 to-amber-700",
+      bg: "bg-amber-50 dark:bg-amber-900/20",
+      description: "Map & Draw",
+      children: [
+
         {
           id: "drawing_tools",
           title: "Drawing & 3D",

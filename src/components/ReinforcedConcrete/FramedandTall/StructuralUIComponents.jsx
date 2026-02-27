@@ -395,7 +395,7 @@ export const Toolbar = ({
 // PROPERTIES PANEL
 // ============================================================================
 
-export const PropertiesPanel = ({ selectedElement, onPropertyChange, onClose }) => {
+export const PropertiesPanel = ({ selectedElement, onPropertyChange, onClose, materialType = 'concrete' }) => {
     if (!selectedElement) {
         return (
             <div style={{
@@ -415,6 +415,11 @@ export const PropertiesPanel = ({ selectedElement, onPropertyChange, onClose }) 
             </div>
         );
     }
+
+    const steelSections = [
+        "UB 203x133x25", "UB 254x146x31", "UB 305x165x40", "UB 356x171x45",
+        "UC 152x152x23", "UC 203x203x46", "UC 254x254x73", "UC 305x305x97"
+    ];
 
     return (
         <div style={{
@@ -466,7 +471,7 @@ export const PropertiesPanel = ({ selectedElement, onPropertyChange, onClose }) 
                         <input
                             type="text"
                             value={selectedElement.id}
-                            onChange={(e) => onPropertyChange('id', e.target.value)} // Note: Requires handling ID change in parent if ID is used as key
+                            onChange={(e) => onPropertyChange('id', e.target.value)}
                             style={{
                                 width: '100%',
                                 padding: '8px',
@@ -477,53 +482,89 @@ export const PropertiesPanel = ({ selectedElement, onPropertyChange, onClose }) 
                         />
                     </div>
 
-                    <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#666', marginTop: '16px' }}>
-                        DIMENSIONS
-                    </div>
+                    {materialType === 'steel' && (selectedElement.type === 'column' || selectedElement.type === 'beam') ? (
+                        <div style={{ marginBottom: '12px' }}>
+                            <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
+                                Steel Section (UK)
+                            </label>
+                            <select
+                                value={selectedElement.properties.section || steelSections[0]}
+                                onChange={(e) => {
+                                    const sec = e.target.value;
+                                    onPropertyChange('section', sec);
+                                    // Auto-update width/depth based on typical section sizes roughly
+                                    const [type, size] = sec.split(' ');
+                                    const dims = size.split('x');
+                                    if (dims.length >= 2) {
+                                        onPropertyChange('width', Number(dims[1]) / 1000);
+                                        onPropertyChange('depth', Number(dims[0]) / 1000);
+                                    }
+                                }}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '4px',
+                                    fontSize: '13px'
+                                }}
+                            >
+                                {steelSections.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                    ) : (
+                        <>
+                            <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#666', marginTop: '16px' }}>
+                                DIMENSIONS
+                            </div>
 
-                    <div style={{ marginBottom: '12px' }}>
-                        <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-                            Width (mm)
-                        </label>
-                        <input
-                            type="number"
-                            value={selectedElement.properties.width}
-                            onChange={(e) => onPropertyChange('width', Number(e.target.value))}
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                fontSize: '13px'
-                            }}
-                        />
-                    </div>
+                            <div style={{ marginBottom: '12px' }}>
+                                <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
+                                    Width (m)
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={selectedElement.properties.width}
+                                    onChange={(e) => onPropertyChange('width', Number(e.target.value))}
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '4px',
+                                        fontSize: '13px'
+                                    }}
+                                />
+                            </div>
 
-                    <div style={{ marginBottom: '12px' }}>
-                        <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-                            Depth (mm)
-                        </label>
-                        <input
-                            type="number"
-                            value={selectedElement.properties.depth}
-                            onChange={(e) => onPropertyChange('depth', Number(e.target.value))}
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                fontSize: '13px'
-                            }}
-                        />
-                    </div>
+                            <div style={{ marginBottom: '12px' }}>
+                                <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
+                                    Depth (m)
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={selectedElement.properties.depth}
+                                    onChange={(e) => onPropertyChange('depth', Number(e.target.value))}
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '4px',
+                                        fontSize: '13px'
+                                    }}
+                                />
+                            </div>
+                        </>
+                    )}
 
                     {selectedElement.type === 'column' && (
                         <div style={{ marginBottom: '12px' }}>
                             <label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-                                Height (mm)
+                                Height (m)
                             </label>
                             <input
                                 type="number"
+                                step="0.1"
                                 value={selectedElement.properties.height}
                                 onChange={(e) => onPropertyChange('height', Number(e.target.value))}
                                 style={{

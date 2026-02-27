@@ -79,6 +79,21 @@ import ElectricalPlumbingTakeoff from "./takeoff2/Electrical_Plumbing/Electrical
 
 //////////////////////////TakingOff /////////////////////
 
+
+
+///////// Timber //////////
+///////// Timber //////////
+import TimberUI from "./Timber/Timber_ui";
+
+///////// Timber //////////
+
+//// Masonry //////
+import MasonryUI from "./masonry/Masonry_ui";
+
+//// Masonry ////// 
+
+
+
 // Wrapper components for navigation
 const QuantityTakeoffWrapper = ({ takeoffData, setTakeoffData }) => {
   const navigate = useNavigate();
@@ -786,6 +801,15 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
 
             {/* // Taking Off ///////////////*/}
             <Route path="*" element={<Navigate to="/" replace />} />
+
+
+            {/* Timber  */}
+            <Route path="/structural/manual/Timber_design"
+              element={<TimberUI isDark={isDark} />} />
+
+            {/* Masonry */}
+            <Route path="/structural/manual/Masonry_design"
+              element={<MasonryUI isDark={isDark} />} />
           </Routes>
         </main>
       </div>

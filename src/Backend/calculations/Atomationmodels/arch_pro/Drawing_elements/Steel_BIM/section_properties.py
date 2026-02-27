@@ -560,7 +560,11 @@ BS_RHS = {
 
 
 def get_section_properties(designation: str) -> Optional[SectionProperties]:
-    """Retrieve section properties by designation."""
+    """Retrieve section properties by designation.
+    
+    Returns a default RHS section if the designation is not found,
+    so generators never receive None and crash on .to_dict().
+    """
     all_sections = {
         **BS_UNIVERSAL_BEAMS,
         **BS_UNIVERSAL_COLUMNS,
@@ -570,4 +574,12 @@ def get_section_properties(designation: str) -> Optional[SectionProperties]:
         **BS_SHS,
         **BS_RHS
     }
-    return all_sections.get(designation)
+    result = all_sections.get(designation)
+    if result is None:
+        # Fallback: use the smallest RHS in the database
+        result = all_sections.get('150x100x6.3RHS') or next(iter(all_sections.values()))
+        # Keep requested designation string so the output is traceable
+        import copy
+        result = copy.copy(result)
+        result.designation = designation + ' (default)'
+    return result

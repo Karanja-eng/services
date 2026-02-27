@@ -26,7 +26,7 @@ const EurocodeColumnDesign = ({ theme = 'light' }) => {
 
   const calculateColumn = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/eurocode/columns/design', {
+      const response = await fetch('http://localhost:8001/api/eurocode/columns/design', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(columnData)
@@ -264,9 +264,9 @@ const EurocodeColumnDesign = ({ theme = 'light' }) => {
 
         <div className={`mt-4 p-4 ${isDark ? 'bg-gray-700' : 'bg-blue-50'} rounded-lg border ${isDark ? 'border-gray-600' : 'border-blue-300'}`}>
           <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-blue-800'}`}>
-            <strong>Buckling Curves (EN 1993-1-1 Table 6.2):</strong><br/>
-            For rolled I/H sections:<br/>
-            • y-axis (major): typically curve b (tf ≤ 100mm)<br/>
+            <strong>Buckling Curves (EN 1993-1-1 Table 6.2):</strong><br />
+            For rolled I/H sections:<br />
+            • y-axis (major): typically curve b (tf ≤ 100mm)<br />
             • z-axis (minor): typically curve c (tf ≤ 100mm)
           </p>
         </div>
@@ -353,9 +353,8 @@ const EurocodeColumnDesign = ({ theme = 'light' }) => {
               </h4>
               <div className="w-full bg-gray-200 rounded-full h-6">
                 <div
-                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold ${
-                    parseFloat(results.interaction_ratio) > 100 ? 'bg-red-600' : parseFloat(results.interaction_ratio) > 90 ? 'bg-yellow-600' : 'bg-green-600'
-                  }`}
+                  className={`h-6 rounded-full flex items-center justify-center text-white font-semibold ${parseFloat(results.interaction_ratio) > 100 ? 'bg-red-600' : parseFloat(results.interaction_ratio) > 90 ? 'bg-yellow-600' : 'bg-green-600'
+                    }`}
                   style={{ width: `${Math.min(parseFloat(results.interaction_ratio), 100)}%` }}
                 >
                   {results.interaction_ratio}%

@@ -48,9 +48,9 @@ const Column3D = ({
     const width = element.properties.width;
     const depth = element.properties.depth;
 
-    const x = element.position.x;
-    const y = element.position.z || 0;
-    const z = element.position.y;
+    const x = element.properties?.start3D ? element.properties.start3D.x : element.position.x;
+    const y = element.properties?.start3D ? element.properties.start3D.z : (element.position.z || 0);
+    const z = element.properties?.start3D ? element.properties.start3D.y : element.position.y;
 
     let color = '#888888';
     if (selected) color = '#4CAF50';
@@ -232,17 +232,13 @@ const Beam3D = ({
 }) => {
     const [hovered, setHovered] = useState(false);
 
-    const start = new THREE.Vector3(
-        element.position.start.x,
-        floorLevel,
-        element.position.start.y
-    );
+    const start = element.properties?.start3D
+        ? new THREE.Vector3(element.properties.start3D.x, element.properties.start3D.z, element.properties.start3D.y)
+        : new THREE.Vector3(element.position.start.x, floorLevel, element.position.start.y);
 
-    const end = new THREE.Vector3(
-        element.position.end.x,
-        floorLevel,
-        element.position.end.y
-    );
+    const end = element.properties?.end3D
+        ? new THREE.Vector3(element.properties.end3D.x, element.properties.end3D.z, element.properties.end3D.y)
+        : new THREE.Vector3(element.position.end.x, floorLevel, element.position.end.y);
 
     const direction = new THREE.Vector3().subVectors(end, start);
     const length = direction.length();
@@ -416,9 +412,9 @@ const Slab3D = ({ element, floorLevel, opacity, visible = true, onClick, wirefra
     return (
         <mesh
             position={[
-                element.position.x + element.properties.width / 2,
-                floorLevel + thickness / 2,
-                element.position.y + element.properties.depth / 2
+                (element.properties?.start3D ? element.properties.start3D.x : element.position.x) + element.properties.width / 2,
+                (element.properties?.start3D ? element.properties.start3D.z : floorLevel) + thickness / 2,
+                (element.properties?.start3D ? element.properties.start3D.y : element.position.y) + element.properties.depth / 2
             ]}
             onClick={(e) => {
                 e.stopPropagation();
@@ -608,17 +604,13 @@ const StructuralGrid3D = ({ size = 100, spacing = 5, visible = true }) => {
 const Wall3D = ({ element, floorLevel, floorHeight, opacity = 1, selected, onClick, showLabels = true, wireframe = false, diagramScale = 25, sectionDisplayType = 'rectangle' }) => {
     const [hovered, setHovered] = useState(false);
 
-    const start = new THREE.Vector3(
-        element.position.start.x,
-        floorLevel,
-        element.position.start.y
-    );
+    const start = element.properties?.start3D
+        ? new THREE.Vector3(element.properties.start3D.x, element.properties.start3D.z, element.properties.start3D.y)
+        : new THREE.Vector3(element.position.start.x, floorLevel, element.position.start.y);
 
-    const end = new THREE.Vector3(
-        element.position.end.x,
-        floorLevel,
-        element.position.end.y
-    );
+    const end = element.properties?.end3D
+        ? new THREE.Vector3(element.properties.end3D.x, element.properties.end3D.z, element.properties.end3D.y)
+        : new THREE.Vector3(element.position.end.x, floorLevel, element.position.end.y);
 
     const direction = new THREE.Vector3().subVectors(end, start);
     const length = direction.length();
@@ -639,7 +631,7 @@ const Wall3D = ({ element, floorLevel, floorHeight, opacity = 1, selected, onCli
     return (
         <group>
             <mesh
-                position={[center.x, floorLevel + height / 2, center.z]}
+                position={[center.x, element.properties?.start3D ? center.y : (floorLevel + height / 2), center.z]}
                 quaternion={quaternion}
                 onClick={(e) => {
                     e.stopPropagation();

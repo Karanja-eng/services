@@ -6,7 +6,9 @@ import ColorPicker from './ColorPicker';
 const FOUNDATION_TYPES = [
     { id: 'pad', label: 'Pad Footing' },
     { id: 'strip', label: 'Strip Foundation' },
-    { id: 'raft', label: 'Raft Foundation' }
+    { id: 'raft', label: 'Raft Foundation' },
+    { id: 'pile', label: 'Pile Foundation' },
+    { id: 'lift_shaft', label: 'Lift Shaft Raft' }
 ];
 
 export default function FoundationPanel({ isOpen, onClose, onGenerate, selectedElementId }) {

@@ -8,8 +8,7 @@ from typing import Dict, List, Tuple, Any, Optional, Union
 
 from foundation_base import FoundationBase
 from strip_foundation import StripFoundation, RCShearWallStripFoundation
-from pad_foundation import PadFoundation, CombinedPadFoundation
-# from pile_foundation import Pile, PileGroup, PileCap
+from pile_foundation import Pile, PileGroup, PileCap
 from raft_foundation import RaftFoundation, LiftShaftRaftFoundation
 
 

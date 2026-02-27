@@ -36,7 +36,9 @@ export const transformElementsForSteelAnalysis = (elements, steelGrade, defaultB
  */
 export const callSteelAnalysis = async (elements, method = 'moment_distribution') => {
     try {
-        const response = await axios.post(`${STEEL_BACKEND_URL}/api/steel_structure/analyze-full`, {
+        // Use the RC framed analysis endpoint — it works for steel too and returns
+        // sections[] data needed for BMD/SFD diagram rendering
+        const response = await axios.post(`${STEEL_BACKEND_URL}/api/framed_full/analyze-full`, {
             elements,
             method,
             slab_load: 5.0

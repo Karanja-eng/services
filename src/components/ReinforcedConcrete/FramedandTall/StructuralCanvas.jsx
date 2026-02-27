@@ -408,6 +408,54 @@ const BeamComponent = ({ element, scale, onClick, onDragEnd, showDiagrams, layer
     );
 };
 
+const ConnectionComponent = ({ connection, scale, onClick }) => {
+    const x = connection.position.x * scale;
+    const y = connection.position.y * scale;
+
+    // Convert mm to pixels/meters-scaled
+    const plateW = (connection.plateW / 1000) * scale;
+    const plateH = (connection.plateH / 1000) * scale;
+
+    return (
+        <Group x={x} y={y} onClick={() => onClick(connection)}>
+            {/* Plate */}
+            <Rect
+                x={-plateW / 2}
+                y={-plateH / 2}
+                width={plateW}
+                height={plateH}
+                fill={connection.selected ? '#e67e22' : '#bdc3c7'}
+                stroke="#2c3e50"
+                strokeWidth={1}
+                cornerRadius={2}
+            />
+
+            {/* Bolts */}
+            {Array.from({ length: connection.boltRows || 0 }).map((_, r) => (
+                Array.from({ length: connection.boltCols || 0 }).map((_, c) => {
+                    const bx = (-plateW / 2) + (plateW / (connection.boltCols + 1)) * (c + 1);
+                    const by = (-plateH / 2) + (plateH / (connection.boltRows + 1)) * (r + 1);
+                    return (
+                        <Circle
+                            key={`${r}-${c}`}
+                            x={bx}
+                            y={by}
+                            radius={(connection.boltDia / 1000) * scale / 2}
+                            fill="#333"
+                        />
+                    );
+                })
+            ))}
+
+            {/* Cross Indicator */}
+            <Group>
+                <Line points={[-5, 0, 5, 0]} stroke="#e74c3c" strokeWidth={1} />
+                <Line points={[0, -5, 0, 5]} stroke="#e74c3c" strokeWidth={1} />
+            </Group>
+        </Group>
+    );
+};
+
 const VoidComponent = ({ element, scale, onClick, layerVisibility }) => {
     const bounds = element.getBounds();
     return (
@@ -487,6 +535,7 @@ export const StructuralCanvas = ({
     activeLayer,
     layerVisibility,
     grid, // Passed from parent
+    connections = [], // NEW: BIM Connections
     onGridUpdate, // Callback to update grid in parent
     beamOpacity, // Added opacity for beams
     sectionDisplayType = 'rectangle' // NEW: 'rectangle', 'I-section', 'circle'
@@ -708,6 +757,16 @@ export const StructuralCanvas = ({
                         showForces={showForces}
                         layerVisibility={layerVisibility}
                         sectionDisplayType={sectionDisplayType}
+                    />
+                ))}
+
+                {/* Connections (BIM) */}
+                {connections.map(conn => (
+                    <ConnectionComponent
+                        key={conn.id}
+                        connection={conn}
+                        scale={scale}
+                        onClick={onElementClick}
                     />
                 ))}
 

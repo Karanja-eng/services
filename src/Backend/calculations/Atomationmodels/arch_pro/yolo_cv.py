@@ -1490,6 +1490,31 @@ async def generate_bim_component(
                     total_load=data.get("load", 2000.0),
                     soil_capacity=soil_cap
                 )
+            elif f_type == "pile":
+                from .Drawing_elements.Foundation_BIM.pile_foundation import PileGroup, PileCap
+                # Create a pile group with cap
+                pile_group = PileGroup(
+                    center_position=(0, 0),
+                    pile_diameter=data.get("pile_diameter", 0.5),
+                    pile_length=data.get("pile_length", 12.0),
+                    pile_capacity=data.get("pile_capacity", 500.0),
+                    total_load=data.get("load", 1500.0)
+                )
+                foundation_obj = PileCap(
+                    pile_group=pile_group,
+                    column_size=(data.get("col_width", 0.4), data.get("col_depth", 0.4)),
+                    material=data.get("material", "C35/45")
+                )
+            elif f_type == "lift_shaft":
+                from .Drawing_elements.Foundation_BIM.raft_foundation import LiftShaftRaftFoundation
+                w = data.get("width", 2.0)
+                d = data.get("depth_dim", 2.0)
+                foundation_obj = LiftShaftRaftFoundation(
+                    shaft_footprint=[(-w/2, -d/2), (w/2, -d/2), (w/2, d/2), (-w/2, d/2)],
+                    shaft_load=data.get("load", 1000.0),
+                    soil_capacity=soil_cap,
+                    pit_depth=data.get("pit_depth", 1.5)
+                )
             
             if foundation_obj:
                 # Export directly to GLB
