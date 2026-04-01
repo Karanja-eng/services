@@ -92,6 +92,7 @@ class BuildingModel(BaseModel):
     totalFloors: int
     totalHeight: float = 0.0
     metadata: Dict = {}
+    glb_url: Optional[str] = None
     # Blender generation fields
     wallHeight: Optional[float] = 3.0
     wallThickness: Optional[float] = 0.15

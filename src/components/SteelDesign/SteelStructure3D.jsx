@@ -1,6 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
-import { getRoleColor } from './SteelBIM_Core.jsx';
+import { getRoleColor, SECTIONS, getSectionProfile } from './SteelBIM_Core.jsx';
 import { Line } from '@react-three/drei';
 
 const SteelMember3D = ({ member, isSelected, onSelect, visible, showDiagrams = {}, diagramScale = 1 }) => {
@@ -13,6 +13,15 @@ const SteelMember3D = ({ member, isSelected, onSelect, visible, showDiagrams = {
     if (len < 0.01) return null;
 
     const color = getRoleColor(member.role);
+    const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    
+    // Use Z-axis as the forward direction for ExtrudeGeometry
+    const orientation = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 0, 1), 
+        dir.clone().normalize()
+    );
+
+    // Fallback radius for cylinders if section geometry is missing
     const radius = {
         column: 0.15, rafter: 0.12, haunch: 0.18,
         'truss-top': 0.08, 'truss-bottom': 0.08,
@@ -22,46 +31,44 @@ const SteelMember3D = ({ member, isSelected, onSelect, visible, showDiagrams = {
         bracing: 0.04, 'dome-rib': 0.07, 'dome-ring': 0.05
     }[member.role] || 0.06;
 
-    const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-    const orientation = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    const renderGeometry = () => {
+        const profilePts = getSectionProfile(member.section);
+        
+        // If we have profile points, use ExtrudeGeometry for a realistic look
+        if (profilePts && profilePts.length > 0) {
+            const shape = new THREE.Shape();
+            shape.moveTo(profilePts[0][0], profilePts[0][1]);
+            for (let i = 1; i < profilePts.length; i++) {
+                shape.lineTo(profilePts[i][0], profilePts[i][1]);
+            }
+            shape.closePath();
 
-    const hasCaps = ['column', 'rafter', 'haunch', 'truss-top', 'truss-bottom', 'leg', 'floor-beam'].includes(member.role);
+            return (
+                <mesh 
+                    position={start} 
+                    quaternion={orientation} 
+                    onClick={(e) => { e.stopPropagation(); onSelect(member.id); }}
+                >
+                    <extrudeGeometry args={[shape, { depth: len, bevelEnabled: false }]} />
+                    <meshPhongMaterial
+                        color={isSelected ? '#ffffff' : color}
+                        emissive={isSelected ? color : '#000000'}
+                        emissiveIntensity={isSelected ? 0.4 : 0}
+                        shininess={100}
+                    />
+                </mesh>
+            );
+        }
 
-    // Diagram Logic (Moment/Shear)
-    const renderDiagram = () => {
-        if (!showDiagrams.moment && !showDiagrams.shear) return null;
-
-        // Simplified diagram rendering: a line offset from the member
-        const up = new THREE.Vector3(0, 1, 0).applyQuaternion(orientation);
-        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(orientation);
-
-        const points = [];
-        const diagramColor = showDiagrams.moment ? "#ef4444" : "#3b82f6"; // Red for Moment, Blue for Shear
-        const factor = (showDiagrams.moment ? member.M_max : member.V_max) || (Math.random() * 5); // Mock data if missing
-
-        const offset = factor * 0.1 * diagramScale;
-
-        points.push(start.clone());
-        points.push(midpoint.clone().add(up.clone().multiplyScalar(offset)));
-        points.push(end.clone());
+        // Fallback to the original cylinder geometry
+        // Note: Cylinder is normally Y-up, so we use a different orientation if falling back
+        const cylOrientation = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(0, 1, 0), 
+            dir.clone().normalize()
+        );
 
         return (
-            <Line
-                points={points}
-                color={diagramColor}
-                lineWidth={3}
-                dashed={false}
-            />
-        );
-    };
-
-    return (
-        <group>
-            <mesh
-                position={midpoint}
-                quaternion={orientation}
-                onClick={(e) => { e.stopPropagation(); onSelect(member.id); }}
-            >
+            <mesh position={midpoint} quaternion={cylOrientation} onClick={(e) => { e.stopPropagation(); onSelect(member.id); }}>
                 <cylinderGeometry args={[radius, radius, len, 8]} />
                 <meshPhongMaterial
                     color={isSelected ? '#ffffff' : color}
@@ -70,12 +77,47 @@ const SteelMember3D = ({ member, isSelected, onSelect, visible, showDiagrams = {
                     shininess={80}
                 />
             </mesh>
-            {hasCaps && [start, end].map((pos, i) => (
-                <mesh key={i} position={pos} quaternion={orientation}>
-                    <cylinderGeometry args={[radius * 1.8, radius * 1.8, 0.02, 8]} />
-                    <meshPhongMaterial color="#94a3b8" />
-                </mesh>
-            ))}
+        );
+    };
+
+    const hasCaps = ['column', 'rafter', 'haunch', 'truss-top', 'truss-bottom', 'leg', 'floor-beam'].includes(member.role);
+
+    // Diagram Logic (Moment/Shear)
+    const renderDiagram = () => {
+        if (!showDiagrams.moment && !showDiagrams.shear) return null;
+
+        // Use the original orientation up vector logic
+        const up = new THREE.Vector3(0, 1, 0).applyQuaternion(
+            new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize())
+        );
+        const points = [];
+        const diagramColor = showDiagrams.moment ? "#ef4444" : "#3b82f6";
+        const factor = (showDiagrams.moment ? member.M_max : member.V_max) || (Math.random() * 5);
+        const offset = factor * 0.1 * diagramScale;
+
+        points.push(start.clone());
+        points.push(midpoint.clone().add(up.clone().multiplyScalar(offset)));
+        points.push(end.clone());
+
+        return <Line points={points} color={diagramColor} lineWidth={3} dashed={false} />;
+    };
+
+    return (
+        <group>
+            {renderGeometry()}
+            {hasCaps && [start, end].map((pos, i) => {
+                // Caps are purely decorative, we align them similarly to cylinders
+                const cylOrientation = new THREE.Quaternion().setFromUnitVectors(
+                    new THREE.Vector3(0, 1, 0), 
+                    dir.clone().normalize()
+                );
+                return (
+                    <mesh key={i} position={pos} quaternion={cylOrientation}>
+                        <cylinderGeometry args={[radius * 1.8, radius * 1.8, 0.02, 8]} />
+                        <meshPhongMaterial color="#94a3b8" />
+                    </mesh>
+                );
+            })}
             {renderDiagram()}
         </group>
     );

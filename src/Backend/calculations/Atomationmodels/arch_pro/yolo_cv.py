@@ -19,9 +19,12 @@ import trimesh
 from scipy.spatial import ConvexHull
 from shapely.geometry import LineString, Point
 from .models import BuildingModel, FloorPlan, Wall, Opening, Room, Furniture, TechnicalPoint, Conduit, WallSegment
+from .models import BuildingModel, FloorPlan, Wall, Opening, Room, Furniture, TechnicalPoint, Conduit, WallSegment
 from .detectors import YOLODetector
 from .engine_rules import EngineeringEngine
 from .cad_file_extractor import CADFileProcessor
+from .Drawing_elements.Architectural_elements import DoorSwing, DoorDouble, DoorSliding, DoorGlass, WindowSliding, WindowClassic, WindowCasement, WindowFixed
+from .Drawing_elements.Electrical_BIM import ElectricalFixture, FixtureType, COMPONENT_LIBRARY, Vector3, ConduitRun
 
 # Proven CV utilities
 try:
@@ -768,39 +771,21 @@ def create_door_mesh(opening: Opening, height: float, wall_thickness: float = 0.
         opening.height,
         opening.rotation,
     )
-    hw = width / 2
-    # Make door slightly thicker than wall or match it perfectly
-    d = wall_thickness + 0.02 # Slight protrusion to ensure visibility
+    d = wall_thickness + 0.02
     
-    vertices = np.array(
-        [
-            [-hw, -d/2, 0],
-            [hw, -d/2, 0],
-            [hw, d/2, 0],
-            [-hw, d/2, 0],
-            [-hw, -d/2, h],
-            [hw, -d/2, h],
-            [hw, d/2, h],
-            [-hw, d/2, h],
-        ]
-    )
-
-    cos_r, sin_r = np.cos(rot), np.sin(rot)
-    rot_mat = np.array([[cos_r, -sin_r, 0], [sin_r, cos_r, 0], [0, 0, 1]])
-    vertices = vertices @ rot_mat.T
-    vertices[:, 0] += pos[0]
-    vertices[:, 1] += pos[1]
-
-    faces = [
-        [0, 1, 5, 4],
-        [1, 2, 6, 5],
-        [2, 3, 7, 6],
-        [3, 0, 4, 7],
-        [3, 2, 1, 0],
-        [4, 5, 6, 7],
-    ]
-    mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
-    mesh.visual.vertex_colors = [139, 69, 19, 255]
+    # Simple heuristic to pick door style based on width/type
+    if opening.type == "double_door" or width >= 1.4:
+        door_gen = DoorDouble(width=width, height=h, depth=d, rotation=np.degrees(rot))
+    elif opening.type == "sliding_door":
+        door_gen = DoorSliding(width=width, height=h, depth=d, rotation=np.degrees(rot))
+    elif "glass" in str(opening.type).lower():
+        door_gen = DoorGlass(width=width, height=h, depth=d, rotation=np.degrees(rot))
+    else:
+        door_gen = DoorSwing(width=width, height=h, depth=d, rotation=np.degrees(rot))
+        
+    mesh = door_gen.generate()
+    # Apply global translation
+    mesh.apply_translation((pos[0], pos[1], 0))
     return mesh
 
 
@@ -812,38 +797,20 @@ def create_window_mesh(opening: Opening, height: float, wall_thickness: float = 
         opening.sillHeight,
         opening.rotation,
     )
-    hw = width / 2
     d = wall_thickness + 0.02
     
-    vertices = np.array(
-        [
-            [-hw, -d/2, sill],
-            [hw, -d/2, sill],
-            [hw, d/2, sill],
-            [-hw, d/2, sill],
-            [-hw, -d/2, sill + h],
-            [hw, -d/2, sill + h],
-            [hw, d/2, sill + h],
-            [-hw, d/2, sill + h],
-        ]
-    )
-
-    cos_r, sin_r = np.cos(rot), np.sin(rot)
-    rot_mat = np.array([[cos_r, -sin_r, 0], [sin_r, cos_r, 0], [0, 0, 1]])
-    vertices = vertices @ rot_mat.T
-    vertices[:, 0] += pos[0]
-    vertices[:, 1] += pos[1]
-
-    faces = [
-        [0, 1, 5, 4],
-        [1, 2, 6, 5],
-        [2, 3, 7, 6],
-        [3, 0, 4, 7],
-        [3, 2, 1, 0],
-        [4, 5, 6, 7],
-    ]
-    mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
-    mesh.visual.vertex_colors = [135, 206, 235, 150] # More transparent
+    if opening.type == "fixed_window":
+        win_gen = WindowFixed(width=width, height=h, sill_height=sill, rotation=np.degrees(rot))
+    elif opening.type == "sliding_window":
+        win_gen = WindowSliding(width=width, height=h, sill_height=sill, rotation=np.degrees(rot))
+    elif opening.type == "casement_window":
+        win_gen = WindowCasement(width=width, height=h, sill_height=sill, rotation=np.degrees(rot))
+    else:
+        win_gen = WindowClassic(width=width, height=h, sill_height=sill, rotation=np.degrees(rot))
+        
+    mesh = win_gen.generate()
+    # Apply global translation to window (plus sill height offset)
+    mesh.apply_translation((pos[0], pos[1], sill))
     return mesh
 
 
@@ -1008,56 +975,39 @@ async def run_blender_generation(model: BuildingModel, output_path: str) -> bool
             data_path.unlink()
 
 
-def create_3d_scene(
-    floor: FloorPlan, height: float, show_floor: bool, show_roof: bool
-) -> trimesh.Scene:
-    scene = trimesh.Scene()
-
-    if show_floor:
-        # Create main slab
-        floor_mesh = create_floor_slab(floor.walls)
-        if floor_mesh:
-            floor_mesh.metadata["bimMetadata"] = {"System": "architecture", "Subsystem": "floors", "Layer": "floors"}
-            scene.add_geometry(floor_mesh, node_name="floor_base")
-            
-        # Create individual room floor meshes (Heatmap)
-        for i, room in enumerate(floor.rooms):
-            room_mesh = create_room_floor_mesh(room)
-            if room_mesh:
-                room_mesh.metadata["bimMetadata"] = {"System": "architecture", "Subsystem": "rooms", "Layer": room.type}
-                scene.add_geometry(room_mesh, node_name=f"room_{i}_{room.type}")
-
-    # Estimate average wall thickness for openings if not uniform
-    avg_thickness = sum([w.thickness for w in floor.walls]) / len(floor.walls) if floor.walls else 0.15
-
-    for i, wall in enumerate(floor.walls):
-        meshes = create_wall_with_openings(wall, height, floor.doors, floor.windows)
-        for j, mesh in enumerate(meshes):
-            mesh.metadata["bimMetadata"] = wall.metadata.get("bimMetadata", {"System": "architecture", "Subsystem": "walls", "Layer": "walls"})
-            scene.add_geometry(mesh, node_name=f"wall_{i}_{j}")
-
-    for i, door in enumerate(floor.doors):
-        # Use wall thickness for door depth
-        mesh = create_door_mesh(door, height, avg_thickness)
-        if mesh:
-            mesh.metadata["bimMetadata"] = door.metadata.get("bimMetadata", {"System": "architecture", "Subsystem": "doors", "Layer": "doors"})
-            scene.add_geometry(mesh, node_name=f"door_{i}")
-
-    for i, window in enumerate(floor.windows):
-         # Use wall thickness for window depth
-        mesh = create_window_mesh(window, height, avg_thickness)
-        if mesh:
-            mesh.metadata["bimMetadata"] = window.metadata.get("bimMetadata", {"System": "architecture", "Subsystem": "windows", "Layer": "windows"})
-            scene.add_geometry(mesh, node_name=f"window_{i}")
-
-    if show_roof:
-        roof = create_floor_slab(floor.walls, 0.25)
-        if roof:
-            roof.apply_translation([0, height + 0.25, 0])
-            roof.visual.vertex_colors = [139, 115, 85, 255]
-            scene.add_geometry(roof, node_name="roof")
-
     return scene
+
+
+async def generate_building_glb(model: BuildingModel) -> str:
+    """Helper to generate a GLB for a BuildingModel and return its URL path."""
+    output_name = f"{model.project_id}_{uuid.uuid4().hex[:8]}.glb"
+    output_path = GENERATED / output_name
+    
+    # Try high-quality Blender generation first
+    success = await run_blender_generation(model, str(output_path))
+    
+    if not success:
+        print(f"⚠️ Blender generation failed for {model.project_id}, falling back to trimesh")
+        combined_scene = trimesh.Scene()
+        
+        for f_idx, floor in enumerate(model.floors):
+            # Generate scene for this floor
+            # We pass elevation=0 to create_3d_scene and apply the translation here
+            floor_scene = create_3d_scene(
+                floor, 
+                floor.height, 
+                show_floor=True, 
+                show_roof=(f_idx == len(model.floors) - 1)
+            )
+            
+            # Apply elevation translation matrix
+            transform = trimesh.transformations.translation_matrix([0, floor.elevation, 0])
+            combined_scene.add_geometry(floor_scene, transform=transform, node_name=f"floor_{f_idx}")
+            
+        combined_scene.export(file_type="glb", file_obj=str(output_path))
+        
+    return f"/generated/{output_name}"
+
 
 
 # ============================================================================
@@ -1252,10 +1202,9 @@ async def process(
                 )
             )
 
-        return BuildingModel(
-            project_id=file_id,
+        model = BuildingModel(
+            id=file_id,
             floors=floors,
-            totalFloors=num_floors,
             totalHeight=num_floors * wall_height,
             metadata={
                 "yolo_used": True, 
@@ -1263,10 +1212,176 @@ async def process(
                 "plumbing_count": len(plumbing),
                 "segmented_urls": segmented_urls
             },
+            wallHeight=wall_height,
+            wallThickness=wall_thickness
         )
+
+        # Generate 3D GLB for visual context
+        model.glb_url = await generate_building_glb(model)
+        
+        return model
 
     except Exception as e:
         raise HTTPException(500, f"{str(e)}\n{traceback.format_exc()}")
+
+
+async def generate_building_glb(model: BuildingModel) -> str:
+    """Generates a .glb mesh of the entire building using trimesh or Blender."""
+    output_filename = f"building_{uuid.uuid4().hex[:8]}.glb"
+    output_path = GENERATED / output_filename
+    
+    # Try Blender first for high-fidelity rendering
+    success = await run_blender_generation(model, str(output_path))
+    if success:
+        return f"/generated/{output_filename}"
+    
+    # Fallback to trimesh/Drawing_elements if Blender fails or is not available
+    try:
+        from .Drawing_elements.Architectural_elements import WallPlain, DoorSwing, WindowCasement, Material, MaterialType
+        from .Drawing_elements.Electrical_BIM import ElectricalFixture, FixtureType, COMPONENT_LIBRARY, Vector3
+        
+        # Combine all components into a trimesh Scene
+        scene = trimesh.Scene()
+        
+        for floor in model.floors:
+            z_offset = floor.elevation
+            
+            # 1. Architectural: Walls
+            for wall in floor.walls:
+                try:
+                    # Create a conceptual wall mesh
+                    start = np.array(wall.start)
+                    end = np.array(wall.end)
+                    length = np.linalg.norm(end - start)
+                    mid = (start + end) / 2
+                    angle = np.degrees(np.atan2(end[1]-start[1], end[0]-start[0]))
+                    
+                    # Use WallPlain from Architectural_elements
+                    w_obj = WallPlain(length=length, height=floor.height, thickness=wall.thickness)
+                    w_mesh = w_obj.generate()
+                    
+                    # Transform to position and rotate
+                    matrix = trimesh.transformations.rotation_matrix(np.radians(angle), [0, 0, 1])
+                    matrix[:3, 3] = [mid[0], mid[1], z_offset + floor.height/2]
+                    w_mesh.apply_transform(matrix)
+                    scene.add_geometry(w_mesh)
+                except Exception as e:
+                    print(f"Failed to add wall: {e}")
+
+            # 2. Openings: Doors and Windows
+            for door in floor.doors:
+                try:
+                    d_obj = DoorSwing(width=door.width, height=door.height).generate()
+                    pos = door.position
+                    matrix = trimesh.transformations.rotation_matrix(door.rotation, [0, 0, 1])
+                    matrix[:3, 3] = [pos[0], pos[1], z_offset + door.height/2]
+                    d_obj.apply_transform(matrix)
+                    scene.add_geometry(d_obj)
+                except Exception as e:
+                    print(f"Failed to add door: {e}")
+
+            for window in floor.windows:
+                try:
+                    w_obj = WindowCasement(width=window.width, height=window.height).generate()
+                    pos = window.position
+                    matrix = trimesh.transformations.rotation_matrix(window.rotation, [0, 0, 1])
+                    matrix[:3, 3] = [pos[0], pos[1], z_offset + 1.2] # Default sill height
+                    w_obj.apply_transform(matrix)
+                    scene.add_geometry(w_obj)
+                except Exception as e:
+                    print(f"Failed to add window: {e}")
+
+            # 3. MEP: Electrical
+            for elec in floor.electrical:
+                try:
+                    # Map position to Vector3
+                    pos = elec.position
+                    z_pos = z_offset + getattr(elec, 'height', 1.2)
+                    v3_pos = Vector3(pos[0], z_pos, pos[1])
+                    
+                    # Create ElectricalFixture
+                    f_type = FixtureType.STANDARD_SOCKET # Default
+                    if "light" in elec.id.lower(): f_type = FixtureType.SURFACE_LIGHT
+                    elif "switch" in elec.id.lower(): f_type = FixtureType.SINGLE_SWITCH
+                    
+                    # Sphere representation for trimesh fallback
+                    sphere = trimesh.creation.uv_sphere(radius=0.1)
+                    sphere.apply_translation([pos[0], pos[1], z_pos])
+                    scene.add_geometry(sphere)
+                except Exception as e:
+                    print(f"Failed to add electrical: {e}")
+            
+        scene.export(str(output_path), file_type="glb")
+        return f"/generated/{output_filename}"
+        
+    except Exception as e:
+        print(f"GLB Generation Fallback failed: {e}")
+        traceback.print_exc()
+        # Final fallback - minimal box scene so frontend doesn't crash
+        box = trimesh.creation.box(extents=[10, 0.1, 10])
+        box.export(str(output_path), file_type="glb")
+        return f"/generated/{output_filename}"
+
+
+async def run_blender_generation(model: BuildingModel, output_path: str) -> bool:
+    """Triggers external Blender process to generate a premium GLB."""
+    if not os.path.exists(BLENDER_PATH):
+        print(f"Blender not found at {BLENDER_PATH}")
+        return False
+        
+    try:
+        # Save model to temp JSON for Blender script
+        temp_json = BASE_DIR / f"temp_{uuid.uuid4().hex}.json"
+        with open(temp_json, 'w') as f:
+            f.write(model.json())
+            
+        process = await asyncio.create_subprocess_exec(
+            BLENDER_PATH,
+            "--background",
+            "--python", str(BLENDER_SCRIPT),
+            "--",
+            "--input", str(temp_json),
+            "--output", output_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        
+        stdout, stderr = await process.communicate()
+        
+        # Cleanup
+        if temp_json.exists(): temp_json.unlink()
+        
+        if process.returncode == 0:
+            return True
+        else:
+            print(f"Blender error: {stderr.decode()}")
+            return False
+            
+    except Exception as e:
+        print(f"Blender process trigger failed: {e}")
+        return False
+
+
+def create_3d_scene(floor, height, show_floor=True, show_roof=True):
+    """Trimesh scene builder for fallback/preview."""
+    scene = trimesh.Scene()
+    # Basic wall meshes
+    for wall in floor.walls:
+        # Create box mesh for wall
+        start = np.array(wall.start)
+        end = np.array(wall.end)
+        length = np.linalg.norm(end - start)
+        angle = np.atan2(end[1]-start[1], end[0]-start[0])
+        
+        box = trimesh.creation.box(extents=[length, height, wall.thickness])
+        # Position at midpoint
+        mid = (start + end) / 2
+        matrix = trimesh.transformations.rotation_matrix(angle, [0, 0, 1])
+        matrix[:3, 3] = [mid[0], mid[1], height/2]
+        box.apply_transform(matrix)
+        scene.add_geometry(box)
+    
+    return scene
 
 
 @router.post("/api/generate-3d")
@@ -1326,29 +1441,22 @@ async def generate_3d(
         for w in windows: w.metadata["bimMetadata"] = {"System": "architecture", "Subsystem": "windows", "Layer": "windows"}
 
         model = BuildingModel(
+            project_id=file_id,
             floors=[floor],
             wallHeight=wall_height,
             wallThickness=0.15,
             totalFloors=1,
+            totalHeight=wall_height,
             scaleFactor=1.0,
             detectedScale=True
         )
 
-        output_name = f"{file_id}_{uuid.uuid4().hex[:8]}.glb"
-        output_path = GENERATED / output_name
-        
-        # Invoke Blender for high-quality production GLB
-        success = await run_blender_generation(model, str(output_path))
-        
-        if not success:
-            print("⚠️ Blender generation failed, falling back to trimesh")
-            scene = create_3d_scene(floor, wall_height, show_floor, show_roof)
-            scene.export(file_type="glb", file_obj=str(output_path))
+        glb_url = await generate_building_glb(model)
 
-        print(f"🎉 Pro Scene generated: {output_name}")
+        print(f"🎉 Pro Scene generated: {glb_url}")
         return JSONResponse(
             {
-                "glb_url": f"/generated/{output_name}",
+                "glb_url": glb_url,
                 "wall_count": len(walls),
                 "door_count": len(doors),
                 "window_count": len(windows),

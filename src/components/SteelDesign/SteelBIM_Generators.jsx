@@ -246,7 +246,7 @@ export const genSymmetricPortal = (cfg = {}) => {
         connections.push(conn(CONNECTION_TYPES.BOLTED_END_PLATE, ridge, [], { plateW: 300, plateH: 250, plateT: 20, boltRows: 3, boltCols: 2, boltDia: 24, hasStiffeners: true, label: `RIDGE${f + 1}` }));
     }
     // Purlins
-    const pSpacing = 1.8, nPurlins = Math.floor(hs / pSpacing);
+    const pSpacing = 1.8, nPurlins = Math.floor(span / 2 / pSpacing);
     for (let p = 1; p <= nPurlins; p++) {
         const xo = p * pSpacing, pz = eaveH + xo * Math.tan(rafterAngle);
         for (let b = 0; b < bays; b++) {
@@ -394,7 +394,7 @@ export const genThroughTruss = (cfg = {}) => {
     const tA = buildTruss(0, 'A'), tB = buildTruss(laneW, 'B');
     for (let i = 0; i <= panels; i++) {
         members.push(el('member', tA.bot[i], tB.bot[i], { section: 'UB 457x191x89', role: 'floor-beam', label: `HFB${i + 1}`, layer: 'BRIDGE', frameId: 'B2' }));
-        if (i < panels) members.push(el('member', tA.top[i], tB.top[i], { section: 'UB 254x146x37', role: 'bracing', label: `HTB${i + 1}`, layer: 'BRIDGE', frameId: 'B2' }));
+        if (i < panels) members.push(el('member', tA.top[i], tB.top[i], { section: 'L 100x100x10', role: 'bracing', label: `HTB${i + 1}`, layer: 'BRIDGE', frameId: 'B2' }));
         // Stringers (deck support beams)
         if (i < panels) for (let s = 1; s <= 2; s++) {
             const yo = s * (laneW / 3);
@@ -412,8 +412,8 @@ export const genCableStayed = (cfg = {}) => {
     const pylon1 = v3(hs / 2, 0, 0), pylon2 = v3(span - hs / 2, 0, 0);
     const ptop1 = v3(hs / 2, 0, pylonH), ptop2 = v3(span - hs / 2, 0, pylonH);
     // Pylons
-    members.push(el('member', pylon1, ptop1, { section: 'CHS 273x10', role: 'column', label: 'PYLON-L', layer: 'BRIDGE', frameId: 'B3' }));
-    members.push(el('member', pylon2, ptop2, { section: 'CHS 273x10', role: 'column', label: 'PYLON-R', layer: 'BRIDGE', frameId: 'B3' }));
+    members.push(el('member', pylon1, ptop1, { section: 'UC 254x254x73', role: 'column', label: 'PYLON-L', layer: 'BRIDGE', frameId: 'B3' }));
+    members.push(el('member', pylon2, ptop2, { section: 'UC 254x254x73', role: 'column', label: 'PYLON-R', layer: 'BRIDGE', frameId: 'B3' }));
     // Deck
     const nDeckPts = 12;
     for (let i = 0; i < nDeckPts; i++) {
@@ -469,13 +469,13 @@ export const genArchBridge = (cfg = {}) => {
         archPts.push(v3(x, 0, z));
     }
     // Arch members
-    for (let i = 0; i < archSegs; i++) members.push(el('member', archPts[i], archPts[i + 1], { section: 'CHS 273x10', role: 'truss-top', label: `ARCH${i + 1}`, layer: 'BRIDGE', frameId: 'B5' }));
+    for (let i = 0; i < archSegs; i++) members.push(el('member', archPts[i], archPts[i + 1], { section: 'UC 254x254x73', role: 'truss-top', label: `ARCH${i + 1}`, layer: 'BRIDGE', frameId: 'B5' }));
     // Deck (at z=0)
     const deckPts = [];
     for (let i = 0; i <= archSegs; i++) deckPts.push(v3(i * (span / archSegs), 0, 0));
     for (let i = 0; i < archSegs; i++) members.push(el('member', deckPts[i], deckPts[i + 1], { section: 'UB 406x178x74', role: 'floor-beam', label: `ADK${i + 1}`, layer: 'BRIDGE', frameId: 'B5' }));
     // Hangers
-    for (let i = 1; i < archSegs; i++) members.push(el('member', archPts[i], deckPts[i], { section: 'CHS 114.3x5', role: 'bracing', label: `HANG${i}`, layer: 'BRIDGE', frameId: 'B5', meta: { type: 'arch_hanger' } }));
+    for (let i = 1; i < archSegs; i++) members.push(el('member', archPts[i], deckPts[i], { section: 'L 100x100x10', role: 'bracing', label: `HANG${i}`, layer: 'BRIDGE', frameId: 'B5', meta: { type: 'arch_hanger' } }));
     connections.push(conn(CONNECTION_TYPES.PINNED, v3(0, 0, 0), [], { plateW: 400, plateH: 400, plateT: 35, boltDia: 30, label: 'ARCH-PIN-L', meta: { type: 'pin_bearing' } }));
     connections.push(conn(CONNECTION_TYPES.PINNED, v3(span, 0, 0), [], { plateW: 400, plateH: 400, plateT: 35, boltDia: 30, label: 'ARCH-PIN-R', meta: { type: 'pin_bearing' } }));
     return { members, connections, metadata: { name: 'Arch Bridge 35m', span, rise, archSegs, type: 'bridge' } };

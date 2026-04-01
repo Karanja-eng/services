@@ -55,6 +55,7 @@ import SteelBIMSidebar from "../SteelDesign/SteelBIMSidebar";
 import SteelBIMInspector from "../SteelDesign/SteelBIMInspector";
 import SteelStructure3D from "../SteelDesign/SteelStructure3D";
 import { STRUCTURE_REGISTRY } from "../SteelDesign/SteelBIM_Generators";
+import { FrameScene } from "../ReinforcedConcrete/FramedandTall/FrameScene";
 
 // Legacy imports for backward compatibility (will be removed after full migration)
 import {
@@ -462,6 +463,7 @@ const StructuralVisualizationComponent = React.memo((props) => {
   // Determine if this is a QS or RC component
   const isQS = isQSComponent(actualComponentType);
   const isRC = isRCComponent(actualComponentType);
+  const isSteelBIM = actualComponentType === 'steel_bim';
 
   // Get the appropriate component/scene
   let Element3DComponent = null;
@@ -624,7 +626,7 @@ const StructuralVisualizationComponent = React.memo((props) => {
     STRUCTURE: true, TRUSS: true, PORTAL: true, BRIDGE: true, TOWER: true, DOME: true, SECONDARY: true, SUPPORT: true, CRANE: true
   });
 
-  const isSteelBIM = actualComponentType === 'steel_bim';
+
 
   const loadSteelStructure = (cat, id) => {
     const entry = STRUCTURE_REGISTRY[cat]?.find(e => e.id === id);
@@ -1194,7 +1196,7 @@ const StructuralVisualizationComponent = React.memo((props) => {
 
               {/* Render Steel Structure (BIM Mode) */}
               {/* Main 3D Model Rendering */}
-              {isSteelBIM || materialType === 'steel' ? (
+              {(isSteelBIM || materialType === 'steel') && (
                 <SteelStructure3D
                   structure={steelStructure || elements}
                   selectedIds={selectedSteelIds.length > 0 ? selectedSteelIds : (externalSelectedElement ? [externalSelectedElement.id] : [])}
@@ -1206,8 +1208,9 @@ const StructuralVisualizationComponent = React.memo((props) => {
                   showDiagrams={showDiagrams}
                   diagramScale={diagramScale}
                 />
-              ) : componentType === "tall_framed_analysis" ||
-                componentType === "tall_framed_wireframe" ? (
+              )}
+
+              {(componentType === "tall_framed_analysis" || componentType === "tall_framed_wireframe") && (
                 <FrameScene
                   elements={elements}
                   showDiagrams={showDiagrams}
@@ -1215,8 +1218,9 @@ const StructuralVisualizationComponent = React.memo((props) => {
                   diagramScale={diagramScale}
                   floorHeight={floorHeight}
                 />
-              ) : (
-                <PerspectiveCamera makeDefault position={[5, 3, 5]} />
+              )}
+
+              <PerspectiveCamera makeDefault position={[5, 3, 5]} />
               {/* Camera Controller */}
               <CameraController
                 viewMode={viewMode}

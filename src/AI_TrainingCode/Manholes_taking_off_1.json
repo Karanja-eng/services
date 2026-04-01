@@ -1,0 +1,156 @@
+{
+  "instruction": "Take off all the wuantities f the manhole and pipe system",
+  "context": {
+    "project_type": "Drainage works",
+    "standard": " SMM7 ",
+    "given_data": {
+      "Internal Sizes Manhole 1": "900mm x 600mm",
+      "Internal Sizes Manhole 2": "1200mm Diameter",
+      "Internal Sizes Manhole 3": "1200mm x 900mm",
+      "Invert Depth Manhole 1": "600mm",
+      "Gradient": "1 in 40",
+      "Pipe Size Manhole 1 to Manhole 2": "110mm",
+      "Pipe Size Manhole 2 to Manhole 3": "150mm",
+      "Pipe Size Manhole 3 to Public Sewer": "350mm",
+      "Pipe Size Gulley Trap to Manhole 2": "50mm",
+      "Pipe Size Water Closet to Manhole 1": "500mm",
+      "Cenetre to centre distance from Water Closet to Manhole 1": "1350mm",
+      "Cenetre to centre distance from Gulley Trap to Manhole 2": "3500mm",
+      "Cenetre to centre distance from Manhole 1 to Manhole 2": "9000mm",
+      "Cenetre to centre distance from Manhole 2 to Manhole 3": "27000mm",
+      "Cenetre to centre distance from Manhole 3 to Property Boundary": "14000mm",
+      "Distance from Property Boundary to Public Sewer": "10000mm",
+      "Manhole Component 1": "GI Cover and frame Dimensions 600mm x 450mm",
+      "Manhole Component 2": "100mm thick pcc slab reinforced with mesh reinforcement A193",
+      "Manhole Component 3": "12mm render",
+      "Manhole Component 4": "mass concrete (1 : 3 : 6) benchig average height 150mmm",
+      "Manhole Component 5": "150mm stone wall",
+      "Manhole Component 6": "150mm thick base concrete (1 : 3 : 6)",
+      "Manhole Component 7": "Thickness between invert depth and bae concrete",
+      "Note 1": "Site is clear",
+      "Note 2": "The ground is levelled",
+      "Note 3": "All upvc pipes to be laid directly on the ground",
+      "Note 4": "Manholes over 1000mm deep to be provided with step irons",
+      "Note 5": "Pccc pipe to be laid on 150 mmm deep and 600 mm wide concrete bed",
+      "Note 6": "Depth from top of manhole to ground level should be 50mm"
+    }
+  },
+  "phases": [
+    {
+      "phase_name": "Calculate Manholes Invert Levels and Manholes External dimensions",
+      "steps": [
+        {
+          "step_no": 1,
+          "heading": "Manhole 1 External Dimensions",
+          "thought": "Need total width and length of the manhole including the walls and projection for the pit excavations and manhole materials",
+          "formula": "External Dimensions = Internal Dimensions + 2(Wall Thickness)",
+          "working": "External Dimensions [Length] = 900mm + 2(150mm) = 1200mm [Width] = 600mm + 2(150mm) = 900mm",
+          "result": "MH1 External Dimensions = 1200mm x 900mm"
+        },
+        {
+          "step_no": 2,
+          "heading": "Calculate manhole Total Depth",
+          "thought": "Need to calculate the depth of the manhole to use in excavation and manhole materials",
+          "formula": "Dy = x / 40 , D2 = D1 + Dy ,Depth = D2 + Manhole Component 6 + Manhole Component 7 + Note 6 ",
+          "working": "Invert Depth = 600mm , Depth = 600 + 150 + 50 + 50 = 850mm",
+          "result": "MH1 Total Depth = 850mm below GL"
+        },
+        {
+          "step_no": 3,
+          "heading": "Manhole 2 External Dimensions",
+          "thought": "Need to calculate the external dimensions of the manhole to use in excavation and manhole materials",
+          "formula": "External Dimensions = Internal Dimensions + 2(Wall Thickness)",
+          "working": "External Dimensions [Diameter] = 1200mm + 2(150mm) = 1500mm",
+          "result": "MH2 External Dimensions = 1500mm Diameter"
+        },
+        {
+          "step_no": 4,
+          "heading": "Calculate manhole Total Depth",
+          "thought": "Need to calculate the depth of the manhole to use in excavation and manhole materials",
+          "formula": "Dy = x / 40 , D2 = D1 + Dy, x = Length - (Mh2 External Length / 2) - (Manhole 1 External Length / 2) ,Depth = D2 + Manhole Component 6 + Manhole Component 7 + Note 6",
+          "working": "Invert Depth = D2 , x = 9000 - (1500 / 2) - (1200 / 2) = 7650, Dy = 7650 / 40 = 191.25, D2 = 600 + 191.25 = 626.75mm , Depth = 791.25 + 150 + 50 + 50 = 1041.25mm",
+          "result": "MH1 Total Depth = 1041.25mm below GL"
+        },
+        {
+          "step_no": 5,
+          "heading": "Manhole 3 External Dimensions",
+          "thought": "Need to calculate the external dimensions of the manhole to use in excavation and manhole materials",
+          "formula": "External Dimensions = Internal Dimensions + 2(Wall Thickness)",
+          "working": "External Dimensions [Length] = 1200mm + 2(150mm) = 1500mm [Width] = 900mm + 2(150mm) = 1200mm",
+          "result": "MH3 External Dimensions = 1500mm x 1200mm"
+        },
+        {
+          "step_no": 6,
+          "heading": "Calculate manhole Total Depth",
+          "thought": "Need to calculate the depth of the manhole to use in excavation and manhole materials",
+          "formula": "Dy = x / 40 , D2 = D1 + Dy, x = Length - (Mh2 External Length / 2) - (Manhole 1 External Length / 2) ,Depth = D2 + Manhole Component 6 + Manhole Component 7 + Note 6",
+          "working": "Invert Depth = D2 , x = 27000 - (1500 / 2) - (1500 / 2) = 25500, Dy = 25500 / 40 = 637.5, D2 = 1041.25 + 637.5 = 1678.75mm , Depth = 1678.75 + 150 + 50 + 50 = 1878.75mm",
+          "result": "MH2 Total Depth = 1878.75mm below GL, 1st Stage = 1500mm , Second Stage = 1878.75 - 1500 = 378.75mm"
+        }
+      ]
+    },
+    {
+      "phase_name": "Final Excavation Dimensions and Descriptions for Takeoff sheet",
+      "steps": [
+        {
+          "step_no": 1,
+          "heading": "Manhole Excavation Pits",
+          "thought": "Need to give Final Dimensions and Descriptions for the excavation  of pits to recieve manholes depth Not exceeding 1500mm",
+          "formula": "",
+          "working": "",
+          "result": "[{\"MH1\": \"1200 x 900 x 850mm\", \"MH2\": \"(3.1415/4 x 1500) x (3.1415/4 x 1500) x 1041.25mm\", \"MH3\": \"1500 x 1200 x 1500mm\"} \"Description : Excavate pits to recieve Manholes Not Exceeding 1500mm epth commencing from Ground Level and Cut away spoil\" ]"
+        },
+        {
+          "step_no": 2,
+          "heading": "Manhole Excavation Pits",
+          "thought": "Need to give Final Dimensions and Descriptions for the excavation  of pits to recieve manholes depth exceeding 1500mm",
+          "formula": "",
+          "working": "",
+          "result": "[{\"MH3\": \"1500 x 1200 x 378.75\"} \"Description : Excavate as above described above 1500mm deep but not exceeding 3000mm deep commencing from 1500mm below ground level and cut away spoil\" ]"
+        }
+      ]
+    },
+    {
+      "phase_name": "Items",
+      "steps": [
+        {
+          "step_no": 1,
+          "heading": "Take off for plunking,strutting and dewatering",
+          "thought": "Need to give  final  dimensins and descriptions for plunking,strutting and dewatering",
+          "formula": "",
+          "working": "",
+          "result": "[{\"ITEM\": \"} \"Description : Allow for necessary plunking and strutting and allow for Dewatering\" ]"
+        },
+        {
+          "phase_name": "Concrete Bed",
+          "steps": [
+            {
+              "step_no": 1,
+              "heading": "Take off for plain concrete Bed",
+              "thought": "Need to give  final  dimensins and descriptions for the takeoff of Plain concrete bed",
+              "formula": "",
+              "working": "",
+              "result": "[{\"MH1\": \"1200 x 900\", \"MH2\": \"(3.1415/4 x  1500) x (3.1415/4 x  1500)\", \"MH3\": \"1500 x 1200\"} \"Description : Plain concrete ( 1 : 3 : 6) 150mm thick bed\" ]"
+            }
+          ]
+        }
+      ],
+      "bill_of_quantities": [
+        {
+          "ref": "D20.2.1",
+          "description": "Excavate for manhole pit; max depth not exceeding 1.0m",
+          "unit": "m³",
+          "qty": 1.53
+        },
+        {
+          "ref": "R12.1.1",
+          "description": "150mm uPVC pipe, laid in trench",
+          "unit": "m",
+          "qty": 9.00
+        }
+      ],
+      "notes": [
+        "Black cotton soil — 100% disposal, import fill",
+        "Step irons required for manholes over 1m deep"
+      ]
+    }
