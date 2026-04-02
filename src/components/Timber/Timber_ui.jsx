@@ -5,23 +5,23 @@ import TimberVisualisation from "./Timber_visualisation";
 const API = "http://localhost:8001";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-// Aesthetic direction: Technical Blueprint / Engineering Drawing
+// Aesthetic direction: Modern clean UI (like Columnmain)
 // Dynamic tokens based on isDark prop
 const getTokens = (isDark) => ({
-    bg: isDark ? "#0f0f0f" : "#f9fafb", // gray-50
-    surface: isDark ? "#161616" : "#ffffff",
-    border: isDark ? "#2a2a2a" : "#e5e7eb", // gray-200
-    borderHi: isDark ? "#3d3d3d" : "#d1d5db", // gray-300
-    amber: "#f0a500",
-    amberDim: isDark ? "#7d5600" : "#fbbf24",
-    green: "#22c55e",
-    red: "#ef4444",
-    text: isDark ? "#e8e8e8" : "#1f2937", // gray-800
-    muted: isDark ? "#6b6b6b" : "#9ca3af", // gray-400
-    label: isDark ? "#9a9a9a" : "#6b7280", // gray-500
+    bg: isDark ? "#1f2937" : "#f3f4f6", // gray-800 : gray-100
+    surface: isDark ? "#374151" : "#ffffff", // gray-700 : white
+    border: isDark ? "#4b5563" : "#e5e7eb", // gray-600 : gray-200
+    borderHi: isDark ? "#6b7280" : "#d1d5db", // gray-500 : gray-300
+    primary: "#2563eb", // blue-600
+    primaryDim: isDark ? "#1e3a8a" : "#bfdbfe", // blue-900 : blue-200
+    green: "#16a34a", // green-600
+    red: "#dc2626", // red-600
+    text: isDark ? "#f9fafb" : "#1f2937", // gray-50 : gray-800
+    muted: isDark ? "#9ca3af" : "#6b7280", // gray-400 : gray-500
+    label: isDark ? "#d1d5db" : "#374151", // gray-300 : gray-700
 });
 
-const isDarkTheme = (token) => token.bg === "#0f0f0f";
+const isDarkTheme = (token) => token.bg === "#1f2937";
 
 
 // ─── Tabs config ─────────────────────────────────────────────────────────────
@@ -64,8 +64,8 @@ function Field({ label, unit, children, token }) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{
-                fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
-                color: token.label, fontFamily: "'Courier New', monospace"
+                fontSize: 14, fontWeight: 500,
+                color: token.text, fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
                 {label}{unit && <span style={{ color: token.muted, marginLeft: 4 }}>[{unit}]</span>}
             </label>
@@ -85,12 +85,12 @@ function Input({ value, onChange, token, type = "number", min, step = "1", ...pr
             onChange={e => onChange(type === "number" ? parseFloat(e.target.value) : e.target.value)}
             style={{
                 background: isDarkTheme(token) ? "#1c1c1c" : "#ffffff", border: `1px solid ${token.border}`,
-                color: token.text, fontFamily: "'Courier New', monospace", fontSize: 13,
-                padding: "6px 10px", borderRadius: 2, outline: "none", width: "100%",
+                color: token.text, fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 14,
+                padding: "8px 12px", borderRadius: 4, outline: "none", width: "100%",
                 boxSizing: "border-box",
                 transition: "border-color 0.15s",
             }}
-            onFocus={e => e.target.style.borderColor = token.amber}
+            onFocus={e => e.target.style.borderColor = token.primary}
             onBlur={e => e.target.style.borderColor = token.border}
             {...props}
         />
@@ -105,8 +105,8 @@ function Select({ value, onChange, options, token }) {
             onChange={e => onChange(e.target.value)}
             style={{
                 background: isDarkTheme(token) ? "#1c1c1c" : "#ffffff", border: `1px solid ${token.border}`,
-                color: token.text, fontFamily: "'Courier New', monospace", fontSize: 12,
-                padding: "6px 10px", borderRadius: 2, outline: "none", width: "100%",
+                color: token.text, fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 14,
+                padding: "8px 12px", borderRadius: 4, outline: "none", width: "100%",
                 cursor: "pointer",
             }}
         >
@@ -124,14 +124,14 @@ function Toggle({ label, checked, onChange, token }) {
     return (
         <label style={{
             display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-            fontSize: 12, color: token.label, fontFamily: "'Courier New', monospace"
+            fontSize: 12, color: token.label, fontFamily: "system-ui, -apple-system, sans-serif"
         }}>
             <div
                 onClick={() => onChange(!checked)}
                 style={{
                     width: 36, height: 18, borderRadius: 9,
-                    background: checked ? token.amber : (isDarkTheme(token) ? "#2a2a2a" : "#e5e7eb"),
-                    border: `1px solid ${checked ? token.amber : token.border}`,
+                    background: checked ? token.primary : (isDarkTheme(token) ? "#2a2a2a" : "#e5e7eb"),
+                    border: `1px solid ${checked ? token.primary : token.border}`,
                     position: "relative", cursor: "pointer", transition: "all 0.2s",
                 }}
             >
@@ -155,11 +155,12 @@ function SubmitBtn({ loading, token, label = "RUN DESIGN CHECK" }) {
             type="submit"
             disabled={loading}
             style={{
-                background: loading ? token.amberDim : token.amber,
-                color: "#000", border: "none",
-                fontFamily: "'Courier New', monospace", fontWeight: 700,
-                fontSize: 12, letterSpacing: "0.15em",
-                padding: "10px 28px", borderRadius: 2, cursor: loading ? "not-allowed" : "pointer",
+                background: loading ? token.primaryDim : token.primary,
+                color: "#ffffff", border: "none",
+                fontFamily: "system-ui, -apple-system, sans-serif", fontWeight: 500,
+                fontSize: 16,
+                padding: "12px 24px", borderRadius: 6, cursor: loading ? "not-allowed" : "pointer",
+                width: "100%", marginTop: "8px", boxSizing: "border-box",
                 transition: "background 0.15s",
             }}
         >
@@ -177,18 +178,19 @@ function UtilBar({ value, label, token }) {
         <div style={{ marginBottom: 8 }}>
             <div style={{
                 display: "flex", justifyContent: "space-between",
-                fontSize: 11, fontFamily: "'Courier New', monospace",
+                fontSize: 11, fontFamily: "system-ui, -apple-system, sans-serif",
                 color: token.label, marginBottom: 3
             }}>
                 <span>{label}</span>
                 <span style={{ color }}>{(value * 100).toFixed(1)}%</span>
             </div>
-            <div style={{ height: 4, background: isDarkTheme(token) ? "#1c1c1c" : "#e5e7eb", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ height: 4, background: isDarkTheme(token) ? "#1c1c1c" : "#e5e7eb", borderRadius: 6, overflow: "hidden" }}>
                 <div style={{
                     height: "100%", width: `${Math.min(pct, 100)}%`,
-                    background: color, borderRadius: 2,
+                    background: color, borderRadius: 6,
                     transition: "width 0.4s ease",
                 }} />
+                
             </div>
         </div>
     );
@@ -205,8 +207,8 @@ function Badge({ ok, token }) {
             background: ok ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
             color: ok ? token.green : token.red,
             border: `1px solid ${ok ? token.green : token.red}`,
-            borderRadius: 2, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-            padding: "1px 6px", fontFamily: "'Courier New', monospace",
+            borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+            padding: "1px 6px", fontFamily: "system-ui, -apple-system, sans-serif",
         }}>
             {ok ? "PASS" : "FAIL"}
         </span>
@@ -221,11 +223,11 @@ function KV({ k, v, token, unit = "" }) {
             borderBottom: `1px solid ${token.border}`, paddingBottom: 5, marginBottom: 5
         }}>
             <span style={{
-                fontSize: 11, color: token.label, fontFamily: "'Courier New', monospace",
-                letterSpacing: "0.05em"
+                fontSize: 14, color: token.label, fontFamily: "system-ui, -apple-system, sans-serif",
+                
             }}>{k}</span>
             <span style={{
-                fontSize: 13, color: token.text, fontFamily: "'Courier New', monospace",
+                fontSize: 13, color: token.text, fontFamily: "system-ui, -apple-system, sans-serif",
                 fontWeight: 600
             }}>
                 {typeof v === "boolean" ? <Badge ok={v} token={token} /> : `${v}${unit ? " " + unit : ""}`}
@@ -239,10 +241,10 @@ function ResultSection({ title, token, children }) {
     return (
         <div style={{ marginBottom: 20 }}>
             <div style={{
-                fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
-                color: token.amber, fontFamily: "'Courier New', monospace",
-                borderBottom: `1px solid ${token.amberDim}`,
-                paddingBottom: 4, marginBottom: 10
+                fontSize: 14, fontWeight: "bold",
+                color: token.primary, fontFamily: "system-ui, -apple-system, sans-serif",
+                borderBottom: `1px solid ${token.primaryDim}`,
+                paddingBottom: 4, marginBottom: 12
             }}>
                 {title}
             </div>
@@ -256,8 +258,8 @@ function ErrorBox({ msg, token }) {
     return (
         <div style={{
             background: "rgba(239,68,68,0.07)", border: `1px solid ${token.red}`,
-            borderRadius: 2, padding: 14, marginTop: 16,
-            fontFamily: "'Courier New', monospace", fontSize: 12, color: token.red,
+            borderRadius: 6, padding: 14, marginTop: 16,
+            fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 12, color: token.red,
             whiteSpace: "pre-wrap",
         }}>
             ⚠ {msg}
@@ -626,65 +628,62 @@ export default function TimberUI({ isDark }) {
     return (
         <div style={{
             minHeight: "100vh", background: token.bg, color: token.text,
-            fontFamily: "'Courier New', monospace",
-            backgroundImage: isDark ? `
-        linear-gradient(rgba(240,165,0,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(240,165,0,0.02) 1px, transparent 1px)
-      ` : `
-        linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px)
-      `,
-            backgroundSize: "40px 40px",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+
         }}>
             {/* Header */}
-            <div style={{
-                borderBottom: `1px solid ${token.border}`,
-                padding: "20px 40px",
-                display: "flex", alignItems: "center", gap: 20,
+            <header style={{
+                background: "#1f2937",
+                color: "#ffffff",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                padding: "24px 40px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
-                <div style={{ fontSize: 11, color: token.amber, letterSpacing: "0.2em", textTransform: "uppercase" }}>
-                    ▐ BS 5268 : PART 2
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.05em", color: token.text }}>
-                    Structural Timber Design
+                <div>
+                    <h1 style={{ fontSize: "1.875rem", lineHeight: "2.25rem", fontWeight: 700, margin: 0, padding: 0 }}>
+                        Timber Design System
+                    </h1>
+                    <p style={{ color: "#d1d5db", marginTop: "4px", marginBottom: 0, padding: 0, fontSize: "1rem" }}>
+                        Professional BS 5268: Part 2 Compliant Tool
+                    </p>
                 </div>
                 <button
                     onClick={() => setShowVisualizer(!showVisualizer)}
                     style={{
-                        background: showVisualizer ? token.amber : "none",
-                        color: showVisualizer ? "#000" : token.amber,
-                        border: `1px solid ${token.amber}`,
-                        padding: "4px 12px",
-                        borderRadius: 4,
-                        fontSize: 10,
-                        fontWeight: 700,
+                        background: showVisualizer ? "rgba(255,255,255,0.2)" : "none",
+                        color: "#ffffff",
+                        border: `1px solid rgba(255,255,255,0.4)`,
+                        padding: "8px 16px",
+                        borderRadius: 6,
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
                         cursor: "pointer",
-                        marginLeft: 20,
                         transition: "all 0.2s"
                     }}
                 >
-                    {showVisualizer ? "HIDE VISUALIZER" : "SHOW VISUALIZER"}
+                    {showVisualizer ? "Hide Visualizer" : "Show Visualizer"}
                 </button>
-                <div style={{ marginLeft: "auto", fontSize: 10, color: token.muted }}>
-                    PERMISSIBLE STRESS · N · mm
-                </div>
-            </div>
+            </header>
 
             {/* Tab bar */}
             <div style={{
                 display: "flex", borderBottom: `1px solid ${token.border}`,
-                padding: "0 40px", gap: 0,
+                padding: "0 40px", gap: 4,
+                background: token.surface,
+                boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
             }}>
                 {TABS.map(t => (
                     <button
                         key={t.id}
                         onClick={() => { setTab(t.id); setResult(null); }}
                         style={{
-                            background: "none", border: "none", cursor: "pointer",
-                            padding: "14px 20px", fontSize: 11, letterSpacing: "0.1em",
-                            textTransform: "uppercase", color: tab === t.id ? token.amber : token.muted,
-                            borderBottom: tab === t.id ? `2px solid ${token.amber}` : "2px solid transparent",
+                            background: tab === t.id ? (isDarkTheme(token) ? "#374151" : "#eff6ff") : "transparent",
+                            border: "none", cursor: "pointer",
+                            padding: "16px 24px", fontSize: 16, fontWeight: 500,
+                            color: tab === t.id ? token.primary : token.muted,
+                            borderBottom: tab === t.id ? `2px solid ${token.primary}` : "2px solid transparent",
                             transition: "all 0.15s",
+                            display: "flex", alignItems: "center", gap: 8
                         }}
                     >
                         {t.label}
@@ -693,7 +692,16 @@ export default function TimberUI({ isDark }) {
             </div>
 
             {/* Body */}
-            <div style={{ display: "grid", gridTemplateColumns: showVisualizer ? "1fr" : "1fr 380px", gap: 0, minHeight: "calc(100vh - 120px)" }}>
+            <div style={{ padding: "32px 0" }}>
+                <div style={{
+                    display: "grid", 
+                    gridTemplateColumns: showVisualizer ? "1fr" : "1fr 450px", 
+                    gap: 32, 
+                    maxWidth: "1280px", 
+                    margin: "0 auto", 
+                    padding: "0 16px",
+                    minHeight: "calc(100vh - 200px)"
+                }}>
 
                 {showVisualizer ? (
                     <div style={{ padding: "40px", display: "flex", justifyContent: "center" }}>
@@ -710,11 +718,16 @@ export default function TimberUI({ isDark }) {
                 ) : (
                     <>
                         {/* Left — inputs */}
-                        <div style={{ padding: "32px 40px", borderRight: `1px solid ${token.border}` }}>
+                        <div style={{ 
+                            padding: "24px", 
+                            background: token.surface, 
+                            borderRadius: "8px", 
+                            boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                            border: `1px solid ${token.border}` 
+                        }}>
                             <div style={{
-                                fontSize: 10, color: token.label, letterSpacing: "0.15em",
-                                textTransform: "uppercase", marginBottom: 20,
-                                borderBottom: `1px solid ${token.border}`, paddingBottom: 10
+                                fontSize: 20, fontWeight: "bold", color: token.text, marginBottom: 16,
+                                paddingBottom: 0
                             }}>
                                 Input Parameters — {TABS.find(t => t.id === tab)?.label}
                             </div>
@@ -726,11 +739,17 @@ export default function TimberUI({ isDark }) {
                         </div>
 
                         {/* Right — results */}
-                        <div style={{ padding: "32px 24px", overflowY: "auto" }}>
+                        <div style={{ 
+                            padding: "24px", 
+                            background: token.surface, 
+                            borderRadius: "8px", 
+                            boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                            border: `1px solid ${token.border}`,
+                            overflowY: "auto" 
+                        }}>
                             <div style={{
-                                fontSize: 10, color: token.label, letterSpacing: "0.15em",
-                                textTransform: "uppercase", marginBottom: 20,
-                                borderBottom: `1px solid ${token.border}`, paddingBottom: 10
+                                fontSize: 20, fontWeight: "bold", color: token.text, marginBottom: 16,
+                                paddingBottom: 0
                             }}>
                                 Design Output
                             </div>
@@ -753,6 +772,7 @@ export default function TimberUI({ isDark }) {
                     </>
                 )}
 
+                </div>
             </div>
         </div>
     );

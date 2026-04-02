@@ -7,7 +7,13 @@ import {
   ChevronRight,
   Circle,
   DraftingCompass,
-  Box
+  Box,
+  Layers,
+  LayoutGrid,
+  TreePine,
+  Grid,
+  Map,
+  PenTool
 } from "lucide-react";
 import bgImage from "../Gemini_Generated_Image_nwcnzmnwcnzmnwcn (1).png";
 import { useNavigate } from "react-router-dom";
@@ -226,7 +232,13 @@ const ChatPage = ({ renderSearch, isDark }) => {
                         <span className="flex items-center gap-2">
                           {section.id.includes('concrete') && <Box size={12} className="text-blue-600 dark:text-blue-300" />}
                           {section.id.includes('steel') && <DraftingCompass size={12} className="text-blue-600 dark:text-blue-300" />}
+                          {section.id.includes('soil') && <Layers size={12} className="text-blue-600 dark:text-blue-300" />}
+                          {section.id.includes('precast') && <LayoutGrid size={12} className="text-blue-600 dark:text-blue-300" />}
+                          {section.id.includes('timber') && <TreePine size={12} className="text-blue-600 dark:text-blue-300" />}
+                          {section.id.includes('masonry') && <Grid size={12} className="text-blue-600 dark:text-blue-300" />}
                           {section.id.includes('qs') && <Calculator size={12} className="text-emerald-600 dark:text-emerald-300" />}
+                          {section.id.includes('surveying_main') && <Map size={12} className="text-emerald-600 dark:text-emerald-300" />}
+                          {section.id.includes('drawing') && <PenTool size={12} className="text-amber-600 dark:text-amber-300" />}
                           {section.title}
                         </span>
                         {expandedSections[section.id] ? <ChevronDown size={12} /> : <ChevronRight size={12} />}

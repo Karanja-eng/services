@@ -64,17 +64,15 @@ function Input({ label, unit, isDark, ...props }) {
     );
 }
 
-function Select({ label, options, ...props }) {
+function Select({ label, options, isDark, ...props }) {
     return (
         <div className="flex flex-col">
-            <Label>{label}</Label>
+            <Label isDark={isDark}>{label}</Label>
             <select
-                className="
-          bg-slate-900 border border-slate-700 rounded
-          px-2.5 py-1.5 text-sm font-mono text-slate-100
-          focus:outline-none focus:border-amber-500
-          transition-colors
-        "
+                className={`border rounded px-2.5 py-1.5 text-sm font-mono transition-colors focus:outline-none
+          ${isDark
+                        ? "bg-slate-900 border-slate-700 text-slate-100 focus:border-amber-500"
+                        : "bg-white border-gray-200 text-gray-900 focus:border-blue-500"}`}
                 {...props}
             >
                 {options.map(o => (
