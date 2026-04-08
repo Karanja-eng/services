@@ -1184,8 +1184,7 @@ const StructuralVisualizationComponent = React.memo((props) => {
                 <CadObjects3D objects={actualComponentData.objects} showDimensions={showDimensions} />
               )}
 
-              {/* ...#######################Render Sample Members ############    */}
-              {/* ...#######################Render Sample Members ############    */}
+              
 
               {/* .............................Render Sample Members .............................                                  */}
 
@@ -1602,12 +1601,6 @@ const StructuralVisualizationComponent = React.memo((props) => {
         )}
       </div>
 
-      {/* Notes Section */}
-
-      {/* Properties Toggle (when closed) */}
-
-      {/* Keyboard Shortcuts Overlay (Optional) */}
-      {/* Can be toggled with a help button */}
     </div>
   );
 });

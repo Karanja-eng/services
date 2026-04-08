@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  
+  body {
+    @apply bg-blueprint-bg text-blueprint-bright;
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { @apply bg-blueprint-bg; }
+  ::-webkit-scrollbar-thumb { @apply bg-blueprint-line rounded; }
+}
+
+@layer components {
+  .panel {
+    @apply bg-blueprint-dim border border-blueprint-line rounded-lg;
+  }
+
+  .panel-header {
+    @apply px-3 py-2 border-b border-blueprint-line font-display text-xs tracking-widest text-blueprint-accent uppercase;
+  }
+
+  .btn-primary {
+    @apply bg-blueprint-accent text-blueprint-bg font-mono text-xs px-3 py-1.5 rounded
+           hover:bg-blueprint-bright transition-colors duration-150 font-semibold tracking-wider;
+  }
+
+  .btn-ghost {
+    @apply border border-blueprint-line text-blueprint-bright font-mono text-xs px-3 py-1.5 rounded
+           hover:border-blueprint-accent hover:text-blueprint-accent transition-colors duration-150;
+  }
+
+  .input-field {
+    @apply bg-blueprint-bg border border-blueprint-line rounded px-2 py-1 text-blueprint-bright
+           font-mono text-xs focus:outline-none focus:border-blueprint-accent w-full
+           placeholder-blueprint-line;
+  }
+
+  .label {
+    @apply text-blueprint-accent font-mono text-xs uppercase tracking-wider;
+  }
+
+  .type-card {
+    @apply panel p-2 cursor-pointer hover:border-blueprint-accent transition-all duration-200
+           flex flex-col items-center gap-1 text-center;
+  }
+
+  .type-card.active {
+    @apply border-blueprint-accent bg-blueprint-grid;
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(42,74,122,0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42,74,122,0.3) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
+
+/* Blueprint scan-line overlay */
+.blueprint-overlay::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(10,22,40,0.15) 2px,
+    rgba(10,22,40,0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Konva canvas cursor */
+.konva-canvas-area canvas {
+  cursor: crosshair;
+}
