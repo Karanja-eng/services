@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { buildTerrainGeometry, extractContours } from '../../utils/terrainUtils';
+import { buildTerrainGeometry, extractContours } from './terrainUtils';
 
 const TERRAIN_MATERIALS = {
     grass: { color: '#4a7c3a', roughness: 1.0, metalness: 0 },

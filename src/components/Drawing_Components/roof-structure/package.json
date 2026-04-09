@@ -1,0 +1,19 @@
+{
+  "name": "roof-structure",
+  "version": "1.0.0",
+  "description": "AI-powered architectural roof structural design system — trusses, rafters, portal frames",
+  "type": "module",
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "three": "^0.150.0",
+    "@react-three/fiber": "^8.0.0",
+    "@react-three/drei": "^9.0.0",
+    "konva": "^8.0.0",
+    "react-konva": "^18.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.0.0"
+  }
+}

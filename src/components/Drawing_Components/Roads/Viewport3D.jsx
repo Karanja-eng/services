@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid, Sky, Environment, Stats } from '@react-three/drei';
-import { useStore } from '../../store/useStore';
+import { useStore } from './useStore';
 import { Road3D } from './Road3D';
 import { Terrain3D } from './Terrain3D';
 import { Tree3D } from './Tree3D';

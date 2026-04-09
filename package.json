@@ -23,7 +23,8 @@
     "react-router-dom": "^7.5.0",
     "react-scripts": "5.0.1",
     "recharts": "^2.15.1",
-    "three": "^0.172.0"
+    "three": "^0.172.0",
+    "zustand": "^5.0.12"
   },
   "scripts": {
     "start": "react-scripts start",

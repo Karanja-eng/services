@@ -1,5 +1,5 @@
 import React from 'react';
-import { useStore } from '../../store/useStore';
+import { useStore } from './useStore';
 
 export function PropertiesPanel() {
   const { selectedIds, elements, updateElement, removeElement, snapshot, selectedTool, toolOptions, setToolOptions } = useStore();

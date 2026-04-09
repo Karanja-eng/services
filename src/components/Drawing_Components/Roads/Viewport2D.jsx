@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Stage, Layer, Line, Circle, Rect, Arrow, Text, Group } from 'react-konva';
-import { useStore } from '../../store/useStore';
+import { useStore } from './useStore';
 import { Road2D } from './Road2D';
 import { Tree2D } from './Tree2D';
 import { Parking2D } from './Parking2D';

@@ -168,7 +168,8 @@ const ChatPage = ({ renderSearch, isDark }) => {
           type: "section",
           items: [
             { label: "2D CAD Drawer", path: "/drawing" },
-            { label: "3D Visualization", path: "/visualise" }
+            { label: "3D Visualization", path: "/visualise" },
+            { label: "Road & Site Design", path: "/drawing/roads" }
           ]
         }
       ]

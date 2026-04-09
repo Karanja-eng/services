@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { useStore } from '../../store/useStore';
+import { useStore } from './useStore';
 import {
     buildRoadGeometry,
     buildCurvedRoadGeometry,
     buildKerbGeometry,
     buildRoundaboutGeometry,
     buildCulDeSacGeometry,
-} from '../../utils/roadGeometry';
+} from './roadGeometry';
 
 const ROAD_COLORS = {
     asphalt: '#1a1a1a',

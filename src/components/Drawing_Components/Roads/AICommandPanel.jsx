@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useStore } from '../../store/useStore';
+import { useStore } from './useStore';
 import {
   placeSiteElement,
   generateParkingLayout,
   generateTerrain,
   plantTrees,
-} from '../../utils/agentInterface';
+} from './agenInterface';
 
 const EXAMPLE_COMMANDS = [
   'Place a 7m wide asphalt road from [0,0] to [50,0] to [50,30]',

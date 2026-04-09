@@ -1,5 +1,4 @@
-import React from 'react';
-import { useStore } from '../../store/useStore';
+import { useStore } from './useStore';
 
 export function StatusBar() {
   const { elements, selectedIds, gridVisible, toggleGrid, showMarkings, toggleMarkings, showTrees, toggleTrees } = useStore();

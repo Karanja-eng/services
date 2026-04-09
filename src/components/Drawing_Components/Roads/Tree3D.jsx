@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { Lod } from '@react-three/drei';
+import { Detailed } from '@react-three/drei';
 
 const TREE_COLORS = {
     deciduous: { trunk: '#5a3a1a', canopy: '#2d6a1a' },
@@ -24,14 +24,14 @@ export function Tree3D({ element }) {
 
     return (
         <group position={[x, 0, z]} scale={scale}>
-            <Lod>
-                {/* LOD 0 — Detailed */}
-                <DetailedTree species={species} colors={colors} distance={0} />
-                {/* LOD 1 — Medium */}
-                <MediumTree species={species} colors={colors} distance={20} />
-                {/* LOD 2 — Far */}
-                <FarTree species={species} colors={colors} distance={60} />
-            </Lod>
+                <Detailed>
+                    {/* LOD 0 — Detailed */}
+                    <DetailedTree species={species} colors={colors} distance={0} />
+                    {/* LOD 1 — Medium */}
+                    <MediumTree species={species} colors={colors} distance={20} />
+                    {/* LOD 2 — Far */}
+                    <FarTree species={species} colors={colors} distance={60} />
+                </Detailed>
         </group>
     );
 }

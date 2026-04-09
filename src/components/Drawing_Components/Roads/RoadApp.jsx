@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { MainLayout } from './components/ui/MainLayout';
-import { Toolbar } from './components/ui/Toolbar';
-import { PropertiesPanel } from './components/ui/PropertiesPanel';
-import { Viewport3D } from './components/3d/Viewport3D';
-import { Viewport2D } from './components/2d/Viewport2D';
-import { useStore } from './store/useStore';
-import { StatusBar } from './components/ui/StatusBar';
-import { AICommandPanel } from './components/ui/AICommandPanel';
+import { MainLayout } from './MainLayout';
+import { Toolbar } from './Toolbar';
+import { PropertiesPanel } from './Propertiespanel';
+import { Viewport3D } from './Viewport3D';
+import { Viewport2D } from './Viewport2D';
+import { useStore } from './useStore';
+import { StatusBar } from './StatusBar';
+import { AICommandPanel } from './AICommandPanel';
 
 export default function App() {
     const [viewMode, setViewMode] = useState('split'); // '3d' | '2d' | 'split'

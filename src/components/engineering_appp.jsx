@@ -35,6 +35,7 @@ import MonitoringDashboard from "./Surveying/Deformation_&_Monitoring/monitoring
 import SoilMechanicsModule from "./Soil_mechanics/soil_mechanics";
 import CadDrawer from "./Drawings/cad_drawing";
 import StructuralVisualizationComponent from "./Drawings/visualise_component";
+import RoadApp from "./Drawing_Components/Roads/RoadApp";
 
 import StructuralEngineeeringSuite from "./ReinforcedConcrete/Beams/StructuralEngineeeringSuite";
 import Columnmain from "./ReinforcedConcrete/Columns/Columnmain";
@@ -680,6 +681,10 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             <Route
               path="/drawing"
               element={<CadDrawer isDark={isDark} />}
+            />
+            <Route
+              path="/drawing/roads"
+              element={<RoadApp isDark={isDark} />}
             />
 
             <Route
