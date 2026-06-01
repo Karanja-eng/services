@@ -4,8 +4,8 @@ import * as THREE from 'three'
 import {
   buildIShape, buildLShape, buildTShape, buildRHSShape,
   extrudeAlongY, getRebarPositions
-} from '../../utils/geometry3d'
-import { MATERIAL_COLORS } from '../../data/sectionLibrary'
+} from './geometry3d.js'
+import { MATERIAL_COLORS } from './sectionLibraryData.js'
 
 // ── Materials ────────────────────────────────────────────────────────────────
 function useMat(material, override = {}) {

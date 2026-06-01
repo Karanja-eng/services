@@ -36,6 +36,13 @@ import SoilMechanicsModule from "./Soil_mechanics/soil_mechanics";
 import CadDrawer from "./Drawings/cad_drawing";
 import StructuralVisualizationComponent from "./Drawings/visualise_component";
 import RoadApp from "./Drawing_Components/Roads/RoadApp";
+import ColumnsBeamsApp from "./Drawing_Components/Columns_Beams/ColumnsBeamsApp";
+import { RoofStructureApp } from "./Drawing_Components/roof-structure/index";
+import SlabModule from "./Drawing_Components/slabs/SlabModule";
+import DimensionsApp from "./Drawing_Components/Dimensions/App";
+import MaterialsApp from "./Drawing_Components/Materials/App";
+import ElectricalApp from "./electrical/ElectricalApp";
+import PlumbingApp from "./plumbing/PlumbingApp";
 
 import StructuralEngineeeringSuite from "./ReinforcedConcrete/Beams/StructuralEngineeeringSuite";
 import Columnmain from "./ReinforcedConcrete/Columns/Columnmain";
@@ -686,6 +693,35 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
               path="/drawing/roads"
               element={<RoadApp isDark={isDark} />}
             />
+            <Route
+              path="/drawing/columns_beams"
+              element={<ColumnsBeamsApp isDark={isDark} />}
+            />
+            <Route
+              path="/drawing/roof_structure"
+              element={<RoofStructureApp isDark={isDark} />}
+            />
+            <Route
+              path="/drawing/slabs"
+              element={<SlabModule isDark={isDark} />}
+            />
+            <Route
+              path="/drawing/dimensions"
+              element={<DimensionsApp /> /* Does not take isDark prop in its App.jsx */}
+            />
+            <Route
+              path="/drawing/materials"
+              element={<MaterialsApp /> /* Does not take isDark prop in its App.jsx */}
+            />
+            <Route
+              path="/drawing/electrical"
+              element={<ElectricalApp isDark={isDark} />}
+            />
+            <Route
+              path="/drawing/plumbing"
+              element={<PlumbingApp isDark={isDark} />}
+            />
+
 
             <Route
               path="/structural/manual/beam"

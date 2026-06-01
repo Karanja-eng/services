@@ -1,7 +1,7 @@
 import React from 'react'
 import { Group, Line, Text, Rect, Arrow } from 'react-konva'
-import { beamPlanRect, dimensionLine, toPixels } from '../../utils/drawing2d'
-import { MATERIAL_FILL_2D } from '../../data/sectionLibrary'
+import { beamPlanRect, dimensionLine, toPixels } from './drawing2d.js'
+import { MATERIAL_FILL_2D } from './sectionLibraryData.js'
 
 // Dimension line with span label
 function SpanDimension({ x1, y1, x2, y2, spanM, scale }) {
@@ -89,7 +89,7 @@ export default function Beam2D({
     const angle = Math.atan2(dy, dx) * 180 / Math.PI
 
     return (
-        <Group onClick={onClick}>
+        <Group onMouseDown={onClick}>
             {/* Beam outline (dashed = hidden below slab) */}
             <Line
                 points={rectPoints}

@@ -1,6 +1,6 @@
 import React from 'react'
-import { useStore } from '../../store'
-import { COLUMN_TYPES, BEAM_TYPES } from '../../data/sectionLibrary'
+import { useStore } from './store.js'
+import { COLUMN_TYPES, BEAM_TYPES } from './sectionLibraryData.js'
 
 // SVG cross-section icons for each type
 function SectionIcon({ icon, material, size = 28 }) {

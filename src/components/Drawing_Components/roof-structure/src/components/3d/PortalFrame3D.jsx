@@ -24,12 +24,12 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
-import { DEG, SECTION_SIZES } from '../constants/roofStructureTypes.js';
+import { DEG, SECTION_SIZES } from '../../constants/roofStructureTypes.js';
 import {
   memberMesh, disposeGroup,
   basePlateMesh, pinMesh,
-} from '../utils/geometryUtils.js';
-import { STEEL_MATS } from '../utils/materialFactory.js';
+} from '../../utils/geometryUtils.js';
+import { STEEL_MATS } from '../../utils/materialFactory.js';
 
 export default function PortalFrame3D({
   span       = 12,

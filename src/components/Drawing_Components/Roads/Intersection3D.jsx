@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { buildRoundaboutGeometry } from '../../utils/roadGeometry';
+import { buildRoundaboutGeometry } from './roadGeometry';
 
 /**
  * T-Junction: three roads meeting at a point, flared apron.

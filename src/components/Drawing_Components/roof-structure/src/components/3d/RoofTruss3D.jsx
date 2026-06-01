@@ -26,9 +26,9 @@ import React, { useRef, useEffect, useMemo } from 'react';
 import { useThree }  from '@react-three/fiber';
 import * as THREE    from 'three';
 
-import { trussTopology, SECTION_SIZES, DEG } from '../constants/roofStructureTypes.js';
-import { memberMesh, gussetMesh, nodes2Dto3D, disposeGroup } from '../utils/geometryUtils.js';
-import { createMaterials } from '../utils/materialFactory.js';
+import { trussTopology, SECTION_SIZES, DEG } from '../../constants/roofStructureTypes.js';
+import { memberMesh, gussetMesh, nodes2Dto3D, disposeGroup } from '../../utils/geometryUtils.js';
+import { createMaterials } from '../../utils/materialFactory.js';
 
 export default function RoofTruss3D({
   type        = 'king',

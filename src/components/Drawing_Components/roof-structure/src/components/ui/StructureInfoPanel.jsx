@@ -15,7 +15,7 @@ import {
   TRUSS_INFO,
   TRUSS_TYPES,
   autoSelectTruss,
-} from '../constants/roofStructureTypes.js';
+} from '../../constants/roofStructureTypes.js';
 
 function PanelTitle({ children }) {
   return (

@@ -1,0 +1,10 @@
+export { MaterialLibrary, MasonryConcrete, Metals, Glazing, Timber, Finishes, CATEGORIES, makeNoiseTexture } from './materials/MaterialLibrary.js';
+export { useMaterialSlotStore, applyMaterial, SLOT_TEMPLATES } from './materials/MaterialSlotSystem.js';
+export { useMaterial, getMaterialInstance, patchMaterial } from './hooks/useMaterial.js';
+export { brickVertexShader, brickFragmentShader, timberVertexShader, timberFragmentShader, concreteVertexShader, concreteFragmentShader } from './shaders/index.js';
+export { LightingRig, useLightingStore, setLighting, kelvinToColor, sunPosition, LIGHTING_MODES } from './lighting/LightingSystem.jsx';
+export { PostProcessingStack, CameraRig, RenderModeController, useScreenshot, useRenderStore, renderScene } from './rendering/RenderingEngine.jsx';
+export { default as MaterialPicker } from './ui/MaterialPicker.jsx';
+export { default as LightingPanel } from './ui/LightingPanel.jsx';
+export { default as RenderPanel } from './ui/RenderPanel.jsx';
+export { ArchStudioAPI, applyMaterial as agentApplyMaterial, setLighting as agentSetLighting, renderScene as agentRenderScene, queryMaterials, batch } from './AgenticInterface.js';

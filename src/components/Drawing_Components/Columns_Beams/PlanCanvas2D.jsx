@@ -1,8 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Stage, Layer, Group, Line, Rect, Text } from 'react-konva'
-import Column2D, { ColumnGridLines } from '../columns/Column2D'
-import Beam2D from '../beams/Beam2D'
-import { useStore } from '../../store'
+import Column2D, { ColumnGridLines } from './Column2D.jsx'
+import Beam2D from './Beam2D.jsx'
+import { useStore } from './store.js'
 
 const PLAN_ORIGIN = { x: 80, y: 80 }
 
@@ -33,11 +33,18 @@ export default function PlanCanvas2D({ width, height }) {
     const snap = (v) => Math.round(v / 0.25) * 0.25
 
     const handleStageClick = useCallback((e) => {
+        // Only trigger on left mouse button
+        if (e.evt && e.evt.button !== 0) return
+
         if (activeTool !== 'place_column' && activeTool !== 'place_beam') {
             setSelectedId(null)
             return
         }
-        const pos = e.target.getStage().getPointerPosition()
+        
+        const stage = e.target.getStage()
+        const pos = stage.getPointerPosition()
+        if (!pos) return
+
         const world = toWorld(pos.x, pos.y)
         const wx = snap(world.x), wy = snap(world.y)
 
@@ -84,7 +91,7 @@ export default function PlanCanvas2D({ width, height }) {
             <Stage
                 ref={stageRef}
                 width={width} height={height}
-                onClick={handleStageClick}
+                onMouseDown={handleStageClick}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={() => setHoverPos(null)}
                 style={{ background: '#070e1a' }}

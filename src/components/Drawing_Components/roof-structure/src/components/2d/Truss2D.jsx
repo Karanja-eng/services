@@ -31,7 +31,7 @@ import {
   TRUSS_TYPES,
   MEMBER_COLORS,
   DEG,
-} from '../constants/roofStructureTypes.js';
+} from '../../constants/roofStructureTypes.js';
 
 export default function Truss2D({
   type           = 'king',

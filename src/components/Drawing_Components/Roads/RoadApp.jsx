@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MainLayout } from './MainLayout';
+
 import { Toolbar } from './Toolbar';
 import { PropertiesPanel } from './Propertiespanel';
 import { Viewport3D } from './Viewport3D';
@@ -13,7 +13,7 @@ export default function App() {
     const { selectedTool } = useStore();
 
     return (
-        <div className="flex flex-col h-screen w-screen bg-[#0f1117] text-[#e2e8f0] font-mono overflow-hidden">
+        <div className="flex flex-col flex-1 w-full bg-[#0f1117] text-[#e2e8f0] font-mono overflow-hidden" style={{ height: 'calc(100vh - 96px)' }}>
             {/* Top Bar */}
             <header className="flex items-center justify-between px-4 py-2 bg-[#161b27] border-b border-[#2a3144] z-50">
                 <div className="flex items-center gap-3">
@@ -45,25 +45,25 @@ export default function App() {
                 </div>
             </header>
 
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden h-full">
                 {/* Left Toolbar */}
                 <Toolbar />
 
                 {/* Main Viewport */}
-                <main className="flex-1 flex overflow-hidden">
+                <main className="flex-1 flex overflow-hidden w-full h-full">
                     {viewMode === 'split' ? (
                         <>
-                            <div className="flex-1 border-r border-[#2a3144]">
+                            <div className="flex-1 border-r border-[#2a3144] h-full w-full relative">
                                 <Viewport3D />
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 h-full w-full relative">
                                 <Viewport2D />
                             </div>
                         </>
                     ) : viewMode === '3d' ? (
-                        <div className="flex-1"><Viewport3D /></div>
+                        <div className="flex-1 h-full w-full relative"><Viewport3D /></div>
                     ) : (
-                        <div className="flex-1"><Viewport2D /></div>
+                        <div className="flex-1 h-full w-full relative"><Viewport2D /></div>
                     )}
                 </main>
 

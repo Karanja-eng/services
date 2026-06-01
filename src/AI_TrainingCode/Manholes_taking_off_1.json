@@ -26,7 +26,7 @@
       "Manhole Component 4": "mass concrete (1 : 3 : 6) benchig average height 150mmm",
       "Manhole Component 5": "150mm stone wall",
       "Manhole Component 6": "150mm thick base concrete (1 : 3 : 6)",
-      "Manhole Component 7": "Thickness between invert depth and bae concrete",
+      "Manhole Component 7": "Thickness between invert depth and base concrete 50mm",
       "Note 1": "Site is clear",
       "Note 2": "The ground is levelled",
       "Note 3": "All upvc pipes to be laid directly on the ground",
@@ -98,7 +98,7 @@
           "thought": "Need to give Final Dimensions and Descriptions for the excavation  of pits to recieve manholes depth Not exceeding 1500mm",
           "formula": "",
           "working": "",
-          "result": "[{\"MH1\": \"1200 x 900 x 850mm\", \"MH2\": \"(3.1415/4 x 1500) x (3.1415/4 x 1500) x 1041.25mm\", \"MH3\": \"1500 x 1200 x 1500mm\"} \"Description : Excavate pits to recieve Manholes Not Exceeding 1500mm epth commencing from Ground Level and Cut away spoil\" ]"
+          "result": "[{\"MH1\": \"1200 x 900 x 850mm\", \"MH2\": \"(3.1415/4 x 1500 x 1500) x 1041.25mm\", \"MH3\": \"1500 x 1200 x 1500mm\"} \"Description : Excavate pits to recieve Manholes Not Exceeding 1500mm epth commencing from Ground Level and Cut away spoil\" ]"
         },
         {
           "step_no": 2,
@@ -130,10 +130,239 @@
               "thought": "Need to give  final  dimensins and descriptions for the takeoff of Plain concrete bed",
               "formula": "",
               "working": "",
-              "result": "[{\"MH1\": \"1200 x 900\", \"MH2\": \"(3.1415/4 x  1500) x (3.1415/4 x  1500)\", \"MH3\": \"1500 x 1200\"} \"Description : Plain concrete ( 1 : 3 : 6) 150mm thick bed\" ]"
+              "result": "[{\"MH1\": \"1200 x 900\", \"MH2\": \"(3.1415/4 x  1500 x  1500)\", \"MH3\": \"1500 x 1200\"} \"Description : Plain concrete ( 1 : 3 : 6) 150mm thick bed\" ]"
             }
           ]
+        },
+        {
+          "phase_name": "Walling",
+          "steps": [
+            {
+              "step_no": 1,
+              "heading": "Manhole 1 Mean Girth calculation",
+              "thought": "Need to calculate mean girth of wall inorder to know dimensions of wall takeoff",
+              "formula": "mean_girt = 2(length + width) - Number of corners / width of wall",
+              "working": "(2 x ( 1500 + 600) ) - (4 x 150) = 2600 ",
+              "result": "Manhole 1 wall mean girth = 2600mm"
+            },
+             {
+              "step_no": 2,
+              "heading": "Manhole 2 Mean Girth calculation",
+              "thought": "Snce Manhole is circular we Need to calculate circumference of wall inorder to know dimensions of wall takeoff",
+              "formula": "Circumference = 2 x Pi x Diameter / 2",
+              "working": "2 x 3.142 x 1500 / 2 = 4712.38 ",
+              "result": "Manhole 2 wall mean girth = 4712mm"
+            },
+             {
+              "step_no": 3,
+              "heading": "Manhole 3 Mean Girth calculation",
+              "thought": "Need to calculate mean girth of wall inorder to know dimensions of wall takeoff",
+              "formula": "mean_girt = 2(length + width) - Number of corners / width of wall",
+              "working": "(2 x ( 1200 + 900) ) - (4 x 150) = 3600 ",
+              "result": "Manhole 1 wall mean girth = 3600mm"
+            },
+             {
+              "step_no": 4,
+              "heading": "Manhole 1 wall height",
+              "thought": "Need to calculate height of wall for taking off dimensions",
+              "formula": "Height = Invert_Depth - 100(pcc slab thickness) + 50(Thickness between invert depth and base concrete)",
+              "working": "600 - 100 + 50 = 550 ",
+              "result": "Manhole 1 wall height = 550mm"
+            },
+             {
+              "step_no": 5,
+              "heading": "Manhole 2 wall height",
+              "thought": "Need to calculate height of wall for taking off dimensions",
+              "formula": "Height = Invert_Depth - 100(pcc slab Thickness) + 50(Thickness between invert depth and base concrete)",
+              "working": "Height = 791.25 - 100 + 50 = 741.25 ",
+              "result": "Manhole 1 wall height = 741.25mm"
+            },
+               {
+              "step_no": 6,
+              "heading": "Manhole 3 wall height",
+              "thought": "Need to calculate height of wall for taking off dimensions",
+              "formula": "Height = Invert_Depth - 100(pcc slab Thickness) + 50(Thickness between invert depth and base concrete)",
+              "working": "Height = 1678.75 - 100 + 50 = 1278.75 ",
+              "result": "Manhole 1 wall height = 1628.75mm"
+            },
+                {
+              "step_no": 7,
+              "heading": "Wall take off",
+              "thought": "Need to show final wall dimensions and descriptions for the dimension paper",
+              "formula": "",
+              "working": "",
+              "result": "[{\"MH1\": \"3.60 x 0.55\", \"MH2\": \"(3.1415/4 x  0.74 x 1.50)\", \"MH3\": \"4.80 x 1.628\"} \"Description : 150mm thick stone wall including bedding and jointing in cement sand mortar\" ]"
+            }
+            
+          ]
+        },
+           {
+          "phase_name": "Concrete Benching",
+          "steps": [
+            {
+              "step_no": 1,
+              "heading": "Take off for Manhole Benching",
+              "thought": "Need to give  final  dimensins and descriptions for the takeoff of benching",
+              "formula": "",
+              "working": "",
+              "result": "[{1\"} \"Plain Concrete (1 : 3 : 6 ) in 175 mm avarage hgh benching to manhole internal size 900 x 600 including finishing smoth to fall  \" \n & \n Ditto but to manhole 2 Internal Diameter 1200mm plain concrete (1 : 3 : 6 ) in 175mm high benching including finishing smooth to fall \n & \n Ditto but to manhole 3 Internal size 1200 x 900 mmm including finishing  smooth to fall ]"
+            }
+          ]
+        },
+           {
+          "phase_name": "Rendering",
+          "steps": [
+            {
+              "step_no": 1,
+              "heading": "Internal perimeter of manhole 1 wall",
+              "thought": "I need to provide the calculation of the Internal Perimeter and Depth of Manhole 1",
+              "formula": "perimeter =  2(Length  width),  Depth = Internal Height of Wall - Rendering Height",
+              "working": "perimeter = 2 ( 900 + 600 ) = 3000, Depth = 550 - 175 = 375",
+              "result": " Internal Perimeter  and Height of wall  3000mm , 375mm"
+            },
+             {
+              "step_no": 2,
+              "heading": "Internal circumference of manhole 2 wall",
+              "thought": "I need to provide the calculation of the ircumference and Depth of Manhole 2",
+              "formula": "circumference = pi x Diameter,  Depth = Internal Height of Wall - Rendering Height",
+              "working": "Circumference = 3.142 x 1500 , Depth = 741.25 - 175 = 566.25",
+              "result": " Internal Circumference  and Height of wall 3.142 x 1500 , 566.25mm"
+            },
+              {
+              "step_no": 3,
+              "heading": "Internal perimeter of manhole 1 wall",
+              "thought": "I need to provide the calculation of the Internal Perimeter and Depth of Manhole 1",
+              "formula": "perimeter =  2(Length  width),  Depth = Internal Height of Wall - Rendering Height",
+              "working": "perimeter = 2 ( 1200 + 900 ) = 4200, Depth = 1628.75 - 175 = 1453.75",
+              "result": " Internal Perimeter  and Height of wall  4200mm , 1453.75mm"
+            },
+                 {
+              "step_no": 4,
+              "heading": "Final Dimension and Descriptions for rendering takeoff",
+              "thought": "I need to provide the Final Dimesnions and dscriptions as to be provided in Dimension paper",
+              "formula": "",
+              "working": "",
+              "result": "[{\"MH1\": \"4.20 x 1.45\"}{\"MH2\": \"3.142 x 1.5 x 0.57\"}{\"MH3\": \"3.0 x 0.38\"} \"Description : 12mmm thick c/s moisture proof render to stone wall\" ]"
+              
+            }
+            
+          ]
+        },
+          {
+          "phase_name": "Stepped Iron",
+          "steps": [
+            {
+              "step_no": 1,
+              "heading": "Stepped Irons Take off",
+              "thought": "I need to create a query sheet inorder to assume the  spacing of stepped irons since the information is not provided then use that to calculate number of stepped irrons",
+              "formula": "Number of steps =  depth of manhole / spacing  ",
+              "working": "Quarry sheet : [{Question : what is spacing of stepped iron},{Answer : assume 300mm}], Number of steps = 1453.75/ 300 = 4.8",
+              "result": "Number of stepped irons  = 5"
+            },
+                 {
+              "step_no": 2,
+              "heading": "Final Dimension and Descriptions for Stepped irons",
+              "thought": "I need to provide the Final Dimesnions and dscriptions for stepped irons take off as is to be provided in Dimension paper",
+              "formula": "",
+              "working": "",
+              "result": "[{4 x 1\"} \"Description : Mild steel steeped iron fish tailed both ends twice bent at right angles and set in cement mortar\" ]"
+              
+            }
+
+          ]
+        }, {
+          "phase_name": "Cover Slab",
+          "steps": [
+            {
+              "step_no": 1,
+              "heading": "Take off for manhole Cover slab",
+              "thought": "Need to give  final  dimensins and descriptions for the takeoff of cover slab as is to be filled in Dimension Paper",
+              "formula": "",
+              "working": "",
+              "result": "[{1\"} \"Description : Precast concrete cover slab size 1200 x 900 x 100 mmm thick reinforced with mesh reinforcement A193 opening size 600 x 450 mm \n & \n Ditto but  1500mm Diameter x 100 mmm thick \n & \n Ditto  but 1500 x 1200 x 100 mm ]"
+            }, {
+              "step_no": 2,
+              "heading": "Take off for manhole Cover frame",
+              "thought": "Need to give  final  dimensions and descriptions for the takeoff of cover frame as is to be filled in Dimension Paper",
+              "formula": "",
+              "working": "",
+              "result": "[{3 x 1\"} \"Description : 600 x 450 mm Gulvanised iron cover and frame including setting frame in ( 1 : 3 ) mortar.]"
+            }
+          ]
+        },        {
+          "phase_name": "Pipe Runs",
+          "steps": [
+            {
+              "step_no": 1,
+              "heading": "Depth of GTI and Wc Query sheet",
+              "thought": "I need to create a querry sheet inorder to assume the depth of GTI and Wc since they are not provided",
+              "formula": "",
+              "working": "[{Question : what is the depth at GTI and Wc},{Answer : say 300mm}]",
+              "result": "Depth at GTI and Wc is  300mm"
+            },
+            {
+              "step_no": 2,
+              "heading": "Average Depth of Trench fro Wc to Mh1",
+              "thought": "I need to show calculation of the avarage depth of the pipe trench from wc and Mh1",
+              "formula": "Mh1 total depth - (150mm thick base concrete + Thickness between invert depth and base concrete 50mm) = Mh1 Depth, Mh1 Depth + Wc Depth = total depth , Average Depth = Total Depth / 2 ",
+              "working": "750 - (150 + 50) = 550, 550 + 300 = 850, 850 x 1/2 = 425",
+              "result": "Average depth of pipe trench from wc to MH1 is 425mm"
+            },
+             {
+              "step_no": 3,
+              "heading": "Average Depth of Trench from Mh1 to Mh2",
+              "thought": "I need to show calculation of the avarage depth of the pipe trench from Mh1 to Mh2",
+              "formula": "Manhole total depth - (150mm thick base concrete + Thickness between invert depth and base concrete 50mm) = Manhole Depth, Mh1 Depth + Mh2 Depth = total depth , Average Depth = Total Depth / 2 ",
+              "working": "750 - (150 + 50) = 550,1041.25 -(150+ 50 ) = 841.25, 550 + 841.25 = 1391.25, 1391 x 1/2 = 695.625",
+              "result": "Average depth of pipe trench from MH1 to Mh2 is 695.625mm"
+            },
+               {
+              "step_no": 4,
+              "heading": "Average Depth of Trench fro Gt to Mh2",
+              "thought": "I need to show calculation of the avarage depth of the pipe trench from Gt and Mh1",
+              "formula": "Mh2 total depth - (150mm thick base concrete + Thickness between invert depth and base concrete 50mm) = Mh2 Depth, Mh2 Depth + Gt Depth = total depth , Average Depth = Total Depth / 2 ",
+              "working": "1041.25 -(150+ 50 ) = 841.25, 841.2 + 300 = 1141.25, 1141.25 x 1/2 = 570.63",
+              "result": "Average depth of pipe trench from wc to MH1 is 570.63mm"
+            },
+             {
+              "step_no": 5,
+              "heading": "Average Depth of Trench from Mh2 to Mh3",
+              "thought": "I need to show calculation of the avarage depth of the pipe trench from Mh2 to Mh3",
+              "formula": "Manhole total depth - (150mm thick base concrete + Thickness between invert depth and base concrete 50mm) = Manhole Depth, Mh3 Depth + Mh2 Depth = total depth , Average Depth = Total Depth / 2 ",
+              "working": "1878.75 - (150 + 50) = 1678.75,1041.25 -(150+ 50 ) = 841.25, 841.25 + 1678.75 = 2519.5, 2519.5 x 1/2 = 1259.75",
+              "result": "Average depth of pipe trench from MH1 to Mh2 is 1219.75mm"
+            },
+              {
+              "step_no": 6,
+              "heading": "Average Depth of Trench from Mh3 to Sewer",
+              "thought": "I need to show calculation of the avarage depth of the pipe trench from Mh3 to Sewer",
+              "formula": "x = distance from Mh3 to property boundary + road thickness , Dy = x / 40 ,D2 = depth at Mh3 + Dy , Total Depth = depth at Mh3 + D2, D2 = Depth at Sewer, Average Depth = 1/2 x Total Depth, Total average Depth = avarage Depth + thickness of concrete bed  ",
+              "working": "x = 14000 + 10000 = 24000 , Dy = 24000/40 = 600,D2 = 1678.25 + 600 = 2278.25 , Total Depth = 178.25 + 2278.25 + 3956.5, Average Depth = 1/2 x 3956.5= 1978.25mm, Total average Depth  = 1978.25 + 150 = 2128.25mm",
+              "result": "Average depth of pipe trench from MH3 to Sewer is 2128.25mm"
+            },
+                {
+              "step_no": 7,
+              "heading": "Length of Trenches",
+              "thought": "I need to show the length of the trenches that will recieve the pipes",
+              "formula": " ",
+              "working": "",
+              "result": "wc - Mh1 : length = 1350mm , Mh1 - Mh2 : length = 8650mm , Gt - Mh2 : length = 3500 - 150/2 = 2750mm, Mh2 - Mh3 :  length = 25500mm , Mh3 - Sewer : 14000 + 10000 = 24000mm"
+            },
+                {
+              "step_no": 8,
+              "heading": "Final Dimensions and Descriptions as per the dimension paper",
+              "thought": "I need to show the final data that is to be filled in the dimension paper ",
+              "formula": "",
+              "working": "",
+              "result": "[{1.35] \Description : Excavate tenches not exceeding 1.50m average depth 425mm to recieve 50mm diameter upvc pipe \n {2.85} \ Description : Excavate trench not exceeding  1.50m average depth 570mm to recieve 50mmm diameter upvc pipe \n {8.65} \ Description : Excavate trench not exceeding  1.50m average depth 695mm to recieve 110mm diameter upvc pipe  \n {27.5} \ Description : Excavate trench not exceeding  1.50m avarage depth 1259mm  to recieve 150mm diameter upvc pipe, "
+            },
+          
+            
+            
+          ]
         }
+        
+        
       ],
       "bill_of_quantities": [
         {

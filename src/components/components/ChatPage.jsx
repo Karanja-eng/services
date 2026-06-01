@@ -169,7 +169,14 @@ const ChatPage = ({ renderSearch, isDark }) => {
           items: [
             { label: "2D CAD Drawer", path: "/drawing" },
             { label: "3D Visualization", path: "/visualise" },
-            { label: "Road & Site Design", path: "/drawing/roads" }
+            { label: "Road & Site Design", path: "/drawing/roads" },
+            { label: "Columns & Beams", path: "/drawing/columns_beams" },
+            { label: "Roof Structure", path: "/drawing/roof_structure" },
+            { label: "Slab Designer", path: "/drawing/slabs" },
+            { label: "Dimensions & Annotations", path: "/drawing/dimensions" },
+            { label: "Material & Rendering", path: "/drawing/materials" },
+            { label: "Electrical Systems", path: "/drawing/electrical" },
+            { label: "Plumbing & Drainage", path: "/drawing/plumbing" }
           ]
         }
       ]

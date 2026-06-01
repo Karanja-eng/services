@@ -2,9 +2,9 @@ import React, { useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Grid, Environment, GizmoHelper, GizmoViewport } from '@react-three/drei'
 import * as THREE from 'three'
-import Column3D from '../columns/Column3D'
-import Beam3D from '../beams/Beam3D'
-import { useStore } from '../../store'
+import Column3D from './Column3d.jsx'
+import Beam3D from './Beam3d.jsx'
+import { useStore } from './store.js'
 
 function GroundPlane() {
     return (

@@ -176,7 +176,17 @@ function TwoDView({ state, width, height }) {
 }
 
 // ── Root app ─────────────────────────────────────────────────
-export default function RoofStructureApp({ initialSpec = {} }) {
+export default function RoofStructureApp({ initialSpec = {}, isDark = false }) {
+  const roofTheme = {
+    '--color-text-primary': 'var(--text-primary)',
+    '--color-text-secondary': 'var(--text-secondary)',
+    '--color-background-primary': 'var(--bg-secondary)',
+    '--color-background-secondary': 'var(--bg-primary)',
+    '--color-background-tertiary': 'var(--bg-primary)',
+    '--color-border-tertiary': 'var(--border-primary)',
+    '--color-border-secondary': 'rgba(255,255,255,0.1)',
+  };
+
   const {
     state, derived,
     set, setElement, setSpan,
@@ -205,6 +215,7 @@ export default function RoofStructureApp({ initialSpec = {} }) {
       fontSize: 13,
       color: 'var(--color-text-primary)',
       background: 'var(--color-background-tertiary)',
+      ...roofTheme,
     }}>
       {/* ── Left panel ─────────────────────────────── */}
       <StructureControlPanel

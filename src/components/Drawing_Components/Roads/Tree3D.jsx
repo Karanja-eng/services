@@ -24,13 +24,13 @@ export function Tree3D({ element }) {
 
     return (
         <group position={[x, 0, z]} scale={scale}>
-                <Detailed>
+                <Detailed distances={[0, 20, 60]}>
                     {/* LOD 0 — Detailed */}
-                    <DetailedTree species={species} colors={colors} distance={0} />
+                    <DetailedTree species={species} colors={colors} />
                     {/* LOD 1 — Medium */}
-                    <MediumTree species={species} colors={colors} distance={20} />
+                    <MediumTree species={species} colors={colors} />
                     {/* LOD 2 — Far */}
-                    <FarTree species={species} colors={colors} distance={60} />
+                    <FarTree species={species} colors={colors} />
                 </Detailed>
         </group>
     );

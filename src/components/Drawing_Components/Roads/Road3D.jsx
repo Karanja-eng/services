@@ -28,20 +28,23 @@ export function Road3D({ element }) {
 
     const roadColor = ROAD_COLORS[material] || ROAD_COLORS.asphalt;
 
-    // ── Road surface geometry ──────────────────────────────────────
     const roadGeom = useMemo(() => {
-        if (!path || path.length < 2) return null;
+        if (!path || path.length === 0) return null;
+
+        if (subType === 'roundabout') {
+            const c = path[0];
+            return buildRoundaboutGeometry([c[0], 0, c[1]], width / 2 + 3, 3);
+        }
+        if (subType === 'cul_de_sac') {
+            const c = path[path.length - 1];
+            return buildCulDeSacGeometry([c[0], 0, c[1]], width / 2 + 1.5);
+        }
+
+        if (path.length < 2) return null;
 
         if (subType === 'curved') {
             const ctrl3D = path.map(([x, z]) => [x, 0, z]);
             return buildCurvedRoadGeometry(ctrl3D, width);
-        }
-        if (subType === 'roundabout') {
-            return buildRoundaboutGeometry([0, 0, 0], width / 2 + 3, 3);
-        }
-        if (subType === 'cul_de_sac') {
-            const last = path[path.length - 1];
-            return buildCulDeSacGeometry([last[0], 0, last[1]], width / 2 + 1.5);
         }
 
         return buildRoadGeometry(path, width);
@@ -49,12 +52,12 @@ export function Road3D({ element }) {
 
     // ── Kerb geometry ──────────────────────────────────────────────
     const kerbGeomL = useMemo(() => {
-        if (!path || !kerb || kerb === 'none' || subType === 'roundabout') return null;
+        if (!path || path.length < 2 || !kerb || kerb === 'none' || subType === 'roundabout' || subType === 'cul_de_sac') return null;
         return buildKerbGeometry(path, width / 2, 'left');
     }, [path, width, kerb, subType]);
 
     const kerbGeomR = useMemo(() => {
-        if (!path || !kerb || kerb === 'none' || subType === 'roundabout') return null;
+        if (!path || path.length < 2 || !kerb || kerb === 'none' || subType === 'roundabout' || subType === 'cul_de_sac') return null;
         return buildKerbGeometry(path, width / 2, 'right');
     }, [path, width, kerb, subType]);
 

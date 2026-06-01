@@ -3,8 +3,8 @@ import * as THREE from 'three'
 import {
   buildIShape, buildChannelShape, buildRHSShape, buildTShape, buildLShape,
   extrudeAlongY
-} from '../../utils/geometry3d'
-import { MATERIAL_COLORS } from '../../data/sectionLibrary'
+} from './geometry3d.js'
+import { MATERIAL_COLORS } from './sectionLibraryData.js'
 
 const rebarMat   = new THREE.MeshStandardMaterial({ color: '#c0392b', roughness: 0.4, metalness: 0.6 })
 const tendonMat  = new THREE.MeshStandardMaterial({ color: '#f39c12', roughness: 0.3, metalness: 0.7 })
@@ -60,22 +60,20 @@ export default function Beam3D({
   selected = false,
   onClick,
 }) {
-  if (!startCol || !endCol) return null
-
   const mat = useMat(material, selected)
 
-  const elevation = Math.min(startCol.topElevation, endCol.topElevation)
+  const elevation = startCol && endCol ? Math.min(startCol.topElevation, endCol.topElevation) : 0
 
   // Offset beam ends to column faces
-  const sx = startCol.x, sz = startCol.y
-  const ex = endCol.x,   ez = endCol.y
+  const sx = startCol?.x || 0, sz = startCol?.y || 0
+  const ex = endCol?.x || 0,   ez = endCol?.y || 0
   const dx = ex - sx, dz = ez - sz
-  const span = Math.sqrt(dx*dx + dz*dz)
+  const span = Math.sqrt(dx*dx + dz*dz) || 1
   const ux = dx / span, uz = dz / span
 
   // Approximate column half-width for face offset
-  const startHW = (startCol.sectionProps?.width || startCol.sectionProps?.diameter || 0.4) / 2
-  const endHW   = (endCol.sectionProps?.width   || endCol.sectionProps?.diameter   || 0.4) / 2
+  const startHW = (startCol?.sectionProps?.width || startCol?.sectionProps?.diameter || 0.4) / 2
+  const endHW   = (endCol?.sectionProps?.width   || endCol?.sectionProps?.diameter   || 0.4) / 2
   const start3  = [sx + ux * startHW, elevation, sz + uz * startHW]
   const end3    = [ex - ux * endHW,   elevation, ez - uz * endHW]
 
@@ -217,6 +215,8 @@ export default function Beam3D({
   const dx3 = end3[0] - start3[0]
   const dz3 = end3[2] - start3[2]
   const angleY = Math.atan2(dx3, dz3)
+
+  if (!startCol || !endCol) return null;
 
   return (
     <group onClick={onClick}>

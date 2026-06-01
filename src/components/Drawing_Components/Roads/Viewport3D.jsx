@@ -1,20 +1,20 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Grid, Sky, Environment, Stats } from '@react-three/drei';
+import { OrbitControls, Grid, Sky, Environment } from '@react-three/drei';
 import { useStore } from './useStore';
 import { Road3D } from './Road3D';
 import { Terrain3D } from './Terrain3D';
 import { Tree3D } from './Tree3D';
 import { ParkingArea3D } from './ParkingArea3D';
 import { Fence3D } from './Fence3D';
-import { Light3D } from './Light3D';
-import { WaterFeature3D } from './WaterFeature3D';
+import { Light3D, WaterFeature3D } from './Fence3D';
+import { Roundabout3D, Crossroads3D, TJunction3D, RoadSign3D } from './Intersection3D';
 
 export function Viewport3D() {
     const { elements, terrain, gridVisible } = useStore();
 
     return (
-        <div className="relative w-full h-full bg-[#0d1420]">
+        <div className="absolute inset-0 bg-[#0d1420]">
             {/* Overlay label */}
             <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-[#0d1420]/80 border border-[#2a3144] rounded text-xs text-[#4a6fa5] font-mono">
                 ◈ 3D VIEW
@@ -76,14 +76,24 @@ export function Viewport3D() {
                         dampingFactor={0.05}
                     />
                 </Suspense>
-
-                <Stats className="!absolute !bottom-2 !left-2" />
             </Canvas>
         </div>
     );
 }
 
 function SceneElement3D({ element }) {
+    if (element.type === 'road' && ['roundabout', 'crossroads', 't_junction'].includes(element.subType)) {
+        const [x, z] = element.path?.[0] || [0, 0];
+        const center = [x, 0, z];
+        if (element.subType === 'roundabout') return <Roundabout3D center={center} outerRadius={element.width/2 + 3} />;
+        if (element.subType === 'crossroads') return <Crossroads3D center={center} width={element.width} />;
+        if (element.subType === 't_junction') return <TJunction3D center={center} width={element.width} />;
+    }
+    if (element.type === 'road_sign') {
+        const [x, z] = element.origin || [0, 0];
+        return <RoadSign3D position={[x, 0, z]} type={element.properties?.type} />;
+    }
+
     switch (element.type) {
         case 'road':
         case 'path':

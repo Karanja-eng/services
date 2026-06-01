@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Stage, Layer, Line, Circle, Rect, Arrow, Text, Group } from 'react-konva';
+import { Stage, Layer, Line, Circle, Rect } from 'react-konva';
 import { useStore } from './useStore';
 import { Road2D } from './Road2D';
 import { Tree2D } from './Tree2D';
@@ -57,17 +57,28 @@ export function Viewport2D() {
     }));
   };
 
-  // Click to draw road
+  // Click to draw elements
   const handleStageClick = (e) => {
-    if (e.target !== stageRef.current && e.target.getParent()?.getType() !== 'Stage') return;
+    // Determine if the user is clicking exactly on the background, grid, or stage itself.
+    // If they click on an actual element (which should have an onClick handler), do not spawn things.
+    const isBackground = e.target === stageRef.current || e.target.name() === 'bg';
+    if (!isBackground) return;
+
     const pos = stageRef.current.getPointerPosition();
     const { wx, wz } = pxToWorld(pos.x, pos.y);
 
-    if (['road', 'path', 'driveway'].includes(selectedTool)) {
+    if (['road', 'path', 'driveway', 'fence'].includes(selectedTool)) {
       setDrawingPath(prev => {
         if (!prev) return [[wx, wz]];
         return [...prev, [wx, wz]];
       });
+    } else if (['tree', 'light', 'water', 'roundabout', 'cul_de_sac'].includes(selectedTool)) {
+        snapshot();
+        if (selectedTool === 'roundabout' || selectedTool === 'cul_de_sac') {
+            addElement({ type: 'road', subType: selectedTool, path: [[wx, wz]], width: 7, material: 'asphalt', markings: [], kerb: 'upstand' });
+        } else {
+            addElement({ type: selectedTool, origin: [wx, wz], properties: {} });
+        }
     }
   };
 
@@ -77,9 +88,10 @@ export function Viewport2D() {
       road: { width: 7, lanes: 2, material: 'asphalt', kerb: 'upstand', markings: ['centre', 'edge'] },
       path: { width: 1.8, material: 'paving', markings: [] },
       driveway: { width: 3.2, material: 'block_paving', markings: [] },
+      fence: { type: 'close_board', height: 1.8 },
     };
     snapshot();
-    addElement({ type: selectedTool, path: drawingPath, ...toolDefaults[selectedTool] });
+    addElement({ type: selectedTool, path: drawingPath, ...(toolDefaults[selectedTool] || {}) });
     setDrawingPath(null);
   };
 
@@ -92,7 +104,7 @@ export function Viewport2D() {
     : [];
 
   return (
-    <div ref={containerRef} className="relative w-full h-full bg-[#f5f0e8] overflow-hidden">
+    <div ref={containerRef} className="absolute inset-0 bg-[#f5f0e8] overflow-hidden">
       {/* Label */}
       <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-[#0d1420]/80 border border-[#2a3144] rounded text-xs text-[#4a6fa5] font-mono">
         ▣ PLAN VIEW
@@ -120,6 +132,7 @@ export function Viewport2D() {
         <Layer>
           {/* Background */}
           <Rect
+            name="bg"
             x={-size.w / stageScale}
             y={-size.h / stageScale}
             width={size.w * 3 / stageScale}
@@ -203,9 +216,9 @@ function PlanGrid({ size, stageScale }) {
     const isMajor = i % 50 === 0;
     lines.push(
       <Line key={`v${i}`} points={[i * 10, -range * 10, i * 10, range * 10]}
-        stroke={isMajor ? '#c8c0b0' : '#ddd5c5'} strokeWidth={isMajor ? 0.8 : 0.4} />,
+        stroke={isMajor ? '#c8c0b0' : '#ddd5c5'} strokeWidth={isMajor ? 0.8 : 0.4} listening={false} />,
       <Line key={`h${i}`} points={[-range * 10, i * 10, range * 10, i * 10]}
-        stroke={isMajor ? '#c8c0b0' : '#ddd5c5'} strokeWidth={isMajor ? 0.8 : 0.4} />
+        stroke={isMajor ? '#c8c0b0' : '#ddd5c5'} strokeWidth={isMajor ? 0.8 : 0.4} listening={false} />
     );
   }
   return <>{lines}</>;
@@ -221,6 +234,7 @@ function SiteBoundary({ size }) {
       strokeWidth={2}
       dash={[12, 6]}
       closed
+      listening={false}
     />
   );
 }

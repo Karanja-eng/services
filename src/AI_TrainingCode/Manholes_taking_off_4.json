@@ -1,0 +1,385 @@
+{
+  "instruction": "Take off all quantities for the manhole and pipe drainage system",
+
+  "context": {
+    "project_type": "Drainage works",
+    "standard": "SMM7",
+    "given_data": {
+      "MH1_internal":        "650 x 900mm",
+      "MH2_internal":        "800 x 1000",
+      "MH3_internal":        "800 x 1200mm",
+      "wall_thickness":      "150mm solid concrete block wall",
+      "bed_concrete":       "150mm thick (1:3:6)",
+      "concrete_benching":   "150mm (1:3:6) concrete Benching",
+      "channel_allowance":   "50mm between invert and base",
+      "cover_depth":         "50mm from top of MH to GL",
+      "step_bars": "12mm mild steel step bars at 300mm c/c",
+      "rendering": "12mm thick proof rendering",
+      "cover_and_frame": "600 x 450 medium duty Gulvanised iron cover frame",
+      "slab": "100mm thick slab reinforced with 8mm diameter bars of 100mmm c/c both ways",
+      "MH1_invert_depth":    "95.80",
+      "MH2_invert_depth":    "95.00",
+      "MH3_invert_depth":    "93.30",
+      "MH3_invert_depth":    "93.30",
+      "Sewer_invert_depth":  "93.30",
+      "MH1_ground_level":    "96.50",
+      "MH2_ground_level":    "96.50",
+      "MH3_ground_level":    "96.50",
+      "Sewer_ground_level":   "96.50",
+      "pipe_WC_to_MH1":      "100mm PVC",
+      "pipe_MH1_to_MH2":     "150mm PVC",
+      "pipe_MH2_to_MH3":     "150mm PVC",
+      "pipe_MH3_to_sewer":   "150mm PVC",
+      "dist_WC_to_MH1":      "8000mm c/c",
+      "dist_MH1_to_MH2":     "30000mm c/c",
+      "dist_GTI_to_MH2":      "6000mm c/c",
+      "dist_MH2_to_MH3":     "35000mm c/c",
+      "dist_MH3_to_tarmac":"6000mm",
+      "width_of_tarmac_road":"8000mm",
+      "dist_tarmac_road_to_public_sewer":"6000mm",
+
+    }
+  },
+
+  "query_sheet": [
+    {
+      "id": "Q1",
+      "question": "What is the invert depth at WC and gully trap — not stated in drawing?",
+      "assumed_answer": "300mm below GL",
+      "impact": "Needed to calculate average trench depth for WC-MH1 and GT-MH2 pipe runs"
+    },
+    {
+      "id": "Q2",
+      "question": "What is the spacing of step irons — not specified?",
+      "assumed_answer": "300mm centres",
+      "impact": "Used to calculate number of step irons in manholes exceeding 1000mm deep"
+    }
+  ],
+
+  "phases": [
+    {
+      "phase_name": "Phase 1 — establish invert levels and total depths",
+      "phase_purpose": "All manhole pit sizes and pipe trench depths depend on these values first",
+      "steps": [
+        {
+          "step_no": 1,
+          "heading": "MH1 external dimensions",
+          "thought": "I need the external pit size for excavation and to find the clear wall height later",
+          "formula": "External = Internal + 2 x wall_thickness",
+          "working": "L: 900 + 2(150) = 1200mm   W: 600 + 2(150) = 900mm",
+          "result": "MH1 external = 1200 x 900mm",
+          "feeds_into": "Excavation pit dimensions, mean girth calculation"
+        },
+        {
+          "step_no": 2,
+          "heading": "MH1 total depth",
+          "thought": "Total depth = invert depth + base concrete + channel allowance + cover depth",
+          "formula": "Total depth = Invert + base + channel + cover",
+          "working": "600 + 150 + 50 + 50 = 850mm",
+          "result": "MH1 total depth = 850mm below GL",
+          "feeds_into": "Excavation depth, wall height, trench depth calculation"
+        },
+        {
+          "step_no": 3,
+          "heading": "MH2 external dimensions",
+          "thought": "MH2 is circular — external diameter adds two wall thicknesses",
+          "formula": "External dia = Internal dia + 2 x wall_thickness",
+          "working": "1200 + 2(150) = 1500mm diameter",
+          "result": "MH2 external = 1500mm diameter",
+          "feeds_into": "Excavation pit area, circumference for walling"
+        },
+        {
+          "step_no": 4,
+          "heading": "MH2 invert depth and total depth",
+          "thought": "Clear distance between manholes (c/c minus half each external dimension) gives the fall",
+          "formula": "x = c/c - (ext_MH1_L/2) - (ext_MH2_dia/2) | Dy = x/40 | D2 = D1 + Dy | Total = D2 + base + channel + cover",
+          "working": "x = 9000 - 600 - 750 = 7650 | Dy = 7650/40 = 191.25 | D2 = 600 + 191.25 = 791.25 | Total = 791.25 + 150 + 50 + 50 = 1041.25mm",
+          "result": "MH2 invert = 791.25mm | MH2 total depth = 1041.25mm",
+          "feeds_into": "Excavation, wall height, pipe trench avg depth"
+        },
+        {
+          "step_no": 5,
+          "heading": "MH3 external dimensions",
+          "thought": "Rectangular manhole — same formula as MH1",
+          "formula": "External = Internal + 2 x wall_thickness",
+          "working": "L: 1200 + 2(150) = 1500mm   W: 900 + 2(150) = 1200mm",
+          "result": "MH3 external = 1500 x 1200mm",
+          "feeds_into": "Excavation pit dimensions, mean girth"
+        },
+        {
+          "step_no": 6,
+          "heading": "MH3 invert depth and total depth",
+          "thought": "Same process as MH2 — clear distance MH2-MH3 then apply gradient",
+          "formula": "x = c/c - (ext_MH2_dia/2) - (ext_MH3_L/2) | Dy = x/40 | D3 = D2 + Dy | Total = D3 + base + channel + cover",
+          "working": "x = 27000 - 750 - 750 = 25500 | Dy = 25500/40 = 637.5 | D3 = 791.25 + 637.5 = 1428.75 — WAIT, D3 from invert of MH2 (791.25) + 637.5 = 1428.75mm | Total = 1428.75 + 150 + 50 + 50 = 1678.75mm",
+          "result": "MH3 invert = 1428.75mm | MH3 total depth = 1678.75mm | Stage 1 (≤1500mm) = 1500mm | Stage 2 (>1500mm) = 1678.75 - 1500 = 178.75mm",
+          "feeds_into": "Two-stage excavation, two-stage walling, step irons"
+        }
+      ]
+    },
+
+    {
+      "phase_name": "Phase 2 — manhole items takeoff",
+      "phase_purpose": "Work through each manhole component, calculate values, then book to dimension paper",
+      "steps": [
+        {
+          "step_no": 1,
+          "heading": "Excavation — pits to receive manholes",
+          "thought": "SMM7 D20: pits measured in m³ by depth band (≤1500mm and >1500mm separately). MH1 and MH2 both within 1500mm so grouped. MH3 splits into two stages.",
+          "formula": "Vol = L x W x H (rectangular) | Vol = (π/4 x D²) x H (circular)",
+          "working": "MH1: 1.200 x 0.900 x 0.850 | MH2: π/4 x 1.500² x 1.041 | MH3 stage1: 1.500 x 1.200 x 1.500 | MH3 stage2: 1.500 x 1.200 x 0.179",
+          "result": "MH1+MH2 grouped (≤1500mm) | MH3 stage 2 separate (>1500mm)",
+          "dimension_paper": {
+            "entries": [
+              {
+                "group_label": "Excavate pits — not exceeding 1500mm deep",
+                "grouped": true,
+                "grouping_reason": "MH1 (850mm) and MH2 (1041mm) both within same depth band — same SMM7 item, stacked under one description",
+                "rows": [
+                  { "Nr": null, "T": null, "B": 1.200, "S": 0.900, "H": 0.850, "label": "MH1" },
+                  { "Nr": null, "T": null, "B": "π/4 x 1.500²", "S": null,  "H": 1.041, "label": "MH2 — circular area formula in B column" }
+                ],
+                "description": "Excavate pits to receive manholes; maximum depth not exceeding 1500mm; commencing at ground level; cut away and remove spoil",
+                "unit": "m³",
+                "smm7_ref": "D20.2.2"
+              },
+              {
+                "group_label": "Excavate pits — MH3 stage 1 (≤1500mm)",
+                "grouped": false,
+                "grouping_reason": "MH3 stage 1 has same description as above — use Ditto",
+                "rows": [
+                  { "Nr": null, "T": null, "B": 1.500, "S": 1.200, "H": 1.500, "label": "MH3 stage 1" }
+                ],
+                "description": "Ditto",
+                "unit": "m³",
+                "smm7_ref": "D20.2.2"
+              },
+              {
+                "group_label": "Excavate pits — MH3 stage 2 (>1500mm)",
+                "grouped": false,
+                "grouping_reason": "Different SMM7 depth band — must be a separate item always",
+                "rows": [
+                  { "Nr": null, "T": null, "B": 1.500, "S": 1.200, "H": 0.179, "label": "MH3 stage 2 — depth above 1500mm only" }
+                ],
+                "description": "Ditto but exceeding 1500mm deep; not exceeding 3000mm; commencing 1500mm below ground level; cut away and remove spoil",
+                "unit": "m³",
+                "smm7_ref": "D20.2.3"
+              }
+            ]
+          }
+        },
+
+        {
+          "step_no": 2,
+          "heading": "Planking, strutting and dewatering",
+          "thought": "No measurable dimension — SMM7 requires this as a lump-sum provisional allowance. Nr = Item.",
+          "formula": "N/A — lump sum",
+          "working": "N/A",
+          "result": "One item covering all excavations",
+          "dimension_paper": {
+            "entries": [
+              {
+                "group_label": "Planking and dewatering",
+                "grouped": false,
+                "grouping_reason": "Single lump-sum allowance covers all manholes and trenches",
+                "rows": [
+                  { "Nr": "Item", "T": null, "B": null, "S": null, "H": null, "label": "No dimensions — provisional allowance" }
+                ],
+                "description": "Allow for necessary planking and strutting to sides of all excavations and for dewatering",
+                "unit": "Item",
+                "smm7_ref": "D20.7"
+              }
+            ]
+          }
+        },
+
+        {
+          "step_no": 3,
+          "heading": "Concrete beds to manholes",
+          "thought": "Beds measured in m² (plan area) with thickness in the description. All three manholes same mix and thickness — group under one description.",
+          "formula": "Area = L x W (rectangular) | Area = π/4 x D² (circular)",
+          "working": "MH1: 1.200 x 0.900 | MH2: π/4 x 1.500² | MH3: 1.500 x 1.200",
+          "result": "Three rows grouped under one description",
+          "dimension_paper": {
+            "entries": [
+              {
+                "group_label": "Concrete bed all manholes",
+                "grouped": true,
+                "grouping_reason": "All three manholes share same mix (1:3:6) and same 150mm thickness — one description, three dimension rows stacked",
+                "rows": [
+                  { "Nr": null, "T": null, "B": 1.200, "S": 0.900, "H": null, "label": "MH1 — plan area only, H not used" },
+                  { "Nr": null, "T": null, "B": "π/4 x 1.500²", "S": null,  "H": null, "label": "MH2 — circular area" },
+                  { "Nr": null, "T": null, "B": 1.500, "S": 1.200, "H": null, "label": "MH3 — plan area" }
+                ],
+                "description": "Plain in-situ mass concrete (1:3:6); 150mm thick bed to manholes",
+                "unit": "m²",
+                "smm7_ref": "E10.1.1"
+              }
+            ]
+          }
+        },
+
+        {
+          "step_no": 4,
+          "heading": "Stone walling — calculate mean girth and wall height first",
+          "thought": "Walling measured as area (mean girth x height). Each manhole has different girth and height so separate rows, but same description — group them.",
+          "formula": "Mean girth (rect) = 2(L + W) - 4 x wall_thickness | Mean girth (circ) = π x mean_dia | Wall height = Invert_depth - slab_thickness + channel_allowance",
+          "working": "MH1 girth: 2(900+600) - 4(150) = 2400mm | MH1 ht: 600 - 100 + 50 = 550mm | MH2 girth: π x 1350 = 4241mm | MH2 ht: 791.25 - 100 + 50 = 741.25mm | MH3 girth: 2(1200+900) - 4(150) = 3600mm | MH3 ht: 1428.75 - 100 + 50 = 1378.75mm",
+          "result": "MH1: 2.400 x 0.550 | MH2: 4.241 x 0.741 | MH3: 3.600 x 1.379",
+          "dimension_paper": {
+            "entries": [
+              {
+                "group_label": "Stone walling all manholes",
+                "grouped": true,
+                "grouping_reason": "Same material, same thickness, same mortar mix — different dimensions only. Three rows grouped under one description.",
+                "rows": [
+                  { "Nr": null, "T": null, "B": 2.400, "S": 0.550, "H": null, "label": "MH1 — mean girth x wall height" },
+                  { "Nr": null, "T": null, "B": 4.241, "S": 0.741, "H": null, "label": "MH2 — circumference of mean diameter x height" },
+                  { "Nr": null, "T": null, "B": 3.600, "S": 1.379, "H": null, "label": "MH3 — mean girth x wall height" }
+                ],
+                "description": "150mm thick stone walling to manholes; bedded and jointed in cement and sand mortar (1:3); including all curved work",
+                "unit": "m²",
+                "smm7_ref": "F20.1.1"
+              }
+            ]
+          }
+        },
+
+        {
+          "step_no": 5,
+          "heading": "Step irons — query Q2 applied",
+          "thought": "Only manholes exceeding 1000mm deep need step irons. MH1=850mm (excluded). MH2=1041mm (included). MH3=1678mm (included). Using Q2 assumption: 300mm spacing.",
+          "formula": "No. of irons = wall_height / spacing",
+          "working": "MH2: 741.25 / 300 = 2.47 → 3 irons | MH3: 1378.75 / 300 = 4.60 → 5 irons",
+          "result": "MH2 = 3 Nr | MH3 = 5 Nr | Total = 8 Nr",
+          "dimension_paper": {
+            "entries": [
+              {
+                "group_label": "Step irons MH2 and MH3",
+                "grouped": true,
+                "grouping_reason": "Same item both manholes — Nr values added, one description. MH1 excluded (depth <1000mm).",
+                "rows": [
+                  { "Nr": 3,  "T": null, "B": null, "S": null, "H": null, "label": "MH2 — 3 step irons at 300mm spacing" },
+                  { "Nr": 5,  "T": null, "B": null, "S": null, "H": null, "label": "MH3 — 5 step irons at 300mm spacing" }
+                ],
+                "description": "Mild steel step iron; fish-tailed both ends; twice bent at right angles; built in and set in cement mortar",
+                "unit": "Nr",
+                "smm7_ref": "L30.1.1"
+              }
+            ]
+          }
+        },
+
+        {
+          "step_no": 6,
+          "heading": "Cover slab and GI cover and frame",
+          "thought": "Cover slab measured as Nr — each manhole gets one slab and one cover/frame. All same GI cover size (600x450) but different slab sizes — separate Ditto items for slabs, one grouped item for frames.",
+          "formula": "N/A — counted items",
+          "working": "3 slabs (different sizes) | 3 covers and frames (identical)",
+          "result": "3 Nr slabs (described individually with Ditto) | 3 Nr covers and frames (T=3)",
+          "dimension_paper": {
+            "entries": [
+              {
+                "group_label": "PCC cover slab MH1",
+                "grouped": false,
+                "grouping_reason": "Different slab sizes for each manhole — cannot group, use Ditto for subsequent ones",
+                "rows": [
+                  { "Nr": 1, "T": null, "B": null, "S": null, "H": null, "label": "MH1 — size in description" }
+                ],
+                "description": "Precast concrete cover slab; 1200 x 900 x 100mm thick; reinforced with A193 mesh; opening 600 x 450mm",
+                "unit": "Nr",
+                "smm7_ref": "H60.1.1"
+              },
+              {
+                "group_label": "PCC cover slab MH2",
+                "grouped": false,
+                "grouping_reason": "Ditto with only the size difference stated",
+                "rows": [
+                  { "Nr": 1, "T": null, "B": null, "S": null, "H": null, "label": "MH2" }
+                ],
+                "description": "Ditto but 1500mm diameter x 100mm thick; opening 600 x 450mm",
+                "unit": "Nr",
+                "smm7_ref": "H60.1.1"
+              },
+              {
+                "group_label": "PCC cover slab MH3",
+                "grouped": false,
+                "grouping_reason": "Ditto with only the size difference stated",
+                "rows": [
+                  { "Nr": 1, "T": null, "B": null, "S": null, "H": null, "label": "MH3" }
+                ],
+                "description": "Ditto but 1500 x 1200 x 100mm thick; opening 600 x 450mm",
+                "unit": "Nr",
+                "smm7_ref": "H60.1.1"
+              },
+              {
+                "group_label": "GI cover and frame — all manholes",
+                "grouped": true,
+                "grouping_reason": "All three manholes have identical 600x450mm GI cover and frame — T=3 times one item",
+                "rows": [
+                  { "Nr": null, "T": 3, "B": null, "S": null, "H": null, "label": "T=3 because all three manholes identical cover — T column used here not Nr" }
+                ],
+                "description": "600 x 450mm galvanised iron manhole cover and frame; set in cement mortar (1:3)",
+                "unit": "Nr",
+                "smm7_ref": "L30.2.1"
+              }
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "phase_name": "Phase 3 — pipe runs takeoff",
+      "phase_purpose": "Calculate average trench depths, pipe lengths, then book excavation and pipe laying",
+      "steps": [
+        {
+          "step_no": 1,
+          "heading": "Average trench depth WC to MH1 — uses Q1",
+          "thought": "uPVC pipes laid directly on ground (no bed). Average depth = (depth at start + depth at end) / 2. Depth at pipe = invert depth of manhole (not total depth).",
+          "formula": "MH invert depth = Total_depth - base - channel | Avg depth = (start_depth + end_depth) / 2",
+          "working": "MH1 invert depth = 850 - 150 - 50 = 650mm (wait — invert IS 600mm from given data, use 600mm) | Avg = (300 + 600) / 2 = 450mm",
+          "result": "Average depth WC to MH1 = 450mm — not exceeding 1500mm",
+          "dimension_paper": {
+            "entries": [
+              {
+                "group_label": "Trench excavation WC to MH1",
+                "grouped": false,
+                "grouping_reason": "Unique pipe size and unique average depth — standalone item",
+                "rows": [
+                  { "Nr": null, "T": null, "B": 1.350, "S": null, "H": null, "label": "B = trench length c/c WC to MH1; linear item so S and H not used" }
+                ],
+                "description": "Excavate trench; average depth 450mm; not exceeding 1500mm deep; to receive 50mm diameter uPVC pipe; cut away and remove spoil",
+                "unit": "m",
+                "smm7_ref": "D20.3.1"
+              }
+            ]
+          }
+        },
+
+        {
+          "step_no": 2,
+          "heading": "Pipe laying — 50mm uPVC WC to MH1",
+          "thought": "Pipe length = trench length (c/c). uPVC pipes laid directly on ground — no bed item needed.",
+          "formula": "Pipe length = c/c distance",
+          "working": "1350mm = 1.350m",
+          "result": "1.350m of 50mm uPVC pipe",
+          "dimension_paper": {
+            "entries": [
+              {
+                "group_label": "50mm uPVC pipe WC to MH1",
+                "grouped": false,
+                "grouping_reason": "Unique diameter — separate item. GT to MH2 also 50mm so that will be Ditto",
+                "rows": [
+                  { "Nr": null, "T": null, "B": 1.350, "S": null, "H": null, "label": "B = pipe length in metres; linear item" }
+                ],
+                "description": "50mm diameter uPVC pipe; laid and jointed in trenches",
+                "unit": "m",
+                "smm7_ref": "R12.1.1"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]

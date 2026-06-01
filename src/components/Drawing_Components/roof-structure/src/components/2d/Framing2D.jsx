@@ -29,7 +29,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import Konva from 'konva';
-import { MEMBER_COLORS, DEG } from '../constants/roofStructureTypes.js';
+import { MEMBER_COLORS, DEG } from '../../constants/roofStructureTypes.js';
 
 export default function Framing2D({
   footprint      = { w: 8, d: 12 },

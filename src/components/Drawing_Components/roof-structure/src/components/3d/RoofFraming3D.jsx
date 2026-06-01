@@ -28,9 +28,9 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
-import { DEG, SECTION_SIZES } from '../constants/roofStructureTypes.js';
-import { memberMesh, disposeGroup } from '../utils/geometryUtils.js';
-import { createMaterials } from '../utils/materialFactory.js';
+import { DEG, SECTION_SIZES } from '../../constants/roofStructureTypes.js';
+import { memberMesh, disposeGroup } from '../../utils/geometryUtils.js';
+import { createMaterials } from '../../utils/materialFactory.js';
 
 // Re-export the path for tree-shaking
 export { default as RoofTruss3D } from './RoofTruss3D.jsx';

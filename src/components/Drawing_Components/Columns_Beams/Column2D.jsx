@@ -1,7 +1,7 @@
 import React from 'react'
 import { Group, Rect, Circle, Line, Text, RegularPolygon } from 'react-konva'
-import { columnPlanPoints, toPixels } from '../../utils/drawing2d'
-import { MATERIAL_FILL_2D } from '../../data/sectionLibrary'
+import { columnPlanPoints, toPixels } from './drawing2d.js'
+import { MATERIAL_FILL_2D } from './sectionLibraryData.js'
 
 // RC diagonal hatch fill (using clip + lines)
 function RCHatch({ x, y, width, height, color }) {
@@ -134,7 +134,7 @@ export default function Column2D({
     }
 
     return (
-        <Group x={x} y={y} onClick={onClick}>
+        <Group x={x} y={y} onMouseDown={onClick}>
             {renderShape()}
 
             {/* Grid cross-hair */}

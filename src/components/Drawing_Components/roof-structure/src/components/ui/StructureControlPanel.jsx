@@ -19,7 +19,7 @@ import {
   RAFTER_SUBTYPES,
   PORTAL_SUBTYPES,
   VIS_KEYS,
-} from '../constants/roofStructureTypes.js';
+} from '../../constants/roofStructureTypes.js';
 
 // ── Small reusable sub-components ────────────────────────────
 
