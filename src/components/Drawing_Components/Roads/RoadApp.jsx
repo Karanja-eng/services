@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FloatingPalette from '../../FloatingPalette';
 
 import { Toolbar } from './Toolbar';
 import { PropertiesPanel } from './Propertiespanel';
@@ -10,6 +11,8 @@ import { AICommandPanel } from './AICommandPanel';
 
 export default function App() {
     const [viewMode, setViewMode] = useState('split'); // '3d' | '2d' | 'split'
+    const [showTools, setShowTools] = useState(true);
+    const [showProperties, setShowProperties] = useState(true);
     const { selectedTool } = useStore();
 
     return (
@@ -38,6 +41,19 @@ export default function App() {
                             {mode === 'split' ? '⬛ Split' : mode === '3d' ? '◈ 3D' : '▣ Plan'}
                         </button>
                     ))}
+                    <div className="h-4 w-[1px] bg-[#2a3144] mx-2" />
+                    <button
+                        onClick={() => setShowTools(!showTools)}
+                        className={`px-3 py-1 text-xs font-bold uppercase tracking-widest rounded transition-all ${showTools ? 'bg-[#4a6fa5] text-white' : 'text-[#4a6fa5] hover:bg-[#1a2035]'}`}
+                    >
+                        Road Tools
+                    </button>
+                    <button
+                        onClick={() => setShowProperties(!showProperties)}
+                        className={`px-3 py-1 text-xs font-bold uppercase tracking-widest rounded transition-all ${showProperties ? 'bg-[#4a6fa5] text-white' : 'text-[#4a6fa5] hover:bg-[#1a2035]'}`}
+                    >
+                        Properties & AI
+                    </button>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-[#4a5568]">
                     <span className="text-[#00ff88]">● Online</span>
@@ -45,9 +61,21 @@ export default function App() {
                 </div>
             </header>
 
-            <div className="flex flex-1 overflow-hidden h-full">
-                {/* Left Toolbar */}
-                <Toolbar />
+            <div className="flex flex-1 overflow-hidden h-full relative">
+                {showTools && (
+                    <FloatingPalette title="Road Tools" onClose={() => setShowTools(false)} width={72}>
+                        <Toolbar />
+                    </FloatingPalette>
+                )}
+
+                {showProperties && (
+                    <FloatingPalette title="Properties & AI" onClose={() => setShowProperties(false)} width={300}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: '#161b27' }}>
+                            <PropertiesPanel />
+                            <AICommandPanel />
+                        </div>
+                    </FloatingPalette>
+                )}
 
                 {/* Main Viewport */}
                 <main className="flex-1 flex overflow-hidden w-full h-full">
@@ -66,12 +94,6 @@ export default function App() {
                         <div className="flex-1 h-full w-full relative"><Viewport2D /></div>
                     )}
                 </main>
-
-                {/* Right Panel */}
-                <aside className="w-64 bg-[#161b27] border-l border-[#2a3144] flex flex-col">
-                    <PropertiesPanel />
-                    <AICommandPanel />
-                </aside>
             </div>
 
             <StatusBar />

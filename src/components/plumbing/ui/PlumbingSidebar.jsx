@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePlumbingStore } from '../stores/plumbingStore';
 
+
 const PALETTE = {
   Fixtures: [
     { id: 'wc_cc',       label: 'Close-coupled WC',   icon: '🚽', category: 'fixture', config: { material: 'Ceramic' } },
@@ -73,7 +74,7 @@ export default function PlumbingSidebar() {
   };
 
   return (
-    <div className="w-64 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col z-10 shrink-0 shadow-sm">
+    <div className="flex flex-col">
       {/* Header */}
       <div className="p-3 border-b border-gray-200 dark:border-gray-800">
         <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Component Library</h2>

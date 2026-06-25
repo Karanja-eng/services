@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import FloatingPalette from "./FloatingPalette";
+import "./floatingPalette.css";
 import {
   BrowserRouter as Router,
   Routes,
@@ -475,6 +477,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
 
   return (
     <div className={`flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-black transition-colors duration-300 ${isDark ? "dark" : ""}`}>
+      {/* Floating Palette Overlay removed from global layout so it can be used per-window */}
 
       {/* Top Bar */}
       <div className={`absolute top-0 left-0 w-full z-40 px-4 py-2 flex items-center justify-between pointer-events-none transition-all duration-300 ${isHomePage ? '' : 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm'}`}>

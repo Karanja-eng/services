@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FloatingPalette from '../../FloatingPalette';
 import Scene3D from './Scene3D';
 import PlanCanvas2D from './PlanCanvas2D';
 import SectionLibrary from './SectionLibrary.jsx';
@@ -6,6 +7,7 @@ import { useStore } from './store';
 
 export default function ColumnsBeamsApp({ isDark }) {
   const { activeView, setActiveView, activeTool, setActiveTool } = useStore();
+  const [showSectionLibrary, setShowSectionLibrary] = useState(true);
   
   return (
     <div className={`flex flex-col h-screen ${isDark ? 'bg-[#070e1a] text-white' : 'bg-gray-100 text-black'} overflow-hidden font-sans`}>
@@ -40,14 +42,23 @@ export default function ColumnsBeamsApp({ isDark }) {
               {tool.replace('_', ' ')}
             </button>
           ))}
+          <div className="w-px h-4 bg-[#1a2d4a] mx-2 self-center" />
+          <button
+            onClick={() => setShowSectionLibrary(!showSectionLibrary)}
+            className={`px-3 py-1 text-[10px] font-mono rounded transition-all ${showSectionLibrary ? 'bg-[#4a9eff] text-white' : 'text-[#4a9eff] border border-[#4a9eff33] hover:bg-[#4a9eff11]'}`}
+          >
+            SECTION LIBRARY
+          </button>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar: Section Library */}
-        <aside className="w-72 bg-[#0a1220] border-r border-[#1a2d4a]">
-          <SectionLibrary />
-        </aside>
+        {/* Left Sidebar as Floating Palette */}
+        {showSectionLibrary && (
+          <FloatingPalette title="Columns & Beams Tools" onClose={() => setShowSectionLibrary(false)} width={300}>
+            <SectionLibrary />
+          </FloatingPalette>
+        )}
 
         {/* Main Viewport */}
         <main className="flex-1 relative bg-[#070e1a]">

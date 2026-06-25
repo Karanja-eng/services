@@ -87,7 +87,7 @@ export default function PropertiesPanel() {
   };
 
   return (
-    <div className="w-72 h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col z-10 shrink-0 shadow-sm">
+    <div className="flex flex-col">
       {/* Header */}
       <div className="p-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
         <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Properties</h2>

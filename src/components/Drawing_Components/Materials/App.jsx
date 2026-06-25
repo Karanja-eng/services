@@ -11,6 +11,7 @@ import {
   PostProcessingStack, CameraRig, RenderModeController,
   useScreenshot, useRenderStore,
 } from './rendering/RenderingEngine.jsx';
+import FloatingPalette from '../../FloatingPalette.jsx';
 
 function ScreenshotBridge({ triggerRef }) {
   const capture = useScreenshot();
@@ -44,6 +45,7 @@ const PANELS = [
 
 export default function App() {
   const [activePanel, setActivePanel] = useState('materials');
+  const [showStudioControls, setShowStudioControls] = useState(true);
   const [pendingMaterial, setPendingMaterial] = useState(null);
   const [selectedMesh, setSelectedMesh] = useState(null);
   const screenshotRef = useRef(null);
@@ -93,6 +95,15 @@ export default function App() {
         </div>
         <div className="w-px h-4 bg-zinc-700 mx-1"/>
         <span className="text-[9px] text-zinc-500 tracking-wider">Material & Rendering Engine</span>
+        
+        <div className="w-px h-4 bg-zinc-700 mx-2" />
+        <button
+          onClick={() => setShowStudioControls(!showStudioControls)}
+          className={`px-3 py-1 text-[10px] font-mono rounded transition-all ${showStudioControls ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'text-zinc-400 border border-zinc-600/40 hover:bg-zinc-800/50'}`}
+        >
+          STUDIO CONTROLS
+        </button>
+
         <div className="ml-auto flex items-center gap-2">
           <span className={`text-[9px] px-2 py-0.5 rounded border font-mono uppercase tracking-wider
             ${renderMode==='realistic'?'text-amber-400 border-amber-500/40 bg-amber-500/10':
@@ -103,25 +114,29 @@ export default function App() {
         </div>
       </div>
 
-      {/* Right sidebar */}
-      <div className="absolute top-10 right-0 bottom-7 w-72 flex flex-col z-10 border-l border-zinc-800/60 bg-zinc-950/80 backdrop-blur-md">
-        <div className="flex border-b border-zinc-800">
-          {PANELS.map(p=>(
-            <button key={p.id} onClick={()=>setActivePanel(p.id)}
-              className={`flex-1 py-2.5 text-[9px] uppercase tracking-widest font-medium flex items-center justify-center gap-1.5 transition-all
-                ${activePanel===p.id?'text-amber-400 border-b-2 border-amber-500 bg-zinc-900/60':'text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent'}`}>
-              <span>{p.icon}</span><span>{p.label}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex-1 overflow-hidden">
-          {activePanel==='materials' && (
-            <MaterialPicker onSelect={handleMaterialSelect} onDragStart={id=>setPendingMaterial({id})} className="h-full rounded-none border-0"/>
-          )}
-          {activePanel==='lighting' && <LightingPanel className="h-full rounded-none border-0"/>}
-          {activePanel==='render'   && <RenderPanel onScreenshot={handleScreenshot} className="h-full rounded-none border-0"/>}
-        </div>
-      </div>
+      {/* Right sidebar as Floating Palette */}
+      {showStudioControls && (
+        <FloatingPalette title="Studio Controls" onClose={() => setShowStudioControls(false)} width={300}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="flex border-b border-zinc-800">
+              {PANELS.map(p=>(
+                <button key={p.id} onClick={()=>setActivePanel(p.id)}
+                  className={`flex-1 py-2.5 text-[9px] uppercase tracking-widest font-medium flex items-center justify-center gap-1.5 transition-all
+                    ${activePanel===p.id?'text-amber-400 border-b-2 border-amber-500 bg-zinc-900/60':'text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent'}`}>
+                  <span>{p.icon}</span><span>{p.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex-1 overflow-hidden" style={{ minHeight: '380px' }}>
+              {activePanel==='materials' && (
+                <MaterialPicker onSelect={handleMaterialSelect} onDragStart={id=>setPendingMaterial({id})} className="h-full rounded-none border-0"/>
+              )}
+              {activePanel==='lighting' && <LightingPanel className="h-full rounded-none border-0"/>}
+              {activePanel==='render'   && <RenderPanel onScreenshot={handleScreenshot} className="h-full rounded-none border-0"/>}
+            </div>
+          </div>
+        </FloatingPalette>
+      )}
 
       {/* Instructions overlay */}
       <div className="absolute top-14 left-4 z-10 pointer-events-none">

@@ -7,17 +7,17 @@ export default function PropertiesPanel() {
 
   if (!selectedElement) {
     return (
-      <div className="w-64 h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col z-10 shrink-0 shadow-sm p-4 text-xs text-gray-500">
+      <div className="p-4 text-xs text-gray-500">
         No element selected.
       </div>
     );
   }
 
   return (
-    <div className="w-64 h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col z-10 shrink-0 shadow-sm">
-      <div className="p-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+    <div className="flex flex-col">
+      <div className="p-3 border-b border-gray-200 dark:border-gray-850 flex justify-between items-center">
         <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500">Properties</h2>
-        <button onClick={() => deleteElement(selectedElementId)} className="text-red-500 hover:bg-red-50 p-1 rounded">Delete</button>
+        <button onClick={() => deleteElement(selectedElementId)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950 p-1 rounded">Delete</button>
       </div>
       
       <div className="p-4 space-y-4 text-xs">

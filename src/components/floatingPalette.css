@@ -1,0 +1,33 @@
+/* Floating Palette Styles */
+.floating-palette {
+  position: absolute;
+  width: 240px;
+  min-height: 200px;
+  background: var(--bg-color, white);
+  border: 1px solid var(--border-color, #e5e7eb);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 1000;
+}
+.floating-palette.transparent {
+  opacity: 0.4;
+}
+.floating-palette-header {
+  cursor: move;
+  user-select: none;
+}
+.floating-palette-collapsed {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-color, white);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+}

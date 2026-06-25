@@ -19,7 +19,7 @@
 //    />
 // ─────────────────────────────────────────────────────────────
 
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useState } from 'react';
 import { Canvas }          from '@react-three/fiber';
 import { OrbitControls, Grid, Environment } from '@react-three/drei';
 
@@ -31,6 +31,7 @@ import Truss2D                    from './2d/Truss2D.jsx';
 import Framing2D                  from './2d/Framing2D.jsx';
 import StructureControlPanel      from './ui/StructureControlPanel.jsx';
 import StructureInfoPanel         from './ui/StructureInfoPanel.jsx';
+import FloatingPalette            from '../../../../FloatingPalette.jsx';
 
 // ── Scene helper: floor + ambient environment ─────────────────
 function SceneSetup() {
@@ -193,6 +194,9 @@ export default function RoofStructureApp({ initialSpec = {}, isDark = false }) {
     toggleVisibility, generateRoofStructure, applyJSONString,
   } = useRoofStructure(initialSpec);
 
+  const [showControls, setShowControls] = useState(true);
+  const [showInfo, setShowInfo] = useState(true);
+
   const canvasAreaRef = useRef(null);
 
   const VIEW_TABS = [
@@ -208,8 +212,8 @@ export default function RoofStructureApp({ initialSpec = {}, isDark = false }) {
 
   return (
     <div style={{
-      display: 'grid',
-      gridTemplateColumns: '210px 1fr 290px',
+      display: 'flex',
+      flexDirection: 'column',
       height: '100vh',
       fontFamily: 'system-ui, sans-serif',
       fontSize: 13,
@@ -217,89 +221,127 @@ export default function RoofStructureApp({ initialSpec = {}, isDark = false }) {
       background: 'var(--color-background-tertiary)',
       ...roofTheme,
     }}>
-      {/* ── Left panel ─────────────────────────────── */}
-      <StructureControlPanel
-        state={state}
-        derived={derived}
-        onSet={set}
-        onSetElement={setElement}
-        onSetSpan={setSpan}
-        onToggleVis={toggleVisibility}
-      />
-
-      {/* ── Centre canvas ──────────────────────────── */}
-      <div ref={canvasAreaRef} style={{ position: 'relative', background: '#0f1117', overflow: 'hidden' }}>
-        {/* View tabs */}
-        <div style={{
-          position: 'absolute', top: 9, left: '50%', transform: 'translateX(-50%)',
-          display: 'flex', gap: 3,
-          background: 'rgba(0,0,0,0.55)', borderRadius: 7, padding: 3, zIndex: 10,
-        }}>
-          {VIEW_TABS.map(({ id, label }) => (
-            <button
-              key={id}
-              onClick={() => set({ view: id })}
-              style={{
-                padding: '3px 12px', border: 'none', cursor: 'pointer', borderRadius: 5,
-                background: state.view === id ? 'rgba(255,255,255,0.15)' : 'none',
-                color: state.view === id ? '#fff' : 'rgba(255,255,255,0.55)',
-                fontSize: 11, fontWeight: 500, transition: 'all .12s',
-              }}
-            >
-              {label}
-            </button>
-          ))}
+      {/* ── Header Ribbon ─────────────────────────────── */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px 16px',
+        background: '#161b27',
+        borderBottom: '1px solid #2a3144',
+        zIndex: 50
+      }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span style={{ fontWeight: 'bold', color: '#4a9eff', letterSpacing: '0.05em' }}>ROOF STRUCTURE</span>
+          <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px', borderRadius: '6px' }}>
+            {VIEW_TABS.map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => set({ view: id })}
+                style={{
+                  padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: '4px',
+                  background: state.view === id ? '#4a9eff' : 'transparent',
+                  color: state.view === id ? '#fff' : 'rgba(255,255,255,0.7)',
+                  fontSize: 11, fontWeight: 'bold', transition: 'all .12s',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ width: '1px', height: '16px', background: '#2a3144' }} />
+          <button
+            onClick={() => setShowControls(!showControls)}
+            style={{
+              padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: '4px',
+              background: showControls ? '#4a6fa5' : 'transparent',
+              color: showControls ? '#fff' : '#4a6fa5',
+              fontSize: 11, fontWeight: 'bold', transition: 'all .12s',
+            }}
+          >
+            STRUCTURE CONTROLS
+          </button>
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            style={{
+              padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: '4px',
+              background: showInfo ? '#4a6fa5' : 'transparent',
+              color: showInfo ? '#fff' : '#4a6fa5',
+              fontSize: 11, fontWeight: 'bold', transition: 'all .12s',
+            }}
+          >
+            INFO & EXPORT
+          </button>
         </div>
-
-        {/* Info badge */}
         <div style={{
-          position: 'absolute', top: 9, right: 9, zIndex: 10,
           background: 'rgba(0,0,0,0.55)', color: 'rgba(255,255,255,0.8)',
-          padding: '3px 9px', borderRadius: 5, fontSize: 10, letterSpacing: '0.05em',
+          padding: '4px 10px', borderRadius: '4px', fontSize: 11, letterSpacing: '0.05em',
         }}>
           {typeLabel.toUpperCase()} · {state.span.toFixed(1)}m · {state.pitch}°
         </div>
-
-        {/* 3D R3F canvas */}
-        {state.view === '3d' && (
-          <Canvas
-            shadows
-            camera={{ position: [8, 6, 14], fov: 45, near: 0.05, far: 200 }}
-            style={{ width: '100%', height: '100%' }}
-          >
-            <Suspense fallback={null}>
-              <SceneSetup />
-              <StructuralContent state={state} />
-              <OrbitControls
-                makeDefault
-                enableDamping
-                dampingFactor={0.05}
-                minDistance={5}
-                maxDistance={45}
-                maxPolarAngle={Math.PI / 2.05}
-              />
-            </Suspense>
-          </Canvas>
-        )}
-
-        {/* 2D Konva view */}
-        {(state.view === 'elev' || state.view === 'plan') && (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0efe8' }}>
-            <TwoDView
-              state={state}
-              width={Math.min(window.innerWidth - 210 - 290 - 20, 820)}
-              height={Math.min(window.innerHeight - 40, 560)}
-            />
-          </div>
-        )}
       </div>
 
-      {/* ── Right panel ────────────────────────────── */}
-      <StructureInfoPanel
-        state={state}
-        derived={derived}
-        onApplyJSON={applyJSONString}
-      />
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {/* ── Left panel ─────────────────────────────── */}
+        {showControls && (
+          <FloatingPalette title="Structure Controls" onClose={() => setShowControls(false)} width={260}>
+            <StructureControlPanel
+              state={state}
+              derived={derived}
+              onSet={set}
+              onSetElement={setElement}
+              onSetSpan={setSpan}
+              onToggleVis={toggleVisibility}
+            />
+          </FloatingPalette>
+        )}
+
+        {/* ── Centre canvas ──────────────────────────── */}
+        <div ref={canvasAreaRef} style={{ flex: 1, position: 'relative', background: '#0f1117', overflow: 'hidden' }}>
+          {/* 3D R3F canvas */}
+          {state.view === '3d' && (
+            <Canvas
+              shadows
+              camera={{ position: [8, 6, 14], fov: 45, near: 0.05, far: 200 }}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <Suspense fallback={null}>
+                <SceneSetup />
+                <StructuralContent state={state} />
+                <OrbitControls
+                  makeDefault
+                  enableDamping
+                  dampingFactor={0.05}
+                  minDistance={5}
+                  maxDistance={45}
+                  maxPolarAngle={Math.PI / 2.05}
+                />
+              </Suspense>
+            </Canvas>
+          )}
+
+          {/* 2D Konva view */}
+          {(state.view === 'elev' || state.view === 'plan') && (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0efe8' }}>
+              <TwoDView
+                state={state}
+                width={820}
+                height={560}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* ── Right panel ────────────────────────────── */}
+        {showInfo && (
+          <FloatingPalette title="Info & Export" onClose={() => setShowInfo(false)} width={310}>
+            <StructureInfoPanel
+              state={state}
+              derived={derived}
+              onApplyJSON={applyJSONString}
+            />
+          </FloatingPalette>
+        )}
+      </div>
     </div>
   );
 }

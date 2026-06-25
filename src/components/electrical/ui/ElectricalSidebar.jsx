@@ -1,52 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { STANDARD_SOCKETS, STANDARD_SWITCHES, STANDARD_LIGHTS } from '../utils/constants';
 
+const CATEGORIES = [
+  { key: 'sockets', label: 'Sockets & Power', color: 'text-orange-400', items: STANDARD_SOCKETS },
+  { key: 'switches', label: 'Switches & Controls', color: 'text-blue-400', items: STANDARD_SWITCHES },
+  { key: 'lights', label: 'Lighting', color: 'text-yellow-400', items: STANDARD_LIGHTS },
+];
+
 export default function ElectricalSidebar() {
+  const [openCat, setOpenCat] = useState('sockets');
+
   return (
-    <div className="w-64 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col z-10 shrink-0 shadow-sm overflow-y-auto">
-      <div className="p-3 border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500">Component Library</h2>
-      </div>
-      
-      <div className="p-4 space-y-6 text-xs">
-        
-        {/* Sockets */}
-        <div>
-          <h3 className="font-semibold text-blue-600 mb-2">Sockets & Power</h3>
-          <div className="space-y-2">
-            {STANDARD_SOCKETS.map(s => (
-              <div key={s.id} className="p-2 border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900 cursor-grab">
-                {s.name}
-              </div>
-            ))}
-          </div>
+    <div className="p-2 space-y-1">
+      {CATEGORIES.map(cat => (
+        <div key={cat.key}>
+          <button
+            onClick={() => setOpenCat(openCat === cat.key ? null : cat.key)}
+            className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${cat.color} hover:bg-white/10 transition-colors`}
+          >
+            <span>{cat.label}</span>
+            <span className="text-white/40">{openCat === cat.key ? '▴' : '▾'}</span>
+          </button>
+          {openCat === cat.key && (
+            <div className="mt-1 mb-2 space-y-0.5">
+              {cat.items.map(s => (
+                <div
+                  key={s.id}
+                  className="px-3 py-2 rounded-lg cursor-grab text-[10px] text-gray-300 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10 transition-all flex justify-between items-center group"
+                >
+                  <span className="leading-tight">{s.name}</span>
+                  {s.current && (
+                    <span className="text-[9px] text-gray-500 group-hover:text-gray-400">{s.current}A</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-
-        {/* Switches */}
-        <div>
-          <h3 className="font-semibold text-blue-600 mb-2">Switches & Controls</h3>
-          <div className="space-y-2">
-            {STANDARD_SWITCHES.map(s => (
-              <div key={s.id} className="p-2 border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900 cursor-grab">
-                {s.name}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Lighting */}
-        <div>
-          <h3 className="font-semibold text-blue-600 mb-2">Lighting Fixtures</h3>
-          <div className="space-y-2">
-            {STANDARD_LIGHTS.map(s => (
-              <div key={s.id} className="p-2 border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900 cursor-grab">
-                {s.name}
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
+      ))}
     </div>
   );
 }

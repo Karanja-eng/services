@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import FloatingPalette from '../../FloatingPalette';
 import { Stage, Layer, Line, Arc, Circle, Text, Arrow, Group } from 'react-konva';
 import { useAnnotationStore } from './stores/annotationStore';
 import { Toolbar } from './components/Toolbar';
@@ -24,6 +25,8 @@ export default function App() {
   const containerRef = useRef(null);
   const [size, setSize] = useState({ w: 800, h: 600 });
   const [stageScale, setStageScale] = useState(1);
+  const [showTools, setShowTools] = useState(true);
+  const [showProperties, setShowProperties] = useState(true);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [activeTool, setActiveTool] = useState(TOOLS.SELECT);
   const [clickPoints, setClickPoints] = useState([]);
@@ -171,6 +174,20 @@ export default function App() {
             Dimensioning & Annotation Engine v2.1
           </span>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowTools(!showTools)}
+            className={`px-3 py-1 text-[10px] font-mono rounded transition-all ${showTools ? 'bg-[#4a9eff] text-white' : 'text-[#4a9eff] border border-[#4a9eff33] hover:bg-[#4a9eff11]'}`}
+          >
+            DIMENSION TOOLS
+          </button>
+          <button
+            onClick={() => setShowProperties(!showProperties)}
+            className={`px-3 py-1 text-[10px] font-mono rounded transition-all ${showProperties ? 'bg-[#4a9eff] text-white' : 'text-[#4a9eff] border border-[#4a9eff33] hover:bg-[#4a9eff11]'}`}
+          >
+            PROPERTIES
+          </button>
+        </div>
         <div className="flex items-center gap-5 text-[9px] text-[#2a3a5a]">
           <span>1:{Math.max(1, Math.round(100 / stageScale))}</span>
           <span>{Math.round(stageScale * 100)}%</span>
@@ -178,11 +195,15 @@ export default function App() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <Toolbar activeTool={activeTool} setActiveTool={setActiveTool} clickPoints={clickPoints} />
+      <div className="flex flex-1 overflow-hidden relative">
+        {showTools && (
+          <FloatingPalette title="Dimension Tools" onClose={() => setShowTools(false)} width={72}>
+            <Toolbar activeTool={activeTool} setActiveTool={setActiveTool} clickPoints={clickPoints} />
+          </FloatingPalette>
+        )}
 
         {/* Canvas */}
-        <div ref={containerRef} className="flex-1 relative overflow-hidden" style={{ cursor }}>
+        <div ref={containerRef} className="flex-1 relative overflow-hidden w-full h-full" style={{ cursor }}>
           {/* Grid */}
           <div className="absolute inset-0 pointer-events-none" style={{
             backgroundImage: `
@@ -256,14 +277,16 @@ export default function App() {
           )}
         </div>
 
-        {/* Right Panel */}
-        <div className="w-60 flex flex-col bg-[#0a0a15] border-l border-[#1e1e36] overflow-y-auto shrink-0">
-          <StylePanel />
-          <PropertiesPanel
-            annotation={annotations.find(a => a.id === selectedId)}
-            updateAnnotation={updateAnnotation}
-          />
-        </div>
+        {/* Right Panel as Floating Palette */}
+        {showProperties && (
+          <FloatingPalette title="Properties" onClose={() => setShowProperties(false)} width={280}>
+            <StylePanel />
+            <PropertiesPanel
+              annotation={annotations.find(a => a.id === selectedId)}
+              updateAnnotation={updateAnnotation}
+            />
+          </FloatingPalette>
+        )}
       </div>
 
       <StatusBar activeTool={activeTool} clickPoints={clickPoints} selectedId={selectedId} />

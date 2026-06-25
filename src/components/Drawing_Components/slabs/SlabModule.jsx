@@ -8,6 +8,7 @@ import { SlabSidebar } from './SlabSidebar';
 import { SlabRightPanel } from './SlabRightPanel';
 import { Slab2D } from './Slab2D';
 import { Slab3D } from './Slab3D';
+import FloatingPalette from '../../FloatingPalette';
 
 // ─── Toolbar button ───────────────────────────────────────────────────────────
 
@@ -311,6 +312,8 @@ function drawFullSection(ctx, type, th, rs, rw, cs, sc, col, W, H) {
  */
 export function SlabModule({ width, height, style = {} }) {
   const [viewLocal, setViewLocal] = useState('plan');
+  const [showTools, setShowTools] = useState(true);
+  const [showProperties, setShowProperties] = useState(true);
   const W = width  || '100vw';
   const H = height || '100vh';
 
@@ -322,7 +325,7 @@ export function SlabModule({ width, height, style = {} }) {
     <div style={{
       width: W, height: H,
       display: 'grid',
-      gridTemplateColumns: '280px 1fr 300px',
+      gridTemplateColumns: '1fr',
       gridTemplateRows: '56px 1fr 24px',
       background: '#0F1117',
       fontFamily: "'Syne', sans-serif",
@@ -346,6 +349,12 @@ export function SlabModule({ width, height, style = {} }) {
         <span style={styles.badge}>MODULE v2.4</span>
         <span style={styles.badge}>{viewLocal === 'plan' ? '2D PLAN VIEW' : viewLocal === 'section' ? 'SECTION VIEW' : '3D ISOMETRIC'}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button style={styles.headerBtn} onClick={() => setShowTools(!showTools)}>
+            Slab Tools
+          </button>
+          <button style={styles.headerBtn} onClick={() => setShowProperties(!showProperties)}>
+            Slab Properties
+          </button>
           <button style={styles.headerBtn} onClick={() => { const json = useSlabStore.getState().exportJSON(); console.log(json); }}>
             Export JSON
           </button>
@@ -356,8 +365,12 @@ export function SlabModule({ width, height, style = {} }) {
         </div>
       </div>
 
-      {/* Left sidebar */}
-      <SlabSidebar />
+      {/* Left sidebar as Floating Palette */}
+      {showTools && (
+        <FloatingPalette title="Slab Tools" onClose={() => setShowTools(false)} width={320}>
+          <SlabSidebar />
+        </FloatingPalette>
+      )}
 
       {/* Canvas area */}
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0D0F1A' }}>
@@ -367,8 +380,12 @@ export function SlabModule({ width, height, style = {} }) {
         </div>
       </div>
 
-      {/* Right panel */}
-      <SlabRightPanel />
+      {/* Right panel as Floating Palette */}
+      {showProperties && (
+        <FloatingPalette title="Slab Properties" onClose={() => setShowProperties(false)} width={330}>
+          <SlabRightPanel />
+        </FloatingPalette>
+      )}
 
       {/* Status bar */}
       <StatusBar view={viewLocal} />
