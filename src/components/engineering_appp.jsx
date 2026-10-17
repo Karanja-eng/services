@@ -37,6 +37,10 @@ import MonitoringDashboard from "./Surveying/Deformation_&_Monitoring/monitoring
 import SoilMechanicsModule from "./Soil_mechanics/soil_mechanics";
 import CadDrawer from "./Drawings/cad_drawing";
 import StructuralVisualizationComponent from "./Drawings/visualise_component";
+// Isolated CAD/BIM/IFC interoperability workbench (MLightCAD + web-ifc).
+// The existing Konva drawing page (/drawing) and R3F visualiser (/visualise)
+// are untouched; this route is additive and can be removed independently.
+import InteropWorkbench from "./interop/InteropWorkbench";
 import RoadApp from "./Drawing_Components/Roads/RoadApp";
 import ColumnsBeamsApp from "./Drawing_Components/Columns_Beams/ColumnsBeamsApp";
 import { RoofStructureApp } from "./Drawing_Components/roof-structure/index";
@@ -691,6 +695,10 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
             <Route
               path="/drawing"
               element={<CadDrawer isDark={isDark} />}
+            />
+            <Route
+              path="/interop/cad-bim"
+              element={<InteropWorkbench isDark={isDark} />}
             />
             <Route
               path="/drawing/roads"

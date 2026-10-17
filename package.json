@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@mlightcad/cad-simple-ui-plugin": "^1.7.5",
+    "@mlightcad/cad-simple-viewer": "^1.7.5",
+    "@mlightcad/data-model": "^1.15.5",
+    "@mlightcad/mtext-parser": "^1.5.3",
+    "@mlightcad/mtext-renderer": "^0.13.3",
+    "@mlightcad/three-renderer": "^1.7.5",
     "@react-pdf/renderer": "^4.3.0",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",
@@ -14,6 +20,7 @@
     "jspdf": "^3.0.1",
     "konva": "^10.0.12",
     "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "lucide-react": "^0.473.0",
     "paper": "^0.12.18",
     "postprocessing": "^6.39.1",
@@ -28,9 +35,11 @@
     "recharts": "^2.15.1",
     "three": "^0.172.0",
     "uuid": "^13.0.0",
+    "web-ifc": "^0.0.78",
     "zustand": "^5.0.12"
   },
   "scripts": {
+    "postinstall": "node scripts/fix-three-exports.js",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
