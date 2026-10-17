@@ -260,6 +260,19 @@ app.include_router(superstructure_router, prefix="/superstructure_router", tags=
 app.include_router(rc_superstructure_router, prefix="/rc_superstructure_router", tags=["rc_superstructure_router"])
 app.include_router(rc_substructure_router, prefix="/rc_substructure_router", tags=["rc_substructure_router"])
 #app.include_router(architectural_router, prefix="/architectural_router", tags=["architectural_router"])
+
+####### CAD / BIM / IFC interoperability #############
+# Optional integration: mounted only if the module imports cleanly, so a missing
+# IfcOpenShell or ezdxf cannot stop the rest of the backend from starting.
+# Endpoints: /api/cad-ifc/{units,health,model,links,export,file}
+try:
+    from cad_ifc.router import router as cad_ifc_router
+
+    app.include_router(cad_ifc_router, prefix="/api/cad-ifc", tags=["cad_ifc"])
+    print("[cad_ifc] router mounted at /api/cad-ifc")
+except Exception as _cad_ifc_import_error:  # pragma: no cover - environment specific
+    print(f"[cad_ifc] router NOT mounted: {_cad_ifc_import_error}")
+
 ## ##############   Ai Models  ##############
 
 ##Ai models

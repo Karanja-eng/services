@@ -4,12 +4,16 @@
 # Allow source files
 !*.py
 !*.jsx
+!/src/**/*.js
+!/src/**/*.ts
+!/src/**/*.tsx
 !*.hpp
 !*.cpp
 
 # Allow directories
 !*/
 
+        
 # Keep gitignore itself
 !.gitignore
 
@@ -69,3 +73,32 @@
 
 # Always ignore node_modules
 /node_modules/
+
+# --- CAD / BIM / IFC integration (feature/cad-bim-ifc-integration) -----------
+# Source of the interoperability layer is already covered by !*.py and
+# !/src/**/*.js. The entries below allow the report and the *generated sample
+# artefacts* that the /interop/cad-bim route loads, so the route works without
+# running the Python pipeline first.
+!/docs/
+!/docs/*.md
+!/public/ifc/
+!/public/ifc/*.ifc
+!/public/ifc/*.dxf
+!/public/ifc/*.json
+# web-ifc runtime asset, copied from node_modules/web-ifc (MPL-2.0)
+!/public/web-ifc/
+!/public/web-ifc/*.wasm
+
+# Local scratch/output from the integration tooling: never commit these
+/.venv-ifc/
+/.pip-dl/
+/.pip-tmp/
+/.poc-out/
+/.poc-test-tmp/
+/.probe/
+/src/Backend/cad_ifc/data/
+/*.log
+
+# Build helper (postinstall resolver fix for MLightCAD + three exports map)
+!/scripts/
+!/scripts/*.js
