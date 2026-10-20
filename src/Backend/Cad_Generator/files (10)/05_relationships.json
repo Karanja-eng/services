@@ -1,0 +1,165 @@
+{
+  "status": "DERIVED from text/drawings; relation names are PROPOSED",
+  "relations": [
+    {
+      "s": "Wall",
+      "p": "contains",
+      "o": "VerticalBar"
+    },
+    {
+      "s": "Wall",
+      "p": "contains",
+      "o": "HorizontalBar"
+    },
+    {
+      "s": "HorizontalBar",
+      "p": "placed_outside",
+      "o": "VerticalBar"
+    },
+    {
+      "s": "Wall",
+      "p": "has",
+      "o": "Kicker"
+    },
+    {
+      "s": "VerticalBar",
+      "p": "rests_on",
+      "o": "Kicker"
+    },
+    {
+      "s": "VerticalBar",
+      "p": "terminated_by",
+      "o": "UBar(top)"
+    },
+    {
+      "s": "VerticalBar",
+      "p": "starts_with",
+      "o": "LBar(bottom)"
+    },
+    {
+      "s": "Wall",
+      "p": "connects_to",
+      "o": "Foundation"
+    },
+    {
+      "s": "Wall",
+      "p": "connects_to",
+      "o": "Slab(MS2/MW3)"
+    },
+    {
+      "s": "Wall",
+      "p": "connects_to",
+      "o": "HalfLanding"
+    },
+    {
+      "s": "Opening",
+      "p": "interrupts",
+      "o": "VerticalBar/HorizontalBar"
+    },
+    {
+      "s": "Trimmer",
+      "p": "reinforces",
+      "o": "Opening"
+    },
+    {
+      "s": "OpeningUBar",
+      "p": "encloses",
+      "o": "Trimmer"
+    },
+    {
+      "s": "CornerLoop",
+      "p": "laps_with",
+      "o": "HorizontalBar(tension lap)"
+    },
+    {
+      "s": "Link",
+      "p": "restrains",
+      "o": "VerticalBar(compression)"
+    },
+    {
+      "s": "RetainingWall",
+      "p": "contains",
+      "o": "Stem"
+    },
+    {
+      "s": "RetainingWall",
+      "p": "contains",
+      "o": "Base"
+    },
+    {
+      "s": "WallStarter",
+      "p": "specified_with",
+      "o": "BaseSlabReinforcement"
+    },
+    {
+      "s": "Joint",
+      "p": "separates",
+      "o": "WallPanel"
+    },
+    {
+      "s": "SpliceBar",
+      "p": "bridges",
+      "o": "MovementJoint"
+    },
+    {
+      "s": "UBar",
+      "p": "bridges",
+      "o": "ConstructionJoint"
+    },
+    {
+      "s": "ColumnStarter",
+      "p": "specified_with",
+      "o": "FootingReinforcement"
+    },
+    {
+      "s": "ColumnStarter",
+      "p": "laps_with",
+      "o": "ColumnMainBar(compression lap)"
+    },
+    {
+      "s": "PadFooting",
+      "p": "has",
+      "o": "BandedBars(if lx>1.5(cx+3d))"
+    },
+    {
+      "s": "PileCap",
+      "p": "anchors",
+      "o": "MainBar(from centreline of edge pile)"
+    },
+    {
+      "s": "Lacer",
+      "p": "supports",
+      "o": "TopReinforcement"
+    },
+    {
+      "s": "GroundBeam",
+      "p": "passes_around",
+      "o": "StarterBars"
+    },
+    {
+      "s": "Stair",
+      "p": "contains",
+      "o": "MainBottomBar"
+    },
+    {
+      "s": "Stair",
+      "p": "connects_to",
+      "o": "Landing"
+    },
+    {
+      "s": "LandingUBar",
+      "p": "area_equals",
+      "o": "0.5*MainBottomArea"
+    },
+    {
+      "s": "CantileverStair",
+      "p": "anchored_into",
+      "o": "SpineWall"
+    },
+    {
+      "s": "Drawing(Wall)",
+      "p": "cross_references",
+      "o": "StarterBars(slab MS2 B,C)"
+    }
+  ]
+}

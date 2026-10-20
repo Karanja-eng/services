@@ -1,0 +1,228 @@
+{
+  "table_B1_minimum_scheduling_radius_and_end_projection": {
+    "description": "Minimum radius for scheduling (r), minimum diameter of bending former (M = 2r), and minimum end projection (P) by nominal bar size. P is split into general case and link-with-bend-<150deg case.",
+    "units": "mm",
+    "columns": ["nominal_bar_size_d", "min_radius_r", "min_former_diameter_M", "min_end_projection_P_general", "min_end_projection_P_link_bend_lt_150deg"],
+    "notes": ["'a' flag = minimum end projection for smaller bars is governed by bending practicalities, not the general formula.", "General P column applies min 5d straight, including links where bend >=150deg.", "Link P column (bend < 150deg) requires min 10d straight."],
+    "rows": [
+      {"d": 6,  "r": 12,  "M": 24,  "P_general": "110 (a)", "P_link_lt150": "110 (a)"},
+      {"d": 8,  "r": 16,  "M": 32,  "P_general": "115 (a)", "P_link_lt150": "115 (a)"},
+      {"d": 10, "r": 20,  "M": 40,  "P_general": "120 (a)", "P_link_lt150": 130},
+      {"d": 12, "r": 24,  "M": 48,  "P_general": "125 (a)", "P_link_lt150": 160},
+      {"d": 16, "r": 32,  "M": 64,  "P_general": 130, "P_link_lt150": 210},
+      {"d": 20, "r": 70,  "M": 140, "P_general": 190, "P_link_lt150": 290},
+      {"d": 25, "r": 87,  "M": 175, "P_general": 240, "P_link_lt150": 365},
+      {"d": 32, "r": 112, "M": 224, "P_general": 305, "P_link_lt150": 465},
+      {"d": 40, "r": 140, "M": 280, "P_general": 380, "P_link_lt150": 580},
+      {"d": 50, "r": 175, "M": 350, "P_general": 475, "P_link_lt150": 725}
+    ],
+    "additional_notes": [
+      "Note 1: due to spring-back, actual bend radius will be slightly greater than half the diameter of former.",
+      "Note 2: BS4449:2005 grade B500A in sizes below 8mm does not conform to BS EN 1992-1-1:2004."
+    ],
+    "source": {"appendix": "B", "table": "B1", "page": 178}
+  },
+
+  "bar_areas_by_number_and_size": {
+    "description": "Cross-sectional steel area (mm2) for N bars of a given nominal diameter.",
+    "units": "mm2 (area); mm (perimeter); kg/m (weight)",
+    "bar_sizes_mm": [6, 8, 10, 12, 16, 20, 25, 32, 40, 50],
+    "rows_by_number": {
+      "1": [28, 50, 79, 113, 201, 314, 491, 804, 1257, 1963],
+      "2": [57, 101, 157, 226, 402, 628, 982, 1608, 2513, 3927],
+      "3": [85, 151, 236, 339, 603, 942, 1473, 2413, 3770, 5890],
+      "4": [113, 201, 314, 452, 804, 1257, 1963, 3217, 5027, 7854],
+      "5": [141, 251, 393, 565, 1005, 1571, 2454, 4021, 6283, 9817],
+      "6": [170, 302, 471, 679, 1206, 1885, 2945, 4825, 7540, 11781],
+      "7": [198, 352, 550, 792, 1407, 2199, 3436, 5630, 8796, 13744],
+      "8": [226, 402, 628, 905, 1608, 2513, 3927, 6434, 10053, 15708],
+      "9": [254, 452, 707, 1018, 1810, 2827, 4418, 7238, 11310, 17671],
+      "10": [283, 503, 785, 1131, 2011, 3142, 4909, 8042, 12566, 19635],
+      "11": [311, 553, 864, 1244, 2212, 3456, 5400, 8847, 13823, 21598],
+      "12": [339, 603, 942, 1357, 2413, 3770, 5890, 9651, 15080, 23562]
+    },
+    "perimeter_mm": [18.85, 25.13, 31.42, 37.70, 50.27, 62.83, 78.54, 100.53, 125.66, 157.08],
+    "weight_kg_per_m": [0.222, 0.395, 0.616, 0.888, 1.579, 2.466, 3.854, 6.313, 9.864, 15.413],
+    "derivable": "Every value in this table equals N x pi x (d/2)^2, so it is DERIVED/computable rather than needing verbatim storage; retained here as-given for source fidelity, but a generator should compute it rather than look it up.",
+    "source": {"appendix": "B", "page": 179}
+  },
+
+  "bar_areas_by_pitch_and_size": {
+    "description": "Steel area per metre width (mm2/m) for a given bar pitch and size. Used for slabs/walls/mesh.",
+    "units": "mm2 per metre width",
+    "bar_sizes_mm": [6, 8, 10, 12, 16, 20, 25, 32, 40, 50],
+    "rows_by_pitch_mm": {
+      "50":  [565, 1005, 1571, 2262, 4021, null, null, null, null, null],
+      "75":  [377, 670, 1047, 1508, 2681, 4189, 6545, null, null, null],
+      "100": [283, 503, 785, 1131, 2011, 3142, 4909, 8042, null, null],
+      "125": [226, 402, 628, 905, 1608, 2513, 3927, 6434, 10053, null],
+      "150": [188, 335, 524, 754, 1340, 2094, 3272, 5362, 8378, 13090],
+      "175": [162, 287, 449, 646, 1149, 1795, 2805, 4596, 7181, 11220],
+      "200": [141, 251, 393, 565, 1005, 1571, 2454, 4021, 6283, 9817],
+      "250": [113, 201, 314, 452, 804, 1257, 1963, 3217, 5027, 7854],
+      "300": [94, 168, 262, 377, 670, 1047, 1636, 2681, 4189, 6545]
+    },
+    "derivable": "area_per_m = (1000/pitch) x single_bar_area(d). DERIVED/computable.",
+    "source": {"appendix": "B", "page": 179}
+  },
+
+  "bar_weights_by_pitch_and_size": {
+    "description": "Steel weight per unit area (kg/m2) for a given bar pitch and size.",
+    "units": "kg/m2",
+    "bar_sizes_mm": [6, 8, 10, 12, 16, 20, 25, 32, 40, 50],
+    "rows_by_pitch_mm": {
+      "50":  [4.44, 7.89, 12.33, 17.76, 31.57, 49.32, null, null, null, null],
+      "75":  [2.96, 5.26, 8.22, 11.84, 21.04, 32.88, 51.38, 84.18, null, null],
+      "100": [2.22, 3.95, 6.17, 8.88, 15.78, 24.66, 38.53, 63.13, null, null],
+      "125": [1.78, 3.16, 4.93, 7.10, 12.63, 19.73, 30.83, 50.51, 78.92, null],
+      "150": [1.48, 2.63, 4.11, 5.92, 10.52, 16.44, 25.69, 42.09, 65.76, 102.76],
+      "175": [1.27, 2.25, 3.52, 5.07, 9.02, 14.09, 22.02, 36.08, 56.37, 88.08],
+      "200": [1.11, 1.97, 3.08, 4.44, 7.89, 12.33, 19.27, 31.57, 49.32, 77.07],
+      "250": [0.89, 1.58, 2.47, 3.55, 6.31, 9.86, 15.41, 25.25, 39.46, 61.65],
+      "300": [0.74, 1.32, 2.06, 2.96, 5.26, 8.22, 12.84, 21.04, 32.88, 51.38]
+    },
+    "source": {"appendix": "B", "page": 180}
+  },
+
+  "fabric_types_BS4483": {
+    "description": "Preferred steel fabric (mesh) types per BS4483:1985.",
+    "note": "Wire of Grade 500 to BS4449/BS4482 used except wrapping fabric wire may be Grade 250. 5mm size available in hard-drawn wire only. 6/7/8/10/12mm available in hard-drawn wire or bar form. 7mm not a preferred cold-worked bar size.",
+    "stock_sheet_size": {"length_m": 4.8, "width_m": 2.4, "area_m2": 11.52},
+    "square_mesh": [
+      {"reference": "A393", "long_wire_mm": 10, "long_pitch_mm": 200, "long_area_mm2": 393, "cross_wire_mm": 10, "cross_pitch_mm": 200, "cross_area_mm2": 393, "mass_kg_m2": 6.16},
+      {"reference": "A252", "long_wire_mm": 8, "long_pitch_mm": 200, "long_area_mm2": 252, "cross_wire_mm": 8, "cross_pitch_mm": 200, "cross_area_mm2": 252, "mass_kg_m2": 3.95},
+      {"reference": "A193", "long_wire_mm": 7, "long_pitch_mm": 200, "long_area_mm2": 193, "cross_wire_mm": 7, "cross_pitch_mm": 200, "cross_area_mm2": 193, "mass_kg_m2": 3.02},
+      {"reference": "A142", "long_wire_mm": 6, "long_pitch_mm": 200, "long_area_mm2": 142, "cross_wire_mm": 6, "cross_pitch_mm": 200, "cross_area_mm2": 142, "mass_kg_m2": 2.22},
+      {"reference": "A98", "long_wire_mm": 5, "long_pitch_mm": 200, "long_area_mm2": 98, "cross_wire_mm": 5, "cross_pitch_mm": 200, "cross_area_mm2": 98, "mass_kg_m2": 1.54}
+    ],
+    "structural_mesh": [
+      {"reference": "B1131", "long_wire_mm": 12, "long_pitch_mm": 100, "long_area_mm2": 1131, "cross_wire_mm": 8, "cross_pitch_mm": 200, "cross_area_mm2": 252, "mass_kg_m2": 10.9},
+      {"reference": "B785",  "long_wire_mm": 10, "long_pitch_mm": 100, "long_area_mm2": 785,  "cross_wire_mm": 8, "cross_pitch_mm": 200, "cross_area_mm2": 252, "mass_kg_m2": 8.14},
+      {"reference": "B503",  "long_wire_mm": 8,  "long_pitch_mm": 100, "long_area_mm2": 503,  "cross_wire_mm": 8, "cross_pitch_mm": 200, "cross_area_mm2": 252, "mass_kg_m2": 5.93},
+      {"reference": "B385",  "long_wire_mm": 7,  "long_pitch_mm": 100, "long_area_mm2": 385,  "cross_wire_mm": 7, "cross_pitch_mm": 200, "cross_area_mm2": 193, "mass_kg_m2": 4.53},
+      {"reference": "B283",  "long_wire_mm": 6,  "long_pitch_mm": 100, "long_area_mm2": 283,  "cross_wire_mm": 7, "cross_pitch_mm": 200, "cross_area_mm2": 193, "mass_kg_m2": 3.73},
+      {"reference": "B196",  "long_wire_mm": 5,  "long_pitch_mm": 100, "long_area_mm2": 196,  "cross_wire_mm": 7, "cross_pitch_mm": 200, "cross_area_mm2": 193, "mass_kg_m2": 3.05}
+    ],
+    "long_mesh": [
+      {"reference": "C785", "long_wire_mm": 10, "long_pitch_mm": 100, "long_area_mm2": 785, "cross_wire_mm": 6, "cross_pitch_mm": 400, "cross_area_mm2": 70.8, "mass_kg_m2": 6.72},
+      {"reference": "C636", "long_wire_mm": 9,  "long_pitch_mm": 100, "long_area_mm2": 636, "cross_wire_mm": 6, "cross_pitch_mm": 400, "cross_area_mm2": 70.8, "mass_kg_m2": 5.55},
+      {"reference": "C503", "long_wire_mm": 8,  "long_pitch_mm": 100, "long_area_mm2": 503, "cross_wire_mm": 5, "cross_pitch_mm": 400, "cross_area_mm2": 49, "mass_kg_m2": 4.34},
+      {"reference": "C385", "long_wire_mm": 7,  "long_pitch_mm": 100, "long_area_mm2": 385, "cross_wire_mm": 5, "cross_pitch_mm": 400, "cross_area_mm2": 49, "mass_kg_m2": 3.41},
+      {"reference": "C283", "long_wire_mm": 6,  "long_pitch_mm": 100, "long_area_mm2": 283, "cross_wire_mm": 5, "cross_pitch_mm": 400, "cross_area_mm2": 49, "mass_kg_m2": 2.61}
+    ],
+    "wrapping_mesh": [
+      {"reference": "D98", "long_wire_mm": 5, "long_pitch_mm": 200, "long_area_mm2": 98, "cross_wire_mm": 5, "cross_pitch_mm": 200, "cross_area_mm2": 98, "mass_kg_m2": 1.54},
+      {"reference": "D49", "long_wire_mm": 2.5, "long_pitch_mm": 100, "long_area_mm2": 49, "cross_wire_mm": 2.5, "cross_pitch_mm": 100, "cross_area_mm2": 49, "mass_kg_m2": 0.77}
+    ],
+    "source": {"appendix": "B", "page": 180}
+  },
+
+  "effective_anchorage_length_L_bars": {
+    "description": "Effective anchorage length (mm) measured from start of bend, for an L-bar (90-degree hook), by mandrel-size/bar-diameter ratio and bar size.",
+    "formula": "Effective anchorage length = (pi x (mandrel_dia + b) / 4 + 5b) / 0.7",
+    "variables": {"b": "bar diameter (mm)", "mandrel_dia": "bending mandrel diameter, expressed as a multiple of bar dia in the row index"},
+    "units": "mm",
+    "hook_lead_length_at_start": "5 x bar_diameter (per diagram)",
+    "bar_sizes_mm": [8, 10, 12, 16, 20, 25, 32, 40],
+    "rows_by_mandrel_to_bar_ratio": {
+      "4":  [102, 128, 153, 204, 255, 319, 408, 510],
+      "5":  [78, 139, 166, 222, 277, 347, 444, 555],
+      "6":  [84, 150, 180, 240, 300, 375, 480, 600],
+      "7":  [90, 161, 193, 258, 322, 403, 516, 645],
+      "8":  [97, 172, 207, 276, 345, 431, 552, 690],
+      "9":  [103, 184, 220, 294, 367, 459, 588, 735],
+      "10": [109, 195, 234, 312, 390, 487, 624, 779],
+      "11": [115, 206, 247, 330, 412, 515, 659, 824],
+      "12": [122, 217, 261, 348, 435, 543, 695, 869],
+      "13": [128, 229, 274, 366, 457, 571, 731, 914],
+      "14": [134, 240, 288, 384, 479, 599, 767, 959]
+    },
+    "note": "First data cell (mandrel ratio 4, bar 8mm = 102) appears anomalously low relative to the progression of the rest of the row/column and may be an OCR/scan artifact from the source; flagged in gaps file rather than silently corrected.",
+    "source": {"appendix": "B", "page": 181}
+  },
+
+  "effective_anchorage_length_U_bars": {
+    "description": "Effective anchorage length (mm) measured from start of bend, for a U-bar (180-degree hook), by mandrel-size/bar-diameter ratio and bar size.",
+    "formula": "Effective anchorage length = (pi x (mandrel_dia + b) / 2 + 5b) / 0.7",
+    "variables": {"b": "bar diameter (mm)", "mandrel_dia": "bending mandrel diameter, expressed as a multiple of bar dia in the row index"},
+    "units": "mm",
+    "hook_lead_length_at_start": "5 x bar_diameter (per diagram)",
+    "bar_sizes_mm": [8, 10, 12, 16, 20, 25, 32, 40],
+    "rows_by_mandrel_to_bar_ratio": {
+      "4":  [147, 184, 220, 294, 367, 459, 588, 735],
+      "5":  [165, 206, 247, 330, 412, 515, 659, 824],
+      "6":  [183, 229, 274, 366, 457, 571, 731, 914],
+      "7":  [201, 251, 301, 402, 502, 627, 803, 1004],
+      "8":  [219, 273, 328, 437, 547, 683, 875, 1094],
+      "9":  [237, 296, 355, 473, 592, 740, 947, 1183],
+      "10": [255, 318, 382, 509, 637, 796, 1018, 1273],
+      "11": [273, 341, 409, 545, 681, 852, 1090, 1363],
+      "12": [291, 363, 436, 581, 726, 908, 1162, 1453],
+      "13": [308, 386, 463, 617, 771, 964, 1234, 1542],
+      "14": [326, 408, 490, 653, 816, 1020, 1306, 1632]
+    },
+    "source": {"appendix": "B", "page": 181}
+  },
+
+  "minimum_overall_depth_U_bar_end_shapes": {
+    "description": "Minimum overall depth (dimension B) of U-bar end details, for two named end-shape styles ('Hook' and 'Trombone'), at fy=500 MPa.",
+    "mandrel_diameter_rule": {
+      "bar_size_le_16mm": "mandrel_dia = 4 x b",
+      "bar_size_gt_16mm": "mandrel_dia = 7 x b"
+    },
+    "hook_shape": {
+      "geometry": "5-diameter lead-in (5d) into a bend of diameter B (the mandrel diameter)",
+      "bar_sizes_mm": [6, 8, 10, 12, 16, 20, 25, 32, 40],
+      "min_B_mm": [40, 50, 60, 75, 100, 180, 225, 290, 360]
+    },
+    "trombone_shape": {
+      "geometry": "5-diameter lead-in (5d), a 4-diameter offset (4d), into bend of diameter B (the mandrel diameter)",
+      "bar_sizes_mm": [6, 8, 10, 12, 16, 20, 25, 32, 40],
+      "min_B_mm": [60, 80, 100, 120, 160, 260, 325, 420, 520]
+    },
+    "fy_MPa": 500,
+    "source": {"appendix": "B", "page": 182}
+  },
+
+  "large_diameter_bends_minimum_mandrel_size": {
+    "description": "Formula and derived lookup tables for the minimum bending mandrel diameter required for a bar under load at a bend, as a function of concrete strength class, spacing/cover parameter (ab), actual ultimate bar stress, and bar diameter.",
+    "formula": {
+      "name": "bm_min",
+      "formula": "bm_min = Fbt x ((1/ab) + 1/(2b)) / fcd",
+      "variables": {
+        "Fbt": "tensile force from ultimate loads (N)",
+        "b": "bar size (mm)",
+        "ab": "half the pitch of bars, or nominal cover + b/2 (mm)",
+        "fcd": "design concrete strength = acc x fck / gamma_c (MPa)"
+      },
+      "units": "mm (internal diameter of bend)",
+      "max_design_stress_note": "Maximum design stress = characteristic yield stress / 1.15 = 435 MPa (for fyk=500)",
+      "governing_note": "Minimum mandrel size may instead be governed by the standard bend-radius rule: for bar size < 20mm, mandrel = 4b; for bar size >= 20mm, mandrel = 7b — whichever is larger governs.",
+      "source": {"appendix": "B", "page": 183}
+    },
+    "precomputed_tables": {
+      "status": "NOT transcribed verbatim in this extraction",
+      "reason": "Six large lookup tables are given in the source (one per concrete strength class: 20/25, 25/30, 28/35, 30/37, 32/40, 35/45 fck/fcu), each cross-tabulating ab (5 values: 25,50,75,100,150-and-over) x actual ultimate bar stress (8 rows: 100-450 MPa in 50 steps) x bar diameter (7 columns: 10,12,16,20,25,32,40mm) = up to 280 numeric cells per table, 1680+ cells total. Every cell is a direct numeric evaluation of the bm_min formula above (confirmed by spot-checking several cells against the formula). Since the formula, its variables, and the governing units are DIRECTLY STATED and complete, these tables are DERIVED/computable outputs and are represented in 10_generator.py as a callable function (`large_diameter_bend_mandrel()`) rather than reproduced as static data, to avoid an enormous low-value data dump. If a compiler needs the exact printed table values for validation/QA against the source (e.g. to catch OCR/print rounding), the raw table pages (183-188) should be re-OCR'd directly rather than relying on this extraction.",
+      "pages": "183-188",
+      "concrete_classes_covered": ["20/25", "25/30", "28/35 (Nov 2006 amendment)", "30/37 (Nov 2006 amendment)", "32/40", "35/45"],
+      "ab_values_seen_mm": [25, 50, 75, 100, "150 and over"],
+      "stress_rows_seen_MPa": [100, 150, 200, 250, 300, 350, 400, 450],
+      "bar_diameters_seen_mm": [10, 12, 16, 20, 25, 32, 40]
+    }
+  },
+
+  "constraint_language_summary": {
+    "mandatory_shall": [
+      "Neither A nor (free dim) shall be less than P (Table B.1) — applies to essentially every shape code.",
+      "No other shape code number, form of designation or abbreviation shall be used in scheduling (code 99 rule).",
+      "A dimensioned sketch shall be drawn over dimension columns A-E for shape 99; every dimension shall be specified; the tolerance-absorbing dimension shall be indicated in parentheses.",
+      "The length of straight between two bends shall be at least 4d."
+    ],
+    "recommendation_preferable": [
+      "Note 1: near-90deg bends, it is preferable to specify shape code 99 with a fully dimensioned sketch."
+    ],
+    "practical_limits_may": [
+      "Note 2: 5 bends or more may be impractical within permitted tolerances."
+    ]
+  }
+}

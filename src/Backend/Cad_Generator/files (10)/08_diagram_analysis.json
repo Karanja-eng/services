@@ -1,0 +1,125 @@
+[
+  {
+    "figure": "MW1",
+    "page": 101,
+    "represents": "Wall vertical section at foundation/floor",
+    "geometry": [
+      "wall bars, kicker 75 (150 below ground), 'L' bars at bottom leg 450 (label), compression lap + 150 foundation tolerance, projection above floor = compression lap + kicker, U-bars at top"
+    ],
+    "dxf": [
+      "LWPOLYLINE bars",
+      "TEXT notes",
+      "table as TEXT/LINE"
+    ],
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MW2",
+    "page": 102,
+    "represents": "Plan of wall corner, Detail A normal, Detail B large moments (splay+diagonal)",
+    "geometry": [
+      "loops with tension laps",
+      "2 or 4 bars inside loop by t"
+    ],
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MW3",
+    "page": 103,
+    "represents": "Half landing detail: pre-bent bars flush with shutter, U-bars, 35 dim, tension lap, two fixing bars",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MW4",
+    "page": 104,
+    "represents": "Wall opening details A (top/bottom section) and B (side section)",
+    "geometry": [
+      "trimmers above/below and at sides; tension anchorage beyond trimmers; tension lap; U-bars"
+    ],
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "Wall drawing",
+    "page": 100,
+    "represents": "6.5.4 elevation+sections 1-1,2-2,3-3",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MRW1",
+    "page": 109,
+    "represents": "External cantilever wall section: earth face, granular fill, kicker 150/75, key, tension laps, 50/40 covers",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MRW2",
+    "page": 110,
+    "represents": "Basement wall section: ground beam, drain slot, waterbars, 300 min overlap, floor to falls",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MRW3",
+    "page": 111,
+    "represents": "Vertical joints plan details A construction/B full contraction/C movement joint",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "6.4 drawings",
+    "page": "107-108",
+    "represents": "Working drawings retaining walls (free-standing, basement)",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "Fig 6.28",
+    "page": 113,
+    "represents": "Pad footing/column strip straight bars, bob if anchorage < required",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "Table 6.10 sketches",
+    "page": 113,
+    "represents": "Pile-cap bar arrangements for 2,3,4,5?,6,7 piles (sketch details lost in extraction)",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "Fig 6.29-6.32",
+    "page": 114,
+    "represents": "Ground slab on ground (TL laps, 25/40 cover); beam between foundations (horizontal U-bars); nominal steel round ducts (TL); continuity across trenches (TA/TL)",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MF1-MF5",
+    "page": "118-122",
+    "represents": "Pad footing, pile cap, multi-column base, ground slab/beam, trench details",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "6.7.4 drawings",
+    "page": "116-117",
+    "represents": "Traditional and representational footing drawings",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "Fig 6.33",
+    "page": 124,
+    "represents": "Stair flight landing: landing span vs stair span, 20 deep formed recess, distribution reinforcement, landing starters confined to shaded area, section a-a",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "6.8.4 drawings",
+    "page": "125-126",
+    "represents": "End-supported (S1) and cantilever (S2) stair working drawings",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MST1",
+    "page": 127,
+    "represents": "End-supported stair with landings: tension anchorage/lap, 'A' extension, construction joints, U-bars 50% area",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  },
+  {
+    "figure": "MST2",
+    "page": 128,
+    "represents": "Cantilever stair from wall/edge beam, section A-A, H8 linking@300, H10 distribution@300",
+    "status": "INFERRED from image/text extraction (diagram geometry not quantitative unless dimensioned)"
+  }
+]

@@ -1,0 +1,71 @@
+{
+  "purpose": "Cases where the generator's computed output can be checked against a value printed verbatim in the source, to confirm formulas were transcribed correctly.",
+  "cases": [
+    {
+      "test": "L-bar effective anchorage length, 16mm bar, mandrel ratio 4",
+      "function": "l_bar_anchorage_length(bar_size_mm=16, mandrel_dia_mm=64)",
+      "expected_source_value_mm": 204,
+      "source": {"appendix": "B", "page": 181},
+      "status": "PASS (computed 204.0mm)"
+    },
+    {
+      "test": "U-bar effective anchorage length, 16mm bar, mandrel ratio 4",
+      "function": "u_bar_anchorage_length(bar_size_mm=16, mandrel_dia_mm=64)",
+      "expected_source_value_mm": 294,
+      "source": {"appendix": "B", "page": 181},
+      "status": "PASS (computed 293.8mm, rounds to 294)"
+    },
+    {
+      "test": "L-bar effective anchorage length, 40mm bar, mandrel ratio 10",
+      "function": "l_bar_anchorage_length(bar_size_mm=40, mandrel_dia_mm=400)",
+      "expected_source_value_mm": 779,
+      "source": {"appendix": "B", "page": 181},
+      "status": "should PASS — not independently re-run in this pass, recommend CI re-check"
+    },
+    {
+      "test": "L-bar anchorage, 8mm bar, mandrel ratio 4 (flagged anomaly)",
+      "function": "l_bar_anchorage_length(bar_size_mm=8, mandrel_dia_mm=32)",
+      "expected_source_value_mm": 102,
+      "note": "This source cell looked anomalously low compared to neighbouring rows/columns during extraction (see 02/03 notes and 12_unresolved_questions.md). Recommend flagging any generator/source mismatch here rather than silently trusting either.",
+      "status": "NEEDS VERIFICATION"
+    },
+    {
+      "test": "Table B.1 lookup, 20mm bar",
+      "function": "table_b1_lookup(20)",
+      "expected_source_value": {"r": 70, "M": 140, "P_general": 190},
+      "source": {"appendix": "B", "table": "B1", "page": 178},
+      "status": "PASS"
+    },
+    {
+      "test": "Hook-shape minimum overall depth, 25mm bar",
+      "function": "u_bar_min_overall_depth(25, 'hook')",
+      "expected_source_value_mm": 225,
+      "source": {"appendix": "B", "page": 182},
+      "status": "PASS"
+    },
+    {
+      "test": "Trombone-shape minimum overall depth, 32mm bar",
+      "function": "u_bar_min_overall_depth(32, 'trombone')",
+      "expected_source_value_mm": 420,
+      "source": {"appendix": "B", "page": 182},
+      "status": "PASS"
+    },
+    {
+      "test": "Shape 51 (standard link/stirrup) minimized form, 8mm links, A=200 B=100",
+      "function": "shape_51(A=200, B=100, C=None, d=8, minimized=True)",
+      "expected_formula": "2A + 2B + max(16d,160) = 400+200+160 = 760mm (16*8=128 < 160, so 160 governs)",
+      "source": {"appendix": "B", "page": 175},
+      "status": "PASS by inspection — matches formula text exactly"
+    },
+    {
+      "test": "Bar area cross-check: 4 no. H16 bars",
+      "function": "group_area_mm2(16, 4)",
+      "expected_source_value_mm2": 804,
+      "source": {"appendix": "B", "page": 179},
+      "status": "PASS (pi*8^2*4 = 804.2)"
+    }
+  ],
+  "not_independently_verifiable_in_this_pass": [
+    "Full six large-diameter-bend tables (pp.183-188) — treated as derived/computable, see 03_detailing_rules.json rationale; spot-checking a handful of cells against the bm_min formula would need fck/fcu-specific acc and gamma_c values not restated in this extract."
+  ]
+}

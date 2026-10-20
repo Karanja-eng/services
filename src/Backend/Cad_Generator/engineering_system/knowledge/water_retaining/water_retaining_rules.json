@@ -1,0 +1,216 @@
+{
+  "engineering_knowledge": {
+    "member_definition": {
+      "scope": "Detailing generally follows normal RC structures except reinforcement provision/spacing, cover, and durability requirements are more onerous. Governed by BS EN 1992-3 (EC2 Part 3).",
+      "key_difference_from_normal_structures": "Serviceability (crack width) often controls design/reinforcement quantity, not just ultimate strength. Construction and movement joints MUST be shown on drawings (not just specification) because reinforcement for thermal/shrinkage restraint depends on joint frequency/spacing \u2014 Designer's responsibility to position all joints."
+    },
+    "tightness_classes": {
+      "table_9_1": [
+        {
+          "class": 0,
+          "requirement": "Some leakage acceptable / leakage of liquids irrelevant."
+        },
+        {
+          "class": 1,
+          "requirement": "Leakage limited to small amount; some surface staining/damp patches acceptable."
+        },
+        {
+          "class": 2,
+          "requirement": "Leakage minimal; appearance not impaired by staining."
+        },
+        {
+          "class": 3,
+          "requirement": "No leakage permitted."
+        }
+      ],
+      "class_0_detail": "Same provisions as retaining walls apply. Minimum wall thickness 120mm.",
+      "class_1_detail": {
+        "min_wall_thickness_mm": 150,
+        "crack_width_formula": "wk1: for hD/hw \u2264 5, wk1=0.2mm; for hD/hw \u2265 25, wk1=0.05mm; linear interpolation between.",
+        "variables": {
+          "hD": "hydrostatic pressure head",
+          "hw": "wall thickness of containing structure"
+        },
+        "rationale": "Limiting crack width to these values should allow effective self-healing within a relatively short time."
+      },
+      "class_2_detail": {
+        "min_wall_thickness_mm": 150,
+        "note": "Cracks passing through full section thickness should generally be avoided unless liners/water bars incorporated."
+      },
+      "class_3_detail": "Special measures (liners or prestress) generally required.",
+      "aesthetic_case": "Where aesthetic appearance critical, crack width limited to 0.1mm."
+    },
+    "cover": {
+      "min_mm": 40,
+      "note": "Greater cover may be needed at faces in contact with aggressive soils, or subject to erosion/abrasion."
+    },
+    "spacing": [
+      {
+        "condition": "Tensile reinforcement, bar stress \u2264150 MPa",
+        "rule": "Bar spacing \u2264 250mm"
+      },
+      {
+        "condition": "Distribution bars",
+        "rule": "Spacing \u2264 150mm (preferably closer)"
+      },
+      {
+        "condition": "Higher bar stresses",
+        "rule": "Pitch reduces rapidly \u2014 see EC2 Part 3 Cl.7.3.3 (dependency, not fully restated here)"
+      }
+    ],
+    "prestressed_walls": {
+      "min_passive_reinforcement": "300 mm\u00b2/m or 0.001\u00b7Ac, each direction, each face."
+    },
+    "circular_tanks": {
+      "tendon_centroid_rule": "Should generally lie in outer third of wall thickness; may relax to outer half if cover otherwise impossible.",
+      "duct_diameter_limit": "\u2264 20% of wall thickness."
+    },
+    "opening_corners": {
+      "rule": "Detailing must ensure diagonal tension faces adequately catered for; strut-and-tie system (EC2 Cl.5.6.4) is an appropriate design approach."
+    },
+    "joint_types_shown": [
+      {
+        "name": "Construction joint (rebar continuous through joint, with hydrophilic strip)",
+        "components": [
+          "hydrophilic strip",
+          "crack inducer filled with sealing compound",
+          "rebar continuous through joint"
+        ]
+      },
+      {
+        "name": "Construction joint (rebar continuous, waterstop with crack inducer)",
+        "components": [
+          "waterstop",
+          "crack inducer",
+          "rebar continuous through joint"
+        ]
+      },
+      {
+        "name": "Movement joint (expansion type waterstop, rebar stopped at joint)",
+        "components": [
+          "compressible filler",
+          "expansion type waterstop",
+          "joint sealing compound",
+          "rebar stopped off at joint"
+        ]
+      }
+    ]
+  },
+  "rules": {
+    "decision_rules": [
+      {
+        "id": "WRS-001",
+        "rule": "IF designing reinforcement for a water-retaining member in a given direction THEN provide the LARGER of the reinforcement required for structural actions and the reinforcement required for restraint to thermal contraction/drying shrinkage.",
+        "type": "mandatory (governing case)"
+      },
+      {
+        "id": "WRS-002",
+        "rule": "Positions of ALL construction joints and movement joints MUST be shown on the detailed drawings (unlike normal structures where this may be left to specification).",
+        "type": "mandatory"
+      },
+      {
+        "id": "WRS-003",
+        "rule": "The Designer is responsible for positioning all joints, because thermal/shrinkage reinforcement quantity depends on joint frequency/spacing.",
+        "type": "mandatory (responsibility allocation)"
+      },
+      {
+        "id": "WRS-004",
+        "rule": "IF Tightness Class 0 THEN treat as for retaining walls; minimum wall thickness 120mm.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "WRS-005",
+        "rule": "IF Tightness Class 1 THEN limit full-depth cracks to wk1 (per hD/hw interpolation formula); minimum wall thickness 150mm.",
+        "type": "mandatory"
+      },
+      {
+        "id": "WRS-006",
+        "rule": "IF Tightness Class 2 THEN full-depth cracks should generally be avoided UNLESS liners/water bars are incorporated; minimum wall thickness 150mm.",
+        "type": "mandatory with conditional mitigation"
+      },
+      {
+        "id": "WRS-007",
+        "rule": "IF Tightness Class 3 THEN special measures (liners or prestress) are generally required.",
+        "type": "mandatory"
+      },
+      {
+        "id": "WRS-008",
+        "rule": "IF aesthetic appearance is critical THEN crack width should be limited to 0.1mm.",
+        "type": "conditional mandatory"
+      },
+      {
+        "id": "WRS-009",
+        "rule": "Nominal cover for water-retaining structures should not be less than 40mm; greater cover needed at faces exposed to aggressive soils/erosion/abrasion.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "WRS-010",
+        "rule": "IF tensile reinforcement bar stress \u2264150 MPa THEN bar spacing \u2264250mm; distribution bar spacing \u2264150mm (preferably closer). IF bar stress is higher THEN pitch must reduce rapidly per EC2 Part 3 Cl.7.3.3.",
+        "type": "mandatory maximum with conditional escalation"
+      },
+      {
+        "id": "WRS-011",
+        "rule": "IF a wall is prestressed THEN minimum passive reinforcement of 300mm\u00b2/m or 0.001\u00b7Ac is required in each direction and each face.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "WRS-012",
+        "rule": "IF detailing a circular tank THEN the centroid of horizontal prestressing tendons should generally lie in the outer third of the wall, relaxable to the outer half if cover otherwise impossible; duct diameter must not exceed 20% of wall thickness.",
+        "type": "recommendation with conditional relaxation + mandatory maximum"
+      },
+      {
+        "id": "WRS-013",
+        "rule": "IF detailing an opening corner THEN reinforcement must ensure diagonal tension faces are adequately catered for; a strut-and-tie approach (EC2 Cl.5.6.4) is appropriate.",
+        "type": "mandatory design approach"
+      }
+    ]
+  },
+  "parameters": {
+    "input_parameters": {
+      "tightness_class": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "wall_thickness_hw": {
+        "unit": "mm"
+      },
+      "hydrostatic_head_hD": {
+        "unit": "mm"
+      },
+      "bar_stress": {
+        "unit": "MPa"
+      },
+      "is_prestressed_wall": {
+        "type": "bool"
+      },
+      "is_circular_tank": {
+        "type": "bool"
+      },
+      "aesthetic_critical": {
+        "type": "bool"
+      }
+    },
+    "derived_parameters": {
+      "wk1_crack_width": "interpolate(hD/hw): 0.2mm at ratio<=5, 0.05mm at ratio>=25, linear between",
+      "min_wall_thickness": "120 (class0) / 150 (class1,2) / per special design (class3)",
+      "bar_spacing_max": "250mm (stress<=150MPa tensile) / 150mm (distribution bars)",
+      "prestressed_wall_min_reinf": "max(300 mm\u00b2/m, 0.001 \u00d7 Ac)"
+    },
+    "constraints": [
+      "cover >= 40mm",
+      "if aesthetic_critical: crack_width <= 0.1mm",
+      "if is_circular_tank: duct_diameter <= 0.2 \u00d7 wall_thickness"
+    ]
+  },
+  "recovered_information_pass": {
+    "provenance": "13_audit_recovered_information (1).md (Ch.9, pp.162–164)",
+    "W1_partial_joints_scope_limitation": "Partial joints are NOT covered in EC2, Part 3 (§9.1, p.162).",
+    "W2_durability_crack_control_clause": "EC2 Part 3, Clause 7 (§9.2.1, p.162).",
+    "W3_diffusion_caveat": "All concrete will permit the passage of small quantities of liquids and gases by diffusion, regardless of tightness class (p.162).",
+    "W4_tightness_class_1_healing_clause": "EC2 Part 3, Clause 7.3.1 (112) and (113) (p.162)."
+  }
+}

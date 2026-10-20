@@ -1,0 +1,31 @@
+{
+  "model_id": "beam",
+  "revision": 2,
+  "model_hash": "c48075a595e386cb73826319b4244d0c65bbc389bff7e0f7903110916b0e1470",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "links": [
+    {
+      "model_id": "beam",
+      "internal_id": "beam.beam",
+      "ifc_guid": "1ShFAenkrKnv1$o4$YWXpg",
+      "ifc_class": "IfcBeam",
+      "dxf_handle": "45",
+      "drawing_id": "beam-r2",
+      "layer": "CONCRETE",
+      "fingerprint": "89ece9e4936c4f51dd03e482a80b9353262d1555c65f2aeceee16f4a28020246",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T19:15:12+00:00"
+    }
+  ],
+  "by_status": {
+    "ok": 1
+  }
+}

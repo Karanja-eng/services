@@ -1,0 +1,245 @@
+{
+  "corbels_half_joints_nibs": {
+    "decision_rules": [
+      {
+        "id": "CBL-001",
+        "rule": "IF member is a corbel/half-joint/nib THEN concrete grade shall not normally be lower than 28/35 MPa (cylinder/cube).",
+        "type": "mandatory (normal practice — 'not normally used')",
+        "source": {"section": "6.9.2", "page": 129}
+      },
+      {
+        "id": "CBL-002",
+        "rule": "IF corbel is for internal use THEN nominal cover = 25mm + Δcdev (XC1). IF for external use THEN nominal cover = 35mm + Δcdev (XC3).",
+        "type": "mandatory",
+        "source": {"section": "6.9.2", "page": 129}
+      },
+      {
+        "id": "CBL-003",
+        "rule": "IF continuous nib or slab half joint is for internal use THEN cover = 20mm or bar size (whichever greater). IF external use THEN cover = 40mm.",
+        "type": "mandatory",
+        "source": {"section": "6.9.2", "page": 129}
+      },
+      {
+        "id": "CBL-004",
+        "rule": "IF nominal cover to grouped bars is being detailed THEN use the cover for the equivalent bar size (per 5.8, general chapter).",
+        "type": "mandatory",
+        "dependency": "General Detailing chapter §5.8"
+      },
+      {
+        "id": "CBL-005",
+        "rule": "IF nominal cover exceeds 40mm AND 4-hour fire resistance is required THEN supplementary reinforcement may be required (axis distance to main reinforcement exceeds 70mm).",
+        "type": "conditional requirement",
+        "source": {"clause": "EC2 Part 1.2 Cl.4.5.2"}
+      },
+      {
+        "id": "CBL-006",
+        "rule": "IF designing corbel tension reinforcement THEN As,min ≥ 0.0014·bt·d.",
+        "type": "mandatory minimum",
+        "source": {"clause": "EC2 9.2.1.1", "page": 129}
+      },
+      {
+        "id": "CBL-007",
+        "rule": "IF designing corbel compression reinforcement THEN Asc,min ≥ 0.002·Ac.",
+        "type": "mandatory minimum",
+        "source": {"clause": "EC2 9.3.1.1"}
+      },
+      {
+        "id": "CBL-008",
+        "rule": "IF designing half-joint/nib tension reinforcement for Grade 28/35 concrete and fyk=500 THEN As,min = 0.0014·bt·d (else use general formula As,min = 0.26·bt·d·fctm/fyk ≥ 0.0013·bt·d).",
+        "type": "mandatory minimum",
+        "source": {"clause": "EC2 9.3.1.2"}
+      },
+      {
+        "id": "CBL-009",
+        "rule": "IF selecting bar diameter for half joint/nib main reinforcement THEN preferred minimum diameter = 10mm.",
+        "type": "recommendation ('preferred')"
+      },
+      {
+        "id": "CBL-010",
+        "rule": "IF spacing bars requiring poker-vibrator access THEN minimum pitch = 75mm.",
+        "type": "mandatory ('must be allowed')"
+      },
+      {
+        "id": "CBL-011",
+        "rule": "IF bars are vertically stacked THEN minimum vertical space between individual bars = 25mm or bar size, whichever greater.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "CBL-012",
+        "rule": "IF continuous nib main bars are in a general (non-concentrated-load) area THEN max pitch = 3h ≤ 400mm. IF in a concentrated-load area THEN max pitch = 2h ≤ 250mm.",
+        "type": "mandatory maximum"
+      },
+      {
+        "id": "CBL-013",
+        "rule": "IF continuous nib secondary bars are in a general area THEN max pitch = 3.5h ≤ 450mm. IF in a concentrated-load area THEN max pitch = 3h ≤ 400mm.",
+        "type": "mandatory maximum"
+      },
+      {
+        "id": "CBL-014",
+        "rule": "IF anchoring any bar in this topic THEN minimum anchorage length = greater of (10 × bar diameter) or 100mm.",
+        "type": "mandatory minimum",
+        "source": {"clause": "EC2 8.4, 8.7"}
+      },
+      {
+        "id": "CBL-015",
+        "rule": "IF selecting bar diameters for corbels/half joints/nibs in general THEN small diameters (≤16mm) should be used; IF larger diameters are used THEN welding is likely required, and this should normally be done off-site under factory conditions.",
+        "type": "recommendation / conditional consequence",
+        "source": {"section": "6.9.2", "page": 129}
+      },
+      {
+        "id": "CBL-016",
+        "rule": "IF detailing corbel main tensile reinforcement THEN small bar diameters, horizontal U-bars or links with easy bends are preferred (Model Detail MCB1). IF loading is high and geometry restrictive THEN large diameter bars may be necessary, requiring welding to a cross bar/plate (Model Detail MCB2), sized to weld strength.",
+        "type": "recommendation with conditional escalation",
+        "source": {"section": "6.9.2", "page": 129}
+      },
+      {
+        "id": "CBL-017",
+        "rule": "IF detailing corbel main tensile reinforcement THEN it must extend as close to the outer face of the corbel as possible AND extend beyond the load-bearing area by at least the Model-Detail-specified minimum distance.",
+        "type": "mandatory ('essential')"
+      },
+      {
+        "id": "CBL-018",
+        "rule": "IF large horizontal forces must be transmitted into a corbel THEN a welded joint may be the only suitable solution.",
+        "type": "conditional recommendation"
+      },
+      {
+        "id": "CBL-019",
+        "rule": "IF detailing half joints in beams THEN inclined bars provide better crack control than other reinforcement arrangements, BUT they are often difficult to fix and can cause congestion — great care is needed, especially with large bar diameters and welded solutions.",
+        "type": "recommendation with caution",
+        "source": {"clause": "EC2 6.2, 6.5, Annex J"}
+      },
+      {
+        "id": "CBL-020",
+        "rule": "IF detailing continuous nibs THEN vertical U-bars or links should be used wherever possible (Model Detail MN1). IF a shallow nib is required (e.g. to support brickwork) THEN horizontal U-bars should be used instead (Model Detail MN2).",
+        "type": "recommendation with conditional alternative",
+        "source": {"section": "6.9.2", "page": 130}
+      },
+      {
+        "id": "CBL-021",
+        "rule": "IF detailing a continuous nib THEN the vertical leg of the links in the SUPPORTING beam must be designed to carry the loads from the nib, AND the effective depth d of that beam must be reduced because concrete in the nib below the vertical beam link does not contribute to resistance.",
+        "type": "mandatory ('must')"
+      },
+      {
+        "id": "CBL-022",
+        "rule": "IF horizontal movement may occur between a nib and the supported member THEN the outer edge of the nib should be given a 20mm chamfer.",
+        "type": "conditional recommendation"
+      },
+      {
+        "id": "CBL-023",
+        "rule": "IF detailing edge distance from bearing to reinforcement (Model Details MCB1/MHJ/MN1) THEN distance = minimum of (bar diameter) or (0.75 × cover), whichever is GREATER.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "CBL-024",
+        "rule": "IF detailing Model Detail MCB1 or MCB2 THEN compression bar area ≥ 1000 mm²/metre width of corbel, AND secondary horizontal reinforcement / horizontal links area ≥ 0.50 × area of main tensile reinforcement.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "CBL-025",
+        "rule": "IF using Model Detail MCB1 (without welds) THEN main tensile reinforcement bar size should be ≤16mm. IF using Model Detail MCB2 (with welds) THEN main tensile reinforcement bar size should be ≤20mm.",
+        "type": "detail-specific constraint (design suitability limit)"
+      },
+      {
+        "id": "CBL-026",
+        "rule": "IF detailing a corbel THEN two column links should be placed close to the corbel top.",
+        "type": "mandatory ('should')"
+      },
+      {
+        "id": "CBL-027",
+        "rule": "IF detailing Model Detail MN1 nib links THEN link diameter must not be more than 12mm.",
+        "type": "mandatory maximum"
+      },
+      {
+        "id": "CBL-028",
+        "rule": "IF detailing Model Detail MN2 (shallow nib) THEN nib depth must not be less than 140mm, horizontal U-bar diameter must not be more than 16mm, and U-bar pitch must not be more than 250mm.",
+        "type": "mandatory constraints"
+      },
+      {
+        "id": "CBL-029",
+        "rule": "IF detailing Model Detail MN1 THEN minimum nominal overlap between reinforcement in the nib and reinforcement in the supported member = 60mm.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "CBL-030",
+        "rule": "IF a lacer bar is used with MN2 horizontal U-bars THEN it must be wired to at least two main longitudinal bars.",
+        "type": "mandatory"
+      }
+    ],
+    "constraints_by_strength": {
+      "mandatory_shall_must": ["CBL-006","CBL-007","CBL-008","CBL-010","CBL-011","CBL-012","CBL-013","CBL-014","CBL-017","CBL-021","CBL-023","CBL-024","CBL-027","CBL-028","CBL-029","CBL-030"],
+      "recommendation_should": ["CBL-009","CBL-015","CBL-016","CBL-019","CBL-020","CBL-022","CBL-026"],
+      "typical_practice_normal": ["CBL-001"],
+      "example_or_optional": ["CBL-018 (may be the only suitable solution — conditional, not universal)"]
+    }
+  },
+
+  "prestressed_concrete": {
+    "decision_rules": [
+      {"id": "PST-001", "rule": "IF a prestressed concrete structure is being detailed THEN a separate set of drawings must be prepared detailing the prestress, in addition to general arrangement/reinforcement drawings.", "type": "mandatory"},
+      {"id": "PST-002", "rule": "IF the prestressing system is not shown on drawings, or an alternative to the detailed system is permitted, THEN the drawings must state that the choice is left to the specialist contractor.", "type": "mandatory"},
+      {"id": "PST-003", "rule": "IF a contractor proposes an alternative prestressing system THEN the original Detailer/Designer should check it, particularly any required reinforcement modifications.", "type": "mandatory ('should')"},
+      {"id": "PST-004", "rule": "IF a clash occurs between tendons and reinforcement bars (links or main steel), inserts, or pipes THEN tendons should take priority — this must be stated on the drawings.", "type": "mandatory"},
+      {"id": "PST-005", "rule": "Calcium chloride or other harmful/corrosive additives must NOT be used with prestressing tendons — must be stated on drawings.", "type": "mandatory prohibition"},
+      {"id": "PST-006", "rule": "IF designed for symmetrical concrete sections with pre-tensioned tendons THEN the centroid of the tendons should lie on the vertical centroidal axis.", "type": "recommendation"},
+      {"id": "PST-007", "rule": "IF spacing post-tensioning couplers THEN they should be located away from intermediate supports, AND placing couplers on 50% or more of the tendons at one cross-section should be avoided.", "type": "recommendation with explicit avoidance threshold"},
+      {"id": "PST-008", "rule": "IF a designed tendon deviation is ≤ 0.01 radians THEN a deviator is not required.", "type": "conditional permission"},
+      {"id": "PST-009", "rule": "IF determining Δcdev for prestressing THEN use 10mm, UNLESS special control measures are in place, in which case 5mm may be used.", "type": "mandatory with conditional reduction"},
+      {"id": "PST-010", "rule": "IF a one-way spanning floor uses bonded tendons THEN there are no minimum un-tensioned reinforcement requirements (sufficient tendon-concrete bond assumed) — BUT sufficient reinforcement must still guard against pre-stressing cracking if early phased stressing is not used.", "type": "conditional exemption with caveat"},
+      {"id": "PST-011", "rule": "IF a one-way spanning floor uses unbonded tendons THEN minimum reinforcement per EC2 Section 9 is required, spread evenly across the full slab width per EC2 Sections 8 and 9 spacing rules.", "type": "mandatory"},
+      {"id": "PST-012", "rule": "IF a flat slab (two-way, discrete column supports) is detailed THEN minimum un-tensioned reinforcement at column positions = 0.075% (0.00075·Ac) of gross concrete cross-section, concentrated between lines 1.5×slab-depth either side of the column width, near top of floor, max pitch 300mm, extending at least an anchorage length beyond 0.2×L into span (or as required by calculation).", "type": "mandatory minimum with geometric placement rule"},
+      {"id": "PST-013", "rule": "IF a flat slab uses unbonded tendons in the span zone THEN designed un-tensioned bottom reinforcement is normally necessary, extending to within 0.2×L (plus anchorage length) from support centreline, spaced at 3×slab thickness or 500mm (lesser).", "type": "conditional mandatory"},
+      {"id": "PST-014", "rule": "IF a flat slab hogging region is detailed THEN minimum reinforcement (or bonded tendons) of 0.1% is required, spacing ≤500mm.", "type": "mandatory minimum"},
+      {"id": "PST-015", "rule": "IF fire rating > 2 hours is required AND no other reinforcement is provided in the soffit THEN anti-spalling reinforcement should be placed in the soffit.", "type": "conditional recommendation"},
+      {"id": "PST-016", "rule": "IF designing end-block bursting reinforcement THEN it should be closed hoops/spirals, detailed with full tensile laps and large-radius bends, positioned as near as possible to the outer edge of the loaded-area-similar prism and at least 50mm outside the anchor-plate edge, distributed through 0.2yo–2yo from the loaded face, at a design stress of 200 N/mm².", "type": "mandatory design/detailing method"},
+      {"id": "PST-017", "rule": "IF proprietary anchorages include spirals as part of the anchorage system THEN additional reinforcement may still be required to fully resist bursting forces.", "type": "conditional requirement"},
+      {"id": "PST-018", "rule": "IF reinforcement links serve adjacent anchorages THEN they should be overlapped, with longitudinal bars positioned in the corners.", "type": "recommendation"},
+      {"id": "PST-019", "rule": "IF detailing end-block corner bars THEN they should have large radius bends to avoid crushing concrete, OR pass round a longitudinal bar/tendon of at least the same diameter.", "type": "mandatory (either/or)"},
+      {"id": "PST-020", "rule": "IF couplers on 50%+ of tendons occur at one cross-section (avoided per PST-007) BUT still used THEN cracking must be controlled by distributing tendons around the cross-section, providing fully anchored reinforcement, or leaving some tendons uncoupled across the joint.", "type": "mitigating requirement"},
+      {"id": "PST-021", "rule": "IF unstressed zones exist near slab edges (post-tensioned) THEN reinforcement perpendicular to the edge = greater of 0.13%·b·h or 1/4 of reinforcement parallel to edge, placed evenly between anchorages, extending the greater of la or 0.7·la plus a full anchorage length into the slab.", "type": "mandatory minimum"},
+      {"id": "PST-022", "rule": "IF an infill strip is required in a prestressed element THEN it should be designed as a reinforced concrete element and suitably reinforced, with minimum time before concreting specified on drawings.", "type": "mandatory"},
+      {"id": "PST-023", "rule": "IF stiff points (e.g. core walls) occur near a post-tensioned floor THEN additional reinforcement may be required for shrinkage cracking, shown on reinforcement drawings.", "type": "conditional requirement"},
+      {"id": "PST-024", "rule": "IF a post-tensioned slab/frame is detailed THEN long-term movements at movement joints (accounting for long-term creep/shrinkage) must be specified on drawings.", "type": "mandatory"},
+      {"id": "PST-025", "rule": "IF pre-tensioned tendons are concentrated in groups (not evenly distributed) THEN overall internal equilibrium of the transmission zone should be considered and reinforcement provided as necessary; IF tendons are distributed per the linear prestress distribution remote from the transmission zone THEN no additional reinforcement is needed there.", "type": "conditional requirement"},
+      {"id": "PST-026", "rule": "IF detailing the end zone of a pre-tensioned beam THEN it is recommended to design/detail it as a reinforced concrete element with longitudinal and shear reinforcement, typically standard stirrups at closer spacing (e.g. 75mm) in the transmission zone.", "type": "recommendation"},
+      {"id": "PST-027", "rule": "IF locating construction joints in prestressed elements THEN avoid cast-in components (anchorages, couplers); where joints intersect duct planes, position to avoid areas with restricted vibration/scabbling access.", "type": "mandatory avoidance rule"},
+      {"id": "PST-028", "rule": "IF using unbonded tendons THEN a safe de-stressing method/sequence prior to demolition must be specified per current CDM regulations, due to risk of sudden high-energy release.", "type": "mandatory (safety)"}
+    ]
+  },
+
+  "precast_concrete": {
+    "decision_rules": [
+      {"id": "PRE-001", "rule": "IF a precast unit exceeds 27.4m length, 4.88m height, or falls in the 3.5–5m width band, OR total vehicle+load weight exceeds 44 tonnes THEN special dispensation/notification from the Department for Transport / police is required, per the stated thresholds.", "type": "mandatory (regulatory)"},
+      {"id": "PRE-002", "rule": "IF a unit is cast onto another precast unit (partial unit) THEN each drawing must clearly state which weights apply and that they are for part units only.", "type": "mandatory"},
+      {"id": "PRE-003", "rule": "IF in-situ concrete is placed adjacent to precast units (e.g. infill slab) THEN the precast units must have a key joint cast into the mutual face for mechanical anchorage/shear, and the precast face must be properly prepared (e.g. scabbled while green).", "type": "mandatory"},
+      {"id": "PRE-004", "rule": "IF reinforcement is used as a lifting point THEN this is generally not considered suitable, UNLESS done with proper care, testing, and risk assessment (as some manufacturers do).", "type": "recommendation against, with conditional exception"},
+      {"id": "PRE-005", "rule": "IF units are of complex shape or require high-quality single-piece-mould finish THEN they should be discussed with a precaster before finalizing details, and a de-moulding drawing is necessary.", "type": "recommendation"},
+      {"id": "PRE-006", "rule": "IF chloride exposure risk exists (e.g. bridges/car parks, XD3) THEN joints between precast units require special corrosion-protection attention.", "type": "conditional mandatory"}
+    ]
+  },
+
+  "water_retaining_structures": {
+    "decision_rules": [
+      {"id": "WRS-001", "rule": "IF designing reinforcement for a water-retaining member in a given direction THEN provide the LARGER of the reinforcement required for structural actions and the reinforcement required for restraint to thermal contraction/drying shrinkage.", "type": "mandatory (governing case)"},
+      {"id": "WRS-002", "rule": "Positions of ALL construction joints and movement joints MUST be shown on the detailed drawings (unlike normal structures where this may be left to specification).", "type": "mandatory"},
+      {"id": "WRS-003", "rule": "The Designer is responsible for positioning all joints, because thermal/shrinkage reinforcement quantity depends on joint frequency/spacing.", "type": "mandatory (responsibility allocation)"},
+      {"id": "WRS-004", "rule": "IF Tightness Class 0 THEN treat as for retaining walls; minimum wall thickness 120mm.", "type": "mandatory minimum"},
+      {"id": "WRS-005", "rule": "IF Tightness Class 1 THEN limit full-depth cracks to wk1 (per hD/hw interpolation formula); minimum wall thickness 150mm.", "type": "mandatory"},
+      {"id": "WRS-006", "rule": "IF Tightness Class 2 THEN full-depth cracks should generally be avoided UNLESS liners/water bars are incorporated; minimum wall thickness 150mm.", "type": "mandatory with conditional mitigation"},
+      {"id": "WRS-007", "rule": "IF Tightness Class 3 THEN special measures (liners or prestress) are generally required.", "type": "mandatory"},
+      {"id": "WRS-008", "rule": "IF aesthetic appearance is critical THEN crack width should be limited to 0.1mm.", "type": "conditional mandatory"},
+      {"id": "WRS-009", "rule": "Nominal cover for water-retaining structures should not be less than 40mm; greater cover needed at faces exposed to aggressive soils/erosion/abrasion.", "type": "mandatory minimum"},
+      {"id": "WRS-010", "rule": "IF tensile reinforcement bar stress ≤150 MPa THEN bar spacing ≤250mm; distribution bar spacing ≤150mm (preferably closer). IF bar stress is higher THEN pitch must reduce rapidly per EC2 Part 3 Cl.7.3.3.", "type": "mandatory maximum with conditional escalation"},
+      {"id": "WRS-011", "rule": "IF a wall is prestressed THEN minimum passive reinforcement of 300mm²/m or 0.001·Ac is required in each direction and each face.", "type": "mandatory minimum"},
+      {"id": "WRS-012", "rule": "IF detailing a circular tank THEN the centroid of horizontal prestressing tendons should generally lie in the outer third of the wall, relaxable to the outer half if cover otherwise impossible; duct diameter must not exceed 20% of wall thickness.", "type": "recommendation with conditional relaxation + mandatory maximum"},
+      {"id": "WRS-013", "rule": "IF detailing an opening corner THEN reinforcement must ensure diagonal tension faces are adequately catered for; a strut-and-tie approach (EC2 Cl.5.6.4) is appropriate.", "type": "mandatory design approach"}
+    ]
+  },
+
+  "general_terminology_constraint_map": {
+    "shall_must": "mandatory requirement — non-negotiable per code/manual",
+    "should": "strong recommendation — deviation requires justification",
+    "may": "optional / permitted arrangement, contingent on stated conditions",
+    "not_permitted_avoid": "prohibition",
+    "typical_normal_practice": "convention, not a hard rule (e.g. 'concrete grades lower than 28/35 are not normally used')"
+  }
+}

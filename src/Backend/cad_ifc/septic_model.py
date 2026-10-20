@@ -428,6 +428,9 @@ def build_model(params: Dict[str, Any] | None = None, *, model_id: str = SEPTIC_
 
     model = {
         "schema": CANONICAL_SCHEMA,
+        # Recorded explicitly so a document is self-describing even though this
+        # generator keeps its historical schema id (canonical.LEGACY_SCHEMA_IDS).
+        "schema_version": "1.0.0",
         "model_id": model_id,
         "generator": "takeoff2/septik/SepticScene",
         "name": "Septic tank, inspection chamber and connection",

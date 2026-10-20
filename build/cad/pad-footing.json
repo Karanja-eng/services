@@ -1,0 +1,153 @@
+{
+  "schema": "fundi.canonical",
+  "schema_version": "1.0.0",
+  "model_id": "pad-footing",
+  "name": "Pad footing (MF1)",
+  "description": "RC pad footing: plan and section with bottom mesh, starter bars and column stub.",
+  "generator": "pad_footing",
+  "generator_module": "engineering_system.members.foundation",
+  "source_params": {
+    "lx_mm": 2500.0,
+    "ly_mm": 2500.0,
+    "depth_mm": 600.0,
+    "cx_mm": 400.0,
+    "cy_mm": 400.0,
+    "bar_dia_mm": 25,
+    "pitch_mm": 200.0,
+    "cover_mm": 75.0,
+    "concrete_grade": "28/35",
+    "bond": "good",
+    "n_starters": 4,
+    "starter_dia_mm": 20,
+    "starter_leg_mm": 450.0
+  },
+  "units": {
+    "length": "metre",
+    "area": "square_metre",
+    "volume": "cubic_metre",
+    "angle": "degree",
+    "frame": "Z-up right-handed",
+    "origin": "project origin at finished ground level of level L0"
+  },
+  "levels": [
+    {
+      "id": "pad-footing:L0",
+      "name": "Level 1",
+      "elevation_m": 0.0,
+      "description": "Single storey used by the member model detail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "pad-footing.footing",
+      "element_type": "pad-footing",
+      "ifc_class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": "Pad footing",
+      "role": "footing",
+      "level_id": "pad-footing:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 2.5,
+        "width_y": 2.5,
+        "height_z": 0.6
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.3
+      },
+      "rotation_z_deg": 0.0,
+      "material": "28/35",
+      "material_properties": {
+        "designation": "28/35",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "lx_mm": 2500.0,
+        "ly_mm": 2500.0,
+        "depth_mm": 600.0,
+        "cx_mm": 400.0,
+        "cy_mm": 400.0,
+        "bar_dia_mm": 25,
+        "pitch_mm": 200.0,
+        "cover_mm": 75.0,
+        "concrete_grade": "28/35",
+        "bond": "good",
+        "n_starters": 4,
+        "starter_dia_mm": 20,
+        "starter_leg_mm": 450.0,
+        "length_x_m": 2.5,
+        "width_y_m": 2.5,
+        "depth_m": 0.6,
+        "column_stub_x_m": 0.4,
+        "column_stub_y_m": 0.4,
+        "effective_depth_m": 0.4875,
+        "anchorage_provided_m": 0.975,
+        "anchorage_required_m": 0.925
+      },
+      "reinforcement": {
+        "bottom_bar_mm": 25,
+        "bottom_pitch_mm": 200.0,
+        "cover_mm": 75.0,
+        "starter_bar_mm": 20,
+        "starter_count": 4,
+        "starter_lap_mm": 1270.0
+      },
+      "provenance": {
+        "generator": "pad_footing",
+        "generator_label": "Pad footing (MF1)",
+        "params_module": "engineering_system.members.foundation",
+        "params_class": "PadFootingParams",
+        "model_class": "PadFootingEngineeringModel",
+        "drawing_number": "PAD-01",
+        "drawing_title": "Pad Footing Plan & Section (Model Detail MF1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "lx_mm": 2500.0,
+          "ly_mm": 2500.0,
+          "depth_mm": 600.0,
+          "cx_mm": 400.0,
+          "cy_mm": 400.0,
+          "bar_dia_mm": 25,
+          "pitch_mm": 200.0,
+          "cover_mm": 75.0,
+          "concrete_grade": "28/35",
+          "bond": "good",
+          "n_starters": 4,
+          "starter_dia_mm": 20,
+          "starter_leg_mm": 450.0
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": []
+      },
+      "validation": {
+        "state": "ok",
+        "warnings": []
+      },
+      "representations": {},
+      "volume_m3": 3.75,
+      "fingerprint": "99ec10968489bcadd9bf729a235abdf1976117835f48f7babcaf6ba11a06d97d"
+    }
+  ],
+  "relationships": [],
+  "warnings": [],
+  "statistics": {
+    "element_count": 1,
+    "by_ifc_class": {
+      "IfcFooting": 1
+    },
+    "by_element_type": {
+      "pad-footing": 1
+    },
+    "total_volume_m3": 3.75,
+    "levels": 1,
+    "relationships": 0,
+    "elements_with_warnings": 0
+  },
+  "model_hash": "eee9bae2c647398c6700257588c342266cbd78587a1e448eaa7d240a034103a6"
+}

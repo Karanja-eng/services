@@ -1,0 +1,146 @@
+{
+  "schema": "fundi.canonical",
+  "schema_version": "1.0.0",
+  "model_id": "wall",
+  "name": "RC wall (MW1)",
+  "description": "RC wall: plan section and elevation with vertical/horizontal reinforcement and optional opening.",
+  "generator": "wall",
+  "generator_module": "engineering_system.members.wall",
+  "source_params": {
+    "thickness_mm": 250.0,
+    "length_mm": 2400.0,
+    "height_mm": 3000.0,
+    "concrete_grade": "28/35",
+    "exposure": "internal",
+    "dcdev_mm": 10.0,
+    "vertical_dia_mm": 0,
+    "vertical_pitch_mm": 0,
+    "horizontal_dia_mm": 0,
+    "horizontal_pitch_mm": 0,
+    "opening": "",
+    "kicker_height_mm": 75.0
+  },
+  "units": {
+    "length": "metre",
+    "area": "square_metre",
+    "volume": "cubic_metre",
+    "angle": "degree",
+    "frame": "Z-up right-handed",
+    "origin": "project origin at finished ground level of level L0"
+  },
+  "levels": [
+    {
+      "id": "wall:L0",
+      "name": "Level 1",
+      "elevation_m": 0.0,
+      "description": "Single storey used by the member model detail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "wall.wall",
+      "element_type": "wall",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "RC wall",
+      "role": "wall",
+      "level_id": "wall:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 2.4,
+        "width_y": 0.25,
+        "height_z": 3.0
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.5
+      },
+      "rotation_z_deg": 0.0,
+      "material": "28/35",
+      "material_properties": {
+        "designation": "28/35",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "thickness_mm": 250.0,
+        "length_mm": 2400.0,
+        "height_mm": 3000.0,
+        "concrete_grade": "28/35",
+        "exposure": "internal",
+        "dcdev_mm": 10.0,
+        "vertical_dia_mm": 0,
+        "vertical_pitch_mm": 0,
+        "horizontal_dia_mm": 0,
+        "horizontal_pitch_mm": 0,
+        "opening": "",
+        "kicker_height_mm": 75.0,
+        "length_m": 2.4,
+        "thickness_m": 0.25,
+        "height_m": 3.0,
+        "As_vertical_mm2_per_m": 1130.973,
+        "As_horizontal_mm2_per_m": 392.699
+      },
+      "reinforcement": {
+        "vertical_bar_mm": 12,
+        "vertical_pitch_mm": 200,
+        "horizontal_bar_mm": 10,
+        "horizontal_pitch_mm": 200,
+        "cover_mm": 20.0
+      },
+      "provenance": {
+        "generator": "wall",
+        "generator_label": "RC wall (MW1)",
+        "params_module": "engineering_system.members.wall",
+        "params_class": "WallParams",
+        "model_class": "WallEngineeringModel",
+        "drawing_number": "WALL-01",
+        "drawing_title": "RC Wall Elevation & Section (Model Detail MW1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "thickness_mm": 250.0,
+          "length_mm": 2400.0,
+          "height_mm": 3000.0,
+          "concrete_grade": "28/35",
+          "exposure": "internal",
+          "dcdev_mm": 10.0,
+          "vertical_dia_mm": 0,
+          "vertical_pitch_mm": 0,
+          "horizontal_dia_mm": 0,
+          "horizontal_pitch_mm": 0,
+          "opening": "",
+          "kicker_height_mm": 75.0
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": []
+      },
+      "validation": {
+        "state": "ok",
+        "warnings": []
+      },
+      "representations": {},
+      "volume_m3": 1.8,
+      "fingerprint": "19355856c6481e2559a48c4ac33143ed9f2d083fc534d4524ea9258f4c9a3e52"
+    }
+  ],
+  "relationships": [],
+  "warnings": [],
+  "statistics": {
+    "element_count": 1,
+    "by_ifc_class": {
+      "IfcWall": 1
+    },
+    "by_element_type": {
+      "wall": 1
+    },
+    "total_volume_m3": 1.8,
+    "levels": 1,
+    "relationships": 0,
+    "elements_with_warnings": 0
+  },
+  "model_hash": "715ec573e07a8d953d1bee883b0b4deafd02d1e84fca562aa830579864dbdd83"
+}

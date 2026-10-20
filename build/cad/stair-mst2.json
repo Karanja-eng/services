@@ -1,0 +1,266 @@
+{
+  "schema": "fundi.canonical",
+  "schema_version": "1.0.0",
+  "model_id": "stair-mst2",
+  "name": "Stair flight MST2 (cantilever)",
+  "description": "Cantilever RC stair flight: section A-A with waist, main bars and distribution bars.",
+  "generator": "stair_mst2",
+  "generator_module": "engineering_system.members.stair",
+  "source_params": {
+    "stair_type": "MST2",
+    "going_mm": 250.0,
+    "rise_mm": 175.0,
+    "n_steps": 12,
+    "waist_mm": 200.0,
+    "landing_length_mm": 0.0,
+    "concrete_grade": "30/37",
+    "exposure": "internal",
+    "dcdev_mm": 10.0,
+    "main_dia_mm": 12,
+    "main_pitch_mm": 150.0,
+    "distribution_dia_mm": 10,
+    "distribution_pitch_mm": 300.0,
+    "link_dia_mm": 8,
+    "link_pitch_mm": 300.0,
+    "bond": "good",
+    "cover_mm": 0.0
+  },
+  "units": {
+    "length": "metre",
+    "area": "square_metre",
+    "volume": "cubic_metre",
+    "angle": "degree",
+    "frame": "Z-up right-handed",
+    "origin": "project origin at finished ground level of level L0"
+  },
+  "levels": [
+    {
+      "id": "stair-mst2:L0",
+      "name": "Level 1",
+      "elevation_m": 0.0,
+      "description": "Single storey used by the member model detail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "stair-mst2.stair",
+      "element_type": "stair",
+      "ifc_class": "IfcStair",
+      "predefined_type": "STRAIGHT_RUN_STAIR",
+      "name": "Stair flight (aggregate)",
+      "role": "stair",
+      "level_id": "stair-mst2:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 3.0,
+        "width_y": 1.0,
+        "height_z": 2.1
+      },
+      "placement": {
+        "x": 1.5,
+        "y": 0.0,
+        "z": 1.05
+      },
+      "rotation_z_deg": 0.0,
+      "material": "30/37",
+      "material_properties": {
+        "designation": "30/37",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "stair_type": "MST2",
+        "going_mm": 250.0,
+        "rise_mm": 175.0,
+        "n_steps": 12,
+        "waist_mm": 200.0,
+        "landing_length_mm": 0.0,
+        "concrete_grade": "30/37",
+        "exposure": "internal",
+        "dcdev_mm": 10.0,
+        "main_dia_mm": 12,
+        "main_pitch_mm": 150.0,
+        "distribution_dia_mm": 10,
+        "distribution_pitch_mm": 300.0,
+        "link_dia_mm": 8,
+        "link_pitch_mm": 300.0,
+        "bond": "good",
+        "cover_mm": 0.0,
+        "run_m": 3.0,
+        "rise_total_m": 2.1,
+        "slope_length_m": 3.661966685,
+        "waist_m": 0.2,
+        "landing_length_m": 0.0,
+        "step_count": 12,
+        "going_m": 0.25,
+        "rise_m": 0.175,
+        "slope_angle_deg": 34.99202
+      },
+      "reinforcement": {},
+      "provenance": {
+        "generator": "stair_mst2",
+        "generator_label": "Stair flight MST2 (cantilever)",
+        "params_module": "engineering_system.members.stair",
+        "params_class": "StairParams",
+        "model_class": "StairEngineeringModel",
+        "drawing_number": "STR-02",
+        "drawing_title": "Cantilever Stair Section A-A (Model Detail MST2)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "stair_type": "MST2",
+          "going_mm": 250.0,
+          "rise_mm": 175.0,
+          "n_steps": 12,
+          "waist_mm": 200.0,
+          "landing_length_mm": 0.0,
+          "concrete_grade": "30/37",
+          "exposure": "internal",
+          "dcdev_mm": 10.0,
+          "main_dia_mm": 12,
+          "main_pitch_mm": 150.0,
+          "distribution_dia_mm": 10,
+          "distribution_pitch_mm": 300.0,
+          "link_dia_mm": 8,
+          "link_pitch_mm": 300.0,
+          "bond": "good",
+          "cover_mm": 0.0
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": [
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "validation": {
+        "state": "warning",
+        "warnings": [
+          "the aggregate stair solid is a bounding volume; the flight carries the inclined waist-slab representation",
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "representations": {},
+      "volume_m3": 6.3,
+      "fingerprint": "43191e3417ec4aef0dff23c8bb7ff25bd787e2eda910d9d4fe7c3a1d32c131df"
+    },
+    {
+      "id": "stair-mst2.flight",
+      "element_type": "stair-flight",
+      "ifc_class": "IfcStairFlight",
+      "predefined_type": "STRAIGHT",
+      "name": "Stair flight waist",
+      "role": "flight",
+      "level_id": "stair-mst2:L0",
+      "parent_id": "stair-mst2.stair",
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 3.661966685,
+        "width_y": 1.0,
+        "height_z": 0.2
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.05
+      },
+      "rotation_z_deg": 0.0,
+      "material": "30/37",
+      "material_properties": {
+        "designation": "30/37",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "slope_length_m": 3.661966685,
+        "waist_m": 0.2,
+        "slope_angle_deg": 34.99202,
+        "flight_width_m": 1.0
+      },
+      "reinforcement": {
+        "main_bar_mm": 12,
+        "main_pitch_mm": 150.0,
+        "distribution_bar_mm": 10,
+        "distribution_pitch_mm": 300.0
+      },
+      "provenance": {
+        "generator": "stair_mst2",
+        "generator_label": "Stair flight MST2 (cantilever)",
+        "params_module": "engineering_system.members.stair",
+        "params_class": "StairParams",
+        "model_class": "StairEngineeringModel",
+        "drawing_number": "STR-02",
+        "drawing_title": "Cantilever Stair Section A-A (Model Detail MST2)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "stair_type": "MST2",
+          "going_mm": 250.0,
+          "rise_mm": 175.0,
+          "n_steps": 12,
+          "waist_mm": 200.0,
+          "landing_length_mm": 0.0,
+          "concrete_grade": "30/37",
+          "exposure": "internal",
+          "dcdev_mm": 10.0,
+          "main_dia_mm": 12,
+          "main_pitch_mm": 150.0,
+          "distribution_dia_mm": 10,
+          "distribution_pitch_mm": 300.0,
+          "link_dia_mm": 8,
+          "link_pitch_mm": 300.0,
+          "bond": "good",
+          "cover_mm": 0.0
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": [
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "validation": {
+        "state": "warning",
+        "warnings": [
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "representations": {},
+      "volume_m3": 0.732393337,
+      "fingerprint": "21daaaedbd1378068b47b1bfe17ca819b00562ae086553ba8ae318177204d726",
+      "extrusion": {
+        "direction": [
+          0.819231921,
+          0.0,
+          0.573462344
+        ],
+        "length_m": 3.661966685,
+        "profile": "width_x_waist"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "type": "part-of",
+      "from": "stair-mst2.flight",
+      "to": "stair-mst2.stair",
+      "note": "flight is part of stair"
+    }
+  ],
+  "warnings": [],
+  "statistics": {
+    "element_count": 2,
+    "by_ifc_class": {
+      "IfcStair": 1,
+      "IfcStairFlight": 1
+    },
+    "by_element_type": {
+      "stair": 1,
+      "stair-flight": 1
+    },
+    "total_volume_m3": 7.032393,
+    "levels": 1,
+    "relationships": 1,
+    "elements_with_warnings": 2
+  },
+  "model_hash": "23d5b09d15527d901332c113164fa0a6e16dff4ec56a63dcf2f2a62d4ee119f5"
+}

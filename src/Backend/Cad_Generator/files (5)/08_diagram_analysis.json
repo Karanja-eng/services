@@ -1,0 +1,116 @@
+{
+  "diagrams": [
+    {
+      "id": "MST2",
+      "member": "Staircase (cantilever from wall/edge beam)",
+      "caption": "STAIRCASES MST2",
+      "represents": "Section A-A of a cantilever stair slab, plus a fragment of an unlabelled companion view.",
+      "geometry": "Cantilever slab from a wall or edge beam; corner bar detailed with wall.",
+      "reinforcement": ["Design reinforcement (main, project-specific)", "Nominal H8 'U' bar (position specified by designer)", "Distribution bars H10 at 300 nominal", "Linking H8 at 300 nominal"],
+      "dimensions_labels": ["Tension anchorage callout at wall/corner", "N.B. note: bends adjusted on site"],
+      "detailing_principle": "Separates 'design reinforcement' (engineer-specified, project variable) from 'nominal' reinforcement (standard unless stated otherwise) — a pattern also seen in other Model Details in this manual.",
+      "fact_type": "PARTIAL — page fragment only, main stair geometry (going/rise/span) not visible in this extract"
+    },
+    {
+      "id": "MCB1",
+      "member": "Corbel (without welds)",
+      "caption": "corbels MCB1",
+      "represents": "Elevation + Section A-A of an in-situ corbel projecting from a column.",
+      "geometry": "Column with corbel cantilevering out; large-radius bend in main tensile bar at column face; two column links near corbel top.",
+      "reinforcement": ["Main tensile reinforcement (large radius bend)", "Main tension bars", "Secondary horizontal reinforcement (≥0.5× main tensile area)", "Compression bars (≥1000mm²/m width, outer bars angled to pass inside links)", "Two column links near corbel top"],
+      "dimensions_labels": ["Edge distance = bar diameter or 0.75×cover, whichever greater", "Tension lap", "Compression anchorage", "Nominal cover specified by designer"],
+      "detailing_principle": "Illustrates load path: tensile force from bearing travels along main tensile reinforcement, laps in tension into the column; compression strut resisted by compression bars anchored in compression; secondary horizontal reinforcement ties the strut-and-tie mechanism together.",
+      "applicability_note": "Suitable for main tensile reinforcement ≤16mm bar size.",
+      "cad_reconstructable": true
+    },
+    {
+      "id": "MCB2",
+      "member": "Corbel (with welds)",
+      "caption": "corbels MCB2",
+      "represents": "Elevation + Section A-A, same overall arrangement as MCB1 but main tensile bars welded to a cross bar or plate (and to vertical compression bars) instead of relying purely on bent-bar anchorage.",
+      "geometry": "Same as MCB1 but with an explicit weld symbol/callout at the main-tensile-bar-to-cross-bar/plate junction.",
+      "reinforcement": ["Main tensile bars welded to cross bar or plate, and to vertical compression bars", "Horizontal links (≥0.5× main tensile area, replacing MCB1's 'secondary horizontal reinforcement' bars)", "Compression bars (≥1000mm²/m width)", "Two column links near corbel top"],
+      "dimensions_labels": ["Edge distance = vertical cover to plate/bar, not less than", "Tension lap", "Compression anchorage", "Nominal cover specified by designer"],
+      "detailing_principle": "Where bar diameter is too large for a practical bend radius (>16mm, up to 20mm here), a welded connection substitutes for the bend — same strut-and-tie logic as MCB1 but with a mechanical (welded) anchorage node.",
+      "applicability_note": "Suitable for main tensile reinforcement ≤20mm bar size.",
+      "cad_reconstructable": true
+    },
+    {
+      "id": "Figure_6.34",
+      "member": "Shallow nib (design/detailing figure, not a Model Detail)",
+      "caption": "Figure 6.34 Design and detailing of shallow nibs",
+      "represents": "Strut-and-tie schematic showing compression strut and tie, with the critical load-application point flagged.",
+      "geometry": "A compression strut and a tie member meeting at a node; note that the exact position where the load is applied may be critical to the design.",
+      "detailing_principle": "Basis for the general nib design philosophy (strut-and-tie), referenced again in §6.9.2/9.3.1 discussion of shallow nibs and cross-referenced from MN2.",
+      "cad_reconstructable": "Partially — schematic strut/tie lines only, no numeric geometry given."
+    },
+    {
+      "id": "MHJ",
+      "member": "Half joint (beam)",
+      "caption": "HALF JOINTS MHJ",
+      "represents": "Elevation + Section A-A of a stepped beam end (half joint) bearing detail.",
+      "geometry": "Beam end reduced in depth to form a bearing seat ('h' notation used twice, likely denoting the step height on each side); full-length links; nominal hanger links at 450; nominal links at 150 elsewhere.",
+      "reinforcement": ["Full length links (resist total reaction, equally spaced)", "Horizontal U-bar (same diameter as main bottom bars, standard radius bend)", "Cranked bars (if necessary, for crack control)", "Nominal hanger links at 450", "Nominal links at 150"],
+      "dimensions_labels": ["Edge distance = bar diameter or 0.75×cover, whichever greater", "Tension anchorage", "Tension lap (straight bars)", "Tension lap for cranked bar (separate callout)"],
+      "detailing_principle": "The half joint transfers a concentrated reaction through the reduced-depth seat; U-bar + hanger links carry the local shear, while full-length links carry the total reaction along the joint. Note this detail is explicitly cross-referenced as ALSO suitable for half joints in slabs (see MN1).",
+      "supplementary_note": "Special design information must be given concerning the bearing pads (out of scope of this manual section).",
+      "cad_reconstructable": true
+    },
+    {
+      "id": "MN1",
+      "member": "Continuous nib (general case)",
+      "caption": "NIBS MN1",
+      "represents": "Elevation + notes for a continuous nib along a beam/wall, general (non-shallow) case.",
+      "geometry": "Nib projecting from a beam/wall face; closed links or U-bars specified by designer to take the nib load.",
+      "reinforcement": ["Closed links or U-bars (designer-specified diameter, max 12mm)", "Tension anchorage length (if U-bars used)"],
+      "dimensions_labels": ["Edge distance: not less than bar diameter or 0.75×nominal cover, whichever greater", "Minimum nominal overlap of reinforcement in nib and supported member = 60"],
+      "detailing_principle": "This detail is explicitly noted as ALSO suitable for half joints in slabs, i.e. the same reinforcement logic (vertical link/U-bar carrying load into supporting member, with defined lap overlap into the supported member) applies to both a nib and a slab half joint.",
+      "cad_reconstructable": true
+    },
+    {
+      "id": "MN2",
+      "member": "Continuous nib (shallow, light loads e.g. brickwork)",
+      "caption": "NIBS MN2",
+      "represents": "Elevation + Section A-A of a shallow nib using horizontal U-bars instead of vertical links/U-bars.",
+      "geometry": "Shallow nib, minimum depth 140mm, wired to at least two main longitudinal bars via a lacer bar.",
+      "reinforcement": ["Horizontal U-bars (diameter ≤16mm, pitch ≤250mm)", "Lacer bar (same diameter as U-bars, wired to ≥2 main longitudinal bars)", "Links (designer-specified, to take load on nib)"],
+      "dimensions_labels": ["Depth of nib not less than 140", "Tension anchorage length", "Pitch of U-bars not more than 250"],
+      "detailing_principle": "Used where a shallow nib is required (e.g. supporting brickwork, light loads) and there isn't enough depth for the MN1 vertical-link arrangement; horizontal U-bars substitute, tied together by a lacer bar for stability during construction. Cross-referenced to §6.9.2 strut-and-tie discussion (Fig 6.34).",
+      "cad_reconstructable": true
+    },
+    {
+      "id": "Fig_7.1_7.2",
+      "member": "Prestressed pre-tensioned element",
+      "caption": "Figure 7.1 Debonding tendons for pretensioned elements / Figure 7.2 Pre-tensioned element with deflected tendons",
+      "represents": "Elevation showing debonded lengths from each end (1700mm and 4500mm examples) and deflected-strand profile; sections A-A/B-B show strand positions (some used, some not, per section).",
+      "detailing_principle": "Debonding length is member-specific and explicitly dimensioned from each end; deflected strands change vertical position along the member length (X m spacing implied by generic 'Xm' labels).",
+      "cad_reconstructable": "Partially — pattern is clear (debonded length as a parameter per strand) but exact numeric profile beyond the two examples is not generalizable without more data."
+    },
+    {
+      "id": "Fig_7.13",
+      "member": "Post-tensioned end block",
+      "caption": "Figure 7.13 Location of bursting reinforcement",
+      "represents": "End elevation + side elevation showing two orthogonal bursting-reinforcement zones (horizontal bursting to depth b, vertical bursting to depth t) relative to the anchorage plate.",
+      "geometry": "t = least dimension of member; zone extends from the anchorage face to depth b (horizontal) or t (vertical); minimum 50mm + 'a' offset from anchor plate edge.",
+      "detailing_principle": "Bursting reinforcement must be positioned within a clearly defined rectangular zone derived from member cross-section and anchor-plate geometry — directly parametrizable (see 10_generator.py `create_end_block_bursting_zone()`).",
+      "cad_reconstructable": true
+    },
+    {
+      "id": "Fig_7.19_7.20_7.21",
+      "member": "Anchorage blister / curved tendon in plan / looped anchorage",
+      "caption": "Figures 7.19-7.21",
+      "represents": "Force diagrams (not primarily detailing geometry) showing radial force components (PR, PV1, PH1, PH2) at blisters, bursting/moment forces around a box girder in plan, and forces at looped anchorages.",
+      "detailing_principle": "These are FORCE/equilibrium diagrams used to justify WHY additional local reinforcement is needed at blisters/curved tendons/loops, not dimensioned reinforcement layout drawings.",
+      "cad_reconstructable": false,
+      "note": "Useful as design-rationale metadata, not as CAD geometry source."
+    },
+    {
+      "id": "Fig_9_joint_types",
+      "member": "Water-retaining structure joints",
+      "caption": "9.4 Typical details — construction & movement joints",
+      "represents": "Three/four joint-section types side by side: (a) construction joint with hydrophilic strip, rebar continuous; (b) movement joint with compressible filler + expansion waterstop, rebar stopped; (c) construction joint with waterstop + crack inducer, rebar continuous.",
+      "detailing_principle": "Waterstop/hydrophilic-strip choice is paired with a rebar-continuity decision (continuous vs stopped) — i.e. each joint TYPE is a fixed bundle of (joint device, rebar treatment, crack inducer presence).",
+      "cad_reconstructable": true
+    }
+  ]
+}

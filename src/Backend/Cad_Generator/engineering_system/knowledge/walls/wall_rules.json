@@ -1,0 +1,595 @@
+{
+  "topic": "walls_and_retaining_walls",
+  "total_rules": 43,
+  "rules": [
+    {
+      "id": "W01",
+      "topic": "walls",
+      "strength": "recommendation",
+      "rule": "Concrete grade lower than 28/35 MPa (cyl/cube) is not normally used.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 97
+      }
+    },
+    {
+      "id": "W02",
+      "topic": "walls",
+      "strength": "recommendation",
+      "rule": "Walls thinner than 150 mm are not recommended. Below 150 mm a single mat may be used to avoid congestion, if design permits.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.1/6.5.2",
+        "page": 97
+      }
+    },
+    {
+      "id": "W03",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Horizontal bars are placed OUTSIDE vertical bars; cover is measured to the horizontal bars.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 97,
+        "figure": "MW1"
+      }
+    },
+    {
+      "id": "W04",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Nominal cover: internal (XC1) = max(15 mm, bar dia) + dcdev; external (XC3) = 35 mm + dcdev. dcdev values are in 5.2.1 (General chapter).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 97
+      },
+      "logic": {
+        "if": "internal",
+        "cover_mm": "max(15, bar_dia) + dcdev"
+      }
+    },
+    {
+      "id": "W05",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "Standard cover for detailing information: 20 mm internal, 40 mm external. MW1 says 'at least 20 or bar size whichever is greater'.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.3",
+        "page": 99,
+        "figure": "MW1"
+      },
+      "note": "CONFLICT with W04 (15 mm) - see unresolved questions"
+    },
+    {
+      "id": "W06",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Min vertical reinforcement As,v,min = 0.002 Ac, half in each face; min bar dia 12 mm for a robust cage.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2 (EC2 9.6.2)",
+        "page": 97
+      }
+    },
+    {
+      "id": "W07",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Horizontal reinforcement (each face) >= max(25% of vertical, 0.001 Ac). Preferred min dia = 1/4 x vertical bar dia.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 97
+      }
+    },
+    {
+      "id": "W08",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Links: dia not less than 1/4 of the largest compression bar.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 97
+      }
+    },
+    {
+      "id": "W09",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Plain-concrete / shrinkage-temperature steel: min 0.0025 Ac for both vertical and horizontal; small dia, closely spaced, near the exposed surface, half near each face, adequate cover.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 97
+      }
+    },
+    {
+      "id": "W10",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Max vertical reinforcement 0.04 Ac (gross section).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2 (EC2 9.6.2)",
+        "page": 97
+      }
+    },
+    {
+      "id": "W11",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Min bar spacing 75 mm (bars >= 40 mm: 100 mm). Pairs of bars: 100 mm. For bars >= 32 mm allow for laps when checking min spacing.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2 (EC2 9.6.3)",
+        "page": 97
+      }
+    },
+    {
+      "id": "W12",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Max spacing of vertical and horizontal bars = lesser of 3 x wall thickness and 400 mm.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2 (EC2 9.6.3)",
+        "page": 97
+      }
+    },
+    {
+      "id": "W13",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Links required where total vertical steel in both faces exceeds 0.02 Ac (see 6.4.2; larger dimension need not exceed 4 x wall thickness).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 97
+      },
+      "logic": {
+        "if": "As_vertical_both_faces > 0.02*Ac",
+        "then": "provide links per 6.4.2 (General/Columns rules)"
+      }
+    },
+    {
+      "id": "W14",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Link vertical spacing = lesser of 16 x vertical bar dia and 2 x wall thickness. Any vertical compression bar not enclosed by a link must be within 200 mm of a restrained bar. Horizontal link spacing <= 2 x wall thickness.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 97
+      }
+    },
+    {
+      "id": "W15",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "Table 6.6 (high-yield 500, good bond, bar<=32, a1,a2,a4,a5=1, <=50% bars lapped a6=1.5). Anchorage lbd = 40/37/36/34 dia and lap l0 = 61/56/54/51 dia for fck/fcu 25/30, 28/35, 30/37, 32/40. Other cases: EC2 8.4.4.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 98
+      },
+      "logic": "Table 6.6"
+    },
+    {
+      "id": "W16",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Lap length for nominal bars not less than max(15 x dia, 200 mm).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 98
+      }
+    },
+    {
+      "id": "W17",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "Two mats (one per face) fixed as orthogonal layers. Face letters: N = near face, F = far face. Identical bars on different faces are itemised (marked) separately.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 98
+      }
+    },
+    {
+      "id": "W18",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "Corners: Model Detail MW2 for most conditions. If opening moment needs > 1.5% tension steel consider a splay + diagonal bars (EC2 Annex J UK NA) - MW2 Detail B.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 98
+      },
+      "logic": "MW2"
+    },
+    {
+      "id": "W19",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Isolated openings smaller than reinforcement pitch need not be trimmed.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 98
+      }
+    },
+    {
+      "id": "W20",
+      "topic": "walls",
+      "strength": "recommendation",
+      "rule": "Opening affecting structural integrity: consider diagonal bars at corners for crack control.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 98
+      }
+    },
+    {
+      "id": "W21",
+      "topic": "walls",
+      "strength": "mandatory/normative",
+      "rule": "Opening not affecting structural integrity: trim with bars one size larger than surrounding wall bars; min wall thickness increased to 175 mm; U-bars same size as horizontal bars placed round the opening enclosing the trimmers (MW4).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 98,
+        "figure": {
+          "if": "opening >= bar pitch AND not structurally critical",
+          "then": "trimmers = next size up; U-bars = horizontal bar size around trimmers; t >= 175"
+        }
+      },
+      "logic": "MW4"
+    },
+    {
+      "id": "W22",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "MW4 details: trimmer dia one size larger than vertical bars; walls < 250 thick: single trimmer of equivalent area above/below hole; walls <= 200 thick: single trimmer each side of hole; tension anchorage length beyond trimmers; compression lap unless specified; tension lap at U-bars.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MW4",
+        "page": 104
+      },
+      "logic": "MW4"
+    },
+    {
+      "id": "W23",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "MW2 corner: tension lap; 2 bars inside the loop for wall t <= 300, 4 bars for t > 300; U-bars same size and pitch as horizontal bars; main bar cover/size/pitch from MW1.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MW2",
+        "page": 102
+      },
+      "logic": "MW2"
+    },
+    {
+      "id": "W24",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "Edge-wall to slab: MS2 (slab chapter 6.2.2). Starter bars not insertable through holes in wall -> MW3. MW3: bars pre-bent to fit flush with shutter; tension lap; two fixing bars inside U-bars; U-bars Class B or C steel, size <= 12.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 99
+      },
+      "logic": "MW3"
+    },
+    {
+      "id": "W25",
+      "topic": "walls",
+      "strength": "optional/consider",
+      "rule": "Half landings: starter bars may be inserted in walls; mechanical shear dowels and couplers are alternatives to half joints (avoid nibs).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.2",
+        "page": 99
+      }
+    },
+    {
+      "id": "W26",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "Vertical bars rest on kicker; U-bars at top; L-bars at bottom; projection above floor = compression lap + kicker height; foundation level: compression lap + 150 (level tolerance); kicker 75 (150 below ground); min 450 horizontal leg of L-bar label shown.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MW1",
+        "page": 101
+      },
+      "logic": "MW1"
+    },
+    {
+      "id": "W27",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "Default bars where no design (MW1 table, wall thickness mm -> vertical dia@pitch / horizontal dia@pitch): 150-175: 12@300/10@200; 175-200: 12@250/10@200; 200-250: 12@200/10@200; 250-300: 16@300/10@200; 300-400: 16@250/12@200; 400-500: 16@200/12@150; 500-600: 20@250/16@200; 600-700: 20@200/16@200; 700-800: 20@200/16@200.",
+      "status": "DIRECTLY STATED (row/column pairing INFERRED from extracted column order - verify against scan)",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MW1",
+        "page": 101
+      },
+      "logic": "MW1"
+    },
+    {
+      "id": "W28",
+      "topic": "walls",
+      "strength": "typical practice/standard",
+      "rule": "Detailing info to be provided: layouts/sections incl. slab intersections and holes; grade & aggregate (std 30/37, 20 mm); cover + governing criterion (fire/durability); design steel (type std H, dia, pitch/number, where, lap if not normal compression lap); proprietary inserts/openings early.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.5.3",
+        "page": 99
+      }
+    },
+    {
+      "id": "RW01",
+      "topic": "retaining_walls",
+      "strength": "recommendation",
+      "rule": "Concrete grade lower than 28/35 not normally used; contaminated ground may need particular grade/mix.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 105
+      }
+    },
+    {
+      "id": "RW02",
+      "topic": "retaining_walls",
+      "strength": "mandatory/normative",
+      "rule": "Cover measured to OUTER layer of steel. Internal face (XC1): max(20, bar dia)+dcdev; external face (XC3): 35+dcdev; earth face: 45+dcdev.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 105
+      }
+    },
+    {
+      "id": "RW03",
+      "topic": "retaining_walls",
+      "strength": "typical practice/standard",
+      "rule": "Standard cover: 50 earth face; 40 external exposed; 75 to bottom and sides of base; 25 internal faces. Standard kicker 150 below ground, 75 above.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.3",
+        "page": 106
+      },
+      "note": "Differs from RW02 nominal values (20 / 45) - see unresolved"
+    },
+    {
+      "id": "RW04",
+      "topic": "retaining_walls",
+      "strength": "mandatory/normative",
+      "rule": "Simple earth-retaining walls (drainage e.g. weep holes, minor seepage tolerable): vertical 0.002 Ac (half each face) min dia 12; horizontal each face >= max(25% vertical, 0.001 Ac).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 105
+      }
+    },
+    {
+      "id": "RW05",
+      "topic": "retaining_walls",
+      "strength": "mandatory/normative",
+      "rule": "Water-resisting walls (basements): restraint cracking in any direction, min steel = Ac*fct/fy in BOTH directions, check crack widths (EC2 Pt3, CIRIA 139).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 105
+      }
+    },
+    {
+      "id": "RW06",
+      "topic": "retaining_walls",
+      "strength": "mandatory/normative",
+      "rule": "Max vertical steel 4% of gross section. Min spacing 75 (>=40 dia: 100), pairs 100, max spacing 200 mm.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 105
+      }
+    },
+    {
+      "id": "RW07",
+      "topic": "retaining_walls",
+      "strength": "typical practice/standard",
+      "rule": "Table 6.7 anchorage/lap (good bond, <=50% lapped a6=1.5): lbd 40/37/36/34; l0 61/56/54/51. Min lap max(15 dia, 200).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 105
+      },
+      "logic": "Table 6.7"
+    },
+    {
+      "id": "RW08",
+      "topic": "retaining_walls",
+      "strength": "mandatory/normative",
+      "rule": "Kicker height for walls below ground >= 150 mm, cast integral with foundation.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 106
+      }
+    },
+    {
+      "id": "RW09",
+      "topic": "retaining_walls",
+      "strength": "recommendation",
+      "rule": "Full contraction joints only when shortening along full wall length is predicted to be cumulative; detail at 30 m centres (MRW3 B).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 106
+      },
+      "logic": "MRW3"
+    },
+    {
+      "id": "RW10",
+      "topic": "retaining_walls",
+      "strength": "typical practice/standard",
+      "rule": "Table 6.8: Option A continuous/full restraint - generally no joints (some widely spaced joints if large temperature range), steel per EC2 cl.6 & 7.3. Option B close joints - complete joints at greater of 5 m or 1.5 x wall height; steel per EC2 cl.6 but not less than 9.6.2-9.6.4 minima.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 106
+      },
+      "logic": "Table 6.8"
+    },
+    {
+      "id": "RW11",
+      "topic": "retaining_walls",
+      "strength": "mandatory/normative",
+      "rule": "Wall starter bars specified with base-slab reinforcement, defined relative to wall section (or their location referenced on drawing and schedule).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 106
+      }
+    },
+    {
+      "id": "RW12",
+      "topic": "retaining_walls",
+      "strength": "mandatory/normative",
+      "rule": "Links required where total vertical steel in both faces > 0.02 Ac.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.6.2",
+        "page": 106
+      }
+    },
+    {
+      "id": "RW13",
+      "topic": "retaining_walls",
+      "strength": "typical practice/standard",
+      "rule": "MRW1 cantilever wall: vertical bars on OUTSIDE for earth face; horizontal bars on outside for exposed face; 50 buried, 40 exposed; kicker 150 (75 above); tension laps at stem/base; key added if required; large radius of bend specified by designer; nominal reinforcement per MS1; exposed-face bars from MW1 table.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MRW1",
+        "page": 109
+      },
+      "logic": "MRW1"
+    },
+    {
+      "id": "RW14",
+      "topic": "retaining_walls",
+      "strength": "typical practice/standard",
+      "rule": "MRW2 basement wall: wall centrally on ground beam; 300 min overlap; cavity drain slot; waterbars as specified; vertical reinforcement fixed first; cover 25 internal, 40 external exposed, 50 buried; 75 to base; kicker 150; floor to falls.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MRW2",
+        "page": 110
+      },
+      "logic": "MRW2"
+    },
+    {
+      "id": "RW15",
+      "topic": "retaining_walls",
+      "strength": "typical practice/standard",
+      "rule": "MRW3 vertical joints: (A) simple construction joint spacing <= 30 m with H10 U-bars (dowel per MF5 B if specified); (B) full contraction joint; (C) movement joint with splice bars same size and pitch as main bars; if internal water bar required, U-bars displaced to avoid clash; 500 lap dimension; 75 cover dims.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MRW3",
+        "page": 111
+      },
+      "logic": "MRW3"
+    }
+  ]
+}

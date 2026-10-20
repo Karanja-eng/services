@@ -1,0 +1,253 @@
+{
+  "document": "IStructE/Concrete Society SMDS Ch5-6 — Validation Cases",
+
+  "validation_cases": [
+
+    {
+      "id": "VC-01", "category": "anchorage",
+      "name": "Slab H12 good bond C30/37 anchorage and lap",
+      "source": "Table 6.1",
+      "inputs": {"member": "slab", "bar_dia_mm": 12, "grade": "30/37", "bond": "good"},
+      "expected": {"anchorage_dia": 36, "anchorage_mm": 432, "lap_dia": 42, "lap_mm": 504}
+    },
+    {
+      "id": "VC-02", "category": "anchorage",
+      "name": "Beam H25 good bond C30/37 anchorage and lap",
+      "source": "Table 6.4",
+      "inputs": {"member": "beam", "bar_dia_mm": 25, "grade": "30/37", "bond": "good"},
+      "expected": {"anchorage_dia": 32, "anchorage_mm": 800, "lap_dia": 37, "lap_mm": 925}
+    },
+    {
+      "id": "VC-03", "category": "anchorage",
+      "name": "Column H32 good bond C30/37 lap (>50% lapped, α6=1.5)",
+      "source": "Table 6.5",
+      "inputs": {"member": "column", "bar_dia_mm": 32, "grade": "30/37", "bond": "good"},
+      "expected": {"anchorage_dia": 32, "anchorage_mm": 1024, "lap_dia": 48, "lap_mm": 1536}
+    },
+    {
+      "id": "VC-04", "category": "anchorage",
+      "name": "Slab H16 poor bond C25/30",
+      "source": "Table 6.1",
+      "inputs": {"member": "slab", "bar_dia_mm": 16, "grade": "25/30", "bond": "poor"},
+      "expected": {"anchorage_dia": 58, "anchorage_mm": 928, "lap_dia": 66, "lap_mm": 1056}
+    },
+
+    {
+      "id": "VC-05", "category": "as_min_slab",
+      "name": "As,min solid slab C30/37 fyk=500 h=200mm",
+      "source": "Section 6.2.2",
+      "inputs": {"h_mm": 200, "fck": 30, "fyk": 500},
+      "expected": {"as_min_mm2_per_m": 300},
+      "formula": "0.0015 × 200 × 1000 = 300 mm²/m"
+    },
+    {
+      "id": "VC-06", "category": "as_min_beam",
+      "name": "As,min beam C30/37 fyk=500 bw=300 d=550",
+      "source": "Section 6.3.2",
+      "inputs": {"bw_mm": 300, "d_mm": 550, "fck": 30, "fyk": 500},
+      "expected": {"as_min_mm2": 247.5},
+      "formula": "0.0015 × 300 × 550 = 247.5 mm²"
+    },
+
+    {
+      "id": "VC-07", "category": "curtailment_slab",
+      "name": "MS1 bottom bar length, span=5000, lap=504",
+      "source": "Model Detail MS1",
+      "inputs": {"span_mm": 5000, "tension_lap_mm": 504},
+      "expected": {"bottom_bar_length_mm": 4252},
+      "formula": "0.8 × 5000 + 0.5 × 504 = 4000 + 252 = 4252mm"
+    },
+    {
+      "id": "VC-08", "category": "curtailment_slab",
+      "name": "MS1 top bar extension, span=5000",
+      "source": "Model Detail MS1",
+      "inputs": {"span_mm": 5000},
+      "expected": {"top_bar_extension_mm": 1500},
+      "formula": "0.3 × 5000 = 1500mm"
+    },
+    {
+      "id": "VC-09", "category": "curtailment_slab",
+      "name": "MS1 top bar end limit, short_span=4000",
+      "source": "Model Detail MS1",
+      "inputs": {"short_span_mm": 4000},
+      "expected": {"top_bar_end_limit_mm": 400},
+      "formula": "min(0.1 × 4000, 600) = min(400, 600) = 400mm"
+    },
+    {
+      "id": "VC-10", "category": "curtailment_slab",
+      "name": "MS1 top bar end limit, large span hits 600mm cap",
+      "source": "Model Detail MS1",
+      "inputs": {"short_span_mm": 8000},
+      "expected": {"top_bar_end_limit_mm": 600},
+      "formula": "min(0.1 × 8000, 600) = min(800, 600) = 600mm"
+    },
+
+    {
+      "id": "VC-11", "category": "beam_spacing",
+      "name": "Beam link max spacing, d=542, compression bar dia=25",
+      "source": "Section 6.3.2",
+      "inputs": {"d_mm": 542, "compression_bar_dia_mm": 25},
+      "expected": {"link_max_spacing_mm": 300},
+      "formula": "min(300, 0.75×542, 12×25) = min(300, 406.5, 300) = 300mm"
+    },
+    {
+      "id": "VC-12", "category": "beam_spacing",
+      "name": "Beam link min spacing, 2 legs",
+      "source": "Section 6.3.2",
+      "inputs": {"num_legs": 2},
+      "expected": {"link_min_spacing_mm": 100},
+      "formula": "max(100, 50 + 12.5×2) = max(100, 75) = 100mm"
+    },
+    {
+      "id": "VC-13", "category": "beam_spacing",
+      "name": "Beam link min spacing, 4 legs",
+      "source": "Section 6.3.2",
+      "inputs": {"num_legs": 4},
+      "expected": {"link_min_spacing_mm": 100},
+      "formula": "max(100, 50 + 12.5×4) = max(100, 100) = 100mm"
+    },
+    {
+      "id": "VC-14", "category": "beam_spacing",
+      "name": "Beam link min spacing, 6 legs",
+      "source": "Section 6.3.2",
+      "inputs": {"num_legs": 6},
+      "expected": {"link_min_spacing_mm": 125},
+      "formula": "max(100, 50 + 12.5×6) = max(100, 125) = 125mm"
+    },
+
+    {
+      "id": "VC-15", "category": "curtailment_beam",
+      "name": "Top bar minimum extension, L=7000, bar_dia=25",
+      "source": "Section 6.3.2",
+      "inputs": {"L_mm": 7000, "bar_dia_mm": 25},
+      "expected": {"top_bar_min_extension_mm": 1125},
+      "formula": "max(0.15×7000, 45×25) = max(1050, 1125) = 1125mm"
+    },
+    {
+      "id": "VC-16", "category": "curtailment_beam",
+      "name": "Top bar default extension, L=7000",
+      "source": "Section 6.3.2",
+      "inputs": {"L_mm": 7000},
+      "expected": {"top_bar_default_extension_mm": 1750},
+      "formula": "0.25 × 7000 = 1750mm"
+    },
+
+    {
+      "id": "VC-17", "category": "column",
+      "name": "Column As,min, Ac=300×400, NEd=1500kN, fyd=434MPa",
+      "source": "Section 6.4.2",
+      "inputs": {"col_width_mm": 300, "col_depth_mm": 400, "NEd_kN": 1500, "fyd_MPa": 434},
+      "expected": {"As_min_option1_mm2": 240, "As_min_option2_mm2": 345,
+                   "As_min_governing_mm2": 345},
+      "formula": "max(0.002×120000, 0.10×1500000/434) = max(240, 345.6) = 346mm²"
+    },
+    {
+      "id": "VC-18", "category": "column",
+      "name": "Column link max spacing, 400×400 column, main bar dia=25",
+      "source": "Section 6.4.2",
+      "inputs": {"col_width_mm": 400, "col_depth_mm": 400, "main_bar_dia_mm": 25},
+      "expected": {"link_max_spacing_mm": 400},
+      "formula": "min(20×25, 400, 400) = min(500, 400, 400) = 400mm"
+    },
+    {
+      "id": "VC-19", "category": "column",
+      "name": "Column link reduced spacing at beam/slab",
+      "source": "Section 6.4.2",
+      "inputs": {"link_max_spacing_mm": 400},
+      "expected": {"reduced_spacing_mm": 240},
+      "formula": "0.6 × 400 = 240mm"
+    },
+    {
+      "id": "VC-20", "category": "column",
+      "name": "Column link min dia, main bar dia=32",
+      "source": "Section 6.4.2",
+      "inputs": {"main_bar_dia_mm": 32},
+      "expected": {"link_dia_min_mm": 8},
+      "formula": "max(32/4, 8) = max(8, 8) = 8mm"
+    },
+    {
+      "id": "VC-21", "category": "column",
+      "name": "Column link min dia, main bar dia=40",
+      "source": "Section 6.4.2",
+      "inputs": {"main_bar_dia_mm": 40},
+      "expected": {"link_dia_min_mm": 10},
+      "formula": "max(40/4, 8) = max(10, 8) = 10mm"
+    },
+
+    {
+      "id": "VC-22", "category": "laps",
+      "name": "alpha6 for <25% lapped",
+      "source": "Table 5.7",
+      "inputs": {"pct_lapped": 20},
+      "expected": {"alpha6": 1.0}
+    },
+    {
+      "id": "VC-23", "category": "laps",
+      "name": "alpha6 for 33% lapped",
+      "source": "Table 5.7",
+      "inputs": {"pct_lapped": 33},
+      "expected": {"alpha6": 1.15}
+    },
+    {
+      "id": "VC-24", "category": "laps",
+      "name": "alpha6 for 50% lapped",
+      "source": "Table 5.7",
+      "inputs": {"pct_lapped": 50},
+      "expected": {"alpha6": 1.4}
+    },
+    {
+      "id": "VC-25", "category": "laps",
+      "name": "alpha6 for >50% lapped",
+      "source": "Table 5.7",
+      "inputs": {"pct_lapped": 60},
+      "expected": {"alpha6": 1.5}
+    },
+
+    {
+      "id": "VC-26", "category": "tolerance",
+      "name": "Closed detailing tolerance, beam (0-1m)",
+      "source": "Table 5.5",
+      "inputs": {"face_distance_m": 0.275, "bar_type": "link"},
+      "expected": {"total_deduction_mm": 10}
+    },
+    {
+      "id": "VC-27", "category": "tolerance",
+      "name": "Closed detailing tolerance, straight bar any length",
+      "source": "Table 5.5",
+      "inputs": {"bar_type": "straight"},
+      "expected": {"total_deduction_mm": 40}
+    },
+
+    {
+      "id": "VC-28", "category": "flat_slab",
+      "name": "Flat slab moment apportionment — negative moment",
+      "source": "Table 6.2",
+      "inputs": {"total_neg_moment_kNm": 100},
+      "expected": {"column_strip_neg_kNm": 75, "middle_strip_neg_kNm": 25}
+    },
+    {
+      "id": "VC-29", "category": "flat_slab",
+      "name": "Flat slab column strip width, Lx=6000, Ly=8000",
+      "source": "Section 6.2.2",
+      "inputs": {"Lx_mm": 6000, "Ly_mm": 8000},
+      "expected": {"column_strip_width_mm": 3000},
+      "formula": "Normally half shorter panel dimension = 6000/2 = 3000mm"
+    },
+
+    {
+      "id": "VC-30", "category": "slab_holes",
+      "name": "Hole sides 100mm — may be ignored",
+      "source": "Section 6.2.2",
+      "inputs": {"hole_sides_mm": 100},
+      "expected": {"action": "can_be_ignored_structurally"}
+    },
+    {
+      "id": "VC-31", "category": "slab_holes",
+      "name": "Hole sides 400mm — trim with 45ø extension",
+      "source": "Section 6.2.2",
+      "inputs": {"hole_sides_mm": 400, "bar_dia_mm": 16},
+      "expected": {"action": "trim_with_compensating_bars", "trimmer_extension_mm": 720},
+      "formula": "45 × 16 = 720mm extension beyond hole"
+    }
+  ]
+}

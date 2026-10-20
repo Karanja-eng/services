@@ -1,0 +1,61 @@
+{
+  "engineering_object_model": {
+    "Corbel": {"properties": ["width","projection","depth_at_column","bearing_width","load_bearing_area_position","concrete_grade","cover","detail_type(MCB1|MCB2)"]},
+    "HalfJoint": {"properties": ["step_depth_reduction","bearing_length","cover","concrete_grade","uses_cranked_bar"]},
+    "ContinuousNib": {"properties": ["depth","projection","shallow(bool)","cover","concrete_grade","concentrated_load_zones"]},
+    "LongitudinalBar": {"properties": ["diameter","quantity","start","end","spacing","layer","zone","anchorage","lap","bar_mark","role(main_tensile|compression|secondary_horizontal|distribution)"]},
+    "Stirrup": {"properties": ["diameter","spacing","shape(closed|open|U-bar)","zone","quantity_per_group"]},
+    "ColumnLink": {"properties": ["diameter","quantity(=2 typical at corbel)","position(close to corbel top)"]},
+    "LacerBar": {"properties": ["diameter(=U-bar diameter)","wired_to(>=2 longitudinal bars)"]},
+    "Anchorage": {"properties": ["length","type(tension|compression)","bend_radius(large where applicable)"]},
+    "Lap": {"properties": ["length","type(tension|compression)","location","min_overlap_mm(nib=60)"]},
+    "Weld": {"properties": ["type(bar-to-crossbar|bar-to-plate)","location","strength_governs_size"]},
+    "Tendon": {"properties": ["type(pre-tensioned|post-tensioned)","diameter","profile(x,y,z)","bonded(bool)","jacking_force","debonded_length"]},
+    "Duct": {"properties": ["internal_diameter","shape(circular|rectangular)","cover","spacing"]},
+    "AnchorageBlock_EndBlock": {"properties": ["bursting_reinforcement_area","face_zone_reinforcement","yo","ypo","Fbst"]},
+    "GroutingPoint": {"properties": ["location(at anchorage/high point)","pressure_MPa"]},
+    "PrecastUnit": {"properties": ["length","height","width","weight","lifting_points","joint_type"]},
+    "WaterRetainingWall": {"properties": ["thickness","tightness_class","cover","crack_width_limit","construction_joints","movement_joints"]},
+    "ConstructionJoint": {"properties": ["waterstop(bool)","hydrophilic_strip(bool)","rebar_continuity(continuous|stopped)"]},
+    "MovementJoint": {"properties": ["compressible_filler","waterstop_type(expansion)","rebar_continuity(stopped)"]},
+    "Dimension": {"properties": ["value","reference_points","view"]},
+    "Callout": {"properties": ["bar_mark","text","leader_line_target"]},
+    "Section": {"properties": ["cut_plane","label(e.g. A-A)","view_direction"]}
+  },
+
+  "relationships": [
+    "Corbel contains LongitudinalBar (main_tensile, compression, secondary_horizontal)",
+    "Corbel contains ColumnLink",
+    "LongitudinalBar (main_tensile) anchored_into Column via Anchorage (tension lap)",
+    "LongitudinalBar (compression) anchored_into Column via Anchorage (compression anchorage)",
+    "Corbel connects_to Column",
+    "MCB2 variant: LongitudinalBar (main_tensile) joined_by Weld to CrossBar_or_Plate",
+    "HalfJoint contains LongitudinalBar (horizontal U-bar, cranked bar)",
+    "HalfJoint contains Stirrup (hanger links, full-length links)",
+    "LongitudinalBar (U-bar / cranked bar) has Lap (tension lap)",
+    "ContinuousNib contains Stirrup (closed links or U-bars, MN1) OR LongitudinalBar (horizontal U-bars, MN2)",
+    "ContinuousNib contains LacerBar (MN2 only)",
+    "ContinuousNib reinforcement laps_with SupportedMember reinforcement (min 60mm overlap)",
+    "ContinuousNib load_transfers_into SupportingBeam via Stirrup vertical leg",
+    "SupportingBeam effective_depth reduced_by ContinuousNib presence",
+    "Tendon anchored_into AnchorageBlock_EndBlock",
+    "AnchorageBlock_EndBlock contains Stirrup (bursting reinforcement, closed hoops/spirals)",
+    "Tendon runs_through Duct",
+    "Duct requires GroutingPoint (at anchorage / high points)",
+    "PrestressedSlab contains LongitudinalBar (un-tensioned reinforcement at columns / hogging zones / unstressed edge zones)",
+    "PrestressedBeam contains Stirrup (shear reinforcement — open links or U-bar pairs, around Tendon)",
+    "PrecastUnit connects_to PrecastUnit via ConstructionJoint (key joint) or in-situ infill",
+    "WaterRetainingWall contains ConstructionJoint and MovementJoint (positions mandatory on drawing)",
+    "WaterRetainingWall reinforcement_governed_by max(structural_action_reinf, thermal_shrinkage_reinf)",
+    "CircularTank (WaterRetainingWall subtype) contains Tendon with centroid_in outer_third_of_wall"
+  ],
+
+  "cross_topic_interfaces": {
+    "Corbel_to_Column": "Column must provide reinforcement to receive corbel main tensile tension lap, compression anchorage, and two additional links near corbel top — column detailer needs corbel geometry/forces.",
+    "Nib_to_SupportingBeam": "Supporting beam's link design and effective depth (d) must account for the nib's vertical link leg and reduced concrete contribution — beam detailer needs nib geometry/loads.",
+    "HalfJoint_to_SupportedMember": "Bearing pad design (out of scope here) and supported member's reinforcement continuity must align with half joint tension anchorage/lap positions.",
+    "PrestressedSlab_to_Column": "Un-tensioned reinforcement at flat-slab columns must coordinate with column reinforcement and punching-shear detailing (not in this extract).",
+    "PrestressedElement_to_GeneralDetailing": "Nominal cover for durability (non-bond) still follows general slab/beam cover rules (§6.2/6.3, not in this extract).",
+    "WaterRetainingWall_to_Foundation": "Joint positions and reinforcement continuity at wall/base junctions depend on the (separate) foundation detailing chapter — not included here."
+  }
+}

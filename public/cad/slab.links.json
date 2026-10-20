@@ -1,0 +1,31 @@
+{
+  "model_id": "slab",
+  "revision": 1,
+  "model_hash": "bdfd60d4298cc0d9d512bd1380ea58d35c2251d9702fc5ea248bfcaa89d4deb3",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "links": [
+    {
+      "model_id": "slab",
+      "internal_id": "slab.slab",
+      "ifc_guid": "3XT6LLZr9OCwE3sbxjq9Ed",
+      "ifc_class": "IfcSlab",
+      "dxf_handle": "45",
+      "drawing_id": "slab-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "a2b746f131bddb2bbb467f89dcef5216d4e700ac3f91211011b8700d5f1612ec",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T20:35:06+00:00"
+    }
+  ],
+  "by_status": {
+    "ok": 1
+  }
+}

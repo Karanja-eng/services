@@ -1,0 +1,858 @@
+{
+  "engineering_knowledge": {
+    "member_definition": {
+      "scope_statement": {
+        "fact_type": "DIRECTLY STATED",
+        "text": "Covers detailing of in-situ corbels, beam half joints and continuous nibs. Closely related to joint design; designer must ensure detail design is clearly specified. Does not cover all aspects of precast corbels/half joints/nibs. Bearing pad design is out of scope.",
+        "source": {
+          "section": "6.9.1",
+          "page": 129
+        }
+      },
+      "member_types": [
+        {
+          "name": "Corbel",
+          "description": "Short cantilever projection from a column/wall face used to support a bearing load (e.g. a beam end).",
+          "model_details": [
+            "MCB1 (without welds)",
+            "MCB2 (with welds)"
+          ]
+        },
+        {
+          "name": "Half joint (beam)",
+          "description": "A stepped/notched end of a beam that provides a reduced-depth bearing seat for a supported member.",
+          "model_detail": "MHJ"
+        },
+        {
+          "name": "Continuous nib",
+          "description": "A linear (continuous, not discrete) projection along a beam or wall used as a bearing seat, e.g. for slabs or brickwork support.",
+          "model_details": [
+            "MN1 (vertical U-bars/links \u2014 general case)",
+            "MN2 (horizontal U-bars \u2014 shallow nib for light loads, e.g. brickwork)"
+          ]
+        }
+      ],
+      "zones_terminology": [
+        "loaded area / bearing area",
+        "load bearing area edge",
+        "outer face of corbel",
+        "column links (top of column, near corbel)",
+        "nib depth",
+        "supporting beam (for nibs \u2014 the vertical link leg in the supporting beam carries the nib reaction)"
+      ],
+      "connections_to_other_members": {
+        "corbel": "Column (corbel cantilevers from column; two column links placed close to corbel top per MCB1/MCB2)",
+        "half_joint": "Beam-to-beam or beam-to-slab bearing (MN1 detail 'also suitable for half joints in slabs')",
+        "nib": "Beam or wall (nib is on a beam/wall; supported member \u2014 e.g. slab or brickwork \u2014 bears on nib); vertical link leg of the SUPPORTING beam carries the nib's load"
+      }
+    },
+    "geometry": {
+      "cover": {
+        "corbels": {
+          "internal_use": {
+            "value_mm": 25,
+            "note": "+ \u0394cdev; XC1 (concrete inside buildings, low air humidity)",
+            "fact_type": "DIRECTLY STATED"
+          },
+          "external_use": {
+            "value_mm": 35,
+            "note": "+ \u0394cdev; XC3 (carbonation-induced corrosion)",
+            "fact_type": "DIRECTLY STATED"
+          },
+          "dependency_note": "See 5.2.1 (general chapter, not in this extract) for values of \u0394cdev.",
+          "grouped_bars_note": "Cover to grouped bars should be for the equivalent bar size (ref. 5.8, general chapter).",
+          "fire_note": "For 4-hour fire resistance, supplementary reinforcement may be required where nominal cover exceeds 40mm (axis distance to main reinforcement exceeds 70mm) \u2014 EC2 Part 1.2 Cl.4.5.2."
+        },
+        "continuous_nibs_and_slab_half_joints": {
+          "internal_use": {
+            "value": "20mm or bar size, whichever is greater",
+            "note": "XC1"
+          },
+          "external_use": {
+            "value_mm": 40,
+            "note": "XC3"
+          }
+        },
+        "generic_model_detail_notes": {
+          "corbels_MCB1_MCB2": "Nominal cover specified by designer (no fixed number printed on the drawing itself \u2014 left to design).",
+          "half_joints_MHJ": "Nominal cover specified by designer (normally to ensure 40mm to the main steel).",
+          "nibs_MN1": "Nominal cover specified by designer.",
+          "nibs_MN2": "Nominal cover specified by designer (normally to ensure 40mm to the main steel)."
+        },
+        "concrete_grade_minimum": {
+          "value": "28/35 MPa (cylinder/cube)",
+          "note": "Concrete grades lower than this are not normally used for corbels/half joints/nibs.",
+          "fact_type": "DIRECTLY STATED"
+        }
+      },
+      "minimum_reinforcement_area": {
+        "corbels": {
+          "tension": {
+            "formula_ref": "As_min_corbel_tension",
+            "text": "As,min \u2265 0.0014 \u00b7 bt \u00b7 d"
+          },
+          "compression": {
+            "formula_ref": "Asc_min_corbel_compression",
+            "text": "Asc,min \u2265 0.002 \u00b7 Ac"
+          }
+        },
+        "half_joints_and_nibs": {
+          "tension_general": {
+            "formula_ref": "As_min_halfjoint_general",
+            "text": "As,min = 0.26 \u00b7 bt \u00b7 d \u00b7 fctm/fyk \u2265 0.0013 \u00b7 bt \u00b7 d"
+          },
+          "tension_grade_28_35_fyk500": {
+            "formula_ref": "As_min_halfjoint_c2835",
+            "value": "As,min = 0.0014 \u00b7 bt \u00b7 d"
+          },
+          "preferred_min_bar_diameter_mm": 10
+        }
+      },
+      "bar_spacing": {
+        "minimum_pitch_of_bars_mm": {
+          "value": 75,
+          "reason": "Sufficient space for insertion of poker vibrator",
+          "source_clause": "EC2 Cl.8.2, 9.3.1.1"
+        },
+        "minimum_vertical_space_between_bars": {
+          "value": "25mm or bar size, whichever is greater"
+        },
+        "continuous_nibs_max_pitch": {
+          "main_bars": {
+            "normal": "3h \u2264 400mm",
+            "concentrated_load_areas": "2h \u2264 250mm"
+          },
+          "secondary_bars": {
+            "normal": "3.5h \u2264 450mm",
+            "concentrated_load_areas": "3h \u2264 400mm"
+          },
+          "variable_note": "h = nib depth (implied; not explicitly restated per-formula in source but consistent with 'h' usage in this manual for member depth)."
+        }
+      },
+      "anchorage_and_lap_geometry": {
+        "minimum_anchorage_length": {
+          "value": "greater of 10\u00b7bar_diameter or 100mm",
+          "source_clause": "EC2 Cl.8.4, 8.7"
+        },
+        "typical_anchorage_and_lap_table_ref": "Table 6.12 (see formulas_and_calculations)"
+      },
+      "MCB1_specific_dimensions": {
+        "edge_distance_to_bearing": {
+          "text": "Distance between edge of bearing and inside of bar to be a minimum of the bar diameter or 0.75 \u00d7 cover, whichever is greater."
+        },
+        "compression_bar_area": {
+          "value": "\u2265 1000 mm\u00b2/metre width of corbel"
+        },
+        "secondary_horizontal_reinforcement_area": {
+          "value": "\u2265 0.50 \u00d7 area of main tensile reinforcement"
+        },
+        "max_bar_size_for_this_detail_mm": 16,
+        "column_links": "Two column links placed close to corbel top."
+      },
+      "MCB2_specific_dimensions": {
+        "edge_distance_to_bearing": {
+          "text": "Distance between edge of bearing and outside of plate or bar should not be less than the vertical cover to the plate or bar."
+        },
+        "compression_bar_area": {
+          "value": "\u2265 1000 mm\u00b2/metre width of corbel"
+        },
+        "horizontal_links_area": {
+          "value": "\u2265 0.50 \u00d7 area of main tensile reinforcement"
+        },
+        "max_bar_size_for_this_detail_mm": 20,
+        "column_links": "Two column links placed close to corbel top.",
+        "welding_note": "Main tensile bars welded to a cross bar or plate, and to the vertical compression bars."
+      },
+      "MHJ_specific_dimensions": {
+        "edge_distance_to_bearing": {
+          "text": "Distance between edge of bearing and inside of bar to be a minimum of the bar diameter or 0.75 \u00d7 cover, whichever is greater."
+        },
+        "horizontal_U_bar_diameter": "Same diameter as main bottom bars.",
+        "hanger_links": {
+          "spacing_mm": 450,
+          "note": "Nominal hanger links"
+        },
+        "other_links_spacing_mm": 150,
+        "bearing_pad_note": "Special design information must be given concerning the bearing pads."
+      },
+      "MN1_specific_dimensions": {
+        "edge_distance": {
+          "text": "Not less than bar diameter or 0.75 \u00d7 nominal cover, whichever is greater."
+        },
+        "max_link_diameter_mm": 12,
+        "min_nominal_overlap_of_reinforcement_mm": {
+          "value": 60,
+          "meaning": "Minimum nominal overlap of reinforcement in nib and reinforcement in supported member."
+        },
+        "reinforcement_options": "Closed links or U-bars may be used."
+      },
+      "MN2_specific_dimensions": {
+        "horizontal_U_bar_max_diameter_mm": 16,
+        "min_nib_depth_mm": 140,
+        "lacer_bar_diameter": "Same diameter as U-bars.",
+        "U_bar_max_pitch_mm": 250,
+        "wiring_requirement": "Lacer bar wired to at least two main longitudinal bars.",
+        "suitability": "Shallow nibs suitable for light loads (e.g. supporting brickwork)."
+      }
+    },
+    "reinforcement_types": [
+      {
+        "name": "Main tensile reinforcement (corbel)",
+        "location": "Top of corbel, extended as close to outer face as possible",
+        "extension_rule": "Must extend beyond the load-bearing area by at least the minimum distance shown on the Model Details.",
+        "anchorage": "Tension lap at column face (into column); large radius bend required where reinforcement changes direction",
+        "preferred_form": "Small bar diameters, horizontal U-bars, or links with easy bends (preferred). Large diameters (requiring welding, MCB2) only where loading is high and geometry restrictive.",
+        "notes": "It is essential the main tensile reinforcement is extended as close to the outer face of the corbel as possible."
+      },
+      {
+        "name": "Compression bars (corbel)",
+        "location": "Bottom of corbel / column compression zone",
+        "area_requirement": "Total area \u2265 1000 mm\u00b2/metre width of corbel (both MCB1 and MCB2)",
+        "anchorage": "Compression anchorage",
+        "geometry_note": "Outer compression bars angled to pass inside links (MCB1)."
+      },
+      {
+        "name": "Secondary horizontal reinforcement / horizontal links (corbel)",
+        "purpose": "Crack control / shear resistance in corbel body",
+        "area_requirement": "Total area not less than 0.50 \u00d7 area of main tensile reinforcement",
+        "MCB1_form": "Secondary horizontal reinforcement (separate bars)",
+        "MCB2_form": "Horizontal links (same area rule)"
+      },
+      {
+        "name": "Column links (at corbel)",
+        "quantity": "Two",
+        "location": "Placed close to corbel top, within the column"
+      },
+      {
+        "name": "Nominal H8 'U' bar (staircase fragment, MST2)",
+        "note": "Position of H8 U-bar specified separately from design reinforcement; adjustable bends on site.",
+        "source_topic": "staircases_fragment"
+      },
+      {
+        "name": "Horizontal 'U' bar (half joint / nib)",
+        "diameter_rule_MHJ": "Same diameter as main bottom bars",
+        "diameter_rule_MN2": "Not more than 16mm",
+        "purpose": "Tension anchorage at nib/half-joint root; standard radius of bend"
+      },
+      {
+        "name": "Hanger links (half joint)",
+        "spacing_mm": 450,
+        "designation": "Nominal"
+      },
+      {
+        "name": "Full-length links (half joint)",
+        "purpose": "Sufficient to resist total reaction, equally spaced"
+      },
+      {
+        "name": "Closed links / U-bars (nib, MN1)",
+        "purpose": "Take load on nib; specified by designer",
+        "constraint": "Diameter of links not more than 12mm"
+      },
+      {
+        "name": "Lacer bar (nib, MN2)",
+        "diameter": "Same as U-bars",
+        "function": "Ties/restrains the horizontal U-bars; wired to at least two main longitudinal bars"
+      },
+      {
+        "name": "Cranked bars (half joint)",
+        "purpose": "Crack control (used 'if necessary')",
+        "lap": "Tension lap for cranked bar"
+      }
+    ],
+    "laps": {
+      "corbel_MCB1_MCB2": {
+        "tension_lap": "Shown at the main tensile reinforcement / column interface (labelled 'Tension lap' on both details).",
+        "compression_anchorage": "Shown separately from the tension lap, at the compression bars."
+      },
+      "half_joint_MHJ": {
+        "tension_lap": "Present for straight bars.",
+        "tension_lap_for_cranked_bar": "Separate, distinct lap noted specifically for the cranked bar."
+      },
+      "nib_MN1": {
+        "min_nominal_overlap_mm": 60,
+        "description": "Minimum nominal overlap of reinforcement in nib and reinforcement in supported member."
+      },
+      "general_table": "Table 6.12 gives typical full tension/compression lap lengths (l0) in bar diameters for good/poor bond conditions across four fck/fcu grades \u2014 see formulas_and_calculations.",
+      "dependency": "DEPENDENCY: exact lap-length rules (staggering, max proportion of bars lapped at one place, minimum spacing between laps) depend on the General Detailing chapter and EC2 Clause 8.7.4 \u2014 not fully restated in this section beyond Table 6.12 and its note that a6 = 1.5 assumes more than 50% of bars lapped at one place."
+    },
+    "anchorage_and_development": {
+      "minimum_anchorage_length_general": {
+        "rule": "Greater of 10 \u00d7 bar diameter or 100mm.",
+        "source_clause": "EC2 Cl.8.4, 8.7"
+      },
+      "table_6_12_reference": "For high-yield (500 grade) deformed bars, Table 6.12 gives typical anchorage (lbd) and lap (l0) lengths in bar diameters for 'good' and 'poor' bond conditions across 4 concrete grades.",
+      "table_6_12_assumptions": [
+        "Bar size not greater than 32mm",
+        "\u03b11, \u03b12, \u03b14, \u03b15 of EC2 Table 8.2 all = 1",
+        "\u03b13 = 0.9 (\u03bb = 1.35 and K = 0.05)",
+        "\u03b16 = 1.5 (assumes more than 50% of bars lapped at one place) \u2014 for laps only",
+        "For other situations, refer to EC2 Clause 8.4.4"
+      ],
+      "corbel_specific": "Main tensile reinforcement anchored via tension lap into the column; large radius of bend required at the anchorage/direction-change point (both MCB1 and MCB2).",
+      "half_joint_specific": "Tension anchorage shown for the horizontal U-bar and for straight/cranked main bars; hh (bar diameter-derived?) dimension labelled at anchorage in MHJ diagram (value not given numerically in source, symbol only).",
+      "nib_specific": {
+        "MN1": "Tension anchorage length required if U-bars are used.",
+        "MN2": "Tension anchorage length shown for horizontal U-bars; depth of nib not less than 140mm partly to accommodate this."
+      },
+      "dependency": "DEPENDENCY: General anchorage/development-length numerical rules and bend-radius/hook rules should be taken from the General Detailing chapter and EC2 Cl.8.4/8.7, not invented here."
+    },
+    "spacing": [
+      {
+        "condition": "General corbel/half-joint/nib reinforcement, poker-vibrator access required",
+        "rule": "Minimum pitch of bars 75mm",
+        "affected": "all main bars"
+      },
+      {
+        "condition": "Vertically stacked/layered bars",
+        "rule": "Minimum vertical space 25mm or bar size, whichever greater",
+        "affected": "all bars"
+      },
+      {
+        "condition": "Continuous nib, main bars, general area",
+        "rule": "Max pitch 3h \u2264 400mm",
+        "affected": "main bars"
+      },
+      {
+        "condition": "Continuous nib, main bars, concentrated load area",
+        "rule": "Max pitch 2h \u2264 250mm",
+        "affected": "main bars"
+      },
+      {
+        "condition": "Continuous nib, secondary bars, general area",
+        "rule": "Max pitch 3.5h \u2264 450mm",
+        "affected": "secondary bars"
+      },
+      {
+        "condition": "Continuous nib, secondary bars, concentrated load area",
+        "rule": "Max pitch 3h \u2264 400mm",
+        "affected": "secondary bars"
+      },
+      {
+        "condition": "Nib MN2 U-bars",
+        "rule": "Pitch not more than 250mm",
+        "affected": "horizontal U-bars"
+      },
+      {
+        "condition": "Half joint MHJ hanger links",
+        "rule": "450mm (nominal)",
+        "affected": "hanger links"
+      },
+      {
+        "condition": "Half joint MHJ other links",
+        "rule": "150mm (nominal)",
+        "affected": "links"
+      }
+    ],
+    "bar_curtailment": {
+      "note": "Source does not give explicit curtailment-length rules for corbels/half joints/nibs beyond anchorage-length and lap requirements above; curtailment as such (mid-span bar cutoffs) is not applicable to these short, statically-determinate cantilever/bearing elements in the way it is for beams/slabs.",
+      "fact_type": "INFORMATION GAP \u2014 no explicit curtailment content in source for this topic"
+    },
+    "bar_bending": {
+      "large_radius_bends": {
+        "requirement": "Large radius of bend required at main tensile reinforcement direction changes in corbels (MCB1, MCB2) to avoid crushing the concrete / for crack control.",
+        "applies_to": [
+          "MCB1 main tensile bars",
+          "MCB2 main tensile bars welded to cross bar/plate"
+        ]
+      },
+      "U_bars": {
+        "MHJ": "Horizontal U-bar, same diameter as main bottom bars, standard radius of bend.",
+        "MN1": "U-bars optional alternative to closed links.",
+        "MN2": "Horizontal U-bars, diameter not more than 16mm."
+      },
+      "cranked_bars": {
+        "MHJ": "Cranked bars used if necessary for crack control; have their own distinct tension lap."
+      },
+      "welding_as_bend_alternative": "Where large bar diameters are needed (>16mm typically), welding main tensile bars to a cross bar or plate (MCB2) is used instead of/alongside bending, because large-diameter bends become impractical; welding normally done off-site under factory conditions."
+    },
+    "reinforcement_zoning": {
+      "corbel": [
+        "outer face zone (main tensile bar termination)",
+        "column-interface zone (tension lap, compression anchorage, two column links)",
+        "body zone (secondary horizontal reinforcement/links, compression bars)"
+      ],
+      "half_joint": [
+        "bearing/nib root zone (tension anchorage, hanger links at 450, cranked-bar lap)",
+        "full length zone (full-length links resisting total reaction, equally spaced)",
+        "general body zone (nominal links at 150)"
+      ],
+      "continuous_nib": [
+        "root/anchorage zone (tension anchorage length for U-bars)",
+        "concentrated-load zone (tighter max bar pitch, 2h\u2264250 vs 3h\u2264400)",
+        "general span zone (normal max pitch rules)"
+      ]
+    },
+    "connections_to_other_members_detail": {
+      "corbel_to_column": {
+        "reinforcement_interaction": "Corbel main tensile reinforcement lapped in tension into column reinforcement at the corbel/column interface; two additional column links placed close to corbel top; compression bars given compression anchorage into column.",
+        "relationship_type": "anchored_into / laps_with"
+      },
+      "nib_to_supporting_beam": {
+        "reinforcement_interaction": "The vertical leg of the links in the supporting beam must be designed to carry the loads from the nib; effective depth d of the beam should be reduced because concrete in the nib below the vertical beam link does not contribute to resistance.",
+        "relationship_type": "load_transfers_into"
+      },
+      "nib_to_supported_member": {
+        "reinforcement_interaction": "Minimum nominal overlap of 60mm between reinforcement in the nib and reinforcement in the supported member (MN1).",
+        "relationship_type": "laps_with"
+      }
+    },
+    "detailing_sequence_implied": [
+      "1. Establish concrete grade (\u226528/35) and member geometry (corbel projection / half-joint step / nib depth, min 140mm for shallow nib MN2).",
+      "2. Establish nominal cover (internal/external, corbel vs. nib/half-joint values) per exposure class.",
+      "3. Check minimum reinforcement area (tension As,min, compression Asc,min for corbels; As,min for half joints/nibs).",
+      "4. Select main tensile reinforcement arrangement: small-diameter bars/U-bars/easy-bend links preferred; large diameter + welding (MCB2) only if loading/geometry demands.",
+      "5. Provide compression bars/anchorage and secondary horizontal reinforcement/links (\u22650.5\u00d7 main tensile area).",
+      "6. Place two column links close to corbel top (corbel case).",
+      "7. Check bar spacing (min pitch 75mm; min vertical spacing 25mm/bar size; nib max pitch rules by zone).",
+      "8. Check anchorage (min 10\u2300 or 100mm; Table 6.12 for specific lengths) and laps (tension lap at column/support interface; 60mm min overlap for nibs).",
+      "9. Confirm edge distances to bearing (bar diameter or 0.75\u00d7cover, whichever greater)."
+    ],
+    "openings_and_discontinuities": {
+      "note": "No openings/penetrations discussed for this specific topic in the source; not applicable to corbels/half joints/nibs as covered here.",
+      "fact_type": "INFORMATION GAP \u2014 not covered by source for this topic"
+    }
+  },
+  "rules": {
+    "decision_rules": [
+      {
+        "id": "CBL-001",
+        "rule": "IF member is a corbel/half-joint/nib THEN concrete grade shall not normally be lower than 28/35 MPa (cylinder/cube).",
+        "type": "mandatory (normal practice \u2014 'not normally used')",
+        "source": {
+          "section": "6.9.2",
+          "page": 129
+        }
+      },
+      {
+        "id": "CBL-002",
+        "rule": "IF corbel is for internal use THEN nominal cover = 25mm + \u0394cdev (XC1). IF for external use THEN nominal cover = 35mm + \u0394cdev (XC3).",
+        "type": "mandatory",
+        "source": {
+          "section": "6.9.2",
+          "page": 129
+        }
+      },
+      {
+        "id": "CBL-003",
+        "rule": "IF continuous nib or slab half joint is for internal use THEN cover = 20mm or bar size (whichever greater). IF external use THEN cover = 40mm.",
+        "type": "mandatory",
+        "source": {
+          "section": "6.9.2",
+          "page": 129
+        }
+      },
+      {
+        "id": "CBL-004",
+        "rule": "IF nominal cover to grouped bars is being detailed THEN use the cover for the equivalent bar size (per 5.8, general chapter).",
+        "type": "mandatory",
+        "dependency": "General Detailing chapter \u00a75.8"
+      },
+      {
+        "id": "CBL-005",
+        "rule": "IF nominal cover exceeds 40mm AND 4-hour fire resistance is required THEN supplementary reinforcement may be required (axis distance to main reinforcement exceeds 70mm).",
+        "type": "conditional requirement",
+        "source": {
+          "clause": "EC2 Part 1.2 Cl.4.5.2"
+        }
+      },
+      {
+        "id": "CBL-006",
+        "rule": "IF designing corbel tension reinforcement THEN As,min \u2265 0.0014\u00b7bt\u00b7d.",
+        "type": "mandatory minimum",
+        "source": {
+          "clause": "EC2 9.2.1.1",
+          "page": 129
+        }
+      },
+      {
+        "id": "CBL-007",
+        "rule": "IF designing corbel compression reinforcement THEN Asc,min \u2265 0.002\u00b7Ac.",
+        "type": "mandatory minimum",
+        "source": {
+          "clause": "EC2 9.3.1.1"
+        }
+      },
+      {
+        "id": "CBL-008",
+        "rule": "IF designing half-joint/nib tension reinforcement for Grade 28/35 concrete and fyk=500 THEN As,min = 0.0014\u00b7bt\u00b7d (else use general formula As,min = 0.26\u00b7bt\u00b7d\u00b7fctm/fyk \u2265 0.0013\u00b7bt\u00b7d).",
+        "type": "mandatory minimum",
+        "source": {
+          "clause": "EC2 9.3.1.2"
+        }
+      },
+      {
+        "id": "CBL-009",
+        "rule": "IF selecting bar diameter for half joint/nib main reinforcement THEN preferred minimum diameter = 10mm.",
+        "type": "recommendation ('preferred')"
+      },
+      {
+        "id": "CBL-010",
+        "rule": "IF spacing bars requiring poker-vibrator access THEN minimum pitch = 75mm.",
+        "type": "mandatory ('must be allowed')"
+      },
+      {
+        "id": "CBL-011",
+        "rule": "IF bars are vertically stacked THEN minimum vertical space between individual bars = 25mm or bar size, whichever greater.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "CBL-012",
+        "rule": "IF continuous nib main bars are in a general (non-concentrated-load) area THEN max pitch = 3h \u2264 400mm. IF in a concentrated-load area THEN max pitch = 2h \u2264 250mm.",
+        "type": "mandatory maximum"
+      },
+      {
+        "id": "CBL-013",
+        "rule": "IF continuous nib secondary bars are in a general area THEN max pitch = 3.5h \u2264 450mm. IF in a concentrated-load area THEN max pitch = 3h \u2264 400mm.",
+        "type": "mandatory maximum"
+      },
+      {
+        "id": "CBL-014",
+        "rule": "IF anchoring any bar in this topic THEN minimum anchorage length = greater of (10 \u00d7 bar diameter) or 100mm.",
+        "type": "mandatory minimum",
+        "source": {
+          "clause": "EC2 8.4, 8.7"
+        }
+      },
+      {
+        "id": "CBL-015",
+        "rule": "IF selecting bar diameters for corbels/half joints/nibs in general THEN small diameters (\u226416mm) should be used; IF larger diameters are used THEN welding is likely required, and this should normally be done off-site under factory conditions.",
+        "type": "recommendation / conditional consequence",
+        "source": {
+          "section": "6.9.2",
+          "page": 129
+        }
+      },
+      {
+        "id": "CBL-016",
+        "rule": "IF detailing corbel main tensile reinforcement THEN small bar diameters, horizontal U-bars or links with easy bends are preferred (Model Detail MCB1). IF loading is high and geometry restrictive THEN large diameter bars may be necessary, requiring welding to a cross bar/plate (Model Detail MCB2), sized to weld strength.",
+        "type": "recommendation with conditional escalation",
+        "source": {
+          "section": "6.9.2",
+          "page": 129
+        }
+      },
+      {
+        "id": "CBL-017",
+        "rule": "IF detailing corbel main tensile reinforcement THEN it must extend as close to the outer face of the corbel as possible AND extend beyond the load-bearing area by at least the Model-Detail-specified minimum distance.",
+        "type": "mandatory ('essential')"
+      },
+      {
+        "id": "CBL-018",
+        "rule": "IF large horizontal forces must be transmitted into a corbel THEN a welded joint may be the only suitable solution.",
+        "type": "conditional recommendation"
+      },
+      {
+        "id": "CBL-019",
+        "rule": "IF detailing half joints in beams THEN inclined bars provide better crack control than other reinforcement arrangements, BUT they are often difficult to fix and can cause congestion \u2014 great care is needed, especially with large bar diameters and welded solutions.",
+        "type": "recommendation with caution",
+        "source": {
+          "clause": "EC2 6.2, 6.5, Annex J"
+        }
+      },
+      {
+        "id": "CBL-020",
+        "rule": "IF detailing continuous nibs THEN vertical U-bars or links should be used wherever possible (Model Detail MN1). IF a shallow nib is required (e.g. to support brickwork) THEN horizontal U-bars should be used instead (Model Detail MN2).",
+        "type": "recommendation with conditional alternative",
+        "source": {
+          "section": "6.9.2",
+          "page": 130
+        }
+      },
+      {
+        "id": "CBL-021",
+        "rule": "IF detailing a continuous nib THEN the vertical leg of the links in the SUPPORTING beam must be designed to carry the loads from the nib, AND the effective depth d of that beam must be reduced because concrete in the nib below the vertical beam link does not contribute to resistance.",
+        "type": "mandatory ('must')"
+      },
+      {
+        "id": "CBL-022",
+        "rule": "IF horizontal movement may occur between a nib and the supported member THEN the outer edge of the nib should be given a 20mm chamfer.",
+        "type": "conditional recommendation"
+      },
+      {
+        "id": "CBL-023",
+        "rule": "IF detailing edge distance from bearing to reinforcement (Model Details MCB1/MHJ/MN1) THEN distance = minimum of (bar diameter) or (0.75 \u00d7 cover), whichever is GREATER.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "CBL-024",
+        "rule": "IF detailing Model Detail MCB1 or MCB2 THEN compression bar area \u2265 1000 mm\u00b2/metre width of corbel, AND secondary horizontal reinforcement / horizontal links area \u2265 0.50 \u00d7 area of main tensile reinforcement.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "CBL-025",
+        "rule": "IF using Model Detail MCB1 (without welds) THEN main tensile reinforcement bar size should be \u226416mm. IF using Model Detail MCB2 (with welds) THEN main tensile reinforcement bar size should be \u226420mm.",
+        "type": "detail-specific constraint (design suitability limit)"
+      },
+      {
+        "id": "CBL-026",
+        "rule": "IF detailing a corbel THEN two column links should be placed close to the corbel top.",
+        "type": "mandatory ('should')"
+      },
+      {
+        "id": "CBL-027",
+        "rule": "IF detailing Model Detail MN1 nib links THEN link diameter must not be more than 12mm.",
+        "type": "mandatory maximum"
+      },
+      {
+        "id": "CBL-028",
+        "rule": "IF detailing Model Detail MN2 (shallow nib) THEN nib depth must not be less than 140mm, horizontal U-bar diameter must not be more than 16mm, and U-bar pitch must not be more than 250mm.",
+        "type": "mandatory constraints"
+      },
+      {
+        "id": "CBL-029",
+        "rule": "IF detailing Model Detail MN1 THEN minimum nominal overlap between reinforcement in the nib and reinforcement in the supported member = 60mm.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "CBL-030",
+        "rule": "IF a lacer bar is used with MN2 horizontal U-bars THEN it must be wired to at least two main longitudinal bars.",
+        "type": "mandatory"
+      }
+    ],
+    "constraints_by_strength": {
+      "mandatory_shall_must": [
+        "CBL-006",
+        "CBL-007",
+        "CBL-008",
+        "CBL-010",
+        "CBL-011",
+        "CBL-012",
+        "CBL-013",
+        "CBL-014",
+        "CBL-017",
+        "CBL-021",
+        "CBL-023",
+        "CBL-024",
+        "CBL-027",
+        "CBL-028",
+        "CBL-029",
+        "CBL-030"
+      ],
+      "recommendation_should": [
+        "CBL-009",
+        "CBL-015",
+        "CBL-016",
+        "CBL-019",
+        "CBL-020",
+        "CBL-022",
+        "CBL-026"
+      ],
+      "typical_practice_normal": [
+        "CBL-001"
+      ],
+      "example_or_optional": [
+        "CBL-018 (may be the only suitable solution \u2014 conditional, not universal)"
+      ]
+    }
+  },
+  "parameters": {
+    "input_parameters": {
+      "shared": {
+        "concrete_grade": {
+          "type": "enum",
+          "typical": "\u2265C28/35",
+          "unit": "MPa cylinder/cube"
+        },
+        "exposure_class": {
+          "type": "enum",
+          "values": [
+            "internal (XC1)",
+            "external (XC3)"
+          ]
+        },
+        "cover_nominal": {
+          "type": "float",
+          "unit": "mm",
+          "depends_on": "exposure_class, member_type"
+        },
+        "main_bar_diameter": {
+          "type": "float",
+          "unit": "mm",
+          "range": "typically \u226416 (MCB1) or \u226420 (MCB2)"
+        },
+        "main_bar_count": {
+          "type": "int"
+        }
+      },
+      "corbel": {
+        "corbel_width": {
+          "unit": "mm"
+        },
+        "corbel_projection": {
+          "unit": "mm",
+          "description": "cantilever length from column face to outer face"
+        },
+        "corbel_depth_at_column": {
+          "unit": "mm"
+        },
+        "bearing_width": {
+          "unit": "mm"
+        },
+        "load_bearing_area_position": {
+          "unit": "mm",
+          "description": "distance from column face"
+        },
+        "welded_option": {
+          "type": "bool",
+          "description": "false=MCB1, true=MCB2"
+        },
+        "secondary_horiz_reinf_diameter": {
+          "unit": "mm"
+        },
+        "compression_bar_diameter": {
+          "unit": "mm"
+        },
+        "column_width": {
+          "unit": "mm"
+        },
+        "column_link_diameter": {
+          "unit": "mm"
+        }
+      },
+      "half_joint": {
+        "step_depth_reduction": {
+          "unit": "mm",
+          "description": "the drop in depth at the half joint"
+        },
+        "bearing_length": {
+          "unit": "mm"
+        },
+        "hanger_link_diameter": {
+          "unit": "mm"
+        },
+        "hanger_link_spacing": {
+          "default_mm": 450
+        },
+        "general_link_spacing": {
+          "default_mm": 150
+        },
+        "uses_cranked_bar": {
+          "type": "bool"
+        },
+        "horizontal_U_bar_diameter": {
+          "unit": "mm",
+          "equals": "main_bottom_bar_diameter"
+        }
+      },
+      "nib": {
+        "nib_depth": {
+          "unit": "mm",
+          "minimum_for_shallow_type": 140
+        },
+        "nib_projection": {
+          "unit": "mm"
+        },
+        "shallow_type": {
+          "type": "bool",
+          "description": "false=MN1 vertical U-bars/links, true=MN2 horizontal U-bars"
+        },
+        "link_diameter": {
+          "unit": "mm",
+          "max_mm_MN1": 12
+        },
+        "U_bar_diameter": {
+          "unit": "mm",
+          "max_mm_MN2": 16
+        },
+        "U_bar_pitch": {
+          "unit": "mm",
+          "max_mm_MN2": 250
+        },
+        "lacer_bar_diameter": {
+          "unit": "mm",
+          "equals": "U_bar_diameter (MN2)"
+        },
+        "min_reinforcement_overlap": {
+          "default_mm": 60
+        },
+        "concentrated_load_zone": {
+          "type": "bool",
+          "affects": "max bar pitch"
+        }
+      }
+    },
+    "derived_parameters": {
+      "As_min_corbel_tension": "0.0014 \u00d7 bt \u00d7 d",
+      "Asc_min_corbel_compression": "0.002 \u00d7 Ac",
+      "As_min_halfjoint_nib_tension": "0.26 \u00d7 bt \u00d7 d \u00d7 fctm/fyk (\u22650.0013\u00b7bt\u00b7d); simplifies to 0.0014\u00b7bt\u00b7d for C28/35 & fyk=500",
+      "min_anchorage_length": "max(10 \u00d7 bar_diameter, 100mm)",
+      "min_edge_distance_to_bearing": "max(bar_diameter, 0.75 \u00d7 cover)",
+      "secondary_reinf_min_area": "0.5 \u00d7 main_tensile_area (corbel)",
+      "compression_bar_min_area": "1000 mm\u00b2/m width (corbel)",
+      "nib_main_bar_max_pitch": "min(3h, 400) general / min(2h, 250) concentrated-load",
+      "nib_secondary_bar_max_pitch": "min(3.5h, 450) general / min(3h, 400) concentrated-load"
+    },
+    "constraints": [
+      "concrete_grade >= C28/35",
+      "main_bar_diameter <= 16mm when welded_option == false (MCB1)",
+      "main_bar_diameter <= 20mm when welded_option == true (MCB2)",
+      "nib_depth >= 140mm when shallow_type == true (MN2)",
+      "link_diameter <= 12mm for MN1",
+      "U_bar_diameter <= 16mm for MN2",
+      "U_bar_pitch <= 250mm for MN2",
+      "bar_pitch >= 75mm (poker vibrator access)",
+      "vertical_bar_spacing >= max(25mm, bar_diameter)"
+    ],
+    "recovered_information_pass": {
+      "provenance": "13_audit_recovered_information (1).md (§6.9, pp.129–135)",
+      "table_6_12_full_numeric": {
+        "title": "Typical values of anchorage and lap lengths for rib/nib/corbel bars (in bar diameters)",
+        "source": "Table 6.12, page 130",
+        "status": "EXTRACTED",
+        "concrete_grades_fck_fcu": {
+          "25/30": {
+            "anchorage_lbd_good_bond": 36,
+            "anchorage_lbd_poor_bond": 48,
+            "lap_l0_good_bond": 55,
+            "lap_l0_poor_bond": 73
+          },
+          "28/35": {
+            "anchorage_lbd_good_bond": 34,
+            "anchorage_lbd_poor_bond": 45,
+            "lap_l0_good_bond": 51,
+            "lap_l0_poor_bond": 68
+          },
+          "30/37": {
+            "anchorage_lbd_good_bond": 32,
+            "anchorage_lbd_poor_bond": 43,
+            "lap_l0_good_bond": 37,
+            "lap_l0_poor_bond": 64,
+            "audit_note_good_bond_lap": "Printed value 37 breaks monotonic sequence (55->51->?->48), likely OCR misread for 47; recorded exactly as printed per audit rules."
+          },
+          "32/40": {
+            "anchorage_lbd_good_bond": 31,
+            "anchorage_lbd_poor_bond": 41,
+            "lap_l0_good_bond": 48,
+            "lap_l0_poor_bond": 62
+          }
+        }
+      },
+      "detailing_information_section_6_9_3": {
+        "source": "Section 6.9.3, pp.130–131",
+        "status": "EXTRACTED",
+        "drawing_scale": "Half full scale (1:2)",
+        "standard_concrete_grade": "C30/37 MPa",
+        "standard_aggregate_size_mm": 20.0,
+        "standard_cover_internal_mm": 35.0,
+        "standard_cover_external_mm": 40.0,
+        "note_on_cover_defaults": "Standard 35/40mm pair is drawing-issue default, not a replacement for exposure-class-specific values in §6.9.2.",
+        "reinforcement_requirements": "Type, bar diameter, number and exact position of main bars to be given."
+      },
+      "code_citations": {
+        "corbels": "EC2 Clauses 6.2, 6.5 and Annex J",
+        "half_joints": "EC2 Clauses 6.2, 6.5 and Annex J",
+        "continuous_nibs": "EC2 Clauses 6.2 and 6.5",
+        "nominal_cover": "EC2 Clause 4.4"
+      },
+      "bibliographic_citations": {
+        "reference_33": "Park & Paulay, Reinforced Concrete Structures (welded joint for large horizontal forces)",
+        "reference_34": "Clark & Thorogood, Serviceability behaviour of RC half joints (inclined bars for crack control)"
+      },
+      "continuous_nib_depth_driver": {
+        "rule": "The arrangement of reinforcement for continuous nibs may control the depth of nib.",
+        "source": "Section 6.9.2, page 130",
+        "status": "EXTRACTED"
+      }
+    }
+  }
+}

@@ -1,0 +1,108 @@
+[
+  {
+    "id": "V1",
+    "type": "wall",
+    "input": {
+      "t": 220,
+      "grade": "28/35",
+      "exposure": "XC1"
+    },
+    "expect": {
+      "vertical": "12@200",
+      "horizontal": "10@200",
+      "As_v_min_per_m_mm2": 400,
+      "max_pitch": 400,
+      "lap_l0_dia": 56
+    }
+  },
+  {
+    "id": "V2",
+    "type": "wall",
+    "input": {
+      "t": 350
+    },
+    "expect": {
+      "vertical": "16@250",
+      "horizontal": "12@200"
+    }
+  },
+  {
+    "id": "V3",
+    "type": "wall",
+    "input": {
+      "t": 120
+    },
+    "expect": {
+      "warning": "thickness < 150 not recommended"
+    }
+  },
+  {
+    "id": "V4",
+    "type": "pad_footing",
+    "input": {
+      "lx": 3000,
+      "ly": 3000,
+      "cx": 400,
+      "cy": 400,
+      "d": 600
+    },
+    "expect": {
+      "banding": false,
+      "band_width": 2200,
+      "note": "3000 <= 1.5*(400+3*600)=3300 so no banding required"
+    }
+  },
+  {
+    "id": "V5",
+    "type": "pad_footing",
+    "input": {
+      "lx": 4000,
+      "ly": 4000,
+      "cx": 400,
+      "cy": 400,
+      "d": 500
+    },
+    "expect": {
+      "banding": true,
+      "band_width": 1900
+    }
+  },
+  {
+    "id": "V6",
+    "type": "stair",
+    "input": {
+      "span": 3600,
+      "lbd_dia": 37,
+      "dia": 12
+    },
+    "expect": {
+      "A": 500,
+      "note": "max(360, 444, 500)=500"
+    }
+  },
+  {
+    "id": "V7",
+    "type": "anchorage",
+    "input": {
+      "grade": "30/37",
+      "bond": "poor",
+      "dia": 20,
+      "source": "stairs"
+    },
+    "expect": {
+      "lbd_mm": 1020
+    }
+  },
+  {
+    "id": "V8",
+    "type": "lap",
+    "input": {
+      "dia": 8,
+      "grade": "28/35",
+      "table": "walls"
+    },
+    "expect": {
+      "l0_mm": "max(56*8=448,15*8=120,200)=448"
+    }
+  }
+]

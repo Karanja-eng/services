@@ -1,0 +1,123 @@
+{
+  "engineering_knowledge": {
+    "member_definition": {
+      "scope": "General practice notes for detailing precast concrete work \u2014 transport, handling, joints, tolerances. Not member-specific geometry."
+    },
+    "key_practice_notes": [
+      "Precast unit transported after manufacture, before incorporation \u2014 tolerances matter when built into part-built/ready-built structures.",
+      "Unit often made by third party without site visit/full drawings \u2014 clarity of instruction vital.",
+      "Special consideration of joints required; sound detailing of joints leads to attractive/serviceable/safe structures.",
+      "Casting orientation decision often best left to/discussed with precaster.",
+      "Avoid acute re-entrant corners (formwork removal damage) and acute protruding corners (handling breakage, poor aggregate compaction/discoloration)."
+    ],
+    "transport_limits_UK": {
+      "length_m": {
+        "no_restriction_under": 27.4,
+        "police_notification_over": 18.3,
+        "special_dispensation_over": 27.4
+      },
+      "height_m": {
+        "no_restriction_under": 4.88,
+        "notice_days_if_over": 2,
+        "standard_motorway_height_m": 5.03
+      },
+      "width_m": {
+        "no_restriction_under": 2.9,
+        "police_notification_2_9_to_3_5": true,
+        "special_dispensation_3_5_to_5": true
+      },
+      "weight_tonne": {
+        "no_restriction_under": 26,
+        "normal_truck_gross_range": "32/36/42",
+        "special_types_vehicle_over": 44,
+        "STGO_1_max_gross_tonne": 80,
+        "STGO_1_notice_days": 2,
+        "STGO_over_80_notice_days": 5
+      },
+      "economic_note": "Most frequent load: 20 tonne payload on 32 tonne gross truck; savings if total unit weight per load approaches (without exceeding) 30 tonne, e.g. 2\u00d79.8t vs 1\u00d710.2t."
+    },
+    "lifting_and_handling": [
+      "Permissible support points and packing materials should be noted on drawing.",
+      "Lifting strengths for concrete stated on drawing (minimum lifting strength specified for mould-reuse economy).",
+      "Unit weight for craneage/transportation stated on drawing.",
+      "Reinforcement generally NOT suitable for use as lifting hooks (though some manufacturers do, with care/testing).",
+      "Proprietary lifting/fixing inserts used per manufacturer instructions with adequate safety factors; isolate fixings from secondary load effects/structural movements not designed for.",
+      "Where a drawing shows part of a unit cast onto another precast unit, clearly state which weights apply to which part."
+    ],
+    "joints": {
+      "reference": "Design of joints & reinforcement/concrete requirements (binding links, chamfers) covered in IStructE report 'Structural joints in precast concrete', 1978.",
+      "in_situ_to_precast_interface": "Precast units should have a key joint cast into the mutual face for mechanical anchorage/shear where in-situ concrete is placed adjacent (e.g. infill slab); precast face receiving in-situ concrete should be properly prepared (e.g. scabbled while 'green')."
+    },
+    "durability_special_case": {
+      "context": "Bridge/car park construction with chloride exposure risk (XD3) \u2014 joints between precast units require special corrosion protection attention.",
+      "figure_ref": "Figure 8.1 shows moderate/severe/very-severe exposure zones for precast car parks and bridges (splash zone, soffit/beam ends behind sealant, transverse beams/floor slab)."
+    }
+  },
+  "rules": {
+    "decision_rules": [
+      {
+        "id": "PRE-001",
+        "rule": "IF a precast unit exceeds 27.4m length, 4.88m height, or falls in the 3.5\u20135m width band, OR total vehicle+load weight exceeds 44 tonnes THEN special dispensation/notification from the Department for Transport / police is required, per the stated thresholds.",
+        "type": "mandatory (regulatory)"
+      },
+      {
+        "id": "PRE-002",
+        "rule": "IF a unit is cast onto another precast unit (partial unit) THEN each drawing must clearly state which weights apply and that they are for part units only.",
+        "type": "mandatory"
+      },
+      {
+        "id": "PRE-003",
+        "rule": "IF in-situ concrete is placed adjacent to precast units (e.g. infill slab) THEN the precast units must have a key joint cast into the mutual face for mechanical anchorage/shear, and the precast face must be properly prepared (e.g. scabbled while green).",
+        "type": "mandatory"
+      },
+      {
+        "id": "PRE-004",
+        "rule": "IF reinforcement is used as a lifting point THEN this is generally not considered suitable, UNLESS done with proper care, testing, and risk assessment (as some manufacturers do).",
+        "type": "recommendation against, with conditional exception"
+      },
+      {
+        "id": "PRE-005",
+        "rule": "IF units are of complex shape or require high-quality single-piece-mould finish THEN they should be discussed with a precaster before finalizing details, and a de-moulding drawing is necessary.",
+        "type": "recommendation"
+      },
+      {
+        "id": "PRE-006",
+        "rule": "IF chloride exposure risk exists (e.g. bridges/car parks, XD3) THEN joints between precast units require special corrosion-protection attention.",
+        "type": "conditional mandatory"
+      }
+    ]
+  },
+  "parameters": {
+    "input_parameters": {
+      "unit_length": {
+        "unit": "m"
+      },
+      "unit_height": {
+        "unit": "m"
+      },
+      "unit_width": {
+        "unit": "m"
+      },
+      "unit_weight": {
+        "unit": "tonne"
+      }
+    },
+    "constraints": [
+      "unit_length <= 27.4 (else special dispensation)",
+      "unit_height <= 4.88 (else 2-day notice)",
+      "unit_width <= 2.9 (else notification/dispensation tiers)",
+      "vehicle_plus_load_weight <= 44 tonne (else Special Types vehicle, STGO tiers)"
+    ]
+  },
+  "recovered_information_pass": {
+    "provenance": "13_audit_recovered_information (1).md (Ch.8, pp.160–161)",
+    "PR1_surface_finish_tolerance": "Designer must make intention clear on surface finish and tolerance; non-standard tolerance areas clearly noted; unnecessarily rigid specifications uneconomic (§8.1, p.160).",
+    "PR2_lifting_angles": "Lifting position specification must cover permissible support points AND angles of lifting (p.160).",
+    "PR3_joint_detail_features": "Binding links, chamfers, etc. per IStructE 1978 report (p.161).",
+    "PR4_precaster_office_expertise": "Detailer needs awareness of moulding, assembly, and handling of cage, typically advised by specialist precaster (p.161).",
+    "PR5_severe_exposure_splash_zone": {
+      "height_band": "1.0 – 1.5m",
+      "description": "Severe-exposure splash zone height on precast car park/bridge beams (Fig 8.1, p.161)."
+    }
+  }
+}

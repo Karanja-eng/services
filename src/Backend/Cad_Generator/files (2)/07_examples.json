@@ -1,0 +1,142 @@
+{
+  "document": "IStructE/Concrete Society SMDS Chapters 1–5 — Worked Examples",
+
+  "examples": [
+    {
+      "id": "EX-01",
+      "name": "Flat Slab — Marked-Up GA",
+      "source": "Section 2.6, Example 1, pages 8–9",
+      "type": "General Arrangement with required steel areas",
+      "structure": {
+        "grid": "A-D columns x 1-5 rows",
+        "element": "flat slab"
+      },
+      "required_areas_mm2_per_mm": {
+        "minimum": 565,
+        "column_strip": [2094, 1796, 1795],
+        "corner_column_zone": 646,
+        "high_load_central_zone": 2805,
+        "special_zone": 1005
+      },
+      "notes": [
+        "Notes on drawing must include concrete grade and cover or reference to these",
+        "Method of showing holes and associated reinforcement trimming for M&E must be clearly stated",
+        "Where contour plots from proprietary systems are provided, level of rationalisation should be agreed between Designer and Detailer",
+        "Where crack control is important, a schematic layout of bars should be given"
+      ],
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-02",
+      "name": "Beam — Calculation Sheet Details",
+      "source": "Section 2.6, Example 2, pages 9–10",
+      "type": "Beam details given on calculation sheet",
+      "note": "Figure shows a calculation sheet with beam dimensions, reinforcement areas and bar details but numerical details are not fully legible — dependency on actual Chapter 6 beam section",
+      "status": "PARTIALLY READABLE"
+    },
+    {
+      "id": "EX-03",
+      "name": "Pile Cap — Sketched Details",
+      "source": "Section 2.6, Example 3, page 10",
+      "type": "Pile cap details from calculation sheets",
+      "reference": "Core 6, GL A13, B2",
+      "bars": [
+        {"mark": "6", "no_off": null, "type": "H16", "spacing_mm": 250},
+        {"mark": "7", "no_off": 4, "type": "H40", "spacing_mm": null},
+        {"mark": "8", "no_off": 4, "type": "H16", "spacing_mm": null},
+        {"mark": "9", "no_off": null, "type": "H16", "spacing_mm": "same as 08"},
+        {"mark": "10", "no_off": 5, "type": "H40", "spacing_mm": null},
+        {"mark": "11", "no_off": null, "type": "H16", "spacing_mm": null}
+      ],
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-04",
+      "name": "Tabular Method — Column Bases",
+      "source": "Section 4.1.1, Table 4.1a, page 24",
+      "type": "Tabular detailing — column bases",
+      "bases": [
+        {
+          "reference": "7A, 7B, 7C",
+          "no_off": 3,
+          "X_mm": 1800,
+          "Y_mm": 1800,
+          "Z_mm": 400,
+          "B1_reinforcement": "12 H20-1-150",
+          "B2_reinforcement": "12 H20-1-150",
+          "level_C": 19.000
+        },
+        {
+          "reference": "8A, 8B, 8C",
+          "no_off": 3,
+          "X_mm": 1800,
+          "Y_mm": 1350,
+          "Z_mm": 400,
+          "B1_reinforcement": "9 H16-2-150",
+          "B2_reinforcement": "12 H20-1-150",
+          "level_C": 19.000
+        }
+      ],
+      "blinding_thickness_mm": 75,
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-05",
+      "name": "Tabular Method — Column Starters",
+      "source": "Section 4.1.1, Table 4.1b, page 24",
+      "type": "Tabular detailing — column starter bars",
+      "starters": [
+        {
+          "col_ref": "7A, 7B, 7C, 7D",
+          "no_off": 3,
+          "level_C": 19.000,
+          "level_D": 19.400,
+          "main_bars_E": "4 H32-3",
+          "links_F": "3 H10-4-150",
+          "section": "1-1",
+          "elevation": "A-A",
+          "column_dim_A_mm": 350,
+          "column_dim_B_mm": 550
+        },
+        {
+          "col_ref": "8C",
+          "no_off": 3,
+          "level_C": 19.500,
+          "level_D": 19.950,
+          "main_bars_E": "6 H25-5",
+          "links_F": "6 H10-6-150 + 6 H10-7-150",
+          "section": "2-2",
+          "elevation": "A-A",
+          "column_dim_A_mm": 575,
+          "column_dim_B_mm": 575
+        }
+      ],
+      "kicker_thickness_mm": 75,
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-06",
+      "name": "Typical Bar Schedule Entry",
+      "source": "Section 4.5.1, Table 4.2, page 31",
+      "type": "Bar schedule example",
+      "member": "Beam 3",
+      "schedule_ref": "046 02A",
+      "bars": [
+        {
+          "bar_mark": 2,
+          "type_size": "H25",
+          "no_of_members": 1,
+          "no_bars_in_each": 4,
+          "total_no": 4,
+          "length_mm": 5225,
+          "shape_code": 11,
+          "A_mm": 400,
+          "revision": "A"
+        }
+      ],
+      "standard": "BS 8666:2005",
+      "dimensions": "multiples of 5mm for A,B,C,D; multiples of 25mm for lengths",
+      "status": "DIRECTLY STATED"
+    }
+  ]
+}

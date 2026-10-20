@@ -1,0 +1,214 @@
+{
+  "document": "IStructE/Concrete Society SMDS Ch5-6 — Worked Examples",
+
+  "tolerance_examples": [
+    {
+      "id": "EX-T1",
+      "name": "Beam corner detail — cover variation with H16 link",
+      "source": "Section 5.3 Example 1, page 39",
+      "geometry": {
+        "link_dia_mm": 16,
+        "main_bar_dia_mm": 40,
+        "nominal_cover_mm": 40
+      },
+      "analysis": {
+        "actual_H16_size_mm": 18,
+        "curve_in_link_increases_cover": true,
+        "position_A_cover_to_one_face_mm": 48,
+        "position_B_cover_to_both_faces_mm": 14
+      },
+      "consequences": [
+        "Position affects crack-width",
+        "Position affects fire resistance",
+        "May cause clash at column intersection"
+      ],
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-T2",
+      "name": "Beam/column junction — bars won't fit",
+      "source": "Section 5.3 Example 2, page 39",
+      "geometry": {
+        "column_width_mm": 275,
+        "cover_each_side_mm": 40,
+        "link_dia_mm": 12,
+        "beam_bar_dia_mm": 32,
+        "beam_bar_count": 5
+      },
+      "calculation": {
+        "space_inside_link_mm": "275 - 80 - 2(12+1) - 10 = 159mm",
+        "note": "deduct 80=2×cover, 2×(link+1)=26mm for actual link size, 10mm for tolerance",
+        "space_required_for_5_H32_mm": "5 × 35.2 ≈ 176mm (using actual bar size +10%)"
+      },
+      "conclusion": "Bars will NOT fit. Tolerance deduction has concrete structural consequence.",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-T3",
+      "name": "Flanged beam — cover to B bar < 10mm",
+      "source": "Section 5.3 Example 3, page 39",
+      "geometry": {
+        "bar_A_dia_mm": 25,
+        "bar_B_dia_mm": 25,
+        "link_dia_mm": 16,
+        "gap_without_tolerance_mm": 3,
+        "slab_thickness_mm": 150
+      },
+      "analysis": {
+        "with_link_tolerance_bar_A_drop_mm": 5,
+        "with_actual_size_additional_mm": 7,
+        "total_possible_drop_bar_A_mm": 12,
+        "if_formwork_out_by_2_to_3mm": "cover to B could be < 10mm"
+      },
+      "status": "DIRECTLY STATED"
+    }
+  ],
+
+  "slab_drawing_examples": [
+    {
+      "id": "EX-S1",
+      "name": "Single-way slab working drawing",
+      "source": "Section 6.2.4, page 62",
+      "type": "Multi-bay one-way slab plan + sections",
+      "bars_identified": [
+        {"mark": "01", "desc": "bottom span bars B1"},
+        {"mark": "02", "desc": "U-bars long leg B1"},
+        {"mark": "03", "desc": "bottom bars B2 alternately placed AP"},
+        {"mark": "04", "desc": "top bars T1 AS (alternately staggered)"},
+        {"mark": "05", "desc": "top bars B1 AP"},
+        {"mark": "06", "desc": "distribution bars"},
+        {"mark": "07", "desc": "top U-bars at end support"},
+        {"mark": "08", "desc": "distribution bars T2"},
+        {"mark": "09", "desc": "U-bars"},
+        {"mark": "10", "desc": "top bars"},
+        {"mark": "11", "desc": "top U-bars long leg B1"},
+        {"mark": "15", "desc": "top bars T1 AS"},
+        {"mark": "16", "desc": "distribution T1"},
+        {"mark": "17", "desc": "distribution T1"},
+        {"mark": "18", "desc": "bottom bars B2"},
+        {"mark": "19", "desc": "U-bars"},
+        {"mark": "22", "desc": "top bars T1"}
+      ],
+      "bar_notation_examples": [
+        "21 H12 16 T1", "19 H10 08 250 B2", "8 H10 08 300 T2",
+        "6 H10 12 300 U-BARS", "10 H12 19 300 U-BARS LONG LEG B1",
+        "61 H12 15 150 T1 AS", "61 H16 13 150 T1 AS"
+      ],
+      "group_counts_in_brackets": ["(2)", "(4)", "(16)"],
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-S2",
+      "name": "Flat slab working drawing",
+      "source": "Section 6.2.4, page 63",
+      "type": "Flat slab plan showing column and middle strips",
+      "notable_features": [
+        "36 H20 03 175 T1 AS — main column strip top bars at 175mm pitch, 36 no.",
+        "36 H20 03 175 T2 AS — same bars top second layer",
+        "8 H16 04 350 T1 AS — column strip bars at wider spacing",
+        "11 H16 04 250 T2 AS — middle strip top bars",
+        "37 H12 10/11 250 U-BARS — edge U-bars",
+        "BAY A label with bay dimensions 1200, 1500, 600, 700mm",
+        "KEY PLAN showing bays A, B, C and columns 5, 6, 7",
+        "50mm dimensions showing column strip concentration zone"
+      ],
+      "status": "DIRECTLY STATED"
+    }
+  ],
+
+  "beam_drawing_examples": [
+    {
+      "id": "EX-B1",
+      "name": "Traditional method — Beam on Grid 1/A-B",
+      "source": "Section 6.3.4, page 79",
+      "geometry": {
+        "beam_width_mm": 225,
+        "beam_depth_mm": "approx 400-500 (INFERRED from drawing)",
+        "span_approx_mm": "approx 6000+ (INFERRED)",
+        "cover_mm": 160
+      },
+      "reinforcement": {
+        "mark_01": "4 H20 01 — main bottom bars",
+        "mark_02": "2 H20 02 UB — U-bars at end support",
+        "mark_03": "4 H25 03 — main bottom span bars",
+        "mark_04": "2 H25 04 — top support bars",
+        "mark_05": "2 H16 05 — hanger bars",
+        "mark_06": "13 H12 06 150 LINKS — shear links at 150mm",
+        "mark_07": "37 H12 07 LINKS P.A.S — main span links",
+        "mark_08": "29 H12 08 300 LINK CLOSERS",
+        "mark_09": "2 H12 09 TEF — side face bars",
+        "mark_10": "4 H25 10 SPACERS"
+      },
+      "link_zones": [
+        {"zone": "left end region", "count": 19, "spacing_mm": 300},
+        {"zone": "central region", "count": 5, "spacing_mm": 200},
+        {"zone": "right end region", "count": 13, "spacing_mm": 150}
+      ],
+      "sections": [
+        {"name": "1-1", "position": "span section", "shows": ["01", "02", "05", "07", "09"]},
+        {"name": "2-2", "position": "at column", "shows": ["01", "03", "04", "05", "06", "07", "08", "09", "10", "COLUMN BARS", "CLOSER"]}
+      ],
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-B2",
+      "name": "Representational method — Beams A, B, C",
+      "source": "Section 6.3.4, page 80",
+      "geometry": {
+        "beam_A": {"DIM1_mm": 1500, "DIM2_mm": 250},
+        "beam_B": {"DIM1_mm": 1400, "DIM2_mm": 200},
+        "beam_C": {"DIM1_mm": 1100, "DIM2_mm": 175}
+      },
+      "method": "General elevation (BEAMS A.B.C.) + cross-sections 1-1 to 6-6 + table with per-beam values",
+      "cover_noted_mm": 40,
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-B3",
+      "name": "Broad beam — Grid Line 6/E-F",
+      "source": "Section 6.3.4, page 81",
+      "reinforcement_highlights": [
+        "22 H10 09 + 44 H10 10 LINKS IN 3s PAS. PLUS 18 H10 11 300 CLOSERS",
+        "5 H20 04 UB — U-bars at support",
+        "6 H20 01 / 3 H20 02 — bottom bars",
+        "3 H20 05 / 5 H20 06 — top bars",
+        "Links arranged in groups of 3 (3s) along beam"
+      ],
+      "sections": ["1-1 span", "2-2 internal", "3-3 at support"],
+      "status": "DIRECTLY STATED"
+    }
+  ],
+
+  "tying_reinforcement_formulas": [
+    {
+      "id": "EX-TY1",
+      "name": "Peripheral ties",
+      "formula": "≥ (20 + 4n_o) but ≤ 60 kN",
+      "variables": {"n_o": "number of storeys"},
+      "location": "Within 1.2m from edge of structure at each floor/roof",
+      "source": "Section 5.1.9, page 36",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-TY2",
+      "name": "Internal ties",
+      "formula": "F_tie,int = [(gk + qk)/7.5] × (lr/5) × F1 ≥ Ft kN/m",
+      "variables": {
+        "gk_plus_qk": "sum of average permanent and variable floor loads (kN/m²)",
+        "lr": "greater of distances between column/frame/wall centres supporting adjacent spans (m)",
+        "Ft": "(20 + 4n_o) ≤ 60 kN/m"
+      },
+      "max_spacing": "1.5 × lr",
+      "source": "Section 5.1.9, page 36",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "id": "EX-TY3",
+      "name": "Horizontal ties to columns/walls",
+      "formula": "Greater of: 2Ft ≥ ls/2.5 × Ft; AND 3% of total vertical load at that level",
+      "variables": {"ls": "floor to ceiling height (m)"},
+      "source": "Section 5.1.9, page 36",
+      "status": "DIRECTLY STATED"
+    }
+  ]
+}

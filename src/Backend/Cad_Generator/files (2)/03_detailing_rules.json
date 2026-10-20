@@ -1,0 +1,230 @@
+{
+  "document": "IStructE/Concrete Society SMDS Chapters 1–5 — General Detailing Rules",
+  "rule_type": "General — applies to all members unless overridden by member-specific chapter",
+
+  "decision_rules": [
+    {
+      "id": "DR-001",
+      "name": "column_bar_link_retention",
+      "condition": "distance between column bars > 150mm",
+      "action": "Every column bar must be retained by a link",
+      "source": "Section 4.2.2, page 26",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "DR-002",
+      "name": "column_bar_link_retention_close_spacing",
+      "condition": "distance between column bars <= 150mm",
+      "action": "Every other column bar should be retained by a link",
+      "source": "Section 4.2.2, page 26",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "SHOULD"
+    },
+    {
+      "id": "DR-003",
+      "name": "straight_bar_preference",
+      "condition": "any bar in any element",
+      "action": "Use straight bars wherever possible",
+      "rationale": "Easier to detail, supply and fix than bars with bends",
+      "source": "Section 4.2.4, page 30",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "SHOULD"
+    },
+    {
+      "id": "DR-004",
+      "name": "bar_max_length_12mm_plus",
+      "condition": "bar nominal diameter >= 12mm",
+      "action": "Schedule with maximum length of 12m",
+      "source": "Section 4.2.4, page 30",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "SHOULD (normally)"
+    },
+    {
+      "id": "DR-005",
+      "name": "bar_max_length_10mm_less",
+      "condition": "bar nominal diameter <= 10mm",
+      "action": "Schedule with maximum length of 6m",
+      "source": "Section 4.2.4, page 30",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "SHOULD (normally)"
+    },
+    {
+      "id": "DR-006",
+      "name": "hole_not_on_rebar_drawing_circular",
+      "condition": "circular hole in slab or wall, diameter <= 150mm",
+      "action": "Need not be indicated on reinforcement drawings",
+      "source": "Section 3.2.2, page 12",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "PERMITTED OMISSION"
+    },
+    {
+      "id": "DR-007",
+      "name": "hole_not_on_rebar_drawing_rectangular",
+      "condition": "rectangular hole in slab or wall, size <= 150x150mm",
+      "action": "Need not be indicated on reinforcement drawings",
+      "source": "Section 3.2.2, page 12",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "PERMITTED OMISSION"
+    },
+    {
+      "id": "DR-008",
+      "name": "hole_on_rebar_drawing_large",
+      "condition": "hole larger than 150mm diameter (circular) or 150x150mm (rectangular)",
+      "action": "Must be indicated on reinforcement drawing AND trimmed where necessary by suitable bars",
+      "source": "Section 3.2.2, page 12",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "DR-009",
+      "name": "secondary_beam_lever_arm_check",
+      "condition": "secondary beam reinforcement has increased top cover",
+      "action": "Check resulting reduction in lever arm is satisfactory",
+      "reference": "Also see section 5.15",
+      "source": "Section 4.2.2, page 26",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "CHECK REQUIRED"
+    },
+    {
+      "id": "DR-010",
+      "name": "bottom_span_bars_stop_at_column",
+      "condition": "internal beam/column intersection with preformed cages",
+      "action": "Bottom span bars stop short of column face; bottom span bars must not extend into column",
+      "source": "Section 4.2.3, Figure 4.1, page 26/29",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST (preferred method)"
+    },
+    {
+      "id": "DR-011",
+      "name": "link_hanger_bars_stop_at_column",
+      "condition": "internal beam/column intersection",
+      "action": "Link hanger bars stop short of column face",
+      "source": "Figure 4.1, page 26",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST (preferred method)"
+    },
+    {
+      "id": "DR-012",
+      "name": "vibrator_access_at_beam",
+      "condition": "any beam with column or formwork",
+      "action": "Allow 75mm space for vibrator for every 300mm of beam width",
+      "source": "Figure 4.2, page 27",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "SHOULD"
+    },
+    {
+      "id": "DR-013",
+      "name": "cross_ties_for_link_height",
+      "condition": "link free height would otherwise exceed 400mm",
+      "action": "Provide cross ties at 1000mm centres to limit free height of link to 400mm",
+      "source": "Figure 4.2, page 27",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "DR-014",
+      "name": "column_crank_ratio",
+      "condition": "column bars cranked at change of section",
+      "action": "Crank ratio 1:10 (1 horizontal : 10 vertical)",
+      "note": "Check cranked bars do not foul any other reinforcement",
+      "source": "Figure 4.2, page 27",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "STANDARD PRACTICE"
+    },
+    {
+      "id": "DR-015",
+      "name": "u_bars_for_external_beam_column",
+      "condition": "beam connects to edge/external column",
+      "action": "U-bars may be used; must be positioned as close to far face of column as possible",
+      "sequence": "U-bars installed after lower column cast, before beam cage placed",
+      "source": "Section 4.2.3, page 29",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MAY / PREFERRED"
+    },
+    {
+      "id": "DR-016",
+      "name": "precast_cover_verification",
+      "condition": "precast concrete element with congested reinforcement",
+      "action": [
+        "Fabricate prototype before finalising details",
+        "Check cover on drawing against assumed in calculation",
+        "Check cover to reinforcement actually achieved on site"
+      ],
+      "source": "Section 4.3, page 30",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "SHOULD"
+    },
+    {
+      "id": "DR-017",
+      "name": "chamfer_fillet_cover_check",
+      "condition": "chamfers or fillets present on concrete section",
+      "action": "Check if chamfers and fillets affect cover to reinforcement",
+      "source": "Figure 4.2, Figure 4.4, pages 27–28",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "CHECK REQUIRED"
+    },
+    {
+      "id": "DR-018",
+      "name": "nominal_reinforcement_default",
+      "condition": "Designer has not given instruction for a particular detail or nominal reinforcement",
+      "action": "Detailer assumes standards described in this manual apply",
+      "source": "Section 2.3, page 8",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "DEFAULT"
+    },
+    {
+      "id": "DR-019",
+      "name": "early_fixed_reinforcement_detailing_assignment",
+      "condition": "reinforcement needs to be fixed in one part before being concreted",
+      "action": "Detail that reinforcement with that part (e.g. starters from tank floor into walls detailed with the floor)",
+      "source": "Section 4.2.1, page 25",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "DR-020",
+      "name": "beam_to_column_clearance",
+      "condition": "beam/column intersection detailing",
+      "action": "Beam reinforcement must avoid column reinforcement, which is likely cast into concrete before beam reinforcement is fixed",
+      "source": "Section 4.2.1, page 25",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "DR-021",
+      "name": "beam_to_beam_layer_clearance",
+      "condition": "beam/beam intersection",
+      "action": "Layers of reinforcement in each beam must be arranged so they will pass over each other with correct cover to upper and lower layers",
+      "source": "Section 4.2.1, page 25",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "DR-022",
+      "name": "slab_to_beam_top_steel_cover",
+      "condition": "slab-to-beam intersection",
+      "action": "Cover over reinforcement in beam must be sufficient for top steel in slab to pass over beam with correct cover",
+      "source": "Section 4.2.1, page 25",
+      "status": "DIRECTLY STATED",
+      "constraint_type": "MUST"
+    }
+  ],
+
+  "mandatory_drawing_checks": {
+    "source": "Section 4.6, pages 32–33",
+    "checks": [
+      "Is spacing of reinforcement correct both on plan and section?",
+      "Is the cover specified and correct?",
+      "Are splices and laps in correct position?",
+      "Do splices suit construction joints?",
+      "Is there congestion of reinforcement?",
+      "Are cranks required where bars cross?",
+      "Do hooks foul other reinforcement?",
+      "Are all projections reinforced?",
+      "Is reinforcement required for anti-crack or fire resistance?",
+      "Where required are spacers and chairs shown/specified?"
+    ],
+    "status": "DIRECTLY STATED"
+  }
+}

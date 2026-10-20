@@ -1,0 +1,16 @@
+{
+  "staircases_fragment": {
+    "note": "Only a partial title-block/notes fragment for Model Detail MST2 (cantilever stair from wall or edge beam) is present in this extract; the main stair chapter content (spans, flights, going/rise geometry) is not included.",
+    "extracted_facts": [
+      "Model Detail MST2: Cantilever from wall or edge beam.",
+      "Linking to be H8s at 300 unless otherwise specified.",
+      "Bends to be adjusted to suit on site (N.B.).",
+      "Position of H8 'U' bar specified separately from design reinforcement (specified by designer).",
+      "Distribution bars to be H10s at 300 unless otherwise specified.",
+      "Nominal H8 'U' bar shown at section A-A alongside design reinforcement and corner bar detailed with wall, with tension anchorage.",
+      "Main cantilever bars must be mild steel if they are to be rebent \u2014 cross-reference to Model Detail MW3 (not in this extract).",
+      "Nominal cover specified by designer (minimum 20mm or bar size, whichever greater). See also design notes 6.8.2 (not in this extract)."
+    ],
+    "dependency": "DEPENDENCY: Model Detail MW3 (rebending of mild steel bars) and design notes 6.8.2 are referenced but not included in this chunk."
+  }
+}

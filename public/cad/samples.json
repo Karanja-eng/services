@@ -1,0 +1,154 @@
+{
+  "generatedBy": "scripts/regenerate_sample_artifacts.py",
+  "note": "Sample artefacts so the /interop/cad-bim route shows real drawings and models before the backend has been run. Regenerate with the backend running; the API produces the same files on demand.",
+  "generators": [
+    {
+      "generator": "beam",
+      "model_id": "beam",
+      "revision": 1,
+      "drawing_id": "beam-r1",
+      "dxf": "/cad/beam-r1.dxf",
+      "ifc": "/ifc/beam.ifc",
+      "entities": 89,
+      "mapped": 82,
+      "unmapped": 7,
+      "ifc_elements": 1,
+      "ifc_classes": [
+        "IfcBeam"
+      ],
+      "validator_statements": 0,
+      "dxf_units_ok": true,
+      "canonical_valid": true
+    },
+    {
+      "generator": "column",
+      "model_id": "column",
+      "revision": 1,
+      "drawing_id": "column-r1",
+      "dxf": "/cad/column-r1.dxf",
+      "ifc": "/ifc/column.ifc",
+      "entities": 69,
+      "mapped": 62,
+      "unmapped": 7,
+      "ifc_elements": 1,
+      "ifc_classes": [
+        "IfcColumn"
+      ],
+      "validator_statements": 0,
+      "dxf_units_ok": true,
+      "canonical_valid": true
+    },
+    {
+      "generator": "slab",
+      "model_id": "slab",
+      "revision": 1,
+      "drawing_id": "slab-r1",
+      "dxf": "/cad/slab-r1.dxf",
+      "ifc": "/ifc/slab.ifc",
+      "entities": 30,
+      "mapped": 23,
+      "unmapped": 7,
+      "ifc_elements": 1,
+      "ifc_classes": [
+        "IfcSlab"
+      ],
+      "validator_statements": 0,
+      "dxf_units_ok": true,
+      "canonical_valid": true
+    },
+    {
+      "generator": "wall",
+      "model_id": "wall",
+      "revision": 1,
+      "drawing_id": "wall-r1",
+      "dxf": "/cad/wall-r1.dxf",
+      "ifc": "/ifc/wall.ifc",
+      "entities": 81,
+      "mapped": 74,
+      "unmapped": 7,
+      "ifc_elements": 1,
+      "ifc_classes": [
+        "IfcWall"
+      ],
+      "validator_statements": 0,
+      "dxf_units_ok": true,
+      "canonical_valid": true
+    },
+    {
+      "generator": "retaining_wall",
+      "model_id": "retaining-wall",
+      "revision": 1,
+      "drawing_id": "retaining-wall-r1",
+      "dxf": "/cad/retaining-wall-r1.dxf",
+      "ifc": "/ifc/retaining-wall.ifc",
+      "entities": 32,
+      "mapped": 25,
+      "unmapped": 7,
+      "ifc_elements": 2,
+      "ifc_classes": [
+        "IfcFooting",
+        "IfcWall"
+      ],
+      "validator_statements": 0,
+      "dxf_units_ok": true,
+      "canonical_valid": true
+    },
+    {
+      "generator": "pad_footing",
+      "model_id": "pad-footing",
+      "revision": 1,
+      "drawing_id": "pad-footing-r1",
+      "dxf": "/cad/pad-footing-r1.dxf",
+      "ifc": "/ifc/pad-footing.ifc",
+      "entities": 71,
+      "mapped": 64,
+      "unmapped": 7,
+      "ifc_elements": 1,
+      "ifc_classes": [
+        "IfcFooting"
+      ],
+      "validator_statements": 0,
+      "dxf_units_ok": true,
+      "canonical_valid": true
+    },
+    {
+      "generator": "stair",
+      "model_id": "stair",
+      "revision": 1,
+      "drawing_id": "stair-r1",
+      "dxf": "/cad/stair-r1.dxf",
+      "ifc": "/ifc/stair.ifc",
+      "entities": 60,
+      "mapped": 53,
+      "unmapped": 7,
+      "ifc_elements": 3,
+      "ifc_classes": [
+        "IfcSlab",
+        "IfcStair",
+        "IfcStairFlight"
+      ],
+      "validator_statements": 0,
+      "dxf_units_ok": true,
+      "canonical_valid": true
+    },
+    {
+      "generator": "stair_mst2",
+      "model_id": "stair-mst2",
+      "revision": 1,
+      "drawing_id": "stair-mst2-r1",
+      "dxf": "/cad/stair-mst2-r1.dxf",
+      "ifc": "/ifc/stair-mst2.ifc",
+      "entities": 55,
+      "mapped": 48,
+      "unmapped": 7,
+      "ifc_elements": 2,
+      "ifc_classes": [
+        "IfcStair",
+        "IfcStairFlight"
+      ],
+      "validator_statements": 0,
+      "dxf_units_ok": true,
+      "canonical_valid": true
+    }
+  ]
+}

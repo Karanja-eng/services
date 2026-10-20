@@ -1,0 +1,123 @@
+{
+  "material_property_periods": [
+    {
+      "period": "1972-1980",
+      "governing_code": "CP110:1972 Part 1",
+      "note": "Characteristic strength basis introduced",
+      "design_strength_formula": {
+        "design_tensile_strength": "0.87 x characteristic_strength",
+        "design_compression_strength": "design_tensile_strength / (1 + design_tensile_strength/2000)"
+      },
+      "grades": [
+        {"bar_type": "Hot rolled bars", "drawing_symbol": null, "characteristic_strength_MPa": 410},
+        {"bar_type": "Cold worked bars, 16mm and under", "drawing_symbol": null, "characteristic_strength_MPa": 460},
+        {"bar_type": "Cold worked bars, over 16mm", "drawing_symbol": null, "characteristic_strength_MPa": 425}
+      ],
+      "source": {"appendix": "A.4", "page": 168}
+    },
+    {
+      "period": "1980-1983",
+      "governing_code": "BS4466:1981 (symbols); CP110 Amendment 1980 (strength)",
+      "grades": [
+        {"bar_type": "Plain or deformed bars grade 250", "drawing_symbol": "R", "characteristic_strength_MPa": null},
+        {"bar_type": "Type 2 deformed bars grade 460/425", "drawing_symbol": "T", "characteristic_strength_MPa": null},
+        {"bar_type": "Not covered by R or T", "drawing_symbol": "X", "characteristic_strength_MPa": null},
+        {"bar_type": "Hot rolled and cold worked bars, up to 16mm", "drawing_symbol": null, "characteristic_strength_MPa": 460},
+        {"bar_type": "Hot rolled and cold worked bars, over 16mm", "drawing_symbol": null, "characteristic_strength_MPa": 425}
+      ],
+      "source": {"appendix": "A.5", "page": 169}
+    },
+    {
+      "period": "1983-1985",
+      "governing_code": "CP110 Amendment 1983",
+      "grades": [
+        {"bar_type": "All sizes", "drawing_symbol": null, "characteristic_strength_MPa": 460}
+      ],
+      "source": {"appendix": "A.6", "page": 170}
+    },
+    {
+      "period": "1985-2004",
+      "governing_code": "BS8110:1985 (strength); BS4466:1989 (symbols)",
+      "design_strength_formula": {
+        "design_compressive_strength": "= design_tensile_strength = 0.87 x characteristic_strength"
+      },
+      "grades": [
+        {"bar_type": "Plain or deformed", "drawing_symbol": "R", "characteristic_strength_MPa": 250},
+        {"bar_type": "Type 2 deformed bars or fabric", "drawing_symbol": "T", "characteristic_strength_MPa": 460},
+        {"bar_type": "Stainless reinforcement", "drawing_symbol": "S", "characteristic_strength_MPa": 460},
+        {"bar_type": "Plain reinforcement to BS4482", "drawing_symbol": "W", "characteristic_strength_MPa": 460},
+        {"bar_type": "Type 1 deformed reinforcement to BS4482", "drawing_symbol": "D", "characteristic_strength_MPa": null},
+        {"bar_type": "Not covered by others", "drawing_symbol": "X", "characteristic_strength_MPa": null}
+      ],
+      "note_1997_revision": "BS8110:1997 increased design strength to characteristic_strength / 1.05",
+      "shape_code_reference_introduced": "BS8666: Specification for scheduling, dimensioning, bending and cutting of steel reinforcement for concrete (2000) replaced BS4466",
+      "source": {"appendix": "A.7", "page": 170}
+    },
+    {
+      "period": "post-2000 (BS8666 era)",
+      "governing_code": "BS8666:2000 (replaced BS4466); conformed with new ISO/European standards",
+      "grades": [
+        {"bar_type": "Conforming to BS4449", "drawing_symbol": null, "characteristic_strength_MPa": null},
+        {"bar_type": "Deformed Type 1 conforming to BS4482 (and fabric to BS4483)", "drawing_symbol": "R", "characteristic_strength_MPa": 250},
+        {"bar_type": "Deformed Type 2 conforming to BS4482 or Ductility A of BS4449 (and fabric to BS4483)", "drawing_symbol": "F", "characteristic_strength_MPa": 460},
+        {"bar_type": "Plain round conforming to BS4482 (and fabric to BS4483)", "drawing_symbol": "D", "characteristic_strength_MPa": 460},
+        {"bar_type": "Ductility A or B deformed Type 2 conforming to BS4449", "drawing_symbol": "W", "characteristic_strength_MPa": 460},
+        {"bar_type": "Ductility B deformed Type 2 conforming to BS4449 (bar or fabric to BS4483)", "drawing_symbol": "T", "characteristic_strength_MPa": 460},
+        {"bar_type": "Specified grade/type of stainless steel to BS6744", "drawing_symbol": "B", "characteristic_strength_MPa": null},
+        {"bar_type": "Type not included above, defined in design/contract specification", "drawing_symbol": "S", "characteristic_strength_MPa": null},
+        {"bar_type": "Reinforcement of a type not included in the above list, properties defined in design/contract specification", "drawing_symbol": "X", "characteristic_strength_MPa": null}
+      ],
+      "fact_status": "DIRECTLY STATED, though the printed table's row-to-symbol alignment for this final period is visually ambiguous in the source scan (see 12_unresolved_questions.md) — symbol-row pairing above is best-effort from column order, not fully certain",
+      "source": {"appendix": "A.7 continued", "page": 171}
+    }
+  ],
+  "note_on_H_symbol": "The chapter on Columns/Walls/Foundations/Staircases (pp.88-127) uses 'H' throughout as the bar-type symbol (e.g. '4 H20', 'H10 U-bars') for high-yield deformed bar. This appendix's explicit symbol list (R/T/X/S/W/D/F/B) does not include 'H'. INFERRED: 'H' is very likely the BS8666/Eurocode-era standard symbol for high-yield deformed reinforcement (in common UK practice, H = high yield deformed, replacing T), but this extract does not directly state that mapping, so it is NOT to be treated as DIRECTLY STATED.",
+  "bar_shape_code_catalogue": [
+    {"shape_code": "00", "description": "Straight bar, no bends", "length_formula": "L = A", "dims": ["A"], "constraints": null},
+    {"shape_code": "01", "description": "Stock length straight bar", "length_formula": "L = A (stock length, see Note 4)", "dims": ["A"], "constraints": "A is indicative; actual delivery length by agreement with supplier; tolerance per relevant product standard"},
+    {"shape_code": "11", "description": "Single bend, one straight leg, one free/tolerance leg", "length_formula": "L = A + (B) - 0.5r - d", "dims": ["A", "(B) free"], "constraints": "Neither A nor B shall be less than P (Table B.1)"},
+    {"shape_code": "12", "description": "Single bend with explicit radius R shown", "length_formula": "L = A + (B) - 0.43R - 1.2d", "dims": ["A", "(B) free", "R"], "constraints": "Neither A nor B less than P; nor less than (R + 6d)"},
+    {"shape_code": "13", "description": "Semi-circular hook shape", "length_formula": "L = A + 0.57B + (C) - 1.6d", "dims": ["A", "B", "(C) free"], "constraints": "B not less than 2(r+d); neither A nor C less than P nor less than (0.5B + 5d)"},
+    {"shape_code": "14", "description": "Bend with offset, angle not necessarily 90deg", "length_formula": "L = A + (C) - 4d", "dims": ["A", "B", "(C) free"], "constraints": "Neither A nor C less than P; see Note 1 (approximate formula for angle > 45deg)"},
+    {"shape_code": "15", "description": "Similar bend variant", "length_formula": "L = A + (C)", "dims": ["A", "B", "(C) free"], "constraints": "Neither A nor C less than P; see Note 1"},
+    {"shape_code": "21", "description": "Two bends, U-ish open shape", "length_formula": "L = A + B + (C) - r - 2d", "dims": ["A", "B", "(C) free"], "constraints": "Neither A nor C less than P"},
+    {"shape_code": "22", "description": "Semi-circular with two straight legs", "length_formula": "L = A + B + C + (D) - 1.5r - 3d", "dims": ["A", "B", "C", "(D) free"], "constraints": "C not less than 2(r+d); neither A nor D less than P; D not less than C/2 + 5d"},
+    {"shape_code": "23", "description": "Two-bend shape variant", "length_formula": "L = A + B + (C) - r - 2d", "dims": ["A", "B", "(C) free"], "constraints": "Neither A nor C less than P"},
+    {"shape_code": "24", "description": "Bend at 90deg to another (A and C at 90deg)", "length_formula": "L = A + B + (C)", "dims": ["A", "B", "(C) free", "D"], "constraints": "A and C are at 90deg to one another"},
+    {"shape_code": "25", "description": "Complex 3-dimension shape", "length_formula": "L = A + B + (E)", "dims": ["A", "B", "C", "(E) free", "D"], "constraints": "Neither A nor B less than P; if E is critical dimension use shape 99 and specify A or B as free dimension; see Note 1"},
+    {"shape_code": "26", "description": "Bend variant", "length_formula": "L = A + B + (C)", "dims": ["A", "B", "(C) free", "D"], "constraints": "Neither A nor C less than P; see Note 1"},
+    {"shape_code": "27", "description": "Bend variant with radius", "length_formula": "L = A + B + (C) - 0.5r - d", "dims": ["A", "B", "(C) free", "D"], "constraints": "Neither A nor C less than P; see Note 1"},
+    {"shape_code": "28", "description": "Bend variant", "length_formula": "L = A + B + (C) - 0.5r - d", "dims": ["A", "B", "(C) free", "D"], "constraints": "Neither A nor C less than P; see Note 1"},
+    {"shape_code": "29", "description": "Bend variant", "length_formula": "L = A + B + (C) - r - 2d", "dims": ["A", "B", "(C) free", "D"], "constraints": "Neither A nor C less than P; see Note 1"},
+    {"shape_code": "31", "description": "Three-bend (Z/crank) shape", "length_formula": "L = A + B + C + (D) - 1.5r - 3d", "dims": ["A", "B", "C", "(D) free"], "constraints": "Neither A nor D less than P"},
+    {"shape_code": "32", "description": "Three-bend shape variant", "length_formula": "L = A + B + C + (D) - 1.5r - 3d", "dims": ["A", "B", "C", "(D) free"], "constraints": "Neither A nor D less than P"},
+    {"shape_code": "33", "description": "Semi-circular with straight extensions (2A ends)", "length_formula": "L = 2A + 1.7B + 2(C) - 4d", "dims": ["A", "B", "(C) free"], "constraints": "A not less than 12d + 30mm; B not less than 2(r+d); C not less than P nor less than B/2 + 5d; see Note 3"},
+    {"shape_code": "34", "description": "Four-segment crank shape", "length_formula": "L = A + B + C + (E) - 0.5r - d", "dims": ["A", "B", "C", "(E) free", "D"], "constraints": "Neither A nor E less than P; see Note 1"},
+    {"shape_code": "35", "description": "Four-segment crank shape variant", "length_formula": "L = A + B + C + (E) - 0.5r - d", "dims": ["A", "B", "C", "(E) free", "D"], "constraints": "Neither A nor E less than P; see Note 1"},
+    {"shape_code": "36", "description": "Four-segment crank shape variant", "length_formula": "L = A + B + C + (D) - r - 2d", "dims": ["A", "B", "C", "(D) free", "E"], "constraints": "Neither A nor D less than P; see Note 1"},
+    {"shape_code": "41", "description": "Closed/open link shape (5-segment), may double as flag link", "length_formula": "L = A + B + C + D + (E) - 2r - 4d", "dims": ["A", "B", "C", "D", "(E) free"], "constraints": "Neither A nor E less than P; may also be used for flag link"},
+    {"shape_code": "44", "description": "Link shape variant", "length_formula": "L = A + B + C + D + (E) - 2r - 4d", "dims": ["A", "B", "C", "D", "(E) free"], "constraints": "Neither A nor E less than P"},
+    {"shape_code": "46", "description": "Symmetric link with two equal end returns", "length_formula": "L = A + 2B + C + (E)", "dims": ["A", "B (x2)", "C", "(E) free", "D (x2)"], "constraints": "Neither A nor E less than P; see Note 1"},
+    {"shape_code": "47", "description": "Circular/spiral-adjacent link with two equal hooks", "length_formula": "L = 2A + B + 2(C) + 1.5r - 3d  [OR minimized form: L = 2A + B + max(21d, 240)]", "dims": ["A", "B", "(C) = (D), equal, free"], "constraints": "C and D shall be equal, not more than A, not less than P"},
+    {"shape_code": "51", "description": "Rectangular closed link (standard stirrup)", "length_formula": "L = 2(A + B + (C)) - 2.5r - 5d  [OR minimized form: L = 2A + 2B + max(16d, 160)]", "dims": ["A", "B", "(C) = (D), equal, free"], "constraints": "C and D equal, not more than A or B, not less than P for links"},
+    {"shape_code": "56", "description": "Link with double end return (E)=(F)", "length_formula": "L = A + B + C + (D) + 2(E) - 2.5r - 5d", "dims": ["A", "B", "C", "(D) free", "(E) = (F)"], "constraints": "E and F equal, not more than B or C, not less than P; see Notes 1 and 2"},
+    {"shape_code": "63", "description": "Rectangular link variant with two equal returns", "length_formula": "L = 2A + 3B + 2(C) - 3r - 6d  [OR minimized form: L = 2A + 3B + max(14d, 150)]", "dims": ["A", "B", "(C) = (D), equal, free"], "constraints": "C and D equal, not more than A or B, not less than P for links"},
+    {"shape_code": "64", "description": "Multi-segment link, 3 bends each side", "length_formula": "L = A + B + C + 2D + E + (F) - 3r - 6d", "dims": ["A", "B", "C", "D (x2)", "E", "(F) free"], "constraints": "Neither A nor F less than P; see Note 2"},
+    {"shape_code": "67", "description": "Special shape per BS8666 Clause 10 (circular/helical related)", "length_formula": "See BS8666 Clause 10 (not given numerically in this source)", "dims": ["A", "B", "C", "R"], "constraints": "External reference to BS8666 Clause 10"},
+    {"shape_code": "75", "description": "Circular ring/helix single turn with lap", "length_formula": "L = pi x (A - d) + B", "dims": ["A (diameter)", "B (=lap)"], "constraints": "B is the lap length"},
+    {"shape_code": "77", "description": "Multi-turn helix", "length_formula": "L = C x pi(A-d)   [if B > A/5: L = C x sqrt((pi(A-d))^2 + B^2)]", "dims": ["A (diameter)", "B (pitch-related)", "C (number of turns)"], "constraints": "Formula changes when B > A/5"},
+    {"shape_code": "98", "description": "Isometric/3D sketch shape (spatial crank)", "length_formula": "L = A + 2B + C + (D) - 2r - 4d", "dims": ["A", "B (x2)", "C", "(D) free"], "constraints": "Isometric sketch; neither C nor D less than P"},
+    {"shape_code": "99", "description": "All other shapes not covered by standard codes", "length_formula": "To be calculated per fully dimensioned sketch (see Note 2)", "dims": ["A", "B", "C", "(D) or other, free dimension indicated in parentheses"], "constraints": "No other shape code, designation, or abbreviation permitted; sketch must be dimensioned A-E with the tolerance-absorbing dimension in parentheses; otherwise fabricator chooses"}
+  ],
+  "general_notes_all_shape_codes": [
+    "Values for minimum radius (r) and end dimension (A), per Table B.1, apply to all shape codes.",
+    "Dimensions in parentheses are free dimensions (absorb permissible deviation). If a different dimension must absorb tolerance than the one shown in parentheses for a standard shape, the shape must be redrawn and coded 99, with the actual free dimension shown in parentheses.",
+    "Minimum straight length between two bends: at least 4d (see BS8666 Figure 6).",
+    "BS8666 Figures 4, 5, 6 should be used to interpret bending dimensions (external reference, not reproduced here).",
+    "Note 1: Length equations for shapes 14, 15, 25, 26, 27, 28, 29, 34, 35, 36, 46 are approximate; where bend angle > 45deg, length should be calculated more accurately (true centreline length vs specified overall dims differ); near 90deg bends, prefer shape code 99 with a fully dimensioned sketch.",
+    "Note 2: 5 or more bends may be impractical within permitted tolerances.",
+    "Note 3: For shapes with straight + curved lengths (12, 13, 22, 33, 47), largest practical mandrel size for a continuous curve is 400mm (see BS8666 Clause 10).",
+    "Note 4: Stock lengths available in a limited number of lengths (e.g. 6m, 12m). Dimension A for shape code 01 is indicative; actual delivery length by agreement with supplier; tolerances per relevant product standard (e.g. BS449:2005 cited, likely a scan/OCR error for a different standard number — flagged in gaps)."
+  ],
+  "source_meta": {"appendix": "B", "pages": "172-177"}
+}

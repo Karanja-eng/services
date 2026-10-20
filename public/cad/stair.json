@@ -1,0 +1,352 @@
+{
+  "schema": "fundi.canonical",
+  "schema_version": "1.0.0",
+  "model_id": "stair",
+  "name": "Stair flight MST1 (end supported)",
+  "description": "End-supported RC stair flight: longitudinal section with waist, main bars, distribution bars and landing detail.",
+  "generator": "stair",
+  "generator_module": "engineering_system.members.stair",
+  "source_params": {
+    "stair_type": "MST1",
+    "going_mm": 250.0,
+    "rise_mm": 175.0,
+    "n_steps": 12,
+    "waist_mm": 200.0,
+    "landing_length_mm": 1000.0,
+    "concrete_grade": "30/37",
+    "exposure": "internal",
+    "dcdev_mm": 10.0,
+    "main_dia_mm": 12,
+    "main_pitch_mm": 150.0,
+    "distribution_dia_mm": 10,
+    "distribution_pitch_mm": 300.0,
+    "link_dia_mm": 8,
+    "link_pitch_mm": 300.0,
+    "bond": "good",
+    "cover_mm": 0.0
+  },
+  "units": {
+    "length": "metre",
+    "area": "square_metre",
+    "volume": "cubic_metre",
+    "angle": "degree",
+    "frame": "Z-up right-handed",
+    "origin": "project origin at finished ground level of level L0"
+  },
+  "levels": [
+    {
+      "id": "stair:L0",
+      "name": "Level 1",
+      "elevation_m": 0.0,
+      "description": "Single storey used by the member model detail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "stair.stair",
+      "element_type": "stair",
+      "ifc_class": "IfcStair",
+      "predefined_type": "STRAIGHT_RUN_STAIR",
+      "name": "Stair flight (aggregate)",
+      "role": "stair",
+      "level_id": "stair:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 4.0,
+        "width_y": 1.0,
+        "height_z": 2.1
+      },
+      "placement": {
+        "x": 2.0,
+        "y": 0.0,
+        "z": 1.05
+      },
+      "rotation_z_deg": 0.0,
+      "material": "30/37",
+      "material_properties": {
+        "designation": "30/37",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "stair_type": "MST1",
+        "going_mm": 250.0,
+        "rise_mm": 175.0,
+        "n_steps": 12,
+        "waist_mm": 200.0,
+        "landing_length_mm": 1000.0,
+        "concrete_grade": "30/37",
+        "exposure": "internal",
+        "dcdev_mm": 10.0,
+        "main_dia_mm": 12,
+        "main_pitch_mm": 150.0,
+        "distribution_dia_mm": 10,
+        "distribution_pitch_mm": 300.0,
+        "link_dia_mm": 8,
+        "link_pitch_mm": 300.0,
+        "bond": "good",
+        "cover_mm": 0.0,
+        "run_m": 3.0,
+        "rise_total_m": 2.1,
+        "slope_length_m": 3.661966685,
+        "waist_m": 0.2,
+        "landing_length_m": 1.0,
+        "step_count": 12,
+        "going_m": 0.25,
+        "rise_m": 0.175,
+        "slope_angle_deg": 34.99202
+      },
+      "reinforcement": {},
+      "provenance": {
+        "generator": "stair",
+        "generator_label": "Stair flight MST1 (end supported)",
+        "params_module": "engineering_system.members.stair",
+        "params_class": "StairParams",
+        "model_class": "StairEngineeringModel",
+        "drawing_number": "STR-01",
+        "drawing_title": "RC Stair Flight Longitudinal Section (Model Detail MST1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "stair_type": "MST1",
+          "going_mm": 250.0,
+          "rise_mm": 175.0,
+          "n_steps": 12,
+          "waist_mm": 200.0,
+          "landing_length_mm": 1000.0,
+          "concrete_grade": "30/37",
+          "exposure": "internal",
+          "dcdev_mm": 10.0,
+          "main_dia_mm": 12,
+          "main_pitch_mm": 150.0,
+          "distribution_dia_mm": 10,
+          "distribution_pitch_mm": 300.0,
+          "link_dia_mm": 8,
+          "link_pitch_mm": 300.0,
+          "bond": "good",
+          "cover_mm": 0.0
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": [
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "validation": {
+        "state": "warning",
+        "warnings": [
+          "the aggregate stair solid is a bounding volume; the flight carries the inclined waist-slab representation",
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "representations": {},
+      "volume_m3": 8.4,
+      "fingerprint": "e821dd9dca9d00e725675870a27db038c5bd794f83e7a876b4c4a773c9ef204a"
+    },
+    {
+      "id": "stair.flight",
+      "element_type": "stair-flight",
+      "ifc_class": "IfcStairFlight",
+      "predefined_type": "STRAIGHT",
+      "name": "Stair flight waist",
+      "role": "flight",
+      "level_id": "stair:L0",
+      "parent_id": "stair.stair",
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 3.661966685,
+        "width_y": 1.0,
+        "height_z": 0.2
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.05
+      },
+      "rotation_z_deg": 0.0,
+      "material": "30/37",
+      "material_properties": {
+        "designation": "30/37",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "slope_length_m": 3.661966685,
+        "waist_m": 0.2,
+        "slope_angle_deg": 34.99202,
+        "flight_width_m": 1.0
+      },
+      "reinforcement": {
+        "main_bar_mm": 12,
+        "main_pitch_mm": 150.0,
+        "distribution_bar_mm": 10,
+        "distribution_pitch_mm": 300.0
+      },
+      "provenance": {
+        "generator": "stair",
+        "generator_label": "Stair flight MST1 (end supported)",
+        "params_module": "engineering_system.members.stair",
+        "params_class": "StairParams",
+        "model_class": "StairEngineeringModel",
+        "drawing_number": "STR-01",
+        "drawing_title": "RC Stair Flight Longitudinal Section (Model Detail MST1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "stair_type": "MST1",
+          "going_mm": 250.0,
+          "rise_mm": 175.0,
+          "n_steps": 12,
+          "waist_mm": 200.0,
+          "landing_length_mm": 1000.0,
+          "concrete_grade": "30/37",
+          "exposure": "internal",
+          "dcdev_mm": 10.0,
+          "main_dia_mm": 12,
+          "main_pitch_mm": 150.0,
+          "distribution_dia_mm": 10,
+          "distribution_pitch_mm": 300.0,
+          "link_dia_mm": 8,
+          "link_pitch_mm": 300.0,
+          "bond": "good",
+          "cover_mm": 0.0
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": [
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "validation": {
+        "state": "warning",
+        "warnings": [
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "representations": {},
+      "volume_m3": 0.732393337,
+      "fingerprint": "8714dd7d20c10505bb1c1114e1f7cc7bc18e201d158b1e6330d632dddf9df6f8",
+      "extrusion": {
+        "direction": [
+          0.819231921,
+          0.0,
+          0.573462344
+        ],
+        "length_m": 3.661966685,
+        "profile": "width_x_waist"
+      }
+    },
+    {
+      "id": "stair.landing",
+      "element_type": "slab",
+      "ifc_class": "IfcSlab",
+      "predefined_type": "FLOOR",
+      "name": "Stair landing",
+      "role": "landing",
+      "level_id": "stair:L0",
+      "parent_id": "stair.stair",
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 1.0,
+        "width_y": 1.0,
+        "height_z": 0.2
+      },
+      "placement": {
+        "x": 3.5,
+        "y": 0.0,
+        "z": 2.0
+      },
+      "rotation_z_deg": 0.0,
+      "material": "30/37",
+      "material_properties": {
+        "designation": "30/37",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "landing_length_m": 1.0,
+        "landing_thickness_m": 0.2,
+        "landing_elevation_m": 2.1
+      },
+      "reinforcement": {},
+      "provenance": {
+        "generator": "stair",
+        "generator_label": "Stair flight MST1 (end supported)",
+        "params_module": "engineering_system.members.stair",
+        "params_class": "StairParams",
+        "model_class": "StairEngineeringModel",
+        "drawing_number": "STR-01",
+        "drawing_title": "RC Stair Flight Longitudinal Section (Model Detail MST1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "stair_type": "MST1",
+          "going_mm": 250.0,
+          "rise_mm": 175.0,
+          "n_steps": 12,
+          "waist_mm": 200.0,
+          "landing_length_mm": 1000.0,
+          "concrete_grade": "30/37",
+          "exposure": "internal",
+          "dcdev_mm": 10.0,
+          "main_dia_mm": 12,
+          "main_pitch_mm": 150.0,
+          "distribution_dia_mm": 10,
+          "distribution_pitch_mm": 300.0,
+          "link_dia_mm": 8,
+          "link_pitch_mm": 300.0,
+          "bond": "good",
+          "cover_mm": 0.0
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": [
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "validation": {
+        "state": "warning",
+        "warnings": [
+          "the MST section detail defines no stair width, so a one metre width is modelled and the IFC quantity is per metre width"
+        ]
+      },
+      "representations": {},
+      "volume_m3": 0.2,
+      "fingerprint": "644cae00da61ab8f2e2774bacd4d6e3a5ad1f92747803c00b9427c4d507c8f14"
+    }
+  ],
+  "relationships": [
+    {
+      "type": "part-of",
+      "from": "stair.flight",
+      "to": "stair.stair",
+      "note": "flight is part of stair"
+    },
+    {
+      "type": "part-of",
+      "from": "stair.landing",
+      "to": "stair.stair",
+      "note": "landing is part of stair"
+    }
+  ],
+  "warnings": [],
+  "statistics": {
+    "element_count": 3,
+    "by_ifc_class": {
+      "IfcSlab": 1,
+      "IfcStair": 1,
+      "IfcStairFlight": 1
+    },
+    "by_element_type": {
+      "slab": 1,
+      "stair": 1,
+      "stair-flight": 1
+    },
+    "total_volume_m3": 9.332393,
+    "levels": 1,
+    "relationships": 2,
+    "elements_with_warnings": 3
+  },
+  "model_hash": "2aaa9170b2998470b16819be1c1e874952c57799f0db8d80b6b55dd312c554c2"
+}

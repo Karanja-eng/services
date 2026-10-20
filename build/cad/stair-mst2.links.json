@@ -1,0 +1,45 @@
+{
+  "model_id": "stair-mst2",
+  "revision": 1,
+  "model_hash": "23d5b09d15527d901332c113164fa0a6e16dff4ec56a63dcf2f2a62d4ee119f5",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "links": [
+    {
+      "model_id": "stair-mst2",
+      "internal_id": "stair-mst2.flight",
+      "ifc_guid": "2QuQ6XHmrTrQWuMyRrK9fX",
+      "ifc_class": "IfcStairFlight",
+      "dxf_handle": "45",
+      "drawing_id": "stair_mst2-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "21daaaedbd1378068b47b1bfe17ca819b00562ae086553ba8ae318177204d726",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T19:15:10+00:00"
+    },
+    {
+      "model_id": "stair-mst2",
+      "internal_id": "stair-mst2.stair",
+      "ifc_guid": "1n84NkbrTTrfRgcPh3cMGE",
+      "ifc_class": "IfcStair",
+      "dxf_handle": "45",
+      "drawing_id": "stair_mst2-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "43191e3417ec4aef0dff23c8bb7ff25bd787e2eda910d9d4fe7c3a1d32c131df",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T19:15:10+00:00"
+    }
+  ],
+  "by_status": {
+    "ok": 2
+  }
+}

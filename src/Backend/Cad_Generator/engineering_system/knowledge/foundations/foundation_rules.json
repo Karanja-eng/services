@@ -1,0 +1,308 @@
+{
+  "topic": "foundations",
+  "total_rules": 22,
+  "rules": [
+    {
+      "id": "F01",
+      "topic": "foundations",
+      "strength": "recommendation",
+      "rule": "Grade lower than 28/35 not normally used unless specific durability requirement.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 112
+      }
+    },
+    {
+      "id": "F02",
+      "topic": "foundations",
+      "strength": "mandatory/normative",
+      "rule": "Cover: large foundations/pile caps/pads/wall footings 75; bottom of piled foundations 100 (mat rests on piles); earth face 45+dcdev; external exposed 35+dcdev; internal max(25, dia)+dcdev (tops of ground slabs, inside trenches).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 112
+      }
+    },
+    {
+      "id": "F03",
+      "topic": "foundations",
+      "strength": "mandatory/normative",
+      "rule": "As,min = max(0.26 bt d fctm/fyk, 0.0013 bt d). For 28/35 and fyk 500: 0.0014 bt d (also applies to nominal steel). Bar dia < 16 not used except lacers.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2 (EC2 9.2.1.1)",
+        "page": 112
+      }
+    },
+    {
+      "id": "F04",
+      "topic": "foundations",
+      "strength": "mandatory/normative",
+      "rule": "Min spacing 75 (>=40 dia: 100); pairs 100; max spacing 200 (as printed).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2 (EC2 9.8)",
+        "page": 112
+      },
+      "note": "Text also lists min 100 and Ast-dependent max 300/225/175 without headings - see unresolved"
+    },
+    {
+      "id": "F05",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "Table 6.9 lbd: good 40/37/36/34, poor 48/45/43/41; l0 (<=33% lapped, a6=1.15): good 46/43/42/39, poor 66/61/59/56 (bar<=32; a1,a2,a4,a5=1).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 112
+      },
+      "logic": "Table 6.9"
+    },
+    {
+      "id": "F06",
+      "topic": "foundations",
+      "strength": "mandatory/normative",
+      "rule": "Lap for nominal bars >= max(15 dia, 200 mm).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 113
+      }
+    },
+    {
+      "id": "F07",
+      "topic": "foundations",
+      "strength": "mandatory/normative",
+      "rule": "Column starters: min horizontal leg 450 mm unless column lightly loaded and design compressive stress < 50% of max bar capacity.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 113
+      }
+    },
+    {
+      "id": "F08",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "Pad footings / column strips: straight bars, no curtailment; anchorage length measured from face of wall/column to bar end; bob (bend) ends if anchorage length not available.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 113
+      },
+      "logic": "Fig 6.28"
+    },
+    {
+      "id": "F09",
+      "topic": "foundations",
+      "strength": "mandatory/normative",
+      "rule": "Banding: if lx > 1.5(cx+3d), >= 2/3 of reinforcement parallel to ly concentrated in a band of width (cx+3d) centred on the column; same transversely with x/y swapped.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 113
+      },
+      "logic": {
+        "if": "lx > 1.5*(cx+3*d)",
+        "then": "band_width = cx+3*d; band_fraction >= 2/3 for bars parallel to ly"
+      }
+    },
+    {
+      "id": "F10",
+      "topic": "foundations",
+      "strength": "mandatory/normative",
+      "rule": "Pile caps: full tension anchorage from centre line of the edge pile to end of bar.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 113
+      }
+    },
+    {
+      "id": "F11",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "Table 6.10 standard pile-cap layouts (2,3,4,5?,6,7 piles): design bars H20/H25/H32/H40 (easy bends); nominal H16 (H16/H20/H25 for 2-pile); shape codes 21, 12, 27, 25, 15; shape 99 where large mandrel needed.",
+      "status": "DIRECTLY STATED but table layout garbled in extraction - see unresolved",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 113
+      },
+      "logic": "Table 6.10"
+    },
+    {
+      "id": "F12",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "Ground slabs (light): A193 square mesh; laps >= 300; cover 25 (40 if exposed).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 114
+      },
+      "logic": "Fig 6.29"
+    },
+    {
+      "id": "F13",
+      "topic": "foundations",
+      "strength": "mandatory/normative",
+      "rule": "Ground beams: as 6.3 but cover 75 mm where no formwork. If beam spans onto pads/pile caps without top steel, continue main beam bars across foundation. As tie between foundations, main bars pass round column/wall starters and are fully anchored.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 114
+      },
+      "logic": "Fig 6.30"
+    },
+    {
+      "id": "F14",
+      "topic": "foundations",
+      "strength": "recommendation",
+      "rule": "Rafts: designer gives instructions (construction joint positions for laps, movement joint position/width/depth, waterbar joints) confirmed with contractor; consider splice bars at laps in a separate layer to avoid congestion.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 114
+      }
+    },
+    {
+      "id": "F15",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "Ducts/trenches in ground slabs without design steel: nominal steel around them (Fig 6.31). In rafts/multi-column foundations keep top steel continuity across trenches where moment transfer needed (Fig 6.32). Small trench/manhole walls: single layer each direction.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 114
+      },
+      "logic": "Fig 6.31, 6.32"
+    },
+    {
+      "id": "F16",
+      "topic": "foundations",
+      "strength": "recommendation",
+      "rule": "Column/wall starters specified with footing steel. Consider chairs (BS 7973) and edge U-bars for top steel in multi-column bases/rafts.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.2",
+        "page": 115
+      }
+    },
+    {
+      "id": "F17",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "MF1 pad: kicker 75 (150 below ground); starters compression lap + 150; starters 450 min leg; column links H10-300 (3 No. min) unless specified; 75 cover; cover to starters from column faces; main bars normally straight, bobbed if design requires.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MF1",
+        "page": 118
+      },
+      "logic": "MF1"
+    },
+    {
+      "id": "F18",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "MF2 pile cap: main bars bent both ends; bars rest on piles; 100 bottom cover; 2 layers of lacers H12; bob length by design; corner bar shifted if large bend radius.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MF2",
+        "page": 119
+      },
+      "logic": "MF2"
+    },
+    {
+      "id": "F19",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "MF3 multi-column base: cover 40 exposed/50 buried; distribution bars H16@300; two layers of lacers H12; 300 min overlap; 75.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MF3",
+        "page": 120
+      },
+      "logic": "MF3"
+    },
+    {
+      "id": "F20",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "MF4 ground slab and beam: mesh A193; extension to link not required if link width >= 300; 40/50 cover; 75.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MF4",
+        "page": 121
+      },
+      "logic": "MF4"
+    },
+    {
+      "id": "F21",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "MF5 trenches: Detail A wall <=150, Detail B wall >150; tension lap = 1.4 x anchorage length; splay bars when design moment specified; 25 internal, 40 external; 50.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MF5",
+        "page": 122
+      },
+      "logic": "MF5"
+    },
+    {
+      "id": "F22",
+      "topic": "foundations",
+      "strength": "typical practice/standard",
+      "rule": "Detailing info: layouts, plan dims/depth/levels, kicker positions, grade (30/37, 20 mm), cover (std 75; 100 piled bottom), starter plan position, x/y bars (number, pitch, type, dia, direction of bottom bars), pile count for standard cap, starters/links, band widths, L-bend details only if anchorage exceeds face-to-edge length, joints, gullies.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.7.3",
+        "page": 115
+      }
+    }
+  ]
+}

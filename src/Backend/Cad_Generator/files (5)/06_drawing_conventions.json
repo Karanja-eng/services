@@ -1,0 +1,83 @@
+{
+  "corbels_half_joints_nibs": {
+    "views_used": [
+      {"view": "Elevation (side view of corbel/nib/half-joint)", "purpose": "Show main tensile reinforcement, compression bars, links, laps, anchorages, overall projection/depth", "objects_visible": ["concrete outline","main bars","links","dimension lines","tension lap","compression anchorage callouts"]},
+      {"view": "Section A-A (cross-section, perpendicular to elevation)", "purpose": "Show width, bar count across width, secondary/horizontal reinforcement, link shape", "objects_visible": ["concrete cross-section outline","bar cross-section marks","link legs"]}
+    ],
+    "labelling_conventions": [
+      "Nominal cover called out as text note referencing 'specified by designer' rather than a fixed number baked into the generic Model Detail (project-specific overlay expected).",
+      "Reinforcement roles labelled directly on the drawing by function, not just bar mark: 'Main tensile reinforcement', 'Secondary horizontal reinforcement', 'Compression bars', 'Outer compression bars angled to pass inside links', 'Nominal H8 U bar', 'Distribution bars'.",
+      "Special conditions flagged with 'N.B.' notes (e.g. 'Bends to be adjusted to suit on site').",
+      "Bar type + size shorthand used inline in notes, e.g. 'H8s at 300', 'H10s at 300' (H = high yield deformed bar, number = diameter mm, 'at 300' = spacing mm).",
+      "Suitability/limits noted directly on the Model Detail sheet, e.g. 'This detail is suitable when using 16mm bar size or smaller for the main tensile reinforcement' (MCB1), 'or smaller for 20mm' (MCB2).",
+      "Model Detail sheets carry a running footer/header with the topic name and code, e.g. 'CORBELS MCB1', 'HALF JOINTS MHJ', 'NIBS MN1', 'NIBS MN2' — used as a drawing/detail-family identifier analogous to a block name."
+    ],
+    "dimensioning_practice": [
+      "Edge distance from bearing to reinforcement dimensioned as a rule-based callout, not a fixed number: 'minimum of the bar diameter or 0.75 × cover, whichever is greater'.",
+      "Bar spacing/pitch given as text notes near the relevant bars rather than as a dimension chain in some cases (e.g. 'Nominal links at 150').",
+      "Key overlap/lap dimensions given as plain numeric callouts on the elevation (e.g. 'Minimum nominal overlap of reinforcement in nib ... to be 60').",
+      "Depth minimums given as plain numeric callouts (e.g. 'Depth of nib to be not less than 140')."
+    ],
+    "bar_marks_and_schedule": {
+      "note": "This chunk shows generic Model Details (MCB1, MCB2, MHJ, MN1, MN2) without a project-specific bar-bending schedule; bar marks in the sense of a schedule (numbered bar marks with shape codes) are not present for this topic in this extract — they appear only in the prestressed-concrete example (see below).",
+      "fact_type": "INFORMATION GAP for this topic; DIRECTLY STATED bar-mark convention exists in the prestressed section (Fig 7.31)"
+    }
+  },
+
+  "prestressed_concrete": {
+    "views_used": [
+      {"view": "Elevation of duct profile", "purpose": "Show tendon deflection/deviation, debonded lengths, strand positions", "objects_visible": ["straight strands","deflected strands","unused strand positions"], "figure_refs": ["Fig 7.1","Fig 7.2"]},
+      {"view": "Plan of duct profiles", "purpose": "Show tendon layout, grouping, placing sequence, dimension between tendon-group centres", "figure_refs": ["Fig 7.9","Fig 7.30","Fig 7.32a"]},
+      {"view": "Section through tendon groups", "purpose": "Show tendon quantity per group, cover to duct/strand", "figure_refs": ["Fig 7.30 (Section A-A)","Fig 7.32b"]},
+      {"view": "Floor plan (untensioned reinforcement layout)", "purpose": "Show additional bonded reinforcement bars separate from tendon layout drawings", "figure_ref": "Fig 7.31"},
+      {"view": "End elevation of end block", "purpose": "Show bursting reinforcement zones (horizontal vs vertical) relative to anchorage", "figure_ref": "Fig 7.13"}
+    ],
+    "tendon_legend_conventions": {
+      "quantity_symbol": "A dot pattern / symbol denotes 1 to 5 tendons in a group; where more than one symbol appears on a tendon group, the total equals the sum of the symbol values (Fig 7.29).",
+      "end_types": ["Live End", "Dead end", "Intermediate anchor", "Intermediate stressing anchor"],
+      "other_symbols": ["Weave", "Add tendons", "Placing sequence (numbered)", "Tendon stressing reference numbers", "Dimension between tendon-group centres", "Colour code (e.g. '17 Yellow')"],
+      "bonded_tendon_legend_extra": "Bonded-tendon legend additionally encodes tendon length and elongation, e.g. '24 x 31.850 Green Σ = 84' style annotation (Fig 7.29b)."
+    },
+    "bar_mark_schedule_example": {
+      "format": "{quantity}H{diameter} – {bar_mark_number} – {spacing}{layer_code}",
+      "example": "8H12 – 2 – 200T1  (8 no. H12 bars, bar mark 2, at 200mm centres, layer T1=Top layer 1)",
+      "layer_codes_seen": ["T1","T2","B1","B2"],
+      "u_bar_annotation": "'(U-bars)' suffix appended where the mark refers to U-shaped bars, e.g. '6H12 – 10 – 300 (U-bars)'.",
+      "combined_layer_note": "Compound notation used for bars serving two positions, e.g. '4H10 – 12 (2 – B2 + 2 = T2)' meaning 2 bars go to bottom layer 2, 2 to top layer 2.",
+      "min_lap_callout": "'Min lap = 300' shown directly adjacent to relevant bars on plan.",
+      "source": "Figure 7.31, page 155"
+    },
+    "duct_profile_tabulation_convention": {
+      "structure": "Separate table per vertical row/tendon, columns = distance along member at fractional-span intervals (1/10 or 1/20 of span), rows = ordinate above soffit (y) and distance from outside face (z).",
+      "example_columns": ["0", "0.05", "0.10", "0.15", "0.20", "..."],
+      "datum_note": "Dimensions based on a datum that is easy to identify on site; profiles tabulated separately per vertical row of ducts.",
+      "source": "Figure 7.9, page 141"
+    },
+    "notes_style": "Long-form prose notes attached to figures (e.g. debonding lengths called out directly on the elevation: 'Strands debonded for 1700 from each end of beam').",
+    "photograph_use": "The manual includes site photographs (not line drawings) to supplement several details, e.g. Fig 7.11b (anchorages), 7.33 (tendons in slab), 7.38–7.40 (bursting reinforcement, dead-end anchorage, ducts in transfer beams) — captioned with courtesy credit to contractor (Sir Robert McAlpine Ltd)."
+  },
+
+  "precast_concrete": {
+    "views_used": [
+      {"view": "Exposure zone diagram", "purpose": "Show durability risk zones (moderate / severe / very severe exposure) on a car-park/bridge precast cross-section", "figure_ref": "Fig 8.1"}
+    ]
+  },
+
+  "water_retaining_structures": {
+    "views_used": [
+      {"view": "Joint detail sections", "purpose": "Show construction-joint and movement-joint arrangements with waterstops/hydrophilic strips/crack inducers", "figure_note": "Multiple joint-type diagrams shown together under '9.4 Typical details', each labelled with its components (wet side, waterstop, rebar continuity)."}
+    ],
+    "labelling_conventions": [
+      "'Wet side' explicitly labelled on every joint diagram to orient which face retains liquid.",
+      "Rebar continuity explicitly called out per joint type: 'Rebar continuous through joint' vs 'Rebar stopped off at joint'.",
+      "Crack inducer explicitly labelled and noted as 'filled with sealing compound'."
+    ]
+  },
+
+  "general_notation_observed_across_topics": [
+    "Bar notation: H{diameter} for high-yield deformed bars (e.g. H8, H10, H12); quantity prefix, spacing suffix 'at {mm}'.",
+    "Section markers use paired letters at cut line with 'A-A', 'B-B' label for the resulting section view.",
+    "Leader lines used extensively for text-note callouts pointing to specific bars/zones rather than dimension strings.",
+    "Detail sheets carry a title-block-like footer combining the generic topic name + code, rotated sideways along the sheet edge in the source layout (an OCR/layout artifact of the original manual's page design)."
+  ]
+}

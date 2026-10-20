@@ -1,0 +1,25 @@
+{
+  "files": {
+    "main.css": "/services/static/css/main.78e7ae04.css",
+    "main.js": "/services/static/js/main.73525979.js",
+    "static/js/842.6f109296.chunk.js": "/services/static/js/842.6f109296.chunk.js",
+    "static/js/400.b60e99f7.chunk.js": "/services/static/js/400.b60e99f7.chunk.js",
+    "static/js/807.52406972.chunk.js": "/services/static/js/807.52406972.chunk.js",
+    "static/js/211.ea386c61.chunk.js": "/services/static/js/211.ea386c61.chunk.js",
+    "static/js/268.a53f0a0c.chunk.js": "/services/static/js/268.a53f0a0c.chunk.js",
+    "static/js/500.391f431f.chunk.js": "/services/static/js/500.391f431f.chunk.js",
+    "static/js/566.b9d77831.chunk.js": "/services/static/js/566.b9d77831.chunk.js",
+    "static/js/343.506590e4.chunk.js": "/services/static/js/343.506590e4.chunk.js",
+    "static/js/36.a0897fce.chunk.js": "/services/static/js/36.a0897fce.chunk.js",
+    "static/js/728.a17669e2.chunk.js": "/services/static/js/728.a17669e2.chunk.js",
+    "static/js/539.137b6e1d.chunk.js": "/services/static/js/539.137b6e1d.chunk.js",
+    "static/js/124.c92210a1.chunk.js": "/services/static/js/124.c92210a1.chunk.js",
+    "static/media/Gemini_Generated_Image_nwcnzmnwcnzmnwcn (1).png": "/services/static/media/Gemini_Generated_Image_nwcnzmnwcnzmnwcn (1).3c468fc34f3384ff6694.png",
+    "static/media/cad-simple-viewer.umd.cjs": "/services/static/media/cad-simple-viewer.umd.408e43f3e03200a5eb9c.cjs",
+    "index.html": "/services/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.78e7ae04.css",
+    "static/js/main.73525979.js"
+  ]
+}

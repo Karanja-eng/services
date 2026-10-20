@@ -14,7 +14,12 @@
     "@react-three/fiber": "^9.4.0",
     "@react-three/postprocessing": "^3.0.4",
     "@tensorflow/tfjs": "^4.22.0",
+    "@thatopen/components": "3.3.3",
+    "@thatopen/components-front": "3.3.3",
+    "@thatopen/fragments": "3.3.3",
+    "@velipso/polybool": "1.1.1",
     "axios": "^1.7.9",
+    "camera-controls": "3.1.2",
     "classnames": "^2.5.1",
     "cra-template": "1.2.0",
     "jspdf": "^3.0.1",
@@ -39,7 +44,9 @@
     "zustand": "^5.0.12"
   },
   "scripts": {
-    "postinstall": "node scripts/fix-three-exports.js",
+    "postinstall": "node scripts/fix-three-exports.js && node scripts/copy-cad-bim-assets.js",
+    "verify:thatopen-three": "node scripts/verify/thatopen-three-compat.mjs",
+    "verify:peers": "node scripts/verify/find-unmet-peers.mjs",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

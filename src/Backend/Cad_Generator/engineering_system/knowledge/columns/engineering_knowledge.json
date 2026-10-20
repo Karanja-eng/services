@@ -1,0 +1,225 @@
+{
+  "engineering_knowledge": {
+    "scope": "In-situ rectangular and circular columns. Not applicable for earthquake. Walls (b/t > 4) covered in 6.5.",
+    "concrete_grade_min": "28/35 MPa",
+    "column_to_slab_beam_grade_ratio_max": 1.4,
+    "nominal_cover_columns": {
+      "internal_XC1": "30mm + \u0394cdev",
+      "external_XC3": "35mm + \u0394cdev",
+      "cover_gt_40mm_fire_risk": "Surface reinforcement required \u2014 mesh spacing \u2264 100mm, dia \u2265 4mm",
+      "bundled_bars_cover": "For equivalent bar size"
+    },
+    "minimum_reinforcement": {
+      "formula": "max(0.002Ac, 0.10 \u00d7 NEd / fyd)",
+      "less_than_0_002Ac": "Treat as plain column (EC2 Section 12)",
+      "min_dia_mm": 16,
+      "exception_small_columns_lt_200mm_min_dia_mm": 8,
+      "min_bars_rectangular": 4,
+      "min_bars_circular": 6,
+      "exception_small_columns_lt_200mm_min_bars_circular": 4
+    },
+    "maximum_reinforcement": {
+      "general": "0.04Ac",
+      "at_laps_max": "0.08Ac",
+      "congestion_note": "Use mechanical splices where congestion is a problem"
+    },
+    "bar_spacing": {
+      "min_main_bars_mm": 75,
+      "min_main_bars_40mm_plus_mm": 100,
+      "min_pairs_mm": 100,
+      "max_compression_bars_mm": 300,
+      "compression_restrained_condition_mm": 150,
+      "max_tension_bars_mm": 175
+    },
+    "anchorage_lap_columns": {
+      "min_anchorage": "max(10\u00f8, 100mm)",
+      "table_6_5": {
+        "notes": "Good bond conditions; bar \u2264 32mm; \u03b11=\u03b12=\u03b14=\u03b15=1.0; \u03b13=0.9 (\u03bb=1.35, K=0.05). Lap: \u03b16=1.5 (>50% bars lapped at once)",
+        "data": [
+          {
+            "condition": "full_tension_compression_anchorage",
+            "C25_30": 36,
+            "C28_35": 34,
+            "C30_37": 32,
+            "C32_40": 31
+          },
+          {
+            "condition": "full_tension_compression_lap",
+            "C25_30": 54,
+            "C28_35": 51,
+            "C30_37": 48,
+            "C32_40": 46
+          }
+        ],
+        "units": "bar_diameters"
+      }
+    },
+    "links": {
+      "size_min": "max(\u00f8_main/4, 8mm)",
+      "exception_small_columns_lt_200mm_min_mm": 6,
+      "bundled_bars_link_size": "Based on equivalent single bar of same area",
+      "arrangement": "Overall enclosing link + additional restraining links for alternate bars or bundles; no additional links if all compression bars within 150mm of restrained bar",
+      "circular_columns": "No additional links required beyond overall enclosing link",
+      "max_spacing": "min(20 \u00d7 longitudinal_bar_dia, lesser_column_dim, 400mm)",
+      "spacing_reduction_at_beam_slab": "Reduce by factor 0.6 within distance = larger column dim above and below beam/slab",
+      "spacing_at_crank": "Link must be close to cranking position; ignore if change in direction \u2264 1:12"
+    },
+    "links_for_bursting_at_laps": {
+      "condition": "Longitudinal bar dia \u2265 20mm",
+      "total_transverse_area": "\u03a3Ast \u2265 1.0 \u00d7 As (area of one lapped bar)",
+      "position": "At outer sections of lap (see Figure 6.25)",
+      "geometry": "l0/3 from each end of lap; \u03a3Ast/2 at each end; 4\u00f8 from end of lap"
+    },
+    "moment_connection_beam_edge_column": {
+      "preferred": "U-bars within depth of beam (fixed with beam; no precise fixing during column concreting)",
+      "when_use_L_bars": "When distance A (Figure 6.26) < anchorage length for that bar dia",
+      "L_bar_note": "Must be fixed accurately at top of column lift \u2014 difficult site task",
+      "standard_bend_ok_if": "Bar of same or greater size placed inside corner normal to it",
+      "non_standard_bend": "Required if no corner bar; check reinforcement fits and performs correctly",
+      "shear_capacity_control": "Max tensile beam reinforcement also controlled by column shear capacity",
+      "transverse_column_rebar_in_depth": "Required where no edge beam intersects at same level (links or horizontal U-bars)"
+    },
+    "bursting_action": "Links may be required at change of column section (especially edge/corner); may extend within or below beam/slab depth",
+    "starter_bars": {
+      "note": "Length specified longer than required from pad footings/pile caps due to construction tolerance risk",
+      "reference": "Model Details MF1 and MF2"
+    }
+  },
+  "rules": [
+    {
+      "id": "CR-001",
+      "source": "Section 6.4.2",
+      "condition": "column, area reinforcement",
+      "action": "0.002Ac \u2264 As \u2264 0.04Ac; at laps \u2264 0.08Ac",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-002",
+      "source": "Section 6.4.2",
+      "condition": "column reinforcement < 0.002Ac",
+      "action": "Consider as plain column (EC2 Section 12)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-003",
+      "source": "Section 6.4.2",
+      "condition": "rectangular column, minimum bars",
+      "action": "\u22654 bars",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-004",
+      "source": "Section 6.4.2",
+      "condition": "circular column, minimum bars",
+      "action": "\u22656 bars (\u22654 if dia < 200mm)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-005",
+      "source": "Section 6.4.2",
+      "condition": "column links, maximum spacing",
+      "action": "min(20\u00d7long_bar_dia, lesser_column_dim, 400mm); reduce to 0.6\u00d7 within larger_dim of column from beam/slab",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-006",
+      "source": "Section 6.4.2",
+      "condition": "column bars, link restraint",
+      "action": "All compression bars must be within 150mm of a restrained bar; additional links required if not satisfied; not required for circular columns",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-007",
+      "source": "Section 6.4.2",
+      "condition": "column bar dia >= 20mm, lapping zone",
+      "action": "Links for bursting: \u03a3Ast >= As of one lapped bar; positioned at outer l0/3 sections of lap",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-008",
+      "source": "Section 6.4.2",
+      "condition": "moment connection, beam to edge column",
+      "action": "Prefer U-bars in beam depth; use L-bars only when distance A < anchorage length for that dia",
+      "constraint_type": "PREFERRED / CONDITIONAL"
+    },
+    {
+      "id": "CR-009",
+      "source": "Section 6.4.2",
+      "condition": "column design concrete grade",
+      "action": "Grade < 28/35 MPa not normally used; column grade must not exceed 1.4 \u00d7 intersecting slab/beam grade",
+      "constraint_type": "MUST (normally)"
+    },
+    {
+      "id": "CR-010",
+      "source": "Section 6.4.2",
+      "condition": "column nominal cover > 40mm",
+      "action": "Provide surface reinforcement mesh: spacing \u2264 100mm, dia \u2265 4mm",
+      "constraint_type": "MUST"
+    }
+  ],
+  "parameters": {
+    "input": {
+      "column_width_mm": {},
+      "column_depth_mm": {},
+      "clear_height_mm": {},
+      "axial_force_NEd_kN": {},
+      "cover_mm": {
+        "internal_typical": 30,
+        "external_typical": 35
+      },
+      "main_bar_dia_mm": {
+        "preferred_min": 16
+      },
+      "main_bar_count": {
+        "min_rectangular": 4,
+        "min_circular": 6
+      },
+      "link_dia_mm": {},
+      "concrete_grade": {
+        "min_fck_fcu": "28/35"
+      }
+    },
+    "derived": {
+      "Ac_mm2": "column_width \u00d7 column_depth",
+      "As_min_mm2": "max(0.002 \u00d7 Ac, 0.10 \u00d7 NEd / fyd)",
+      "As_max_mm2": "0.04 \u00d7 Ac",
+      "As_max_at_laps_mm2": "0.08 \u00d7 Ac",
+      "link_dia_min_mm": "max(main_bar_dia/4, 8)",
+      "link_max_spacing_mm": "min(20 \u00d7 main_bar_dia, lesser_column_dim, 400)",
+      "link_spacing_at_beam_slab_mm": "0.6 \u00d7 link_max_spacing_mm",
+      "anchorage_length_bars": "from Table 6.5",
+      "lap_length_bars": "from Table 6.5",
+      "lap_bursting_links_area": "1.0 \u00d7 As_one_lapped_bar (if main_bar_dia >= 20mm)"
+    },
+    "constraints": {
+      "grade_to_slab_ratio_max": 1.4,
+      "surface_mesh_trigger_cover_mm": 40,
+      "surface_mesh_spacing_max_mm": 100,
+      "surface_mesh_dia_min_mm": 4
+    },
+    "recovered_information_pass": {
+      "provenance": "RECOVERY_gap_fill (1).json SECTION_G (Section 6.4.2, page 85)",
+      "G1_column_tension_bar_max_spacing": {
+        "rule": "Maximum spacing of tension bars in column: 175mm.",
+        "source": "Section 6.4.2, page 85",
+        "status": "EXTRACTED"
+      },
+      "G2_column_32mm_spacing_lapping_allowance": {
+        "rule": "When considering minimum spacing of bars of 32mm size or greater, allowance must be made for lapping of bars.",
+        "practical_check": "At laps, clear spacing of max(bar_dia, dg+5mm, 20mm) must be computed on lapping bars.",
+        "source": "Section 6.4.2, page 85",
+        "status": "EXTRACTED"
+      },
+      "G3_column_concrete_grade_cap": {
+        "rule": "Column concrete grade must not exceed 1.4 * concrete grade of intersecting slab or beam UNLESS special measures taken to resist bursting forces.",
+        "source": "Section 6.4.2, page 85",
+        "status": "EXTRACTED"
+      },
+      "G4_column_5_8_bundle_cover": {
+        "rule": "Cover to bundled bars in columns = cover to equivalent bar size bn = ø * sqrt(nb) <= 55mm.",
+        "source": "Section 6.4.2, page 85; Section 5.4.5, page 43",
+        "status": "EXTRACTED"
+      }
+    }
+  }
+}

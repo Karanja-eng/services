@@ -1,0 +1,273 @@
+{
+  "document": "IStructE/Concrete Society Standard Method of Detailing Structural Concrete — Chapters 1–5",
+  "scope": "GENERAL DETAILING INFORMATION — applies to all structural members",
+
+  "reinforcement_notation": {
+    "standard_description_sequence": "Number, type_and_grade, size, mark, bar_centres, location_or_comment",
+    "example": "20H16-63-150B1",
+    "example_decoded": {
+      "20": "number of bars",
+      "H": "high yield deformed bar",
+      "16": "nominal diameter in mm",
+      "63": "bar mark",
+      "150": "pitch/centres in mm",
+      "B1": "bottom face, outer layer"
+    },
+    "source": "Section 4.2.1, page 25",
+    "status": "DIRECTLY STATED"
+  },
+
+  "reinforcement_layering_notation": {
+    "far_face_outer": "F1",
+    "far_face_second": "F2",
+    "near_face_outer": "N1",
+    "near_face_second": "N2",
+    "bottom_face_outer": "B1",
+    "bottom_face_second": "B2",
+    "top_face_outer": "T1",
+    "top_face_second": "T2",
+    "note": "Contractor may not be familiar — illustrate with sketch on drawings",
+    "source": "Section 4.2.1, page 25",
+    "status": "DIRECTLY STATED"
+  },
+
+  "bar_mark_conventions": {
+    "rule_1": "Bar size is NOT part of the bar mark",
+    "rule_2": "Prefixes/suffixes for location must not be included in bar mark",
+    "rule_3": "Exception: varying shape/length bars may use letter suffixes, e.g. 8H20-1(a to h)-150",
+    "rule_4": "Bar mark given on schedule for exception: 1a, 1b, 1c",
+    "rule_5": "Same bar mark must never repeat within the same member name",
+    "source": "Section 4.5.1, page 32",
+    "status": "DIRECTLY STATED"
+  },
+
+  "schedule_reference_numbering": {
+    "format": "DrawingRef(3chars) + ScheduleNum(2chars, starting 01) + RevisionLetter(1char)",
+    "example": "046 02A",
+    "rule_zeros": "The importance of leading zeros must be observed",
+    "rule_uniqueness": "Each schedule must have a different reference number and refer to only one drawing",
+    "bar_schedule_standard": "BS 8666",
+    "source": "Section 4.5.1, pages 31–32",
+    "status": "DIRECTLY STATED"
+  },
+
+  "bar_group_bar_marks_for_separate_drawings": {
+    "bottom_reinforcement": "bar marks 1–99",
+    "top_reinforcement": "bar marks 100–199",
+    "note": "When top and bottom reinforcement are detailed on separate drawings",
+    "source": "Section 4.5.1, page 32",
+    "status": "DIRECTLY STATED"
+  },
+
+  "straight_bar_maximum_lengths": {
+    "12mm_and_over": {"max_length_m": 12, "note": "normally scheduled"},
+    "10mm_and_less": {"max_length_m": 6, "note": "normally scheduled"},
+    "source": "Section 4.2.4, page 30",
+    "status": "DIRECTLY STATED"
+  },
+
+  "reinforcement_grades": {
+    "grade_500A": {
+      "yield_strength_Nmm2": 500,
+      "stress_ratio_Rm_Re": ">= 1.05",
+      "total_elongation_percent": ">= 2.5"
+    },
+    "grade_500B": {
+      "yield_strength_Nmm2": 500,
+      "stress_ratio_Rm_Re": ">= 1.08",
+      "total_elongation_percent": ">= 5.0"
+    },
+    "grade_500C": {
+      "yield_strength_Nmm2": 500,
+      "stress_ratio_Rm_Re": ">= 1.15 and < 1.35",
+      "total_elongation_percent": ">= 7.5"
+    },
+    "mild_steel_grade_250": {
+      "status": "No longer commonly available in UK",
+      "available_sizes_mm": [8, 10, 12, 16]
+    },
+    "standard": "BS 4449 / EC2 Annex C",
+    "source": "Section 5.1.2, Table 5.1, page 34",
+    "status": "DIRECTLY STATED"
+  },
+
+  "fabric_reinforcement": {
+    "standard": "BS 4483",
+    "scheduling": "Separate fabric schedules from bar schedules, use BS 8666 fabric schedule form",
+    "where_same_fabric": "Identify perimeter, note fabric type including orientation, layers, laps",
+    "where_fabric_type_varies": "Show individual locations",
+    "sheet_count": "Number of sheets in a set stated only once on drawing",
+    "layering_avoidance": "Use 'flying end' fabrics or purpose-made fabrics",
+    "source": "Section 4.2.5, page 30",
+    "status": "DIRECTLY STATED"
+  },
+
+  "beam_column_intersection_rules": {
+    "column_bar_link_retention": {
+      "rule": "Every column bar must be retained by a link",
+      "exception": "Where distance between column bars is 150mm or less, every other bar should be retained by a link",
+      "source": "Section 4.2.2, page 26, note 1",
+      "status": "DIRECTLY STATED"
+    },
+    "column_bars_through_junction": {
+      "rule": "Column bars go straight through the junction",
+      "source": "Figure 4.1, page 26",
+      "status": "DIRECTLY STATED"
+    },
+    "bottom_span_bars_at_column": {
+      "rule": "Bottom span bars stop short of column face",
+      "source": "Figure 4.1, page 26",
+      "status": "DIRECTLY STATED"
+    },
+    "link_hanger_bars_at_column": {
+      "rule": "Link hanger bars stop short of column face",
+      "source": "Figure 4.1, page 26",
+      "status": "DIRECTLY STATED"
+    },
+    "top_support_bars_primary_over_secondary": {
+      "rule": "Top support bars of primary beam are placed above secondary beam bars",
+      "source": "Figure 4.1, page 26",
+      "status": "DIRECTLY STATED"
+    },
+    "continuity_through_column": {
+      "rule": "Continuity through column provided by main support bars and bottom support bars of appropriate sizes",
+      "source": "Section 4.2.3, page 29",
+      "status": "DIRECTLY STATED"
+    },
+    "vibrator_access": {
+      "rule": "Allow 75mm space for vibrator for every 300mm of beam width",
+      "source": "Figure 4.2, page 27",
+      "status": "DIRECTLY STATED"
+    },
+    "cross_ties": {
+      "rule": "Cross ties at 1000mm centres to limit free height of link to 400mm",
+      "source": "Figure 4.2, page 27",
+      "status": "DIRECTLY STATED"
+    },
+    "column_crank": {
+      "rule": "Column reinforcement cranked inside at crank ratio 1:10, with 50mm offset at kicker",
+      "figure": "Figure 4.2, page 27",
+      "status": "DIRECTLY STATED"
+    },
+    "secondary_beam_lever_arm": {
+      "rule": "Where secondary beam reinforcement has increased top cover, check resulting reduction in lever arm is satisfactory",
+      "reference": "Also see 5.15",
+      "source": "Section 4.2.2, page 26, note 3",
+      "status": "DIRECTLY STATED"
+    },
+    "beam_corner_detail": {
+      "rule": "Standard radius for both links and secondary beam reinforcement must pass between main reinforcement",
+      "note": "If corner bar must move, use smaller diameter to fit into radius of link — check with Designer",
+      "spacer_bars_spacing": "Space bars at 1000mm centres",
+      "source": "Figure 4.3, page 28",
+      "status": "DIRECTLY STATED"
+    },
+    "link_concrete_space": {
+      "rule": "Sufficient space between links to allow concrete and vibrator to pass through",
+      "note": "When calculating actual space between links, add thickness of returned legs of link",
+      "source": "Figure 4.4, page 28",
+      "status": "DIRECTLY STATED"
+    },
+    "large_column_centre_clear": {
+      "rule": "With large columns, advisable to keep central area free of links for formwork cleaning access prior to concreting",
+      "source": "Figure 4.4, page 28",
+      "status": "DIRECTLY STATED"
+    }
+  },
+
+  "external_beam_column_intersection": {
+    "u_bars": {
+      "rule": "U-bars may be placed into column reinforcement for external (edge) beam-column connections",
+      "position": "U-bars must be positioned as close to far face of column as possible",
+      "sequence": "Bars fitted after column below cast, before prefabricated beam cage fixed in position",
+      "source": "Section 4.2.3, Figure 4.5, page 29",
+      "status": "DIRECTLY STATED"
+    },
+    "l_bars": {
+      "rule": "Where design requires L-bars with vertical leg fixed into lower column, position must be clearly shown on drawings",
+      "note": "Beam bottom L-bars cast into lower column before prefabricated beam cage placed in position",
+      "warning": "This detail can delay construction if reinforcement not fixed in correct position",
+      "reference": "See Model Detail MS2",
+      "source": "Section 4.2.3, Figure 4.6, page 30",
+      "status": "DIRECTLY STATED"
+    }
+  },
+
+  "flexible_detailing": {
+    "definition": "Method of detailing end bars separate from main longitudinal bars of an element",
+    "purpose": [
+      "Ensures correct end cover achievable by limited telescoping at splice",
+      "Encourages detailing of preformed cages"
+    ],
+    "example": "Separate bottom splice bars at supports of continuous beams which lap onto main span bars",
+    "source": "Section 4.2.3, page 29",
+    "status": "DIRECTLY STATED"
+  },
+
+  "preformed_cages": {
+    "advantages": [
+      "Improves speed and efficiency on site",
+      "Allows large proportion of reinforcement prefabrication",
+      "May have site safety benefits"
+    ],
+    "notes": "Decision to preassemble normally taken by Contractor; Designer and Detailer should bear possibility in mind",
+    "source": "Section 4.2.3, page 29",
+    "status": "DIRECTLY STATED"
+  },
+
+  "holes_in_elements": {
+    "not_shown_on_reinforcement_drawings": {
+      "circular": "Up to 150mm diameter",
+      "rectangular": "Up to 150x150mm in slabs or walls"
+    },
+    "must_be_shown": "All other holes must be indicated on reinforcement drawing and trimmed where necessary",
+    "source": "Section 3.2.2, page 12",
+    "status": "DIRECTLY STATED"
+  },
+
+  "top_bottom_separate_drawings": {
+    "rule": "Separate drawings for top and bottom layers only for fabric and in exceptional cases (e.g. voided bridge decks, box girders with 4 layers)",
+    "source": "Section 3.2.2, page 12",
+    "status": "DIRECTLY STATED"
+  },
+
+  "reinforcement_cover_tolerances": {
+    "rule": "All reinforcement fixed to nominal cover using spacers of same nominal size as nominal cover",
+    "schedule_dimensions_for_bars_between_faces": "Nominal concrete dimension less nominal cover on each face less allowance for other errors per Table 5.5",
+    "note_actual_bar_size": "Actual size of bar is larger than nominal size — see 5.1.5",
+    "source": "Section 4.5.2, page 32",
+    "status": "DIRECTLY STATED"
+  },
+
+  "section_viewing_directions": {
+    "beams": "Looking towards the left",
+    "columns": "Looking downwards",
+    "rule": "Sections taken consistently in same direction",
+    "source": "Section 3.18, page 16",
+    "status": "DIRECTLY STATED"
+  },
+
+  "flat_slab_reinforcement_areas_example": {
+    "note": "From Figure in Section 2.6, Example 1 — a marked-up GA for a flat slab showing required steel areas",
+    "minimum_area_mm2": 565,
+    "column_strip_areas_mm2": [2094, 1796, 1795],
+    "corner_column_area_mm2": 646,
+    "high_load_area_mm2": 2805,
+    "special_area_mm2": 1005,
+    "interpretation": "These are required steel areas per mm width at specific grid locations in a real example flat slab",
+    "status": "DIRECTLY STATED (example only — not a general rule)"
+  },
+
+  "pile_cap_example": {
+    "bars": [
+      {"mark": 6, "count": null, "type": "H16", "spacing": 250},
+      {"mark": 7, "count": 4, "type": "H40", "spacing": null},
+      {"mark": 8, "count": 4, "type": "H16", "spacing": null},
+      {"mark": 9, "count": null, "type": "H16", "spacing": "same as mark 8"},
+      {"mark": 10, "count": 5, "type": "H40", "spacing": null},
+      {"mark": 11, "count": null, "type": "H16", "spacing": null}
+    ],
+    "source": "Section 2.6, Example 3, page 10",
+    "status": "DIRECTLY STATED (example only)"
+  }
+}

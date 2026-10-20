@@ -1,0 +1,20 @@
+{
+  "stairs": {
+    "types": [
+      "end-supported flight with landings (MST1)",
+      "cantilever from wall/edge beam (MST2)",
+      "landing-supported in recess (Fig 6.33)"
+    ],
+    "components": [
+      "main bottom bars",
+      "top bars at landing",
+      "U-bars at landings (50% As)",
+      "distribution bars",
+      "links (cantilever H8@300)",
+      "corner bars",
+      "construction joint",
+      "recess",
+      "handrail pocket steel"
+    ]
+  }
+}

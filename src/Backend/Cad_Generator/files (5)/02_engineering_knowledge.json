@@ -1,0 +1,501 @@
+{
+  "corbels_half_joints_nibs": {
+    "member_definition": {
+      "scope_statement": {
+        "fact_type": "DIRECTLY STATED",
+        "text": "Covers detailing of in-situ corbels, beam half joints and continuous nibs. Closely related to joint design; designer must ensure detail design is clearly specified. Does not cover all aspects of precast corbels/half joints/nibs. Bearing pad design is out of scope.",
+        "source": {"section": "6.9.1", "page": 129}
+      },
+      "member_types": [
+        {"name": "Corbel", "description": "Short cantilever projection from a column/wall face used to support a bearing load (e.g. a beam end).", "model_details": ["MCB1 (without welds)", "MCB2 (with welds)"]},
+        {"name": "Half joint (beam)", "description": "A stepped/notched end of a beam that provides a reduced-depth bearing seat for a supported member.", "model_detail": "MHJ"},
+        {"name": "Continuous nib", "description": "A linear (continuous, not discrete) projection along a beam or wall used as a bearing seat, e.g. for slabs or brickwork support.", "model_details": ["MN1 (vertical U-bars/links — general case)", "MN2 (horizontal U-bars — shallow nib for light loads, e.g. brickwork)"]}
+      ],
+      "zones_terminology": [
+        "loaded area / bearing area",
+        "load bearing area edge",
+        "outer face of corbel",
+        "column links (top of column, near corbel)",
+        "nib depth",
+        "supporting beam (for nibs — the vertical link leg in the supporting beam carries the nib reaction)"
+      ],
+      "connections_to_other_members": {
+        "corbel": "Column (corbel cantilevers from column; two column links placed close to corbel top per MCB1/MCB2)",
+        "half_joint": "Beam-to-beam or beam-to-slab bearing (MN1 detail 'also suitable for half joints in slabs')",
+        "nib": "Beam or wall (nib is on a beam/wall; supported member — e.g. slab or brickwork — bears on nib); vertical link leg of the SUPPORTING beam carries the nib's load"
+      }
+    },
+
+    "geometry": {
+      "cover": {
+        "corbels": {
+          "internal_use": {"value_mm": 25, "note": "+ Δcdev; XC1 (concrete inside buildings, low air humidity)", "fact_type": "DIRECTLY STATED"},
+          "external_use": {"value_mm": 35, "note": "+ Δcdev; XC3 (carbonation-induced corrosion)", "fact_type": "DIRECTLY STATED"},
+          "dependency_note": "See 5.2.1 (general chapter, not in this extract) for values of Δcdev.",
+          "grouped_bars_note": "Cover to grouped bars should be for the equivalent bar size (ref. 5.8, general chapter).",
+          "fire_note": "For 4-hour fire resistance, supplementary reinforcement may be required where nominal cover exceeds 40mm (axis distance to main reinforcement exceeds 70mm) — EC2 Part 1.2 Cl.4.5.2."
+        },
+        "continuous_nibs_and_slab_half_joints": {
+          "internal_use": {"value": "20mm or bar size, whichever is greater", "note": "XC1"},
+          "external_use": {"value_mm": 40, "note": "XC3"}
+        },
+        "generic_model_detail_notes": {
+          "corbels_MCB1_MCB2": "Nominal cover specified by designer (no fixed number printed on the drawing itself — left to design).",
+          "half_joints_MHJ": "Nominal cover specified by designer (normally to ensure 40mm to the main steel).",
+          "nibs_MN1": "Nominal cover specified by designer.",
+          "nibs_MN2": "Nominal cover specified by designer (normally to ensure 40mm to the main steel)."
+        },
+        "concrete_grade_minimum": {"value": "28/35 MPa (cylinder/cube)", "note": "Concrete grades lower than this are not normally used for corbels/half joints/nibs.", "fact_type": "DIRECTLY STATED"}
+      },
+
+      "minimum_reinforcement_area": {
+        "corbels": {
+          "tension": {"formula_ref": "As_min_corbel_tension", "text": "As,min ≥ 0.0014 · bt · d"},
+          "compression": {"formula_ref": "Asc_min_corbel_compression", "text": "Asc,min ≥ 0.002 · Ac"}
+        },
+        "half_joints_and_nibs": {
+          "tension_general": {"formula_ref": "As_min_halfjoint_general", "text": "As,min = 0.26 · bt · d · fctm/fyk ≥ 0.0013 · bt · d"},
+          "tension_grade_28_35_fyk500": {"formula_ref": "As_min_halfjoint_c2835", "value": "As,min = 0.0014 · bt · d"},
+          "preferred_min_bar_diameter_mm": 10
+        }
+      },
+
+      "bar_spacing": {
+        "minimum_pitch_of_bars_mm": {"value": 75, "reason": "Sufficient space for insertion of poker vibrator", "source_clause": "EC2 Cl.8.2, 9.3.1.1"},
+        "minimum_vertical_space_between_bars": {"value": "25mm or bar size, whichever is greater"},
+        "continuous_nibs_max_pitch": {
+          "main_bars": {"normal": "3h ≤ 400mm", "concentrated_load_areas": "2h ≤ 250mm"},
+          "secondary_bars": {"normal": "3.5h ≤ 450mm", "concentrated_load_areas": "3h ≤ 400mm"},
+          "variable_note": "h = nib depth (implied; not explicitly restated per-formula in source but consistent with 'h' usage in this manual for member depth)."
+        }
+      },
+
+      "anchorage_and_lap_geometry": {
+        "minimum_anchorage_length": {"value": "greater of 10·bar_diameter or 100mm", "source_clause": "EC2 Cl.8.4, 8.7"},
+        "typical_anchorage_and_lap_table_ref": "Table 6.12 (see formulas_and_calculations)"
+      },
+
+      "MCB1_specific_dimensions": {
+        "edge_distance_to_bearing": {"text": "Distance between edge of bearing and inside of bar to be a minimum of the bar diameter or 0.75 × cover, whichever is greater."},
+        "compression_bar_area": {"value": "≥ 1000 mm²/metre width of corbel"},
+        "secondary_horizontal_reinforcement_area": {"value": "≥ 0.50 × area of main tensile reinforcement"},
+        "max_bar_size_for_this_detail_mm": 16,
+        "column_links": "Two column links placed close to corbel top."
+      },
+
+      "MCB2_specific_dimensions": {
+        "edge_distance_to_bearing": {"text": "Distance between edge of bearing and outside of plate or bar should not be less than the vertical cover to the plate or bar."},
+        "compression_bar_area": {"value": "≥ 1000 mm²/metre width of corbel"},
+        "horizontal_links_area": {"value": "≥ 0.50 × area of main tensile reinforcement"},
+        "max_bar_size_for_this_detail_mm": 20,
+        "column_links": "Two column links placed close to corbel top.",
+        "welding_note": "Main tensile bars welded to a cross bar or plate, and to the vertical compression bars."
+      },
+
+      "MHJ_specific_dimensions": {
+        "edge_distance_to_bearing": {"text": "Distance between edge of bearing and inside of bar to be a minimum of the bar diameter or 0.75 × cover, whichever is greater."},
+        "horizontal_U_bar_diameter": "Same diameter as main bottom bars.",
+        "hanger_links": {"spacing_mm": 450, "note": "Nominal hanger links"},
+        "other_links_spacing_mm": 150,
+        "bearing_pad_note": "Special design information must be given concerning the bearing pads."
+      },
+
+      "MN1_specific_dimensions": {
+        "edge_distance": {"text": "Not less than bar diameter or 0.75 × nominal cover, whichever is greater."},
+        "max_link_diameter_mm": 12,
+        "min_nominal_overlap_of_reinforcement_mm": {"value": 60, "meaning": "Minimum nominal overlap of reinforcement in nib and reinforcement in supported member."},
+        "reinforcement_options": "Closed links or U-bars may be used."
+      },
+
+      "MN2_specific_dimensions": {
+        "horizontal_U_bar_max_diameter_mm": 16,
+        "min_nib_depth_mm": 140,
+        "lacer_bar_diameter": "Same diameter as U-bars.",
+        "U_bar_max_pitch_mm": 250,
+        "wiring_requirement": "Lacer bar wired to at least two main longitudinal bars.",
+        "suitability": "Shallow nibs suitable for light loads (e.g. supporting brickwork)."
+      }
+    },
+
+    "reinforcement_types": [
+      {
+        "name": "Main tensile reinforcement (corbel)",
+        "location": "Top of corbel, extended as close to outer face as possible",
+        "extension_rule": "Must extend beyond the load-bearing area by at least the minimum distance shown on the Model Details.",
+        "anchorage": "Tension lap at column face (into column); large radius bend required where reinforcement changes direction",
+        "preferred_form": "Small bar diameters, horizontal U-bars, or links with easy bends (preferred). Large diameters (requiring welding, MCB2) only where loading is high and geometry restrictive.",
+        "notes": "It is essential the main tensile reinforcement is extended as close to the outer face of the corbel as possible."
+      },
+      {
+        "name": "Compression bars (corbel)",
+        "location": "Bottom of corbel / column compression zone",
+        "area_requirement": "Total area ≥ 1000 mm²/metre width of corbel (both MCB1 and MCB2)",
+        "anchorage": "Compression anchorage",
+        "geometry_note": "Outer compression bars angled to pass inside links (MCB1)."
+      },
+      {
+        "name": "Secondary horizontal reinforcement / horizontal links (corbel)",
+        "purpose": "Crack control / shear resistance in corbel body",
+        "area_requirement": "Total area not less than 0.50 × area of main tensile reinforcement",
+        "MCB1_form": "Secondary horizontal reinforcement (separate bars)",
+        "MCB2_form": "Horizontal links (same area rule)"
+      },
+      {
+        "name": "Column links (at corbel)",
+        "quantity": "Two",
+        "location": "Placed close to corbel top, within the column"
+      },
+      {
+        "name": "Nominal H8 'U' bar (staircase fragment, MST2)",
+        "note": "Position of H8 U-bar specified separately from design reinforcement; adjustable bends on site.",
+        "source_topic": "staircases_fragment"
+      },
+      {
+        "name": "Horizontal 'U' bar (half joint / nib)",
+        "diameter_rule_MHJ": "Same diameter as main bottom bars",
+        "diameter_rule_MN2": "Not more than 16mm",
+        "purpose": "Tension anchorage at nib/half-joint root; standard radius of bend"
+      },
+      {
+        "name": "Hanger links (half joint)",
+        "spacing_mm": 450,
+        "designation": "Nominal"
+      },
+      {
+        "name": "Full-length links (half joint)",
+        "purpose": "Sufficient to resist total reaction, equally spaced"
+      },
+      {
+        "name": "Closed links / U-bars (nib, MN1)",
+        "purpose": "Take load on nib; specified by designer",
+        "constraint": "Diameter of links not more than 12mm"
+      },
+      {
+        "name": "Lacer bar (nib, MN2)",
+        "diameter": "Same as U-bars",
+        "function": "Ties/restrains the horizontal U-bars; wired to at least two main longitudinal bars"
+      },
+      {
+        "name": "Cranked bars (half joint)",
+        "purpose": "Crack control (used 'if necessary')",
+        "lap": "Tension lap for cranked bar"
+      }
+    ],
+
+    "laps": {
+      "corbel_MCB1_MCB2": {
+        "tension_lap": "Shown at the main tensile reinforcement / column interface (labelled 'Tension lap' on both details).",
+        "compression_anchorage": "Shown separately from the tension lap, at the compression bars."
+      },
+      "half_joint_MHJ": {
+        "tension_lap": "Present for straight bars.",
+        "tension_lap_for_cranked_bar": "Separate, distinct lap noted specifically for the cranked bar."
+      },
+      "nib_MN1": {
+        "min_nominal_overlap_mm": 60,
+        "description": "Minimum nominal overlap of reinforcement in nib and reinforcement in supported member."
+      },
+      "general_table": "Table 6.12 gives typical full tension/compression lap lengths (l0) in bar diameters for good/poor bond conditions across four fck/fcu grades — see formulas_and_calculations.",
+      "dependency": "DEPENDENCY: exact lap-length rules (staggering, max proportion of bars lapped at one place, minimum spacing between laps) depend on the General Detailing chapter and EC2 Clause 8.7.4 — not fully restated in this section beyond Table 6.12 and its note that a6 = 1.5 assumes more than 50% of bars lapped at one place."
+    },
+
+    "anchorage_and_development": {
+      "minimum_anchorage_length_general": {"rule": "Greater of 10 × bar diameter or 100mm.", "source_clause": "EC2 Cl.8.4, 8.7"},
+      "table_6_12_reference": "For high-yield (500 grade) deformed bars, Table 6.12 gives typical anchorage (lbd) and lap (l0) lengths in bar diameters for 'good' and 'poor' bond conditions across 4 concrete grades.",
+      "table_6_12_assumptions": [
+        "Bar size not greater than 32mm",
+        "α1, α2, α4, α5 of EC2 Table 8.2 all = 1",
+        "α3 = 0.9 (λ = 1.35 and K = 0.05)",
+        "α6 = 1.5 (assumes more than 50% of bars lapped at one place) — for laps only",
+        "For other situations, refer to EC2 Clause 8.4.4"
+      ],
+      "corbel_specific": "Main tensile reinforcement anchored via tension lap into the column; large radius of bend required at the anchorage/direction-change point (both MCB1 and MCB2).",
+      "half_joint_specific": "Tension anchorage shown for the horizontal U-bar and for straight/cranked main bars; hh (bar diameter-derived?) dimension labelled at anchorage in MHJ diagram (value not given numerically in source, symbol only).",
+      "nib_specific": {
+        "MN1": "Tension anchorage length required if U-bars are used.",
+        "MN2": "Tension anchorage length shown for horizontal U-bars; depth of nib not less than 140mm partly to accommodate this."
+      },
+      "dependency": "DEPENDENCY: General anchorage/development-length numerical rules and bend-radius/hook rules should be taken from the General Detailing chapter and EC2 Cl.8.4/8.7, not invented here."
+    },
+
+    "spacing": [
+      {"condition": "General corbel/half-joint/nib reinforcement, poker-vibrator access required", "rule": "Minimum pitch of bars 75mm", "affected": "all main bars"},
+      {"condition": "Vertically stacked/layered bars", "rule": "Minimum vertical space 25mm or bar size, whichever greater", "affected": "all bars"},
+      {"condition": "Continuous nib, main bars, general area", "rule": "Max pitch 3h ≤ 400mm", "affected": "main bars"},
+      {"condition": "Continuous nib, main bars, concentrated load area", "rule": "Max pitch 2h ≤ 250mm", "affected": "main bars"},
+      {"condition": "Continuous nib, secondary bars, general area", "rule": "Max pitch 3.5h ≤ 450mm", "affected": "secondary bars"},
+      {"condition": "Continuous nib, secondary bars, concentrated load area", "rule": "Max pitch 3h ≤ 400mm", "affected": "secondary bars"},
+      {"condition": "Nib MN2 U-bars", "rule": "Pitch not more than 250mm", "affected": "horizontal U-bars"},
+      {"condition": "Half joint MHJ hanger links", "rule": "450mm (nominal)", "affected": "hanger links"},
+      {"condition": "Half joint MHJ other links", "rule": "150mm (nominal)", "affected": "links"}
+    ],
+
+    "bar_curtailment": {
+      "note": "Source does not give explicit curtailment-length rules for corbels/half joints/nibs beyond anchorage-length and lap requirements above; curtailment as such (mid-span bar cutoffs) is not applicable to these short, statically-determinate cantilever/bearing elements in the way it is for beams/slabs.",
+      "fact_type": "INFORMATION GAP — no explicit curtailment content in source for this topic"
+    },
+
+    "bar_bending": {
+      "large_radius_bends": {
+        "requirement": "Large radius of bend required at main tensile reinforcement direction changes in corbels (MCB1, MCB2) to avoid crushing the concrete / for crack control.",
+        "applies_to": ["MCB1 main tensile bars", "MCB2 main tensile bars welded to cross bar/plate"]
+      },
+      "U_bars": {
+        "MHJ": "Horizontal U-bar, same diameter as main bottom bars, standard radius of bend.",
+        "MN1": "U-bars optional alternative to closed links.",
+        "MN2": "Horizontal U-bars, diameter not more than 16mm."
+      },
+      "cranked_bars": {
+        "MHJ": "Cranked bars used if necessary for crack control; have their own distinct tension lap."
+      },
+      "welding_as_bend_alternative": "Where large bar diameters are needed (>16mm typically), welding main tensile bars to a cross bar or plate (MCB2) is used instead of/alongside bending, because large-diameter bends become impractical; welding normally done off-site under factory conditions."
+    },
+
+    "reinforcement_zoning": {
+      "corbel": ["outer face zone (main tensile bar termination)", "column-interface zone (tension lap, compression anchorage, two column links)", "body zone (secondary horizontal reinforcement/links, compression bars)"],
+      "half_joint": ["bearing/nib root zone (tension anchorage, hanger links at 450, cranked-bar lap)", "full length zone (full-length links resisting total reaction, equally spaced)", "general body zone (nominal links at 150)"],
+      "continuous_nib": ["root/anchorage zone (tension anchorage length for U-bars)", "concentrated-load zone (tighter max bar pitch, 2h≤250 vs 3h≤400)", "general span zone (normal max pitch rules)"]
+    },
+
+    "connections_to_other_members_detail": {
+      "corbel_to_column": {
+        "reinforcement_interaction": "Corbel main tensile reinforcement lapped in tension into column reinforcement at the corbel/column interface; two additional column links placed close to corbel top; compression bars given compression anchorage into column.",
+        "relationship_type": "anchored_into / laps_with"
+      },
+      "nib_to_supporting_beam": {
+        "reinforcement_interaction": "The vertical leg of the links in the supporting beam must be designed to carry the loads from the nib; effective depth d of the beam should be reduced because concrete in the nib below the vertical beam link does not contribute to resistance.",
+        "relationship_type": "load_transfers_into"
+      },
+      "nib_to_supported_member": {
+        "reinforcement_interaction": "Minimum nominal overlap of 60mm between reinforcement in the nib and reinforcement in the supported member (MN1).",
+        "relationship_type": "laps_with"
+      }
+    },
+
+    "detailing_sequence_implied": [
+      "1. Establish concrete grade (≥28/35) and member geometry (corbel projection / half-joint step / nib depth, min 140mm for shallow nib MN2).",
+      "2. Establish nominal cover (internal/external, corbel vs. nib/half-joint values) per exposure class.",
+      "3. Check minimum reinforcement area (tension As,min, compression Asc,min for corbels; As,min for half joints/nibs).",
+      "4. Select main tensile reinforcement arrangement: small-diameter bars/U-bars/easy-bend links preferred; large diameter + welding (MCB2) only if loading/geometry demands.",
+      "5. Provide compression bars/anchorage and secondary horizontal reinforcement/links (≥0.5× main tensile area).",
+      "6. Place two column links close to corbel top (corbel case).",
+      "7. Check bar spacing (min pitch 75mm; min vertical spacing 25mm/bar size; nib max pitch rules by zone).",
+      "8. Check anchorage (min 10⌀ or 100mm; Table 6.12 for specific lengths) and laps (tension lap at column/support interface; 60mm min overlap for nibs).",
+      "9. Confirm edge distances to bearing (bar diameter or 0.75×cover, whichever greater)."
+    ],
+
+    "openings_and_discontinuities": {
+      "note": "No openings/penetrations discussed for this specific topic in the source; not applicable to corbels/half joints/nibs as covered here.",
+      "fact_type": "INFORMATION GAP — not covered by source for this topic"
+    }
+  },
+
+  "prestressed_concrete": {
+    "member_definition": {
+      "scope": "Covers design/detailing principles for prestressed concrete elements commonly used in buildings: flat slabs, banded beams, trough/waffle slabs, transfer structures. Principles also apply to bridges (not detailed here).",
+      "methods": [
+        {"name": "Pre-tensioning", "description": "Reinforcement stressed between steel buttresses before casting; concrete cast around the stressed tendons. Typically factory-cast precast units delivered to site."},
+        {"name": "Post-tensioning", "description": "Steel stressed in a duct installed in concrete after the concrete reaches specified strength. Used for in-situ concrete frames; the main focus of this section."}
+      ]
+    },
+    "drawing_requirements_for_prestress_set": {
+      "fact_type": "DIRECTLY STATED",
+      "items": [
+        "Layout/arrangement of tendons incl. spacing",
+        "Minimum cover to tendons",
+        "Setting-out data per tendon: profile and tolerances (vertical & horizontal)",
+        "Tendon and duct types/sizes",
+        "Anchorage recess dimensions (if any)",
+        "Prestressing system detailed (if any)",
+        "Forces to be applied per tendon and tensioning sequence",
+        "Location of grouting points and vents",
+        "Grouting pressure and grout specification",
+        "Infill strip size and location",
+        "Connection detail consideration with shear walls/bracing points",
+        "Debonded tendons marked on sections/elevations with method and length of debonding",
+        "Tendon deflection dimensioned horizontally and vertically (radius of curvature per manufacturer)",
+        "Concrete grade and minimum strength at transfer of prestress",
+        "Design parameters: relaxation of prestressing steel, duct friction/wobble factors, anchorage draw-in, modulus of elasticity/tendon extension, movement of permanent structure at stressing, camber variation",
+        "Method of marking tendons on slab soffit",
+        "Demolition sequence where required (per CDM)"
+      ],
+      "notes": [
+        "Choice of prestressing system left to specialist contractor when not shown on drawings, or where alternative system is permitted — must be stated.",
+        "Original Detailer/Designer should check any contractor-proposed alternative, especially reinforcement modifications.",
+        "Where clashes occur between tendons and reinforcement (links/main steel), inserts, or pipes — tendons take priority (must be stated on drawings).",
+        "Calcium chloride (harmful additive, corrosive to tendons) must not be used — must be stated."
+      ]
+    },
+    "geometry_pretensioned": {
+      "min_clear_spacing_pretensioned_tendons": {"formula": "≥ φ, ≥ dg, ≥ 2φ, ≥ dg+5, ≥ 2φ, ≥ 20", "note": "φ = tendon diameter, dg = max aggregate size; multiple governing minima per Figure 7.4 (values partially OCR-garbled — see information gaps)."},
+      "centroid_rule": "For symmetrical concrete sections, centroid of tendons should lie on the vertical centroidal axis (Fig. 7.3)."
+    },
+    "geometry_posttensioned_ducts": {
+      "min_clear_spacing_posttensioned_ducts": {"formula_partial": "≥ φ, ≥40mm, ≥dg+5, ≥φ, ≥50mm, ≥dg, ≥φ, ≥40mm", "note": "φ = duct diameter, dg = max aggregate size (Fig. 7.5; values OCR-garbled — treat with caution)."},
+      "coupler_location_rule": "Couplers located away from intermediate supports; avoid placing couplers on ≥50% of tendons at one cross-section.",
+      "tendon_deviation_without_deviator": "Up to 0.01 radians permitted without a deviator."
+    },
+    "nominal_cover_prestressing": {
+      "definition": "cnom = cmin + Δcdev",
+      "cmin_b_posttensioned_ducts": {
+        "circular": "= duct diameter",
+        "rectangular": "greater of smaller dimension or half the greater dimension",
+        "cap": "No requirement for more than 80mm for either duct shape."
+      },
+      "cmin_b_pretensioned_tendons": {
+        "strand_or_plain_wire": "1.5 × diameter",
+        "indented_wire": "2.5 × diameter"
+      },
+      "Δcdev": {"value_mm": 10, "reduced_value_mm": 5, "condition_for_reduction": "special control measures in place"},
+      "durability_cover": "cmin,dur + Δcdev as for reinforced concrete (slabs 6.2 / beams 6.3 — not in this extract; dependency)."
+    },
+    "reinforcement_types": [
+      {"name": "Bursting reinforcement (end block)", "purpose": "Resist tensile bursting forces behind anchorages, acting in all lateral planes.", "form": "Closed hoops or spirals", "detailing_requirement": "Full tensile laps; large radius bends to avoid crushing concrete.", "positioning": "As near as possible to outer edge of largest similar/concentric prism to the anchor plate; at least 50mm outside edge of anchor plate.", "distribution_zone": "0.2·yo to 2·yo from loaded face", "design_stress": "200 N/mm²"},
+      {"name": "Face-zone reinforcement (spalling control)", "purpose": "Resist tensile stresses on end-block faces adjacent to anchorages, prevent spalling.", "placement": "Two directions at right angles, as close to end face as cover permits."},
+      {"name": "Un-tensioned reinforcement at column positions (flat slabs)", "area": "≥ 0.075% gross concrete cross-section (0.00075·Ac)", "placement": "Concentrated between lines 1.5×slab depth either side of column width; near top of floor.", "extension": "At least anchorage length beyond 0.2×L into span, or as needed by calculation.", "max_pitch_mm": 300},
+      {"name": "Un-tensioned bottom reinforcement (flat slabs, span zone, unbonded tendons)", "condition": "Required when unbonded tendons used in span zone.", "extension": "At least to within 0.2×L (plus anchorage length) from centre of support.", "spacing": "3×slab thickness or 500mm, whichever lesser."},
+      {"name": "Hogging-zone minimum reinforcement/bonded tendons (flat slabs)", "area_pct": 0.1, "max_spacing_mm": 500},
+      {"name": "Shear reinforcement (post-tensioned beams)", "form": "Open links or pairs of lapping U-bars (to allow tendon positioning around them)."},
+      {"name": "Anti-spalling reinforcement", "condition": "Fire ratings > 2 hours, when no other reinforcement provided in soffit."},
+      {"name": "Trimmer bars (stressing pockets)", "note": "Require proper anchorage; total area of longitudinal bars to equal area of prestressing steel being anchored at pocket."},
+      {"name": "Reinforcement in unstressed slab zones", "area": "Greater of 0.13%·b·h, or 1/4 of reinforcement parallel to edge.", "placement": "Evenly between anchorages.", "extension": "Greater of la or 0.7·la, plus full anchorage length into slab."},
+      {"name": "Reinforcement at end zone of pre-tensioned beam (transmission length)", "form": "Standard stirrups, closer spacing (e.g. 75mm) in transmission zone."}
+    ],
+    "laps": {
+      "end_block_links": "Reinforcement links for adjacent anchorages should be overlapped; longitudinal bars positioned in corners.",
+      "general_note": "Bursting reinforcement (hoops/spirals) must be detailed with full tensile laps."
+    },
+    "anchorage_and_development": {
+      "corner_bars_end_block": "At all corners, bars should have large radius bends to avoid crushing concrete, or pass round a longitudinal bar/tendon of at least the same diameter.",
+      "un_tensioned_flat_slab_reinf": "Extends beyond 0.2×L an anchorage length (see above)."
+    },
+    "spacing": [
+      {"condition": "Pre-tensioned tendons", "rule": "Per Figure 7.4 minima (φ, dg-based)"},
+      {"condition": "Post-tensioned ducts", "rule": "Per Figure 7.5 minima (φ, dg-based)"},
+      {"condition": "Un-tensioned top reinforcement at flat-slab columns", "rule": "Max pitch 300mm"},
+      {"condition": "Un-tensioned bottom reinforcement, span zone, unbonded tendons", "rule": "3×slab thickness or 500mm, lesser"},
+      {"condition": "Hogging-zone reinforcement", "rule": "Max spacing 500mm"},
+      {"condition": "Pre-tensioned beam end-zone stirrups", "rule": "e.g. 75mm (closer than typical)"}
+    ],
+    "formulas": [
+      {"name": "bursting_force_ratio", "formula": "Fbst/Po per Table 7.3, keyed by ypo/yo", "variables": {"ypo": "half side of loaded area", "yo": "half side of end block", "Po": "tendon jacking force", "Fbst": "bursting force"}, "table_values": {"0.2": 0.20, "0.3": 0.18, "0.4": 0.15, "0.5": 0.13, "0.6": 0.10, "0.7": 0.08}, "source": {"table": "Table 7.3", "page": 144}},
+      {"name": "grouting_pressure", "value": "0.1 MPa typical for slabs and beams", "source": {"section": "7.4.6", "page": 150}}
+    ],
+    "drawing_conventions_specific": {
+      "tendon_legend_symbols": "Symbols for 1–5+ tendons per group (dot patterns), live end, dead end, intermediate anchor/stressing anchor, weave, 'add tendons', placing sequence numbers, colour code, tendon stressing reference numbers (Figs 7.29–7.30).",
+      "duct_profile_tabulation": "Duct profile given in tabular form (x, y, z coordinates per Fig 7.9), profiles tabulated separately per vertical row of ducts, referenced to an on-site datum; dimensions to top or bottom of duct, frequent enough to define the curvature.",
+      "soffit_marking": "Soffit of slabs should be marked to show tendon positions (for future reference / to avoid drilling into tendons)."
+    },
+    "notes_and_callouts": [
+      "Choice of prestressing system left to specialist contractor where not shown / alternative permitted — statement required on drawing.",
+      "Tendons take priority over reinforcement/inserts/pipes at clashes — statement required on drawing.",
+      "Calcium chloride must not be used — statement required on drawing.",
+      "Drilling/demolition: specify specialist drilling techniques to avoid hitting tendons; specify safe demolition sequence per CDM, particularly for unbonded tendons (sudden energy release risk)."
+    ],
+    "material_information": {
+      "concrete_grade_generic": "Not fixed generically in this section (project/design specific); grade referenced elsewhere (e.g. transfer strength, minimum start grade for corbels/nibs is 28/35 from §6.9).",
+      "prestressing_strand_types_table_7_1": [
+        {"type": "12.9 Super", "steel_no": "1.1373", "tensile_MPa": 1860, "dia_mm": 12.9, "area_mm2": 100, "mass_kgm": 0.781, "char_max_force_kN": 186, "max_force_kN": 213, "proof_force_0.1pct_kN": 160},
+        {"type": "12.7 Super", "steel_no": "1.1372", "tensile_MPa": 1860, "dia_mm": 12.7, "area_mm2": 112, "mass_kgm": 0.875, "char_max_force_kN": 209, "max_force_kN": 238, "proof_force_0.1pct_kN": 180},
+        {"type": "15.7 Super", "steel_no": "1.1375", "tensile_MPa": 1770, "dia_mm": 15.7, "area_mm2": 150, "mass_kgm": 1.17, "char_max_force_kN": 265, "max_force_kN": 302, "proof_force_0.1pct_kN": 228},
+        {"type": "15.7 Euro", "steel_no": "1.1373", "tensile_MPa": 1860, "dia_mm": 15.7, "area_mm2": 150, "mass_kgm": 1.17, "char_max_force_kN": 279, "max_force_kN": 319, "proof_force_0.1pct_kN": 240},
+        {"type": "15.2 Drawn", "steel_no": "1.1371", "tensile_MPa": 1820, "dia_mm": 15.2, "area_mm2": 165, "mass_kgm": 1.290, "char_max_force_kN": 300, "max_force_kN": 342, "proof_force_0.1pct_kN": 258}
+      ]
+    }
+  },
+
+  "precast_concrete": {
+    "member_definition": {
+      "scope": "General practice notes for detailing precast concrete work — transport, handling, joints, tolerances. Not member-specific geometry."
+    },
+    "key_practice_notes": [
+      "Precast unit transported after manufacture, before incorporation — tolerances matter when built into part-built/ready-built structures.",
+      "Unit often made by third party without site visit/full drawings — clarity of instruction vital.",
+      "Special consideration of joints required; sound detailing of joints leads to attractive/serviceable/safe structures.",
+      "Casting orientation decision often best left to/discussed with precaster.",
+      "Avoid acute re-entrant corners (formwork removal damage) and acute protruding corners (handling breakage, poor aggregate compaction/discoloration)."
+    ],
+    "transport_limits_UK": {
+      "length_m": {"no_restriction_under": 27.4, "police_notification_over": 18.3, "special_dispensation_over": 27.4},
+      "height_m": {"no_restriction_under": 4.88, "notice_days_if_over": 2, "standard_motorway_height_m": 5.03},
+      "width_m": {"no_restriction_under": 2.9, "police_notification_2_9_to_3_5": true, "special_dispensation_3_5_to_5": true},
+      "weight_tonne": {"no_restriction_under": 26, "normal_truck_gross_range": "32/36/42", "special_types_vehicle_over": 44, "STGO_1_max_gross_tonne": 80, "STGO_1_notice_days": 2, "STGO_over_80_notice_days": 5},
+      "economic_note": "Most frequent load: 20 tonne payload on 32 tonne gross truck; savings if total unit weight per load approaches (without exceeding) 30 tonne, e.g. 2×9.8t vs 1×10.2t."
+    },
+    "lifting_and_handling": [
+      "Permissible support points and packing materials should be noted on drawing.",
+      "Lifting strengths for concrete stated on drawing (minimum lifting strength specified for mould-reuse economy).",
+      "Unit weight for craneage/transportation stated on drawing.",
+      "Reinforcement generally NOT suitable for use as lifting hooks (though some manufacturers do, with care/testing).",
+      "Proprietary lifting/fixing inserts used per manufacturer instructions with adequate safety factors; isolate fixings from secondary load effects/structural movements not designed for.",
+      "Where a drawing shows part of a unit cast onto another precast unit, clearly state which weights apply to which part."
+    ],
+    "joints": {
+      "reference": "Design of joints & reinforcement/concrete requirements (binding links, chamfers) covered in IStructE report 'Structural joints in precast concrete', 1978.",
+      "in_situ_to_precast_interface": "Precast units should have a key joint cast into the mutual face for mechanical anchorage/shear where in-situ concrete is placed adjacent (e.g. infill slab); precast face receiving in-situ concrete should be properly prepared (e.g. scabbled while 'green')."
+    },
+    "durability_special_case": {
+      "context": "Bridge/car park construction with chloride exposure risk (XD3) — joints between precast units require special corrosion protection attention.",
+      "figure_ref": "Figure 8.1 shows moderate/severe/very-severe exposure zones for precast car parks and bridges (splash zone, soffit/beam ends behind sealant, transverse beams/floor slab)."
+    }
+  },
+
+  "water_retaining_structures": {
+    "member_definition": {
+      "scope": "Detailing generally follows normal RC structures except reinforcement provision/spacing, cover, and durability requirements are more onerous. Governed by BS EN 1992-3 (EC2 Part 3).",
+      "key_difference_from_normal_structures": "Serviceability (crack width) often controls design/reinforcement quantity, not just ultimate strength. Construction and movement joints MUST be shown on drawings (not just specification) because reinforcement for thermal/shrinkage restraint depends on joint frequency/spacing — Designer's responsibility to position all joints."
+    },
+    "tightness_classes": {
+      "table_9_1": [
+        {"class": 0, "requirement": "Some leakage acceptable / leakage of liquids irrelevant."},
+        {"class": 1, "requirement": "Leakage limited to small amount; some surface staining/damp patches acceptable."},
+        {"class": 2, "requirement": "Leakage minimal; appearance not impaired by staining."},
+        {"class": 3, "requirement": "No leakage permitted."}
+      ],
+      "class_0_detail": "Same provisions as retaining walls apply. Minimum wall thickness 120mm.",
+      "class_1_detail": {
+        "min_wall_thickness_mm": 150,
+        "crack_width_formula": "wk1: for hD/hw ≤ 5, wk1=0.2mm; for hD/hw ≥ 25, wk1=0.05mm; linear interpolation between.",
+        "variables": {"hD": "hydrostatic pressure head", "hw": "wall thickness of containing structure"},
+        "rationale": "Limiting crack width to these values should allow effective self-healing within a relatively short time."
+      },
+      "class_2_detail": {"min_wall_thickness_mm": 150, "note": "Cracks passing through full section thickness should generally be avoided unless liners/water bars incorporated."},
+      "class_3_detail": "Special measures (liners or prestress) generally required.",
+      "aesthetic_case": "Where aesthetic appearance critical, crack width limited to 0.1mm."
+    },
+    "cover": {"min_mm": 40, "note": "Greater cover may be needed at faces in contact with aggressive soils, or subject to erosion/abrasion."},
+    "spacing": [
+      {"condition": "Tensile reinforcement, bar stress ≤150 MPa", "rule": "Bar spacing ≤ 250mm"},
+      {"condition": "Distribution bars", "rule": "Spacing ≤ 150mm (preferably closer)"},
+      {"condition": "Higher bar stresses", "rule": "Pitch reduces rapidly — see EC2 Part 3 Cl.7.3.3 (dependency, not fully restated here)"}
+    ],
+    "prestressed_walls": {"min_passive_reinforcement": "300 mm²/m or 0.001·Ac, each direction, each face."},
+    "circular_tanks": {
+      "tendon_centroid_rule": "Should generally lie in outer third of wall thickness; may relax to outer half if cover otherwise impossible.",
+      "duct_diameter_limit": "≤ 20% of wall thickness."
+    },
+    "opening_corners": {
+      "rule": "Detailing must ensure diagonal tension faces adequately catered for; strut-and-tie system (EC2 Cl.5.6.4) is an appropriate design approach."
+    },
+    "joint_types_shown": [
+      {"name": "Construction joint (rebar continuous through joint, with hydrophilic strip)", "components": ["hydrophilic strip", "crack inducer filled with sealing compound", "rebar continuous through joint"]},
+      {"name": "Construction joint (rebar continuous, waterstop with crack inducer)", "components": ["waterstop", "crack inducer", "rebar continuous through joint"]},
+      {"name": "Movement joint (expansion type waterstop, rebar stopped at joint)", "components": ["compressible filler", "expansion type waterstop", "joint sealing compound", "rebar stopped off at joint"]}
+    ]
+  },
+
+  "staircases_fragment": {
+    "note": "Only a partial title-block/notes fragment for Model Detail MST2 (cantilever stair from wall or edge beam) is present in this extract; the main stair chapter content (spans, flights, going/rise geometry) is not included.",
+    "extracted_facts": [
+      "Model Detail MST2: Cantilever from wall or edge beam.",
+      "Linking to be H8s at 300 unless otherwise specified.",
+      "Bends to be adjusted to suit on site (N.B.).",
+      "Position of H8 'U' bar specified separately from design reinforcement (specified by designer).",
+      "Distribution bars to be H10s at 300 unless otherwise specified.",
+      "Nominal H8 'U' bar shown at section A-A alongside design reinforcement and corner bar detailed with wall, with tension anchorage.",
+      "Main cantilever bars must be mild steel if they are to be rebent — cross-reference to Model Detail MW3 (not in this extract).",
+      "Nominal cover specified by designer (minimum 20mm or bar size, whichever greater). See also design notes 6.8.2 (not in this extract)."
+    ],
+    "dependency": "DEPENDENCY: Model Detail MW3 (rebending of mild steel bars) and design notes 6.8.2 are referenced but not included in this chunk."
+  }
+}

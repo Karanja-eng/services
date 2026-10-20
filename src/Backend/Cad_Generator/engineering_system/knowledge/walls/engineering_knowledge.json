@@ -1,0 +1,116 @@
+{
+  "walls": {
+    "definition": "Vertical loadbearing members incl. plain concrete walls (EC2). Columns with breadth/thickness <= 4 are in 6.4. Basement retaining walls 6.6; deep beams 6.3.",
+    "components": [
+      "vertical bars (2 faces)",
+      "horizontal bars (outside verticals)",
+      "links (if As_v>0.02Ac)",
+      "U-bars at top",
+      "L-bars at bottom",
+      "kicker",
+      "starters",
+      "corner bars/loops",
+      "opening trimmers",
+      "opening U-bars",
+      "diagonal corner bars",
+      "slab starter bars",
+      "half-landing U-bars"
+    ],
+    "zones": [
+      "base/kicker zone",
+      "main wall zone",
+      "top zone",
+      "corner zone",
+      "opening zone",
+      "slab/landing connection zone"
+    ],
+    "connections": {
+      "foundation": "L-bars bottom, compression lap+150, kicker",
+      "slab": "MS2 / MW3 starter U-bars",
+      "stairs": "half landing via MW3 / dowels / couplers",
+      "corner": "MW2 loops with tension lap",
+      "opening": "MW4 trimmers"
+    },
+    "typical_defaults_table_MW1": [
+      {
+        "t_min": 150,
+        "t_max": 175,
+        "V": "H12@300",
+        "H": "H10@200"
+      },
+      {
+        "t_min": 175,
+        "t_max": 200,
+        "V": "H12@250",
+        "H": "H10@200"
+      },
+      {
+        "t_min": 200,
+        "t_max": 250,
+        "V": "H12@200",
+        "H": "H10@200"
+      },
+      {
+        "t_min": 250,
+        "t_max": 300,
+        "V": "H16@300",
+        "H": "H10@200"
+      },
+      {
+        "t_min": 300,
+        "t_max": 400,
+        "V": "H16@250",
+        "H": "H12@200"
+      },
+      {
+        "t_min": 400,
+        "t_max": 500,
+        "V": "H16@200",
+        "H": "H12@150"
+      },
+      {
+        "t_min": 500,
+        "t_max": 600,
+        "V": "H20@250",
+        "H": "H16@200"
+      },
+      {
+        "t_min": 600,
+        "t_max": 700,
+        "V": "H20@200",
+        "H": "H16@200"
+      },
+      {
+        "t_min": 700,
+        "t_max": 800,
+        "V": "H20@200",
+        "H": "H16@200"
+      }
+    ]
+  },
+  "retaining_walls": {
+    "definition": "Retaining walls with two layers of steel; cantilever (MRW1) and basement (MRW2). Water-retaining Ch.9 may apply. Joints/waterbars not covered (CIRIA 139).",
+    "components": [
+      "stem vertical bars (earth face outside)",
+      "horizontal bars (exposed face outside)",
+      "base slab bars",
+      "wall starters",
+      "kicker",
+      "key",
+      "U-bars at construction joints",
+      "splice bars at movement joint",
+      "waterbar",
+      "drain slot",
+      "panels (drawing)"
+    ],
+    "types": [
+      "free-standing cantilever",
+      "basement retaining wall on ground beam/slab"
+    ],
+    "joints": {
+      "construction": "<=30 m, H10 U-bars",
+      "contraction": "full, 30 m centres if cumulative shortening",
+      "movement": "splice bars same size/pitch; option B spacing >= greater of 5 m or 1.5H"
+    }
+  }
+}

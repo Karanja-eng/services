@@ -1,0 +1,113 @@
+{
+  "purpose": "Cases to validate the RuleEngine / generator against source-stated numbers, plus constraint-violation cases that should raise errors.",
+  "positive_cases": [
+    {
+      "id": "V1",
+      "description": "Corbel edge distance formula check",
+      "input": {"bar_diameter_mm": 16, "cover_mm": 35},
+      "expected": {"min_edge_distance_mm": 26.25, "formula": "max(16, 0.75*35) = max(16, 26.25) = 26.25"}
+    },
+    {
+      "id": "V2",
+      "description": "Minimum anchorage length, small bar",
+      "input": {"bar_diameter_mm": 10},
+      "expected": {"min_anchorage_length_mm": 100, "formula": "max(10*10, 100) = max(100,100) = 100"}
+    },
+    {
+      "id": "V3",
+      "description": "Minimum anchorage length, large bar",
+      "input": {"bar_diameter_mm": 20},
+      "expected": {"min_anchorage_length_mm": 200, "formula": "max(10*20, 100) = 200"}
+    },
+    {
+      "id": "V4",
+      "description": "Nib main bar max pitch, general area, h=150mm",
+      "input": {"h_mm": 150, "concentrated_load": false},
+      "expected": {"max_pitch_mm": 400, "formula": "min(3*150, 400) = min(450,400) = 400"}
+    },
+    {
+      "id": "V5",
+      "description": "Nib main bar max pitch, concentrated load area, h=150mm",
+      "input": {"h_mm": 150, "concentrated_load": true},
+      "expected": {"max_pitch_mm": 250, "formula": "min(2*150, 250) = min(300,250) = 250"}
+    },
+    {
+      "id": "V6",
+      "description": "Nib secondary bar max pitch, general area, h=100mm",
+      "input": {"h_mm": 100, "concentrated_load": false},
+      "expected": {"max_pitch_mm": 350, "formula": "min(3.5*100, 450) = min(350,450) = 350"}
+    },
+    {
+      "id": "V7",
+      "description": "Corbel As,min tension, bt=400mm, d=450mm",
+      "input": {"bt_mm": 400, "d_mm": 450},
+      "expected": {"As_min_mm2": 252.0, "formula": "0.0014*400*450 = 252"}
+    },
+    {
+      "id": "V8",
+      "description": "Corbel compression bar min area for 400mm wide corbel",
+      "input": {"width_mm": 400},
+      "expected": {"min_area_mm2": 400.0, "formula": "1000 * (400/1000) = 400"}
+    },
+    {
+      "id": "V9",
+      "description": "Table 7.3 bursting force ratio lookup, ypo/yo=0.4",
+      "input": {"ypo_over_yo": 0.4},
+      "expected": {"Fbst_over_Po": 0.15}
+    },
+    {
+      "id": "V10",
+      "description": "Water-retaining Class 1 crack width at hD/hw=5",
+      "input": {"hD_over_hw": 5},
+      "expected": {"wk1_mm": 0.2}
+    },
+    {
+      "id": "V11",
+      "description": "Water-retaining Class 1 crack width at hD/hw=25",
+      "input": {"hD_over_hw": 25},
+      "expected": {"wk1_mm": 0.05}
+    },
+    {
+      "id": "V12",
+      "description": "Water-retaining Class 1 crack width at hD/hw=15 (interpolated)",
+      "input": {"hD_over_hw": 15},
+      "expected": {"wk1_mm_approx": 0.125, "formula": "linear interpolation between (5,0.2) and (25,0.05): 0.2 - (15-5)/(25-5)*(0.2-0.05) = 0.2 - 0.5*0.15 = 0.125"}
+    }
+  ],
+  "negative_cases_should_raise": [
+    {
+      "id": "N1",
+      "description": "MCB1 (unwelded) with main bar diameter 20mm — exceeds 16mm limit",
+      "input": {"main_bar_diameter_mm": 20, "welded": false},
+      "expected_error": "ValueError: main_bar_diameter 20mm exceeds 16mm limit for MCB1 (unwelded) — CBL-025"
+    },
+    {
+      "id": "N2",
+      "description": "MCB2 (welded) with main bar diameter 25mm — exceeds 20mm limit",
+      "input": {"main_bar_diameter_mm": 25, "welded": true},
+      "expected_error": "ValueError: main_bar_diameter 25mm exceeds 20mm limit for MCB2 (welded) — CBL-025"
+    },
+    {
+      "id": "N3",
+      "description": "MN2 shallow nib with depth 120mm — below 140mm minimum",
+      "input": {"nib_depth_mm": 120, "shallow": true, "link_or_ubar_diameter_mm": 12, "ubar_pitch_mm": 200},
+      "expected_error": "ValueError: MN2 shallow nib depth must be >= 140mm — CBL-028"
+    },
+    {
+      "id": "N4",
+      "description": "MN1 with link diameter 16mm — exceeds 12mm limit",
+      "input": {"nib_depth_mm": 200, "shallow": false, "link_or_ubar_diameter_mm": 16, "ubar_pitch_mm": null},
+      "expected_error": "ValueError: MN1 link diameter must be <= 12mm — CBL-027"
+    },
+    {
+      "id": "N5",
+      "description": "MN2 U-bar pitch 300mm — exceeds 250mm limit",
+      "input": {"nib_depth_mm": 180, "shallow": true, "link_or_ubar_diameter_mm": 12, "ubar_pitch_mm": 300},
+      "expected_error": "ValueError: MN2 U-bar pitch must be <= 250mm — CBL-028"
+    }
+  ],
+  "generator_smoke_test_result": {
+    "status": "PASS",
+    "note": "10_generator.py executed successfully in this environment (ezdxf installed), producing corbels_half_joints_nibs_reference.dxf with 6 model-detail instances (MCB1, MCB2, MHJ with cranked bar, MN1, MN2, end-block bursting zone) without raising any validation errors, confirming the default parameter sets in the dataclasses satisfy all encoded constraints."
+  }
+}

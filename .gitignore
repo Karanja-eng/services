@@ -89,6 +89,10 @@
 !/public/web-ifc/
 !/public/web-ifc/*.wasm
 
+# Agent execution journals (chats/) are committed alongside the code.
+!/chats/
+!/chats/*.md
+
 # Local scratch/output from the integration tooling: never commit these
 /.venv-ifc/
 /.pip-dl/
@@ -102,3 +106,33 @@
 # Build helper (postinstall resolver fix for MLightCAD + three exports map)
 !/scripts/
 !/scripts/*.js
+!/scripts/*.mjs
+!/scripts/verify/
+!/scripts/verify/*.mjs
+
+# --- That Open BIM viewer runtime assets -------------------------------------
+# Copied from node_modules by scripts/copy-cad-bim-assets.js (postinstall) so the
+# browser can fetch the fragments worker and the web-ifc WASM by URL. Generated,
+# but committed so a clone can run the route without reinstalling; manifest.json
+# records which package versions produced them.
+!/public/thatopen/
+!/public/thatopen/*.mjs
+!/public/thatopen/*.wasm
+!/public/thatopen/*.json
+
+# --- Generated CAD artefacts (public/cad) ------------------------------------
+# DXF drawings and canonical-model JSON produced by POST /api/cad-ifc/generate.
+!/public/cad/
+!/public/cad/*.dxf
+!/public/cad/*.json
+
+# --- Integration documentation ----------------------------------------------
+!/docs/integration/
+!/docs/integration/*.md
+
+# npm configuration: pins the peer-resolution policy that lets three 0.172 serve
+# both MLightCAD and That Open. Must be committed or `npm install` breaks.
+!.npmrc
+
+# Local scratch produced by the acceptance test suites
+/.test-artifacts/

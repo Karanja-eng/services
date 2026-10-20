@@ -1,0 +1,264 @@
+{
+  "schema": "fundi.canonical",
+  "schema_version": "1.0.0",
+  "model_id": "retaining-wall",
+  "name": "Cantilever retaining wall (MRW1)",
+  "description": "Cantilever RC retaining wall: stem and base section with earth-face and external-face reinforcement plus base mesh.",
+  "generator": "retaining_wall",
+  "generator_module": "engineering_system.members.wall",
+  "source_params": {
+    "stem_height_mm": 3000.0,
+    "stem_thickness_mm": 300.0,
+    "base_length_mm": 2200.0,
+    "toe_length_mm": 600.0,
+    "base_thickness_mm": 400.0,
+    "vdia_earth_mm": 16,
+    "vpitch_earth_mm": 150.0,
+    "hdia_mm": 12,
+    "hpitch_mm": 200.0,
+    "base_dia_mm": 16,
+    "base_pitch_mm": 150.0,
+    "cover_earth_mm": 50.0,
+    "cover_ext_mm": 40.0,
+    "cover_base_mm": 75.0,
+    "concrete_grade": "28/35"
+  },
+  "units": {
+    "length": "metre",
+    "area": "square_metre",
+    "volume": "cubic_metre",
+    "angle": "degree",
+    "frame": "Z-up right-handed",
+    "origin": "project origin at finished ground level of level L0"
+  },
+  "levels": [
+    {
+      "id": "retaining-wall:L0",
+      "name": "Level 1",
+      "elevation_m": 0.0,
+      "description": "Single storey used by the member model detail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "retaining-wall.stem",
+      "element_type": "retaining-wall",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Retaining wall stem",
+      "role": "stem",
+      "level_id": "retaining-wall:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 0.3,
+        "width_y": 1.0,
+        "height_z": 3.0
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.9
+      },
+      "rotation_z_deg": 0.0,
+      "material": "28/35",
+      "material_properties": {
+        "designation": "28/35",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "stem_height_mm": 3000.0,
+        "stem_thickness_mm": 300.0,
+        "base_length_mm": 2200.0,
+        "toe_length_mm": 600.0,
+        "base_thickness_mm": 400.0,
+        "vdia_earth_mm": 16,
+        "vpitch_earth_mm": 150.0,
+        "hdia_mm": 12,
+        "hpitch_mm": 200.0,
+        "base_dia_mm": 16,
+        "base_pitch_mm": 150.0,
+        "cover_earth_mm": 50.0,
+        "cover_ext_mm": 40.0,
+        "cover_base_mm": 75.0,
+        "concrete_grade": "28/35",
+        "wall_length_modelled_m": 1.0,
+        "base_elevation_m": 0.0,
+        "stem_height_m": 3.0,
+        "stem_thickness_m": 0.3
+      },
+      "reinforcement": {
+        "earth_face_bar_mm": 16,
+        "earth_face_pitch_mm": 150.0,
+        "horizontal_bar_mm": 12,
+        "horizontal_pitch_mm": 200.0,
+        "cover_earth_mm": 50.0
+      },
+      "provenance": {
+        "generator": "retaining_wall",
+        "generator_label": "Cantilever retaining wall (MRW1)",
+        "params_module": "engineering_system.members.wall",
+        "params_class": "CantileverRetainingWallParams",
+        "model_class": null,
+        "drawing_number": "RW-01",
+        "drawing_title": "Cantilever Retaining Wall Section (Model Detail MRW1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "stem_height_mm": 3000.0,
+          "stem_thickness_mm": 300.0,
+          "base_length_mm": 2200.0,
+          "toe_length_mm": 600.0,
+          "base_thickness_mm": 400.0,
+          "vdia_earth_mm": 16,
+          "vpitch_earth_mm": 150.0,
+          "hdia_mm": 12,
+          "hpitch_mm": 200.0,
+          "base_dia_mm": 16,
+          "base_pitch_mm": 150.0,
+          "cover_earth_mm": 50.0,
+          "cover_ext_mm": 40.0,
+          "cover_base_mm": 75.0,
+          "concrete_grade": "28/35"
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": [
+          "MRW1 is a section-only detail; it defines no length along the wall, so the model is one metre of wall and the quantity of concrete is per metre run"
+        ]
+      },
+      "validation": {
+        "state": "warning",
+        "warnings": [
+          "MRW1 is a section-only detail; it defines no length along the wall, so the model is one metre of wall and the quantity of concrete is per metre run"
+        ]
+      },
+      "representations": {},
+      "volume_m3": 0.9,
+      "fingerprint": "a226fa0aaa73ddd9d518ca5cf6c5c5346893e4d630cab310d56c82c06e20f290"
+    },
+    {
+      "id": "retaining-wall.base",
+      "element_type": "pad-footing",
+      "ifc_class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": "Retaining wall base",
+      "role": "base",
+      "level_id": "retaining-wall:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 2.2,
+        "width_y": 1.0,
+        "height_z": 0.4
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.2
+      },
+      "rotation_z_deg": 0.0,
+      "material": "28/35",
+      "material_properties": {
+        "designation": "28/35",
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "stem_height_mm": 3000.0,
+        "stem_thickness_mm": 300.0,
+        "base_length_mm": 2200.0,
+        "toe_length_mm": 600.0,
+        "base_thickness_mm": 400.0,
+        "vdia_earth_mm": 16,
+        "vpitch_earth_mm": 150.0,
+        "hdia_mm": 12,
+        "hpitch_mm": 200.0,
+        "base_dia_mm": 16,
+        "base_pitch_mm": 150.0,
+        "cover_earth_mm": 50.0,
+        "cover_ext_mm": 40.0,
+        "cover_base_mm": 75.0,
+        "concrete_grade": "28/35",
+        "wall_length_modelled_m": 1.0,
+        "base_elevation_m": 0.0,
+        "base_length_m": 2.2,
+        "toe_length_m": 0.6,
+        "base_thickness_m": 0.4
+      },
+      "reinforcement": {
+        "base_bar_mm": 16,
+        "base_pitch_mm": 150.0,
+        "cover_base_mm": 75.0
+      },
+      "provenance": {
+        "generator": "retaining_wall",
+        "generator_label": "Cantilever retaining wall (MRW1)",
+        "params_module": "engineering_system.members.wall",
+        "params_class": "CantileverRetainingWallParams",
+        "model_class": null,
+        "drawing_number": "RW-01",
+        "drawing_title": "Cantilever Retaining Wall Section (Model Detail MRW1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "stem_height_mm": 3000.0,
+          "stem_thickness_mm": 300.0,
+          "base_length_mm": 2200.0,
+          "toe_length_mm": 600.0,
+          "base_thickness_mm": 400.0,
+          "vdia_earth_mm": 16,
+          "vpitch_earth_mm": 150.0,
+          "hdia_mm": 12,
+          "hpitch_mm": 200.0,
+          "base_dia_mm": 16,
+          "base_pitch_mm": 150.0,
+          "cover_earth_mm": 50.0,
+          "cover_ext_mm": 40.0,
+          "cover_base_mm": 75.0,
+          "concrete_grade": "28/35"
+        },
+        "source_model_fields": [],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": [
+          "MRW1 is a section-only detail; it defines no length along the wall, so the model is one metre of wall and the quantity of concrete is per metre run"
+        ]
+      },
+      "validation": {
+        "state": "warning",
+        "warnings": [
+          "MRW1 is a section-only detail; it defines no length along the wall, so the model is one metre of wall and the quantity of concrete is per metre run"
+        ]
+      },
+      "representations": {},
+      "volume_m3": 0.88,
+      "fingerprint": "eb615ca0ae838252c9642d402e71c35962d6e4bcf7056c678275317b8a25f9a2"
+    }
+  ],
+  "relationships": [
+    {
+      "type": "supported-by",
+      "from": "retaining-wall.stem",
+      "to": "retaining-wall.base",
+      "note": "retaining wall stem is carried by the base slab"
+    }
+  ],
+  "warnings": [],
+  "statistics": {
+    "element_count": 2,
+    "by_ifc_class": {
+      "IfcFooting": 1,
+      "IfcWall": 1
+    },
+    "by_element_type": {
+      "pad-footing": 1,
+      "retaining-wall": 1
+    },
+    "total_volume_m3": 1.78,
+    "levels": 1,
+    "relationships": 1,
+    "elements_with_warnings": 2
+  },
+  "model_hash": "ce34f3b215a78bc442b5bc61ffdd83b48c0a954b261b4cfcc8fcd4f97bc150a4"
+}

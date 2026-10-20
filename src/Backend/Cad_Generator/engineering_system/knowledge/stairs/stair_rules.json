@@ -1,0 +1,154 @@
+{
+  "topic": "stairs",
+  "total_rules": 11,
+  "rules": [
+    {
+      "id": "S01",
+      "topic": "stairs",
+      "strength": "typical practice/standard",
+      "rule": "Scope: suspended in-situ RC flights and half landings. Precast flights with half joints not covered. Grade normally 30/37, max aggregate 20.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.1/6.8.2",
+        "page": 123
+      }
+    },
+    {
+      "id": "S02",
+      "topic": "stairs",
+      "strength": "mandatory/normative",
+      "rule": "Cover (solid slab): internal max(15, dia)+dcdev; external 35+dcdev. Top cover also applies at the throat. Extra 10 mm on top wearing surface where no applied finish.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.2",
+        "page": 123
+      }
+    },
+    {
+      "id": "S03",
+      "topic": "stairs",
+      "strength": "typical practice/standard",
+      "rule": "Standard cover 20 internal / 40 external; MST1/MST2: min 20 or bar size.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.3",
+        "page": 124
+      }
+    },
+    {
+      "id": "S04",
+      "topic": "stairs",
+      "strength": "mandatory/normative",
+      "rule": "As,min = max(0.26 bt d fctm/fyk, 0.0013 bt d); for 30/37, fyk 500: 0.0015 bt d.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.2",
+        "page": 123
+      }
+    },
+    {
+      "id": "S05",
+      "topic": "stairs",
+      "strength": "recommendation",
+      "rule": "Min pitch 75 (100 at laps). Max pitch main bars 3h and 400 (concentrated loads 2h and 250); secondary 3.5h and 450 (concentrated 3h and 400).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.2 (EC2 9.3.1.1)",
+        "page": 123
+      },
+      "note": "Symbol between the two limits is garbled in the extract (rendered 'G'); presumably 'lesser of' - unresolved"
+    },
+    {
+      "id": "S06",
+      "topic": "stairs",
+      "strength": "typical practice/standard",
+      "rule": "Table 6.11 lbd good 40/37/36/34, poor 58/53/51/49; l0 good 46/43/42/39, poor 66/61/59/56 (<=33% lapped, a6=1.15).",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.2",
+        "page": 123
+      },
+      "logic": "Table 6.11"
+    },
+    {
+      "id": "S07",
+      "topic": "stairs",
+      "strength": "typical practice/standard",
+      "rule": "End-supported flights per MST1: U-bars at both landings = 50% area of main bottom steel; A = greatest(0.1 x design span, tension anchorage length, 500); distribution as MS1; construction joint at landing; bars similar to main bottom steel at landing; tension lap/anchorage.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MST1",
+        "page": 127
+      },
+      "logic": "MST1"
+    },
+    {
+      "id": "S08",
+      "topic": "stairs",
+      "strength": "optional/consider",
+      "rule": "Alternative: landings support flight in a simple concrete recess (20 deep formed recess) - avoids starter congestion; landing starters confined to shaded area; recess continued up flight where in-situ edge wall exists to avoid cracking.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.2",
+        "page": 123
+      },
+      "logic": "Fig 6.33"
+    },
+    {
+      "id": "S09",
+      "topic": "stairs",
+      "strength": "typical practice/standard",
+      "rule": "Cantilever flights per MST2: design reinforcement + nominal H8 U-bar; linking H8@300 unless specified; distribution H10@300; bends adjusted on site; main cantilever bars must be mild steel if rebent (see MW3); corner bar detailed with wall; tension anchorage into wall.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "MST2",
+        "page": 128
+      },
+      "logic": "MST2"
+    },
+    {
+      "id": "S10",
+      "topic": "stairs",
+      "strength": "recommendation",
+      "rule": "Bottom connection: starter bars from prepared surface (when position/height closely controlled) or pocket in ground floor/foundation big enough for cage.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.2",
+        "page": 124
+      }
+    },
+    {
+      "id": "S11",
+      "topic": "stairs",
+      "strength": "mandatory/normative",
+      "rule": "Handrail pockets: bars pass around pockets and anchor into main body; inserts need bars passing round or anchorage ties.",
+      "status": "DIRECTLY STATED",
+      "source": {
+        "document": "IStructE/Concrete Society - Standard Method of Detailing Structural Concrete, Chapter 6 (pp.97-128)",
+        "chapter": "6",
+        "section": "6.8.2",
+        "page": 124
+      }
+    }
+  ]
+}

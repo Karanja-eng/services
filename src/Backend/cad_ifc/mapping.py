@@ -51,6 +51,11 @@ STATUS_DELETED = "deleted"
 STATUS_STALE = "stale"
 STATUS_CONFLICT = "conflict"
 STATUS_UNIT_MISMATCH = "unit_mismatch"
+#: Entity-level states (per CAD entity, not per element).
+STATUS_EDITED = "edited"
+STATUS_DUPLICATE = "duplicate"
+STATUS_NEW = "new"
+STATUS_ORPHAN = "orphan"
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS fundi_models (
@@ -99,6 +104,29 @@ CREATE TABLE IF NOT EXISTS fundi_element_links (
 
 CREATE INDEX IF NOT EXISTS ix_links_ifc_guid ON fundi_element_links(model_id, ifc_guid);
 CREATE INDEX IF NOT EXISTS ix_links_handle   ON fundi_element_links(drawing_id, dxf_handle);
+
+-- One row per (element, drawing, entity handle): the one-to-many half of the
+-- mapping. A single engineering element legitimately owns many CAD entities (a
+-- beam detail is dozens of lines and texts), and a single entity can represent
+-- more than one element (a section drawing shows a retaining wall stem and base
+-- in one view), so neither column is unique on its own.
+CREATE TABLE IF NOT EXISTS fundi_entity_links (
+    model_id      TEXT NOT NULL,
+    internal_id   TEXT NOT NULL,
+    drawing_id    TEXT NOT NULL,
+    handle        TEXT NOT NULL,
+    layer         TEXT,
+    entity_type   TEXT,
+    view          TEXT,
+    status        TEXT NOT NULL,
+    geometry_hash TEXT,
+    note          TEXT,
+    updated_at    TEXT NOT NULL,
+    PRIMARY KEY (model_id, internal_id, drawing_id, handle)
+);
+
+CREATE INDEX IF NOT EXISTS ix_entity_links_handle   ON fundi_entity_links(drawing_id, handle);
+CREATE INDEX IF NOT EXISTS ix_entity_links_element  ON fundi_entity_links(model_id, internal_id);
 """
 
 
@@ -219,20 +247,29 @@ def sync_links(
     dxf_links: Iterable[Dict[str, Any]],
     ifc_guids: Dict[str, str],
     ifc_conflict: bool = False,
+    required_view: Optional[str] = "plan",
 ) -> Dict[str, Any]:
     """Reconcile stored links with a freshly exported DXF/IFC pair.
 
     ``dxf_links`` are the entries read back from the written DXF, so the handles
     recorded are the ones a CAD application will report. ``ifc_guids`` maps
     internal id -> GlobalId from the written IFC.
+
+    ``required_view`` names a view an element *must* appear in for its CAD link to
+    count as valid; it defaults to ``"plan"`` because that is the historical
+    behaviour for the septic drawing, which always has a plan view, so an element
+    surviving only in section means the plan geometry was deleted. Generator detail
+    sheets have no plan view at all, so they pass ``None``: any single view is
+    sufficient.
     """
     model_id = model_doc["model_id"]
-    # An element may be drawn in several views (plan, section). The plan view is
-    # the canonical CAD handle; other views are kept for traceability below.
+    # An element may be drawn in several views (plan, section). The preferred view
+    # is the canonical CAD handle; other views are kept for traceability below.
     by_internal_id: Dict[str, Dict[str, Any]] = {}
     views_by_internal_id: Dict[str, List[str]] = {}
     duplicates: List[str] = []
     seen: Dict[tuple, int] = {}
+    preferred = required_view or "plan"
     for link in dxf_links:
         internal_id = link["internal_id"]
         view = link.get("view") or "plan"
@@ -242,7 +279,7 @@ def sync_links(
             duplicates.append(f"{view}:{internal_id}")
         views_by_internal_id.setdefault(internal_id, []).append(view)
         existing = by_internal_id.get(internal_id)
-        if existing is None or (view == "plan" and existing.get("view") != "plan"):
+        if existing is None or (view == preferred and existing.get("view") != preferred):
             by_internal_id[internal_id] = link
 
     previous = existing_links(conn, model_id)
@@ -264,11 +301,11 @@ def sync_links(
         if link is None:
             status = STATUS_STALE
             note = "element is absent from the DXF (no XDATA match)"
-        elif "plan" not in views_by_internal_id.get(internal_id, []):
-            # The plan view is the authoritative CAD representation of an
-            # element; a surviving section entity alone is not enough.
+        elif required_view and required_view not in views_by_internal_id.get(internal_id, []):
+            # The required view is the authoritative CAD representation of an
+            # element; a surviving entity in another view alone is not enough.
             status = STATUS_STALE
-            note = ("plan view entity missing (element only present in: "
+            note = (f"{required_view} view entity missing (element only present in: "
                     + ", ".join(sorted(views_by_internal_id.get(internal_id, []))) + ")")
         elif abs(float(link["unit_scale"]) - expected_scale) > units.TOLERANCE_MM:
             status = STATUS_UNIT_MISMATCH
@@ -509,3 +546,370 @@ def export_mapping_json(conn: sqlite3.Connection, model_id: str, path: str) -> D
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(document, handle, indent=2)
     return {"path": path, "links": len(document["links"])}
+
+
+# ---------------------------------------------------------------------------
+# Entity-level (one-to-many) links for generator-produced drawings
+# ---------------------------------------------------------------------------
+
+
+def _entity_key(internal_id: str, handle: str) -> tuple:
+    return (str(internal_id), str(handle))
+
+
+def sync_entity_links(
+    conn: sqlite3.Connection,
+    model_doc: Dict[str, Any],
+    drawing_id: str,
+    entity_links: Iterable[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Persist the element -> CAD entity links for one drawing.
+
+    ``entity_links`` come from reading the written DXF back, so every handle is
+    the one a CAD application will report. Links that disappeared are marked
+    ``deleted``; links whose geometry changed are marked ``edited``. Rows are
+    never silently removed, because the history of a drawing matters.
+    """
+    model_id = model_doc["model_id"]
+    now = _utcnow()
+    previous = {
+        (row["internal_id"], row["handle"]): dict(row)
+        for row in conn.execute(
+            "SELECT * FROM fundi_entity_links WHERE model_id = ? AND drawing_id = ?",
+            (model_id, drawing_id),
+        ).fetchall()
+    }
+
+    counts = {"added": 0, "unchanged": 0, "edited": 0, "deleted": 0}
+    current_keys = set()
+    for link in entity_links:
+        key = _entity_key(link["internal_id"], link["handle"])
+        if key in current_keys:
+            # The same (element, handle) pair twice cannot be represented; it means
+            # the same entity carries this element id twice in its XDATA.
+            continue
+        current_keys.add(key)
+        prior = previous.get(key)
+        status = STATUS_OK
+        note = None
+        if prior is None:
+            counts["added"] += 1
+        elif prior["geometry_hash"] and link.get("geometry_hash") and \
+                prior["geometry_hash"] != link["geometry_hash"]:
+            status = STATUS_EDITED
+            note = "geometry differs from the generated entity"
+            counts["edited"] += 1
+        else:
+            counts["unchanged"] += 1
+        conn.execute(
+            """
+            INSERT INTO fundi_entity_links(
+                model_id, internal_id, drawing_id, handle, layer, entity_type, view,
+                status, geometry_hash, note, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(model_id, internal_id, drawing_id, handle) DO UPDATE SET
+                layer = excluded.layer,
+                entity_type = excluded.entity_type,
+                view = excluded.view,
+                status = excluded.status,
+                geometry_hash = excluded.geometry_hash,
+                note = excluded.note,
+                updated_at = excluded.updated_at
+            """,
+            (model_id, link["internal_id"], drawing_id, link["handle"],
+             link.get("layer"), link.get("entity_type"), link.get("view"),
+             status, link.get("geometry_hash"), note, now),
+        )
+
+    for key, row in previous.items():
+        if key in current_keys:
+            continue
+        conn.execute(
+            "UPDATE fundi_entity_links SET status = ?, note = ?, updated_at = ? "
+            "WHERE model_id = ? AND internal_id = ? AND drawing_id = ? AND handle = ?",
+            (STATUS_DELETED, "entity no longer present in the drawing", now,
+             model_id, row["internal_id"], drawing_id, row["handle"]),
+        )
+        counts["deleted"] += 1
+
+    conn.commit()
+    return {"drawing_id": drawing_id, "counts": counts}
+
+
+def entity_links_for(conn: sqlite3.Connection, model_id: str,
+                     drawing_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """All entity links for a model (optionally one drawing), newest first."""
+    if drawing_id:
+        rows = conn.execute(
+            "SELECT * FROM fundi_entity_links WHERE model_id = ? AND drawing_id = ? "
+            "ORDER BY internal_id, handle",
+            (model_id, drawing_id),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM fundi_entity_links WHERE model_id = ? "
+            "ORDER BY drawing_id DESC, internal_id, handle",
+            (model_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def elements_for_handle(conn: sqlite3.Connection, drawing_id: str,
+                        handle: str) -> List[Dict[str, Any]]:
+    """Which engineering element(s) a CAD handle represents.
+
+    A handle may represent more than one element (a section view shows a stem and
+    its base in one view), so this returns a list rather than a single row.
+    """
+    rows = conn.execute(
+        "SELECT * FROM fundi_entity_links WHERE drawing_id = ? AND handle = ? "
+        "AND status != ? ORDER BY internal_id",
+        (drawing_id, str(handle), STATUS_DELETED),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def handles_for_element(conn: sqlite3.Connection, model_id: str, internal_id: str,
+                        drawing_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """All CAD entities that represent one engineering element."""
+    if drawing_id:
+        rows = conn.execute(
+            "SELECT * FROM fundi_entity_links WHERE model_id = ? AND internal_id = ? "
+            "AND drawing_id = ? AND status != ? ORDER BY handle",
+            (model_id, internal_id, drawing_id, STATUS_DELETED),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM fundi_entity_links WHERE model_id = ? AND internal_id = ? "
+            "AND status != ? ORDER BY drawing_id, handle",
+            (model_id, internal_id, STATUS_DELETED),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def reconcile_drawing(
+    conn: sqlite3.Connection,
+    model_doc: Dict[str, Any],
+    drawing_id: str,
+    scanned_entities: Iterable[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Compare a reopened drawing against the stored mapping and report drift.
+
+    Detects, without guessing:
+
+    ``missing``        stored entity handle absent from the file
+    ``rehandled``      handle changed but the element id *and* geometry match, so
+                       the entity was re-written by another application; identity
+                       comes from the XDATA id, not from the handle
+    ``edited``         handle present, geometry hash differs (user edited it)
+    ``duplicates``     the same element appears twice in one view
+    ``unmapped``       entities with no Fundi identity at all (reported, never
+                       guessed)
+    ``new_elements``   Fundi element ids in the file that the model does not know
+    ``elements_without_entities``  model elements with no entity in this drawing
+    """
+    model_id = model_doc["model_id"]
+    model_ids = {element["id"] for element in model_doc["elements"]}
+    stored = {
+        (row["internal_id"], row["handle"]): row
+        for row in conn.execute(
+            "SELECT * FROM fundi_entity_links WHERE model_id = ? AND drawing_id = ?",
+            (model_id, drawing_id),
+        ).fetchall()
+    }
+
+    scanned_entities = list(scanned_entities)
+    # handle -> the entity's own facts (geometry hash, layer, type) plus the
+    # element payloads found in its XDATA. Keeping the entity-level data here is
+    # what allows an edited entity to be recognised: the geometry hash belongs to
+    # the entity, not to the identity payload inside it.
+    by_handle: Dict[str, Dict[str, Any]] = {}
+    unmapped: List[Dict[str, Any]] = []
+    for entity in scanned_entities:
+        payloads = entity.get("elements") or []
+        by_handle[entity["handle"]] = {
+            "geometry_hash": entity.get("geometry_hash"),
+            "layer": entity.get("layer"),
+            "entity_type": entity.get("entity_type"),
+            "elements": payloads,
+        }
+        if not payloads:
+            unmapped.append(
+                {"handle": entity.get("handle"), "layer": entity.get("layer"),
+                 "type": entity.get("entity_type")}
+            )
+
+    missing: List[Dict[str, Any]] = []
+    edited: List[Dict[str, Any]] = []
+    unchanged = 0
+    current_keys = set()
+
+    # Index the file's entities by (element id, view) so a re-handled entity can be
+    # recognised even though its handle changed.
+    file_index: Dict[tuple, List[Dict[str, Any]]] = {}
+    for handle, record in by_handle.items():
+        for payload in record["elements"]:
+            file_index.setdefault(
+                (payload["internal_id"], payload.get("view")), []
+            ).append(
+                {"handle": handle, "geometry_hash": record["geometry_hash"],
+                 "layer": record["layer"], "entity_type": record["entity_type"]}
+            )
+
+    rehandled: List[Dict[str, Any]] = []
+    for (internal_id, handle), row in stored.items():
+        record = by_handle.get(handle)
+        entry = None
+        if record is not None:
+            for candidate in record["elements"]:
+                if candidate["internal_id"] == internal_id:
+                    entry = candidate
+                    break
+        if entry is not None:
+            current_keys.add((internal_id, handle))
+            stored_hash = row["geometry_hash"]
+            current_hash = record["geometry_hash"]
+            if stored_hash and current_hash and stored_hash != current_hash:
+                edited.append(
+                    {"internal_id": internal_id, "handle": handle,
+                     "stored_hash": stored_hash, "current_hash": current_hash,
+                     "layer": record["layer"]}
+                )
+            else:
+                unchanged += 1
+            continue
+
+        # Handle gone: is it the same element re-written with a new handle?
+        replacement = None
+        for candidate in file_index.get((internal_id, row["view"]), []):
+            if (internal_id, candidate["handle"]) in stored:
+                continue
+            if row["geometry_hash"] and candidate.get("geometry_hash") == row["geometry_hash"]:
+                replacement = candidate
+                break
+        if replacement is None:
+            missing.append(
+                {"internal_id": internal_id, "handle": handle, "view": row["view"],
+                 "layer": row["layer"], "entity_type": row["entity_type"]}
+            )
+        else:
+            current_keys.add((internal_id, replacement["handle"]))
+            rehandled.append(
+                {"internal_id": internal_id, "old_handle": handle,
+                 "new_handle": replacement["handle"], "view": row["view"]}
+            )
+
+    new_entities: List[Dict[str, Any]] = []
+    duplicates: List[str] = []
+    for handle, record in by_handle.items():
+        for payload in record["elements"]:
+            key = (payload["internal_id"], handle)
+            if key in current_keys:
+                continue
+            new_entities.append(
+                {"internal_id": payload["internal_id"], "handle": handle,
+                 "view": payload.get("view"), "layer": record["layer"]}
+            )
+    # An element must appear once per view. More than once means the entity was
+    # copied (which duplicates the XDATA) and the mapping cannot be one-to-one.
+    for (view, internal_id), entries in sorted(file_index.items()):
+        if len(entries) > 1:
+            duplicates.append(f"{view}:{internal_id}")
+
+    unknown_ids = sorted(
+        {
+            payload["internal_id"]
+            for record in by_handle.values()
+            for payload in record["elements"]
+            if payload["internal_id"] not in model_ids
+        }
+    )
+    elements_with_entities = {
+        payload["internal_id"]
+        for record in by_handle.values()
+        for payload in record["elements"]
+    }
+    without_entities = sorted(model_ids - elements_with_entities)
+
+    # Persist what the file actually says so the registry does not go stale.
+    now = _utcnow()
+    for item in rehandled:
+        conn.execute(
+            "UPDATE fundi_entity_links SET handle = ?, status = ?, note = ?, updated_at = ? "
+            "WHERE model_id = ? AND internal_id = ? AND drawing_id = ? AND handle = ?",
+            (item["new_handle"], STATUS_OK,
+             f"handle reassigned from {item['old_handle']}", now,
+             model_id, item["internal_id"], drawing_id, item["old_handle"]),
+        )
+    for item in missing:
+        conn.execute(
+            "UPDATE fundi_entity_links SET status = ?, note = ?, updated_at = ? "
+            "WHERE model_id = ? AND internal_id = ? AND drawing_id = ? AND handle = ?",
+            (STATUS_DELETED, "not found in the reopened drawing", now,
+             model_id, item["internal_id"], drawing_id, item["handle"]),
+        )
+    for item in edited:
+        conn.execute(
+            "UPDATE fundi_entity_links SET status = ?, note = ?, updated_at = ? "
+            "WHERE model_id = ? AND internal_id = ? AND drawing_id = ? AND handle = ?",
+            (STATUS_EDITED, "geometry edited outside Fundi", now,
+             model_id, item["internal_id"], drawing_id, item["handle"]),
+        )
+    conn.commit()
+
+    requires_attention = bool(missing or edited or unknown_ids or without_entities)
+    return {
+        "drawing_id": drawing_id,
+        "model_id": model_id,
+        "unchanged": unchanged,
+        "missing": missing,
+        "rehandled": rehandled,
+        "edited": edited,
+        "new_entities": new_entities,
+        "duplicates": sorted(set(duplicates)),
+        "unmapped_entities": unmapped,
+        "unknown_element_ids": unknown_ids,
+        "elements_without_entities": without_entities,
+        "requires_reconciliation": requires_attention,
+        "summary": {
+            "stored_links": len(stored),
+            "file_entities": len(scanned_entities),
+            "mapped_entities": sum(
+                1 for record in by_handle.values() if record["elements"]
+            ),
+            "missing": len(missing),
+            "rehandled": len(rehandled),
+            "edited": len(edited),
+            "new": len(new_entities),
+            "unmapped": len(unmapped),
+        },
+    }
+
+
+def entity_mapping_document(conn: sqlite3.Connection, model_id: str,
+                            drawing_id: Optional[str] = None) -> Dict[str, Any]:
+    """Serialise element -> entity links for the API and the workbench panel."""
+    links = entity_links_for(conn, model_id, drawing_id)
+    by_element: Dict[str, List[Dict[str, Any]]] = {}
+    for link in links:
+        by_element.setdefault(link["internal_id"], []).append(
+            {
+                "handle": link["handle"],
+                "drawing_id": link["drawing_id"],
+                "layer": link["layer"],
+                "entity_type": link["entity_type"],
+                "view": link["view"],
+                "status": link["status"],
+                "note": link["note"],
+            }
+        )
+    counts: Dict[str, int] = {}
+    for link in links:
+        counts[link["status"]] = counts.get(link["status"], 0) + 1
+    return {
+        "model_id": model_id,
+        "drawing_id": drawing_id,
+        "entity_link_count": len(links),
+        "by_status": dict(sorted(counts.items())),
+        "elements": dict(sorted(by_element.items())),
+    }

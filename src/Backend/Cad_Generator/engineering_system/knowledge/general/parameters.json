@@ -1,0 +1,118 @@
+{
+  "document": "IStructE/Concrete Society SMDS Chapters 1–5 — General Parameters",
+
+  "drawing_sheet_sizes": {
+    "A0": {"width_mm": 841, "height_mm": 1189},
+    "A1": {"width_mm": 594, "height_mm": 841},
+    "A2": {"width_mm": 420, "height_mm": 594},
+    "A3": {"width_mm": 297, "height_mm": 420},
+    "A4": {"width_mm": 210, "height_mm": 297},
+    "recommended_GA": "A1",
+    "recommended_details": "A3 or A4",
+    "border_filing_side_mm": 20,
+    "border_A0_A1_other_sides_min_mm": 20,
+    "border_A2_A3_A4_other_sides_min_mm": 10,
+    "border_line_thickness_min_mm": 0.5,
+    "source": "Sections 3.5, 3.6, pages 13–14"
+  },
+
+  "line_thicknesses_mm": {
+    "concrete_outline_GA": 0.35,
+    "concrete_outline_rebar_drawing": 0.35,
+    "main_reinforcing_bar": 0.7,
+    "links_min": 0.35,
+    "links_max": 0.7,
+    "dimension_lines": 0.25,
+    "centre_lines": 0.25,
+    "source": "Section 3.10, page 14",
+    "status": "DIRECTLY STATED"
+  },
+
+  "recommended_scales": {
+    "general_arrangements": "1:100",
+    "wall_and_slab_detail": "1:50",
+    "beam_and_column_elevations": "1:50",
+    "beam_and_column_sections": "1:20",
+    "larger_scales_preferred_if_needed": ["1:10", "1:5", "1:2", "1:1 (full size)"],
+    "difficult_junctions_sketch_scale_min": "1:10",
+    "source": "Sections 3.15, 4.4, pages 15, 31",
+    "status": "DIRECTLY STATED"
+  },
+
+  "dimension_units": {
+    "site_layouts_and_levels": "metres",
+    "reinforcement_detailing_and_small_sections": "millimetres",
+    "millimetre_suffix_required": false,
+    "rounding": "nearest whole millimetre",
+    "source": "Section 3.13, page 14–15",
+    "status": "DIRECTLY STATED"
+  },
+
+  "reinforcement_parameters": {
+    "column_bar_spacing_link_retention_threshold_mm": 150,
+    "vibrator_access_per_beam_width_mm": {"width_per_slot": 300, "slot_width": 75},
+    "cross_tie_spacing_mm": 1000,
+    "max_link_free_height_mm": 400,
+    "column_crank_ratio": "1:10",
+    "column_crank_offset_typical_mm": 50,
+    "source": "Sections 4.2.2, 4.2.3, Figures 4.2, 4.4",
+    "status": "DIRECTLY STATED"
+  },
+
+  "bar_length_limits": {
+    "12mm_diameter_and_above_max_length_m": 12,
+    "10mm_diameter_and_below_max_length_m": 6,
+    "source": "Section 4.2.4, page 30",
+    "status": "DIRECTLY STATED"
+  },
+
+  "hole_thresholds_for_trimming": {
+    "circular_not_shown_on_rebar_dwg_max_dia_mm": 150,
+    "rectangular_not_shown_on_rebar_dwg_max_size_mm": "150x150",
+    "source": "Section 3.2.2, page 12",
+    "status": "DIRECTLY STATED"
+  },
+
+  "grid_notation": {
+    "one_direction": "numbers 1, 2, 3 ...",
+    "other_direction": "letters A, B, C ... X, Y, Z, AA, AB ... (omitting I and O)",
+    "start_corner": "lower left corner",
+    "supplementary_grids": "Aa, Ab, Ba, 2.5, 4.2 etc.",
+    "beam_reference_format": "column_ref + suffix (e.g. B21, B22, B23 for beams in panel B2)",
+    "source": "Section 3.19, page 16",
+    "status": "DIRECTLY STATED"
+  },
+
+  "reinforcement_material": {
+    "standard_grade": "Grade 500 (B or C preferred for ductility)",
+    "standard": "BS 4449 / EC2 Annex C",
+    "certification_body_UK": "UK CARES",
+    "yield_strength_Nmm2": 500,
+    "stainless_steel_reference": "BS 6744:2001",
+    "source": "Sections 1, 5.1, pages 1, 34"
+  },
+
+  "information_panel_contents": {
+    "required_items": [
+      "office project number",
+      "project title",
+      "drawing number with revision suffix",
+      "drawing title",
+      "office of origin",
+      "scales",
+      "drawn by (name)",
+      "checked by (name)",
+      "date of drawing"
+    ],
+    "notes_on_rebar_drawings": [
+      "cross-references to GAs",
+      "list of abbreviations",
+      "grade of concrete",
+      "specified covers",
+      "schedule refs"
+    ],
+    "location": "bottom right-hand corner of drawing sheet",
+    "source": "Section 3.7, page 14",
+    "status": "DIRECTLY STATED"
+  }
+}

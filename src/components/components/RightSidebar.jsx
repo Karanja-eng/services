@@ -14,6 +14,11 @@ const RightSidebar = ({ isOpen, onClose, isDark, toggleTheme }) => {
       )}
 
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Settings"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
         className={`fixed top-0 right-0 h-full w-80 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-l border-gray-200 dark:border-gray-800 z-[70] transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"} shadow-2xl flex flex-col`}
       >
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800 shrink-0">
@@ -22,9 +27,10 @@ const RightSidebar = ({ isOpen, onClose, isDark, toggleTheme }) => {
             Settings
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Close sidebar"
+            aria-label="Close settings"
           >
             <X size={24} />
           </button>
@@ -46,6 +52,10 @@ const RightSidebar = ({ isOpen, onClose, isDark, toggleTheme }) => {
                 </span>
               </div>
               <button
+                type="button"
+                role="switch"
+                aria-checked={isDark}
+                aria-label="Dark mode"
                 onClick={toggleTheme}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isDark ? "bg-blue-600" : "bg-gray-300"}`}
               >
@@ -75,6 +85,7 @@ const RightSidebar = ({ isOpen, onClose, isDark, toggleTheme }) => {
 
         <div className="p-5 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
           <button
+            type="button"
             onClick={onClose}
             className="w-full py-3 px-4 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors"
           >

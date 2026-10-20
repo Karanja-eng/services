@@ -1,337 +1,800 @@
 // src/components/interop/InteropWorkbench.jsx
 //
-// The 2D CAD + 3D BIM + IFC workbench.
+// The CAD + BIM + IFC workbench for Fundi Studio.
 //
-// This is the smallest end-to-end demonstration of the target workflow that the
-// repository supports today:
+// The workflow this page implements, in the order it happens:
 //
-//   septic tank parameters (the real generator's own inputs)
-//        -> canonical engineering model   (Python: septic_model)
-//        -> IFC4 file                     (Python: ifc_export / IfcOpenShell)
-//        -> DXF drawing                   (Python: dxf_export / ezdxf)
-//        -> persistent element mapping    (Python: mapping / SQLite)
-//        -> MLightCAD renders the DXF     (this page, left tab)
-//        -> web-ifc renders the IFC       (this page, right tab)
-//        -> one element selected in one view is identified in the other
+//   1. pick one of the existing Python RC generators (beam, column, slab, wall,
+//      retaining wall, pad footing, stair) and edit its real parameters;
+//   2. POST /api/cad-ifc/generate  (Python: generator_registry + rc_model)
+//        -> the generator's own DXF sheet, tagged with FUNDI identity XDATA
+//        -> a canonical engineering model (JSON, metres, Z-up)
+//        -> a semantic IFC4 file (IfcOpenShell)
+//        -> a persistent element <-> CAD entity <-> IFC GlobalId mapping
+//   3. edit the DXF in the MLightCAD editor (left tab) - the served file is the
+//      real artefact, not a re-render of React state;
+//   4. inspect the same elements in the That Open BIM viewer (right tab), with
+//      selection, properties, clipping and measurement;
+//   5. reconcile: upload the edited DXF and see exactly which entities were
+//      deleted, re-handled or modified. CAD changes are *never* applied to the
+//      engineering model automatically.
 //
-// It does not replace the existing Konva drawing page (/drawing) or the existing
-// R3F visualiser (/visualise); it is an additional, isolated route.
+// The application's existing Konva drawing page (/drawing) and React Three Fiber
+// visualiser (/visualise) are untouched: the "Existing 3D" tab only links to them.
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Layers, Link2, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import CadDxfViewer from './CadDxfViewer';
-import IfcBimViewer from './IfcBimViewer';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  AlertTriangle,
+  Box,
+  CheckCircle2,
+  Database,
+  Download,
+  ExternalLink,
+  FileCode2,
+  Layers,
+  Link2,
+  Loader2,
+  Play,
+  RefreshCw,
+  Upload,
+  XCircle,
+} from 'lucide-react';
 
-const STATIC_BASE = process.env.PUBLIC_URL || '';
-const MODEL_ID = 'septic-system';
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8001';
+import {
+  API_BASE,
+  artefactUrl,
+  exportSeptic,
+  fetchGenerators,
+  fetchHealth,
+  fetchLinks,
+  fileToBase64,
+  generate,
+  reconcile,
+} from './cadIfcApi';
 
-const STATUS_STYLES = {
-  ok: 'bg-emerald-900/40 text-emerald-300 border-emerald-800',
-  regenerated: 'bg-sky-900/40 text-sky-300 border-sky-800',
-  deleted: 'bg-rose-900/40 text-rose-300 border-rose-800',
-  stale: 'bg-amber-900/40 text-amber-300 border-amber-800',
-  conflict: 'bg-rose-900/40 text-rose-200 border-rose-700',
-  unit_mismatch: 'bg-fuchsia-900/40 text-fuchsia-200 border-fuchsia-800',
-};
+// The three viewers pull in large third-party stacks (MLightCAD + three,
+// That Open + fragments + web-ifc). Loading them lazily keeps them out of the
+// application's initial chunk, so adding this route does not slow down the rest of
+// Fundi Studio — the same reason Fundi Pulse mounts MLightCAD lazily.
+const CadDxfViewer = lazy(() => import('./CadDxfViewer'));
+const IfcBimViewer = lazy(() => import('./IfcBimViewer'));
+const ThatOpenBimViewer = lazy(() => import('./ThatOpenBimViewer'));
 
-export default function InteropWorkbench({ isDark = false }) {
-  const [tab, setTab] = useState('cad');
-  const [links, setLinks] = useState([]);
-  const [model, setModel] = useState(null);
-  const [loadError, setLoadError] = useState(null);
-  const [selectedId, setSelectedId] = useState(null);
-  const [cadFocus, setCadFocus] = useState(null);
-  const [cadLoaded, setCadLoaded] = useState(null);
-  const [bimStatus, setBimStatus] = useState(null);
-  const [regenerating, setRegenerating] = useState(false);
-  const [regenMessage, setRegenMessage] = useState(null);
-  const [revision, setRevision] = useState(0);
-  const [params, setParams] = useState({ tank_int_l: 3.0, tank_int_w: 2.5, tank_depth_int: 2.0 });
-
-  // Artifacts are written by: python -m src.Backend.cad_ifc.pipeline
-  const urls = useMemo(
-    () => ({
-      dxf: `${STATIC_BASE}/ifc/${MODEL_ID}.dxf?v=${revision}`,
-      ifc: `${STATIC_BASE}/ifc/${MODEL_ID}.ifc?v=${revision}`,
-      links: `${STATIC_BASE}/ifc/${MODEL_ID}.links.json?v=${revision}`,
-      model: `${STATIC_BASE}/ifc/${MODEL_ID}.model.json?v=${revision}`,
-    }),
-    [revision]
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [linksResponse, modelResponse] = await Promise.all([
-          fetch(urls.links),
-          fetch(urls.model),
-        ]);
-        if (!linksResponse.ok) throw new Error(`links.json: HTTP ${linksResponse.status}`);
-        if (!modelResponse.ok) throw new Error(`model.json: HTTP ${modelResponse.status}`);
-        const linksDocument = await linksResponse.json();
-        const modelDocument = await modelResponse.json();
-        if (cancelled) return;
-        setLinks(linksDocument.links || []);
-        setModel({ ...modelDocument, revision: linksDocument.revision });
-        setLoadError(null);
-        setParams((prev) => ({
-          ...prev,
-          tank_int_l: modelDocument.parameters?.tank_int_l ?? prev.tank_int_l,
-          tank_int_w: modelDocument.parameters?.tank_int_w ?? prev.tank_int_w,
-          tank_depth_int: modelDocument.parameters?.tank_depth_int ?? prev.tank_depth_int,
-        }));
-      } catch (error) {
-        if (!cancelled) setLoadError(error.message);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [urls.links, urls.model]);
-
-  const selected = useMemo(
-    () => links.find((link) => link.internal_id === selectedId) || null,
-    [links, selectedId]
-  );
-
-  const statusCounts = useMemo(() => {
-    const counts = {};
-    links.forEach((link) => {
-      counts[link.status] = (counts[link.status] || 0) + 1;
-    });
-    return counts;
-  }, [links]);
-
-  const onBimSelect = useCallback(
-    (picked) => {
-      if (!picked?.globalId) {
-        setSelectedId(null);
-        return;
-      }
-      const match = links.find((link) => link.ifc_guid === picked.globalId);
-      setSelectedId(match ? match.internal_id : null);
-      setBimStatus(
-        match
-          ? `IFC element ${picked.globalId} -> ${match.internal_id} (handle ${match.dxf_handle})`
-          : `IFC element ${picked.globalId} is not in the Fundi mapping`
-      );
-    },
-    [links]
-  );
-
-  const pickLink = useCallback((link) => {
-    setSelectedId(link.internal_id);
-    setCadFocus(link.dxf_handle);
-    setBimStatus(`Selected ${link.internal_id} — linked to DXF handle ${link.dxf_handle}`);
-  }, []);
-
-  const regenerate = useCallback(async () => {
-    setRegenerating(true);
-    setRegenMessage(null);
-    try {
-      const response = await fetch(`${API_BASE}/api/cad-ifc/export`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ params }),
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const report = await response.json();
-      setRegenMessage(
-        `Regenerated revision ${report?.model?.revision ?? '?'} — ` +
-          `${report?.model?.element_count ?? '?'} elements, ` +
-          `${report?.mapping?.link_count ?? '?'} links`
-      );
-      setRevision((value) => value + 1);
-    } catch (error) {
-      setRegenMessage(
-        `Backend not reachable (${error.message}). Start it with ` +
-          `uvicorn src.Backend.main:app --port 8001 — the static artifacts are ` +
-          `regenerated by python -m src.Backend.cad_ifc.pipeline`
-      );
-    } finally {
-      setRegenerating(false);
-    }
-  }, [params]);
-
+/** Placeholder while a viewer chunk downloads. */
+function ViewerFallback({ label }) {
   return (
-    <div className={`flex h-screen flex-col ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
-      {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/50 bg-slate-900 px-4 py-2 text-slate-100 shrink-0">
-        <div className="flex items-center gap-3">
-          <Link2 className="h-5 w-5 text-sky-400" />
-          <div>
-            <h1 className="text-sm font-semibold">CAD · BIM · IFC Interoperability Workbench</h1>
-            <p className="text-[11px] text-slate-400">
-              Septic tank generator · canonical model rev {model?.revision ?? '—'} ·{' '}
-              {model?.statistics?.element_count ?? links.length} elements
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 text-[11px]">
-          {Object.entries(statusCounts).map(([status, count]) => (
-            <span
-              key={status}
-              className={`rounded border px-1.5 py-0.5 ${STATUS_STYLES[status] || 'border-slate-600 text-slate-300'}`}
-            >
-              {status}: {count}
-            </span>
-          ))}
-        </div>
-      </header>
-
-      {loadError && (
-        <div className="flex items-center gap-2 bg-rose-950/60 px-4 py-2 text-[12px] text-rose-200">
-          <AlertTriangle className="h-4 w-4" />
-          Generated artifacts not found ({loadError}). Run:{' '}
-          <code className="rounded bg-black/40 px-1">
-            python -m src.Backend.cad_ifc.pipeline
-          </code>
-        </div>
-      )}
-
-      <div className="flex min-h-0 flex-1">
-        {/* Left: element / link browser */}
-        <aside className="flex w-[330px] shrink-0 flex-col border-r border-slate-700/50 bg-slate-900/95 text-slate-200">
-          <div className="border-b border-slate-700/50 px-3 py-2 text-[10px] uppercase tracking-wide text-slate-400">
-            Persistent element links ({links.length})
-          </div>
-          <div className="min-h-0 flex-1 overflow-auto">
-            {links.length === 0 && (
-              <p className="px-3 py-3 text-[11px] text-slate-500">
-                No links loaded. Generate the artifacts with the Python pipeline.
-              </p>
-            )}
-            {links.map((link) => (
-              <button
-                key={link.internal_id}
-                onClick={() => pickLink(link)}
-                className={`block w-full border-b border-slate-800/70 px-3 py-1.5 text-left hover:bg-slate-800/70 ${
-                  selectedId === link.internal_id ? 'bg-slate-800' : ''
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate font-mono text-[11px]">{link.internal_id}</span>
-                  <span
-                    className={`shrink-0 rounded border px-1 text-[9px] ${STATUS_STYLES[link.status] || 'border-slate-600'}`}
-                  >
-                    {link.status}
-                  </span>
-                </div>
-                <div className="truncate text-[10px] text-slate-500">
-                  {link.ifc_class} · DXF {link.dxf_handle || '—'} · {link.ifc_guid}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Controlled regeneration */}
-          <div className="border-t border-slate-700/50 p-3">
-            <div className="mb-1 text-[10px] uppercase tracking-wide text-slate-400">
-              Engineering parameters
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              {[
-                ['tank_int_l', 'Length'],
-                ['tank_int_w', 'Width'],
-                ['tank_depth_int', 'Depth'],
-              ].map(([key, label]) => (
-                <label key={key} className="text-[10px] text-slate-400">
-                  {label} (m)
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0.5"
-                    value={params[key]}
-                    onChange={(event) =>
-                      setParams((prev) => ({ ...prev, [key]: Number(event.target.value) }))
-                    }
-                    className="mt-0.5 w-full rounded border border-slate-700 bg-slate-800 px-1 py-0.5 text-[11px] text-slate-100"
-                  />
-                </label>
-              ))}
-            </div>
-            <button
-              onClick={regenerate}
-              disabled={regenerating}
-              className="mt-2 flex w-full items-center justify-center gap-1 rounded bg-sky-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-            >
-              <RefreshCw className={`h-3 w-3 ${regenerating ? 'animate-spin' : ''}`} />
-              Regenerate IFC + DXF
-            </button>
-            {regenMessage && (
-              <p className="mt-2 flex items-start gap-1 text-[10px] leading-snug text-amber-300">
-                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-                {regenMessage}
-              </p>
-            )}
-          </div>
-        </aside>
-
-        {/* Right: viewers */}
-        <section className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center gap-1 border-b border-slate-700/50 bg-slate-900 px-2 py-1 text-[11px] text-slate-200 shrink-0">
-            <TabButton active={tab === 'cad'} onClick={() => setTab('cad')} icon={Layers}>
-              2D CAD (MLightCAD, DXF)
-            </TabButton>
-            <TabButton active={tab === 'bim'} onClick={() => setTab('bim')} icon={Box}>
-              3D BIM (IFC, web-ifc)
-            </TabButton>
-            <span className="ml-2 truncate text-[10px] text-slate-500">
-              {selected
-                ? `linked: ${selected.internal_id} · handle ${selected.dxf_handle} · ${selected.ifc_guid}`
-                : 'no element selected'}
-            </span>
-          </div>
-
-          <div className="min-h-0 flex-1">
-            {tab === 'cad' ? (
-              <CadDxfViewer
-                dxfUrl={urls.dxf}
-                focusHandle={cadFocus}
-                isDark
-                onLoaded={setCadLoaded}
-              />
-            ) : (
-              <IfcBimViewer
-                ifcUrl={urls.ifc}
-                selectedGuid={selected?.ifc_guid || null}
-                onSelect={onBimSelect}
-                onStatus={(status) => setBimStatus(status.message)}
-              />
-            )}
-          </div>
-
-          {/* Footer diagnostics: what the viewers actually loaded */}
-          <footer className="flex flex-wrap items-center gap-3 border-t border-slate-700/50 bg-slate-900 px-3 py-1 text-[10px] text-slate-400 shrink-0">
-            <span className="flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-              DXF: {cadLoaded ? `${cadLoaded.entityCount} entities, ${cadLoaded.durationMs} ms` : 'not loaded'}
-            </span>
-            <span className="truncate">BIM: {bimStatus || 'not loaded'}</span>
-            <span className="ml-auto">
-              units: model {model?.units?.canonical || 'm'} · IFC {model?.units?.ifc || 'm'} · DXF{' '}
-              {model?.units?.dxf || 'mm'}
-            </span>
-          </footer>
-        </section>
-      </div>
+    <div className="flex w-full h-full items-center justify-center gap-2 text-[12px] text-[#909399]">
+      <Loader2 className="w-4 h-4 animate-spin" />
+      <span>Loading {label}…</span>
     </div>
   );
 }
 
-function TabButton({ active, onClick, icon: Icon, children }) {
+const STATUS_STYLES = {
+  ok: 'bg-emerald-900/40 text-emerald-300 border-emerald-800',
+  regenerated: 'bg-sky-900/40 text-sky-300 border-sky-800',
+  added: 'bg-sky-900/40 text-sky-300 border-sky-800',
+  unchanged: 'bg-neutral-800 text-neutral-300 border-neutral-700',
+  deleted: 'bg-rose-900/40 text-rose-300 border-rose-800',
+  stale: 'bg-amber-900/40 text-amber-300 border-amber-800',
+  conflict: 'bg-rose-900/40 text-rose-200 border-rose-700',
+  edited: 'bg-amber-900/40 text-amber-200 border-amber-700',
+  unit_mismatch: 'bg-fuchsia-900/40 text-fuchsia-200 border-fuchsia-800',
+  duplicate: 'bg-orange-900/40 text-orange-200 border-orange-800',
+  new: 'bg-sky-900/40 text-sky-200 border-sky-700',
+};
+
+const TABS = [
+  { id: 'cad', label: '2D CAD (MLightCAD)' },
+  { id: 'bim', label: 'BIM (That Open)' },
+  { id: 'ifc', label: 'IFC check (web-ifc)' },
+  { id: 'existing', label: 'Existing 3D (R3F)' },
+];
+
+function Badge({ status, children }) {
+  const style = STATUS_STYLES[status] || 'bg-neutral-800 text-neutral-300 border-neutral-700';
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-1 rounded px-2 py-1 ${
-        active ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/60'
-      }`}
-    >
-      <Icon className="h-3 w-3" />
-      {children}
-    </button>
+    <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded border ${style}`}>
+      {children || status}
+    </span>
+  );
+}
+
+/** Number input that keeps a numeric string while typing but reports a number. */
+function ParamInput({ item, value, onChange }) {
+  if (item.type === 'boolean') {
+    return (
+      <label className="flex items-center gap-2 py-0.5">
+        <input
+          type="checkbox"
+          checked={Boolean(value)}
+          onChange={(event) => onChange(item.name, event.target.checked)}
+          className="accent-[#409eff]"
+        />
+        <span className="text-[11px] text-[#c8c9cc]">{item.label}</span>
+      </label>
+    );
+  }
+  if (item.type === 'string') {
+    return (
+      <label className="flex flex-col gap-0.5 py-0.5">
+        <span className="text-[10px] text-[#909399]">
+          {item.label}
+          {item.unit && item.unit !== '-' ? ` (${item.unit})` : ''}
+        </span>
+        <input
+          type="text"
+          value={value ?? ''}
+          onChange={(event) => onChange(item.name, event.target.value)}
+          className="px-1.5 py-1 text-[11px] bg-[#141414] border border-[#4c4d4f] rounded text-[#e5eaf3]"
+        />
+      </label>
+    );
+  }
+  return (
+    <label className="flex flex-col gap-0.5 py-0.5">
+      <span className="text-[10px] text-[#909399]">
+        {item.label}
+        {item.unit && item.unit !== '-' ? ` (${item.unit})` : ''}
+      </span>
+      <input
+        type="number"
+        step={item.type === 'integer' ? 1 : 'any'}
+        value={value ?? ''}
+        onChange={(event) =>
+          onChange(item.name, event.target.value === '' ? '' : Number(event.target.value))
+        }
+        className="px-1.5 py-1 text-[11px] bg-[#141414] border border-[#4c4d4f] rounded text-[#e5eaf3]"
+      />
+    </label>
+  );
+}
+
+export default function InteropWorkbench({ isDark = false }) {
+  const [tab, setTab] = useState('cad');
+  const [health, setHealth] = useState(null);
+  const [healthError, setHealthError] = useState(null);
+  const [generators, setGenerators] = useState([]);
+  const [generatorKey, setGeneratorKey] = useState('beam');
+  const [params, setParams] = useState({});
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+  const [links, setLinks] = useState(null);
+  const [focusHandle, setFocusHandle] = useState(null);
+  const [focusGuid, setFocusGuid] = useState(null);
+  const [selectedElementId, setSelectedElementId] = useState(null);
+  const [reconcileResult, setReconcileResult] = useState(null);
+  const uploadRef = useRef(null);
+
+  const spec = useMemo(
+    () => generators.find((entry) => entry.key === generatorKey) || null,
+    [generators, generatorKey]
+  );
+
+  // --- backend discovery ---------------------------------------------------
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const healthPayload = await fetchHealth();
+        if (!cancelled) setHealth(healthPayload);
+        const catalogue = await fetchGenerators();
+        if (cancelled) return;
+        const list = catalogue.generators || [];
+        setGenerators(list);
+        const first = list.find((entry) => entry.key === 'beam') || list[0];
+        if (first) {
+          setGeneratorKey(first.key);
+          setParams({ ...first.defaults });
+        }
+        setHealthError(null);
+      } catch (err) {
+        if (!cancelled) setHealthError(err.message);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectGenerator = useCallback((key) => {
+    const next = generators.find((entry) => entry.key === key);
+    setGeneratorKey(key);
+    setParams(next ? { ...next.defaults } : {});
+    setReconcileResult(null);
+  }, [generators]);
+
+  const resetParams = useCallback(() => {
+    if (spec) setParams({ ...spec.defaults });
+  }, [spec]);
+
+  const setParam = useCallback((name, value) => {
+    setParams((previous) => ({ ...previous, [name]: value }));
+  }, []);
+
+  // --- generate -----------------------------------------------------------
+  const runGenerate = useCallback(async () => {
+    if (!spec) return;
+    setBusy(true);
+    setError(null);
+    setMessage(`Generating ${spec.label}…`);
+    setReconcileResult(null);
+    try {
+      const numericParams = {};
+      for (const item of spec.parameters) {
+        const value = params[item.name];
+        if (value === '' || value === undefined) continue;
+        if (item.editable === false) continue;
+        numericParams[item.name] = value;
+      }
+      const report = await generate({ generator: spec.key, params: numericParams });
+      setResult(report);
+      setMessage(
+        `Generated ${report.drawing.drawing_id}: ${report.drawing.entity_count} entities, ` +
+          `${report.ifc.element_count} IFC element(s), ${report.mapping.entity_links.link_count} links.`
+      );
+      try {
+        const entityLinks = await fetchLinks(report.model.model_id, report.drawing.drawing_id);
+        setLinks(entityLinks);
+      } catch (linkError) {
+        setLinks(null);
+        setMessage((previous) => `${previous} (entity links unavailable: ${linkError.message})`);
+      }
+      setSelectedElementId(report.ifc?.guids ? Object.keys(report.ifc.guids)[0] : null);
+    } catch (err) {
+      setError(err.message);
+      setMessage(null);
+    } finally {
+      setBusy(false);
+    }
+  }, [params, spec]);
+
+  // --- legacy septic demo (kept working) ----------------------------------
+  const runSeptic = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    setMessage('Generating the septic tank model, drawing and IFC…');
+    try {
+      const report = await exportSeptic({});
+      const modelId = report.model.model_id;
+      setResult({
+        model: { model_id: modelId, element_count: report.model.element_count },
+        drawing: {
+          drawing_id: `${modelId}-sheet-1`,
+          url: `/ifc/${modelId}.dxf`,
+          entity_count: report.dxf.replaced_entities + report.dxf.preserved_entities,
+          drawing_number: 'SEPTIC-01',
+          drawing_title: 'Septic tank and inspection chamber',
+        },
+        ifc: { url: `/ifc/${modelId}.ifc`, element_count: report.ifc.element_count },
+        mapping: { entity_links: { link_count: report.mapping.link_count } },
+      });
+      setMessage(`Septic pipeline regenerated: ${report.model.element_count} elements.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  // --- reconcile ----------------------------------------------------------
+  const runReconcile = useCallback(
+    async (file) => {
+      if (!result) return;
+      setBusy(true);
+      setError(null);
+      try {
+        const base64 = file ? await fileToBase64(file) : null;
+        const report = await reconcile(
+          result.model.model_id,
+          result.drawing.drawing_id,
+          base64
+        );
+        setReconcileResult(report);
+        setMessage(
+          report.requires_reconciliation
+            ? 'Drift detected — review the reconciliation report below.'
+            : 'Drawing matches the mapping: no drift detected.'
+        );
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [result]
+  );
+
+  const drawingUrl = result?.drawing?.url ? `${artefactUrl(result.drawing.url)}?v=${encodeURIComponent(result.drawing.drawing_id)}` : null;
+  const ifcUrl = result?.ifc?.url ? `${artefactUrl(result.ifc.url)}?v=${encodeURIComponent(result.model.model_id)}` : null;
+
+  const elements = useMemo(() => {
+    if (!result?.model) return [];
+    const list = result.model.elements || [];
+    if (list.length) return list;
+    // /generate returns statistics rather than every element; the preview from
+    // /generators carries the element list.
+    return spec?.canonical_preview?.elements || [];
+  }, [result, spec]);
+
+  const elementRows = useMemo(() => {
+    const guids = result?.ifc?.guids || {};
+    const entityLinks = links?.elements || {};
+    return elements.map((element) => ({
+      id: element.id,
+      name: element.name || element.role || element.id,
+      ifcClass: element.ifc_class,
+      guid: guids[element.id] || null,
+      handles: (entityLinks[element.id] || []).map((link) => link.handle),
+      warnings: element.validation?.warnings || element.warnings || [],
+    }));
+  }, [elements, result, links]);
+
+  const focusElement = useCallback((row) => {
+    setSelectedElementId(row.id);
+    if (row.handles?.length) setFocusHandle(row.handles[0]);
+    if (row.guid) setFocusGuid(row.guid);
+  }, []);
+
+  return (
+    <div className="flex flex-col w-full h-full bg-[#181818] text-[#e5eaf3] overflow-hidden">
+      {/* ---- header ------------------------------------------------------ */}
+      <header className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#1d1e1f] border-b border-[#4c4d4f] shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <Layers className="w-4 h-4 text-[#409eff]" />
+          <h1 className="text-[13px] font-medium">CAD · BIM · IFC workbench</h1>
+          <span className="text-[10px] text-[#909399]">
+            generators → canonical model → DXF + IFC → mapping
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {health && (
+            <span className="flex items-center gap-1 text-[10px] text-[#909399]">
+              <Database className="w-3 h-3" />
+              IfcOpenShell {health.ifcopenshell?.available ? 'ok' : 'missing'}
+              {health.ifcopenshell?.available ? ` · ${health.ifcopenshell.schema}` : ''}
+              {` · ezdxf ${health.ezdxf?.version || '?'}`}
+            </span>
+          )}
+          <a
+            href="/visualise"
+            className="flex items-center gap-1 px-2 py-1 text-[11px] bg-[#262727] hover:bg-[#303030] border border-[#4c4d4f] rounded"
+            title="The existing React Three Fiber route, unchanged"
+          >
+            <ExternalLink className="w-3 h-3" />
+            <span>/visualise</span>
+          </a>
+        </div>
+      </header>
+
+      {healthError && (
+        <div className="px-3 py-2 bg-rose-950/60 border-b border-rose-800 text-[11px] text-rose-200 flex items-start gap-2">
+          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span>{healthError}</span>
+        </div>
+      )}
+
+      <div className="flex flex-1 min-h-0">
+        {/* ---- generator panel ------------------------------------------- */}
+        <aside className="w-[290px] shrink-0 border-r border-[#4c4d4f] bg-[#1a1b1c] overflow-y-auto">
+          <div className="px-3 py-2 border-b border-[#4c4d4f]">
+            <div className="text-[10px] uppercase tracking-wide text-[#909399]">
+              Engineering generator
+            </div>
+            <select
+              value={generatorKey}
+              onChange={(event) => selectGenerator(event.target.value)}
+              className="mt-1 w-full px-2 py-1 text-[11px] bg-[#141414] border border-[#4c4d4f] rounded text-[#e5eaf3]"
+            >
+              {generators.map((entry) => (
+                <option key={entry.key} value={entry.key}>
+                  {entry.label}
+                </option>
+              ))}
+              {!generators.length && <option value="beam">beam (backend offline)</option>}
+            </select>
+            {spec && (
+              <p className="mt-1 text-[10px] text-[#909399] leading-snug">{spec.description}</p>
+            )}
+            {spec && (
+              <div className="mt-1 flex items-center gap-1 text-[10px] text-[#909399]">
+                <FileCode2 className="w-3 h-3" />
+                <span>
+                  {spec.drawing_number} · {spec.scale} · views {spec.views.join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {spec && (
+            <div className="px-3 py-2 border-b border-[#4c4d4f]">
+              <div className="flex items-center justify-between">
+                <div className="text-[10px] uppercase tracking-wide text-[#909399]">
+                  Parameters ({spec.parameters.filter((p) => p.editable !== false).length})
+                </div>
+                <button
+                  onClick={resetParams}
+                  className="text-[10px] text-[#409eff] hover:underline"
+                >
+                  reset
+                </button>
+              </div>
+              <div className="mt-1 max-h-[46vh] overflow-y-auto pr-1">
+                {spec.parameters.map((item) => (
+                  <ParamInput
+                    key={item.name}
+                    item={item}
+                    value={params[item.name]}
+                    onChange={setParam}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="px-3 py-2 space-y-1.5">
+            <button
+              onClick={runGenerate}
+              disabled={busy || !spec}
+              className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-medium bg-[#409eff] hover:bg-[#66b1ff] disabled:opacity-50 text-white rounded"
+            >
+              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              <span>Generate DXF + IFC</span>
+            </button>
+            <button
+              onClick={runSeptic}
+              disabled={busy}
+              className="w-full flex items-center justify-center gap-1.5 px-2 py-1 text-[10px] bg-[#262727] hover:bg-[#303030] disabled:opacity-50 border border-[#4c4d4f] rounded"
+              title="The earlier septic-tank pipeline, kept working"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Regenerate septic demo</span>
+            </button>
+          </div>
+
+          {result && (
+            <div className="px-3 py-2 border-t border-[#4c4d4f] text-[10px] text-[#909399] space-y-1">
+              <div className="uppercase tracking-wide">Current artefacts</div>
+              <div>drawing: {result.drawing?.drawing_id}</div>
+              <div>model: {result.model?.model_id}</div>
+              <div>links: {result.mapping?.entity_links?.link_count ?? 0}</div>
+              {result.ifc?.classes?.length ? (
+                <div>ifc: {result.ifc.classes.join(', ')}</div>
+              ) : null}
+              {result.model?.elements_with_warnings > 0 && (
+                <div className="text-amber-300">
+                  {result.model.elements_with_warnings} element(s) carry modelling warnings
+                </div>
+              )}
+              <div className="flex flex-wrap gap-1 pt-1">
+                {result.drawing?.url && (
+                  <a
+                    href={artefactUrl(result.drawing.url)}
+                    download
+                    className="flex items-center gap-1 px-1.5 py-0.5 bg-[#262727] border border-[#4c4d4f] rounded hover:bg-[#303030]"
+                  >
+                    <Download className="w-3 h-3" /> DXF
+                  </a>
+                )}
+                {result.ifc?.url && (
+                  <a
+                    href={artefactUrl(result.ifc.url)}
+                    download
+                    className="flex items-center gap-1 px-1.5 py-0.5 bg-[#262727] border border-[#4c4d4f] rounded hover:bg-[#303030]"
+                  >
+                    <Download className="w-3 h-3" /> IFC
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </aside>
+
+        {/* ---- viewers --------------------------------------------------- */}
+        <main className="flex-1 flex flex-col min-w-0 min-h-0">
+          <div className="flex items-center gap-1 px-2 py-1 bg-[#1d1e1f] border-b border-[#4c4d4f] shrink-0">
+            {TABS.map((entry) => (
+              <button
+                key={entry.id}
+                onClick={() => setTab(entry.id)}
+                className={`px-2.5 py-1 text-[11px] rounded ${
+                  tab === entry.id
+                    ? 'bg-[#409eff] text-white'
+                    : 'bg-[#262727] hover:bg-[#303030] border border-[#4c4d4f]'
+                }`}
+              >
+                {entry.label}
+              </button>
+            ))}
+            <div className="flex-1" />
+            {result?.drawing?.drawing_number && (
+              <span className="text-[10px] text-[#909399]">
+                {result.drawing.drawing_number} · {result.drawing.drawing_title}
+              </span>
+            )}
+          </div>
+
+          <div className="flex-1 min-h-0">
+            {tab === 'cad' && (
+              <Suspense fallback={<ViewerFallback label="MLightCAD" />}>
+                <CadDxfViewer
+                  dxfUrl={drawingUrl}
+                  focusHandle={focusHandle}
+                  onStatus={({ message: statusMessage }) => setMessage(statusMessage)}
+                  onLoaded={(info) =>
+                    setMessage(
+                      `MLightCAD parsed ${info.fileName}: ${info.entityCount} entities, ` +
+                        `${info.layers.length} layers in ${info.durationMs} ms`
+                    )
+                  }
+                />
+              </Suspense>
+            )}
+            {tab === 'bim' && (
+              <Suspense fallback={<ViewerFallback label="That Open Components" />}>
+                <ThatOpenBimViewer
+                  ifcUrl={ifcUrl}
+                  elements={elements}
+                  focusGuid={focusGuid}
+                  onStatus={({ message: statusMessage }) => setMessage(statusMessage)}
+                  onSelect={(selection) => {
+                    if (selection?.element) setSelectedElementId(selection.element.id);
+                  }}
+                />
+              </Suspense>
+            )}
+            {tab === 'ifc' && (
+              <Suspense fallback={<ViewerFallback label="web-ifc" />}>
+                <IfcBimViewer
+                  ifcUrl={ifcUrl}
+                  onStatus={({ message: statusMessage }) => setMessage(statusMessage)}
+                />
+              </Suspense>
+            )}
+            {tab === 'existing' && (
+              <div className="p-4 text-[12px] text-[#c8c9cc] space-y-2">
+                <p>
+                  The application&apos;s original three-dimensional workflow is a separate
+                  React Three Fiber route and has not been modified, replaced or wrapped by
+                  this workbench.
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-[11px] text-[#909399]">
+                  <li>
+                    <a className="text-[#409eff] hover:underline" href="/visualise">
+                      /visualise
+                    </a>{' '}
+                    — the R3F visualiser with its generator registry (QS and RC scenes)
+                  </li>
+                  <li>
+                    <a className="text-[#409eff] hover:underline" href="/drawing">
+                      /drawing
+                    </a>{' '}
+                    — the existing React Konva 2D authoring page
+                  </li>
+                </ul>
+                <p className="text-[11px] text-[#909399]">
+                  The BIM viewer above runs in its own container with its own renderer, so
+                  the two stacks never share a canvas. They share only the canonical
+                  engineering model and the identity mapping.
+                </p>
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* ---- identity / mapping panel ---------------------------------- */}
+        <aside className="w-[320px] shrink-0 border-l border-[#4c4d4f] bg-[#1a1b1c] overflow-y-auto">
+          <div className="px-3 py-2 border-b border-[#4c4d4f]">
+            <div className="flex items-center gap-1.5">
+              <Link2 className="w-3.5 h-3.5 text-[#409eff]" />
+              <span className="text-[10px] uppercase tracking-wide text-[#909399]">
+                Canonical elements
+              </span>
+            </div>
+            {!elementRows.length && (
+              <p className="mt-1 text-[11px] text-[#909399]">
+                Generate a drawing to populate the engineering model.
+              </p>
+            )}
+            <ul className="mt-1 space-y-1">
+              {elementRows.map((row) => (
+                <li key={row.id}>
+                  <button
+                    onClick={() => focusElement(row)}
+                    className={`w-full text-left px-2 py-1 rounded border ${
+                      selectedElementId === row.id
+                        ? 'border-[#409eff] bg-[#1f2b3a]'
+                        : 'border-[#333] bg-[#202122] hover:bg-[#262727]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[11px] truncate">{row.name}</span>
+                      <Badge status={row.ifcClass ? 'ok' : 'stale'}>
+                        {row.ifcClass || 'unmapped'}
+                      </Badge>
+                    </div>
+                    <div className="text-[9px] text-[#909399] break-all">{row.id}</div>
+                    <div className="text-[9px] text-[#909399] break-all">
+                      guid {row.guid || '—'}
+                    </div>
+                    <div className="text-[9px] text-[#909399]">
+                      {row.handles.length} CAD entit{row.handles.length === 1 ? 'y' : 'ies'}
+                      {row.handles.length ? `: ${row.handles.slice(0, 4).join(', ')}` : ''}
+                      {row.handles.length > 4 ? '…' : ''}
+                    </div>
+                    {row.warnings.length > 0 && (
+                      <div className="mt-0.5 flex items-start gap-1 text-[9px] text-amber-300">
+                        <AlertTriangle className="w-2.5 h-2.5 mt-0.5 shrink-0" />
+                        <span>{row.warnings[0]}</span>
+                      </div>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="px-3 py-2 border-b border-[#4c4d4f]">
+            <div className="text-[10px] uppercase tracking-wide text-[#909399]">
+              Reconcile CAD edits
+            </div>
+            <p className="mt-1 text-[10px] text-[#909399]">
+              Export the edited DXF from the CAD tab, then upload it here. Only differences
+              are reported; the engineering model is never changed automatically.
+            </p>
+            <div className="mt-1 flex gap-1">
+              <button
+                onClick={() => uploadRef.current?.click()}
+                disabled={busy || !result}
+                className="flex-1 flex items-center justify-center gap-1 px-2 py-1 text-[10px] bg-[#262727] hover:bg-[#303030] disabled:opacity-50 border border-[#4c4d4f] rounded"
+              >
+                <Upload className="w-3 h-3" /> Upload edited DXF
+              </button>
+              <input
+                ref={uploadRef}
+                type="file"
+                accept=".dxf"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = '';
+                  if (file) runReconcile(file);
+                }}
+              />
+              <button
+                onClick={() => runReconcile(null)}
+                disabled={busy || !result}
+                className="px-2 py-1 text-[10px] bg-[#262727] hover:bg-[#303030] disabled:opacity-50 border border-[#4c4d4f] rounded"
+                title="Re-read the drawing currently in the store"
+              >
+                Re-scan
+              </button>
+            </div>
+            {reconcileResult && (
+              <div className="mt-2 text-[10px] space-y-1">
+                <div className="flex items-center gap-1 font-medium">
+                  {reconcileResult.requires_reconciliation ? (
+                    <>
+                      <XCircle className="w-3 h-3 text-amber-400" />
+                      <span className="text-amber-300">Drift detected</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span className="text-emerald-300">No drift</span>
+                    </>
+                  )}
+                  {reconcileResult.drawing?.uploaded && (
+                    <Badge status="new">uploaded</Badge>
+                  )}
+                </div>
+                <ul className="space-y-0.5">
+                  {Object.entries(reconcileResult.summary || {}).map(([key, value]) => (
+                    <li key={key} className="flex justify-between gap-2">
+                      <span className="text-[#909399]">{key}</span>
+                      <span>{value}</span>
+                    </li>
+                  ))}
+                </ul>
+                {reconcileResult.missing?.length > 0 && (
+                  <div>
+                    <div className="text-rose-300">missing entities</div>
+                    <div className="text-[#909399] break-all">
+                      {reconcileResult.missing
+                        .slice(0, 6)
+                        .map((item) => `${item.handle} (${item.internal_id})`)
+                        .join(', ')}
+                    </div>
+                  </div>
+                )}
+                {reconcileResult.rehandled?.length > 0 && (
+                  <div>
+                    <div className="text-sky-300">re-handled (identity kept)</div>
+                    <div className="text-[#909399] break-all">
+                      {reconcileResult.rehandled
+                        .slice(0, 6)
+                        .map((item) => `${item.old_handle}→${item.new_handle}`)
+                        .join(', ')}
+                    </div>
+                  </div>
+                )}
+                {reconcileResult.edited?.length > 0 && (
+                  <div>
+                    <div className="text-amber-300">edited geometry</div>
+                    <div className="text-[#909399] break-all">
+                      {reconcileResult.edited.slice(0, 6).map((item) => item.handle).join(', ')}
+                    </div>
+                  </div>
+                )}
+                {reconcileResult.unmapped_entities?.length > 0 && (
+                  <div>
+                    <div className="text-[#909399]">
+                      unmapped entities (not guessed): {reconcileResult.unmapped_entities.length}
+                    </div>
+                  </div>
+                )}
+                {reconcileResult.unknown_element_ids?.length > 0 && (
+                  <div>
+                    <div className="text-rose-300">unknown element ids</div>
+                    <div className="text-[#909399] break-all">
+                      {reconcileResult.unknown_element_ids.join(', ')}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="px-3 py-2 text-[10px] text-[#909399]">
+            <div className="uppercase tracking-wide">Backend</div>
+            <div className="break-all">{API_BASE}/api/cad-ifc</div>
+            {result?.validation && (
+              <div className="mt-1 space-y-0.5">
+                <div>
+                  canonical schema:{' '}
+                  {result.validation.canonical?.ok ? (
+                    <span className="text-emerald-400">valid</span>
+                  ) : (
+                    <span className="text-rose-400">invalid</span>
+                  )}
+                </div>
+                <div>
+                  IfcOpenShell validator:{' '}
+                  {result.validation.ifc_schema?.ok ? (
+                    <span className="text-emerald-400">0 statements</span>
+                  ) : (
+                    <span className="text-rose-400">
+                      {result.validation.ifc_schema?.statement_count} statements
+                    </span>
+                  )}
+                </div>
+                <div>
+                  DXF units:{' '}
+                  {result.validation.dxf_units?.ok ? (
+                    <span className="text-emerald-400">mm ($INSUNITS=4)</span>
+                  ) : (
+                    <span className="text-rose-400">mismatch</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {/* ---- status bar --------------------------------------------------- */}
+      <footer className="px-3 py-1 bg-[#1d1e1f] border-t border-[#4c4d4f] text-[10px] shrink-0">
+        {error ? (
+          <span className="flex items-start gap-1 text-rose-300">
+            <XCircle className="w-3 h-3 mt-0.5 shrink-0" />
+            <span>{error}</span>
+          </span>
+        ) : (
+          <span className="text-[#909399] truncate block">{message || 'Ready.'}</span>
+        )}
+      </footer>
+    </div>
   );
 }

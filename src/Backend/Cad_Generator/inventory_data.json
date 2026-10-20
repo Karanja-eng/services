@@ -1,0 +1,2168 @@
+{
+  "files (2)": {
+    "json": {
+      "02_engineering_knowledge.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "scope",
+          "reinforcement_notation",
+          "reinforcement_layering_notation",
+          "bar_mark_conventions",
+          "schedule_reference_numbering",
+          "bar_group_bar_marks_for_separate_drawings",
+          "straight_bar_maximum_lengths",
+          "reinforcement_grades",
+          "fabric_reinforcement",
+          "beam_column_intersection_rules",
+          "external_beam_column_intersection",
+          "flexible_detailing",
+          "preformed_cages",
+          "holes_in_elements",
+          "top_bottom_separate_drawings",
+          "reinforcement_cover_tolerances",
+          "section_viewing_directions",
+          "flat_slab_reinforcement_areas_example",
+          "pile_cap_example"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "scope": {
+            "type": "str"
+          },
+          "reinforcement_notation": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "standard_description_sequence",
+              "example",
+              "example_decoded",
+              "source",
+              "status"
+            ]
+          },
+          "reinforcement_layering_notation": {
+            "type": "dict",
+            "count": 11,
+            "sample": [
+              "far_face_outer",
+              "far_face_second",
+              "near_face_outer",
+              "near_face_second",
+              "bottom_face_outer",
+              "bottom_face_second",
+              "top_face_outer",
+              "top_face_second"
+            ]
+          },
+          "bar_mark_conventions": {
+            "type": "dict",
+            "count": 7,
+            "sample": [
+              "rule_1",
+              "rule_2",
+              "rule_3",
+              "rule_4",
+              "rule_5",
+              "source",
+              "status"
+            ]
+          },
+          "schedule_reference_numbering": {
+            "type": "dict",
+            "count": 7,
+            "sample": [
+              "format",
+              "example",
+              "rule_zeros",
+              "rule_uniqueness",
+              "bar_schedule_standard",
+              "source",
+              "status"
+            ]
+          },
+          "bar_group_bar_marks_for_separate_drawings": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "bottom_reinforcement",
+              "top_reinforcement",
+              "note",
+              "source",
+              "status"
+            ]
+          },
+          "straight_bar_maximum_lengths": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "12mm_and_over",
+              "10mm_and_less",
+              "source",
+              "status"
+            ]
+          },
+          "reinforcement_grades": {
+            "type": "dict",
+            "count": 7,
+            "sample": [
+              "grade_500A",
+              "grade_500B",
+              "grade_500C",
+              "mild_steel_grade_250",
+              "standard",
+              "source",
+              "status"
+            ]
+          },
+          "fabric_reinforcement": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "standard",
+              "scheduling",
+              "where_same_fabric",
+              "where_fabric_type_varies",
+              "sheet_count",
+              "layering_avoidance",
+              "source",
+              "status"
+            ]
+          },
+          "beam_column_intersection_rules": {
+            "type": "dict",
+            "count": 13,
+            "sample": [
+              "column_bar_link_retention",
+              "column_bars_through_junction",
+              "bottom_span_bars_at_column",
+              "link_hanger_bars_at_column",
+              "top_support_bars_primary_over_secondary",
+              "continuity_through_column",
+              "vibrator_access",
+              "cross_ties"
+            ]
+          },
+          "external_beam_column_intersection": {
+            "type": "dict",
+            "count": 2,
+            "sample": [
+              "u_bars",
+              "l_bars"
+            ]
+          },
+          "flexible_detailing": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "definition",
+              "purpose",
+              "example",
+              "source",
+              "status"
+            ]
+          },
+          "preformed_cages": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "advantages",
+              "notes",
+              "source",
+              "status"
+            ]
+          },
+          "holes_in_elements": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "not_shown_on_reinforcement_drawings",
+              "must_be_shown",
+              "source",
+              "status"
+            ]
+          },
+          "top_bottom_separate_drawings": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "rule",
+              "source",
+              "status"
+            ]
+          },
+          "reinforcement_cover_tolerances": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "rule",
+              "schedule_dimensions_for_bars_between_faces",
+              "note_actual_bar_size",
+              "source",
+              "status"
+            ]
+          },
+          "section_viewing_directions": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "beams",
+              "columns",
+              "rule",
+              "source",
+              "status"
+            ]
+          },
+          "flat_slab_reinforcement_areas_example": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "note",
+              "minimum_area_mm2",
+              "column_strip_areas_mm2",
+              "corner_column_area_mm2",
+              "high_load_area_mm2",
+              "special_area_mm2",
+              "interpretation",
+              "status"
+            ]
+          },
+          "pile_cap_example": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "bars",
+              "source",
+              "status"
+            ]
+          }
+        }
+      },
+      "03_detailing_rules.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "rule_type",
+          "decision_rules",
+          "mandatory_drawing_checks"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "rule_type": {
+            "type": "str"
+          },
+          "decision_rules": {
+            "type": "list",
+            "count": 22,
+            "item_keys": [
+              "id",
+              "name",
+              "condition",
+              "action",
+              "source",
+              "status",
+              "constraint_type"
+            ]
+          },
+          "mandatory_drawing_checks": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "source",
+              "checks",
+              "status"
+            ]
+          }
+        }
+      },
+      "04_parameters.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "drawing_sheet_sizes",
+          "line_thicknesses_mm",
+          "recommended_scales",
+          "dimension_units",
+          "reinforcement_parameters",
+          "bar_length_limits",
+          "hole_thresholds_for_trimming",
+          "grid_notation",
+          "reinforcement_material",
+          "information_panel_contents"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "drawing_sheet_sizes": {
+            "type": "dict",
+            "count": 12,
+            "sample": [
+              "A0",
+              "A1",
+              "A2",
+              "A3",
+              "A4",
+              "recommended_GA",
+              "recommended_details",
+              "border_filing_side_mm"
+            ]
+          },
+          "line_thicknesses_mm": {
+            "type": "dict",
+            "count": 9,
+            "sample": [
+              "concrete_outline_GA",
+              "concrete_outline_rebar_drawing",
+              "main_reinforcing_bar",
+              "links_min",
+              "links_max",
+              "dimension_lines",
+              "centre_lines",
+              "source"
+            ]
+          },
+          "recommended_scales": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "general_arrangements",
+              "wall_and_slab_detail",
+              "beam_and_column_elevations",
+              "beam_and_column_sections",
+              "larger_scales_preferred_if_needed",
+              "difficult_junctions_sketch_scale_min",
+              "source",
+              "status"
+            ]
+          },
+          "dimension_units": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "site_layouts_and_levels",
+              "reinforcement_detailing_and_small_sections",
+              "millimetre_suffix_required",
+              "rounding",
+              "source",
+              "status"
+            ]
+          },
+          "reinforcement_parameters": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "column_bar_spacing_link_retention_threshold_mm",
+              "vibrator_access_per_beam_width_mm",
+              "cross_tie_spacing_mm",
+              "max_link_free_height_mm",
+              "column_crank_ratio",
+              "column_crank_offset_typical_mm",
+              "source",
+              "status"
+            ]
+          },
+          "bar_length_limits": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "12mm_diameter_and_above_max_length_m",
+              "10mm_diameter_and_below_max_length_m",
+              "source",
+              "status"
+            ]
+          },
+          "hole_thresholds_for_trimming": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "circular_not_shown_on_rebar_dwg_max_dia_mm",
+              "rectangular_not_shown_on_rebar_dwg_max_size_mm",
+              "source",
+              "status"
+            ]
+          },
+          "grid_notation": {
+            "type": "dict",
+            "count": 7,
+            "sample": [
+              "one_direction",
+              "other_direction",
+              "start_corner",
+              "supplementary_grids",
+              "beam_reference_format",
+              "source",
+              "status"
+            ]
+          },
+          "reinforcement_material": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "standard_grade",
+              "standard",
+              "certification_body_UK",
+              "yield_strength_Nmm2",
+              "stainless_steel_reference",
+              "source"
+            ]
+          },
+          "information_panel_contents": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "required_items",
+              "notes_on_rebar_drawings",
+              "location",
+              "source",
+              "status"
+            ]
+          }
+        }
+      },
+      "05_relationships.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "structural_relationships",
+          "information_flow_relationships"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "structural_relationships": {
+            "type": "list",
+            "count": 11,
+            "item_keys": [
+              "subject",
+              "predicate",
+              "object",
+              "type",
+              "detailing_consequence",
+              "source"
+            ]
+          },
+          "information_flow_relationships": {
+            "type": "list",
+            "count": 2,
+            "item_keys": [
+              "from",
+              "to",
+              "via",
+              "must_include"
+            ]
+          }
+        }
+      },
+      "06_drawing_conventions.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "reinforcement_notation_on_drawings",
+          "layer_notation",
+          "line_types",
+          "plan_view_conventions",
+          "elevation_conventions",
+          "section_conventions",
+          "dimension_placement",
+          "levels_notation",
+          "holes_on_drawings",
+          "pockets_and_recesses",
+          "joints_on_drawings",
+          "steps_in_level",
+          "framing_plan_notation",
+          "checking_colour_system",
+          "abbreviations",
+          "bar_identification_visual",
+          "typical_drawing_views_by_member"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "reinforcement_notation_on_drawings": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "format",
+              "fields",
+              "full_example",
+              "full_example_decoded",
+              "note_beams_columns",
+              "source"
+            ]
+          },
+          "layer_notation": {
+            "type": "dict",
+            "count": 10,
+            "sample": [
+              "B1",
+              "B2",
+              "T1",
+              "T2",
+              "F1",
+              "F2",
+              "N1",
+              "N2"
+            ]
+          },
+          "line_types": {
+            "type": "dict",
+            "count": 12,
+            "sample": [
+              "concrete_outlines",
+              "main_reinforcing_bars",
+              "links",
+              "dimension_lines",
+              "centre_lines",
+              "members_behind_cut",
+              "members_in_cutting_plane",
+              "lower_column_profile_on_plan"
+            ]
+          },
+          "plan_view_conventions": {
+            "type": "dict",
+            "count": 7,
+            "sample": [
+              "support_below",
+              "section_position",
+              "span_direction_slab",
+              "column_size_notation",
+              "beam_notation",
+              "downstand_beam_soffit",
+              "source"
+            ]
+          },
+          "elevation_conventions": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "section_position",
+              "members_in_cut",
+              "connecting_members_behind",
+              "source"
+            ]
+          },
+          "section_conventions": {
+            "type": "dict",
+            "count": 7,
+            "sample": [
+              "content",
+              "cut_member_shading",
+              "beam_section_direction",
+              "column_section_direction",
+              "placement",
+              "cross_sections_of_rebar",
+              "source"
+            ]
+          },
+          "dimension_placement": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "reading_direction",
+              "placement",
+              "kept_clear_of",
+              "on_GA",
+              "on_rebar_drawing",
+              "source"
+            ]
+          },
+          "levels_notation": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "SSL",
+              "FFL",
+              "EL",
+              "units",
+              "on_plan",
+              "on_section",
+              "both_SSL_and_FFL",
+              "source"
+            ]
+          },
+          "holes_on_drawings": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "identification",
+              "groups_of_holes",
+              "hole_through_beam_or_wall",
+              "hole_below_section",
+              "large_or_complex_holes",
+              "source"
+            ]
+          },
+          "pockets_and_recesses": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "area_identification",
+              "small_pockets",
+              "dimensioning",
+              "source"
+            ]
+          },
+          "joints_on_drawings": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "plan",
+              "section_for_clarification",
+              "source"
+            ]
+          },
+          "steps_in_level": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "plan_representation",
+              "splay_on_soffit",
+              "source"
+            ]
+          },
+          "framing_plan_notation": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "column_ref",
+              "beam_ref",
+              "beams_on_grid_lines",
+              "source"
+            ]
+          },
+          "checking_colour_system": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "correct",
+              "additions_and_corrections",
+              "source"
+            ]
+          },
+          "abbreviations": {
+            "type": "dict",
+            "count": 17,
+            "sample": [
+              "RC",
+              "blk",
+              "bwk",
+              "drg",
+              "FS",
+              "NTS",
+              "dia_or_phi",
+              "crs"
+            ]
+          },
+          "bar_identification_visual": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "grade_A_500",
+              "grade_B_500",
+              "grade_C_500",
+              "CARES_mark",
+              "UK_country_ribs",
+              "source"
+            ]
+          },
+          "typical_drawing_views_by_member": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "flat_slab",
+              "beam",
+              "column",
+              "staircase",
+              "pile_cap",
+              "foundation_layout",
+              "general_arrangement",
+              "source"
+            ]
+          }
+        }
+      },
+      "07_examples.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "examples"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "examples": {
+            "type": "list",
+            "count": 6,
+            "item_keys": [
+              "id",
+              "name",
+              "source",
+              "type",
+              "structure",
+              "required_areas_mm2_per_mm",
+              "notes",
+              "status"
+            ]
+          }
+        }
+      },
+      "08_diagram_analysis.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "diagrams"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "diagrams": {
+            "type": "list",
+            "count": 9,
+            "item_keys": [
+              "figure_number",
+              "caption",
+              "page",
+              "type",
+              "member_types",
+              "elements_visible",
+              "key_spatial_relationships",
+              "DXF_primitives_needed",
+              "status"
+            ]
+          }
+        }
+      },
+      "11_validation_cases.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "validation_cases"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "validation_cases": {
+            "type": "list",
+            "count": 15,
+            "item_keys": [
+              "id",
+              "name",
+              "rule",
+              "input",
+              "expected_output",
+              "regenerated_string"
+            ]
+          }
+        }
+      }
+    },
+    "md": {
+      "01_source_analysis.md": {
+        "bytes": 2309,
+        "headings": [
+          "# 01 SOURCE ANALYSIS",
+          "## Document Details",
+          "## Nature of Content",
+          "## What is NOT in This Extract",
+          "## Significance for the System",
+          "## Fact vs Inference Classification Used"
+        ]
+      },
+      "09_generator_design.md": {
+        "bytes": 5637,
+        "headings": [
+          "# 09 GENERATOR DESIGN \u2014 General Detailing Layer",
+          "## Purpose",
+          "## Architecture",
+          "## Generation Logic for Beam/Column Intersection Drawing",
+          "### INPUT PARAMETERS",
+          "### GENERATION STEPS",
+          "## Key Functions",
+          "## DXF Layer Structure",
+          "## Validation Logic"
+        ]
+      },
+      "12_unresolved_questions.md": {
+        "bytes": 7260,
+        "headings": [
+          "# 12 UNRESOLVED QUESTIONS / INFORMATION GAPS / DEPENDENCIES",
+          "## DEPENDENCIES ON GENERAL DETAILING INFORMATION (Mandatory Section)",
+          "### 1. COVER REQUIREMENTS",
+          "### 2. ANCHORAGE AND DEVELOPMENT LENGTHS",
+          "### 3. LAP LENGTHS",
+          "### 4. FULL BAR BENDING SHAPES (BS 8666 Tables)",
+          "### 5. SECTION 5.15 \u2014 SECONDARY BEAM LEVER ARM CHECK",
+          "### 6. SECTION 5.1.5 \u2014 ACTUAL BAR SIZE vs NOMINAL",
+          "### 7. SECTION 5.2.5 \u2014 LINK BEND RADIUS",
+          "### 8. TABLE 5.5 \u2014 TOLERANCE ALLOWANCES",
+          "### 9. MODEL DETAIL MS2 \u2014 EXTERNAL BEAM/COLUMN WITH L-BARS",
+          "### 10. GENERAL CURTAILMENT RULES"
+        ]
+      }
+    },
+    "py": {
+      "10_generator.py": {
+        "bytes": 31256,
+        "classes": [
+          "BarDescription:",
+          "DrawingPanelA:",
+          "DrawingSheet:",
+          "BarScheduleEntry:",
+          "BarSchedule:",
+          "BeamColumnParams:",
+          "BeamColumnIntersectionGenerator:"
+        ],
+        "defs": [
+          "parse_bar_notation",
+          "generate_bar_notation",
+          "check_bar_max_length",
+          "main"
+        ]
+      }
+    },
+    "dxf": {
+      "beam_column_intersection.dxf": {
+        "bytes": 30596
+      }
+    }
+  },
+  "files (4)": {
+    "json": {
+      "02_engineering_knowledge.json": {
+        "type": "dict",
+        "keys": [
+          "material_property_periods",
+          "note_on_H_symbol",
+          "bar_shape_code_catalogue",
+          "general_notes_all_shape_codes",
+          "source_meta"
+        ],
+        "sub_keys": {
+          "material_property_periods": {
+            "type": "list",
+            "count": 5,
+            "item_keys": [
+              "period",
+              "governing_code",
+              "note",
+              "design_strength_formula",
+              "grades",
+              "source"
+            ]
+          },
+          "note_on_H_symbol": {
+            "type": "str"
+          },
+          "bar_shape_code_catalogue": {
+            "type": "list",
+            "count": 35,
+            "item_keys": [
+              "shape_code",
+              "description",
+              "length_formula",
+              "dims",
+              "constraints"
+            ]
+          },
+          "general_notes_all_shape_codes": {
+            "type": "list",
+            "count": 8
+          },
+          "source_meta": {
+            "type": "dict",
+            "count": 2,
+            "sample": [
+              "appendix",
+              "pages"
+            ]
+          }
+        }
+      },
+      "03_detailing_rules.json": {
+        "type": "dict",
+        "keys": [
+          "table_B1_minimum_scheduling_radius_and_end_projection",
+          "bar_areas_by_number_and_size",
+          "bar_areas_by_pitch_and_size",
+          "bar_weights_by_pitch_and_size",
+          "fabric_types_BS4483",
+          "effective_anchorage_length_L_bars",
+          "effective_anchorage_length_U_bars",
+          "minimum_overall_depth_U_bar_end_shapes",
+          "large_diameter_bends_minimum_mandrel_size",
+          "constraint_language_summary"
+        ],
+        "sub_keys": {
+          "table_B1_minimum_scheduling_radius_and_end_projection": {
+            "type": "dict",
+            "count": 7,
+            "sample": [
+              "description",
+              "units",
+              "columns",
+              "notes",
+              "rows",
+              "additional_notes",
+              "source"
+            ]
+          },
+          "bar_areas_by_number_and_size": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "description",
+              "units",
+              "bar_sizes_mm",
+              "rows_by_number",
+              "perimeter_mm",
+              "weight_kg_per_m",
+              "derivable",
+              "source"
+            ]
+          },
+          "bar_areas_by_pitch_and_size": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "description",
+              "units",
+              "bar_sizes_mm",
+              "rows_by_pitch_mm",
+              "derivable",
+              "source"
+            ]
+          },
+          "bar_weights_by_pitch_and_size": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "description",
+              "units",
+              "bar_sizes_mm",
+              "rows_by_pitch_mm",
+              "source"
+            ]
+          },
+          "fabric_types_BS4483": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "description",
+              "note",
+              "stock_sheet_size",
+              "square_mesh",
+              "structural_mesh",
+              "long_mesh",
+              "wrapping_mesh",
+              "source"
+            ]
+          },
+          "effective_anchorage_length_L_bars": {
+            "type": "dict",
+            "count": 9,
+            "sample": [
+              "description",
+              "formula",
+              "variables",
+              "units",
+              "hook_lead_length_at_start",
+              "bar_sizes_mm",
+              "rows_by_mandrel_to_bar_ratio",
+              "note"
+            ]
+          },
+          "effective_anchorage_length_U_bars": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "description",
+              "formula",
+              "variables",
+              "units",
+              "hook_lead_length_at_start",
+              "bar_sizes_mm",
+              "rows_by_mandrel_to_bar_ratio",
+              "source"
+            ]
+          },
+          "minimum_overall_depth_U_bar_end_shapes": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "description",
+              "mandrel_diameter_rule",
+              "hook_shape",
+              "trombone_shape",
+              "fy_MPa",
+              "source"
+            ]
+          },
+          "large_diameter_bends_minimum_mandrel_size": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "description",
+              "formula",
+              "precomputed_tables"
+            ]
+          },
+          "constraint_language_summary": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "mandatory_shall",
+              "recommendation_preferable",
+              "practical_limits_may"
+            ]
+          }
+        }
+      },
+      "06_drawing_conventions.json": {
+        "type": "dict",
+        "keys": [
+          "bar_type_drawing_symbols",
+          "bar_callout_notation_general",
+          "bar_bending_schedule_fields",
+          "shape_diagram_drawing_conventions",
+          "cross_reference_to_member_chapter_notation"
+        ],
+        "sub_keys": {
+          "bar_type_drawing_symbols": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "description",
+              "symbols_seen",
+              "caution"
+            ]
+          },
+          "bar_callout_notation_general": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "pattern_observed_in_member_chapter",
+              "example",
+              "example_with_spacing",
+              "wall_zone_suffix_example",
+              "source_note"
+            ]
+          },
+          "bar_bending_schedule_fields": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "description",
+              "fields",
+              "fact_status"
+            ]
+          },
+          "shape_diagram_drawing_conventions": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "dimension_letter_convention",
+              "bend_geometry_symbols",
+              "special_shape_conventions"
+            ]
+          },
+          "cross_reference_to_member_chapter_notation": {
+            "type": "dict",
+            "count": 1,
+            "sample": [
+              "note_labels_seen_in_member_chapter"
+            ]
+          }
+        }
+      },
+      "08_diagram_analysis.json": {
+        "type": "dict",
+        "keys": [
+          "diagrams",
+          "diagrams_referenced_but_not_reproduced_numerically"
+        ],
+        "sub_keys": {
+          "diagrams": {
+            "type": "list",
+            "count": 6,
+            "item_keys": [
+              "id",
+              "location",
+              "what_it_represents",
+              "cad_recreation_notes",
+              "fact_status"
+            ]
+          },
+          "diagrams_referenced_but_not_reproduced_numerically": {
+            "type": "list",
+            "count": 1,
+            "item_keys": [
+              "id",
+              "location",
+              "what_it_represents",
+              "status"
+            ]
+          }
+        }
+      },
+      "11_validation_cases.json": {
+        "type": "dict",
+        "keys": [
+          "purpose",
+          "cases",
+          "not_independently_verifiable_in_this_pass"
+        ],
+        "sub_keys": {
+          "purpose": {
+            "type": "str"
+          },
+          "cases": {
+            "type": "list",
+            "count": 9,
+            "item_keys": [
+              "test",
+              "function",
+              "expected_source_value_mm",
+              "source",
+              "status"
+            ]
+          },
+          "not_independently_verifiable_in_this_pass": {
+            "type": "list",
+            "count": 1
+          }
+        }
+      }
+    },
+    "md": {
+      "01_source_analysis.md": {
+        "bytes": 4919,
+        "headings": [
+          "# Source Analysis \u2014 Appendices A & B",
+          "## Structure found",
+          "### Appendix A \u2014 Historical reinforcement material properties (pp.168\u2013171)",
+          "### Appendix B \u2014 Bar shape codes and scheduling tables (pp.172\u2013188)",
+          "## Fact vs inference in this analysis",
+          "## Relationship to previously processed chapter (Columns/Walls/Retaining Walls/Foundations/Staircases, pp.88\u2013127)"
+        ]
+      },
+      "04_parameters_relationships_design.md": {
+        "bytes": 5339,
+        "headings": [
+          "# Parameters, Relationships & Generator Design \u2014 Appendices A & B",
+          "## 04. Parametric variables",
+          "### Input parameters (generator/user chooses)",
+          "### Derived parameters (computed from rules)",
+          "### Constraints (must be satisfied)",
+          "## 05. Relationships (this module's objects, for compiler merge)",
+          "## 09. Generator design (see 10_generator.py for implementation)"
+        ]
+      },
+      "12_unresolved_questions.md": {
+        "bytes": 6453,
+        "headings": [
+          "# Information Gaps / Ambiguities & Dependencies \u2014 Appendices A & B",
+          "## Information gaps / ambiguities",
+          "## DEPENDENCIES ON GENERAL DETAILING INFORMATION (external to this appendix)",
+          "## Cross-topic interfaces"
+        ]
+      }
+    },
+    "py": {
+      "10_generator.py": {
+        "bytes": 17281,
+        "classes": [
+          "BarGeometry:"
+        ],
+        "defs": [
+          "table_b1_lookup",
+          "shape_00",
+          "shape_01",
+          "shape_11",
+          "shape_12",
+          "shape_13",
+          "shape_14",
+          "shape_15",
+          "shape_21",
+          "shape_22",
+          "shape_23",
+          "shape_24",
+          "shape_25",
+          "shape_26",
+          "shape_27",
+          "shape_28",
+          "shape_29",
+          "shape_31",
+          "shape_32",
+          "shape_33",
+          "shape_34",
+          "shape_35",
+          "shape_36",
+          "shape_41",
+          "shape_44",
+          "shape_46",
+          "shape_47",
+          "shape_51",
+          "shape_56",
+          "shape_63",
+          "shape_64",
+          "shape_75",
+          "shape_77",
+          "shape_98",
+          "shape_length",
+          "single_bar_area_mm2",
+          "group_area_mm2",
+          "area_per_metre_mm2",
+          "bar_weight_kg_per_m",
+          "l_bar_anchorage_length",
+          "u_bar_anchorage_length",
+          "u_bar_end_mandrel_diameter",
+          "u_bar_min_overall_depth",
+          "large_diameter_bend_mandrel",
+          "governing_bend_mandrel",
+          "fabric_lookup",
+          "material_symbol_lookup"
+        ]
+      }
+    },
+    "dxf": {}
+  },
+  "files (5)": {
+    "json": {
+      "02_engineering_knowledge.json": {
+        "type": "dict",
+        "keys": [
+          "corbels_half_joints_nibs",
+          "prestressed_concrete",
+          "precast_concrete",
+          "water_retaining_structures",
+          "staircases_fragment"
+        ],
+        "sub_keys": {
+          "corbels_half_joints_nibs": {
+            "type": "dict",
+            "count": 12,
+            "sample": [
+              "member_definition",
+              "geometry",
+              "reinforcement_types",
+              "laps",
+              "anchorage_and_development",
+              "spacing",
+              "bar_curtailment",
+              "bar_bending"
+            ]
+          },
+          "prestressed_concrete": {
+            "type": "dict",
+            "count": 13,
+            "sample": [
+              "member_definition",
+              "drawing_requirements_for_prestress_set",
+              "geometry_pretensioned",
+              "geometry_posttensioned_ducts",
+              "nominal_cover_prestressing",
+              "reinforcement_types",
+              "laps",
+              "anchorage_and_development"
+            ]
+          },
+          "precast_concrete": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "member_definition",
+              "key_practice_notes",
+              "transport_limits_UK",
+              "lifting_and_handling",
+              "joints",
+              "durability_special_case"
+            ]
+          },
+          "water_retaining_structures": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "member_definition",
+              "tightness_classes",
+              "cover",
+              "spacing",
+              "prestressed_walls",
+              "circular_tanks",
+              "opening_corners",
+              "joint_types_shown"
+            ]
+          },
+          "staircases_fragment": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "note",
+              "extracted_facts",
+              "dependency"
+            ]
+          }
+        }
+      },
+      "03_detailing_rules.json": {
+        "type": "dict",
+        "keys": [
+          "corbels_half_joints_nibs",
+          "prestressed_concrete",
+          "precast_concrete",
+          "water_retaining_structures",
+          "general_terminology_constraint_map"
+        ],
+        "sub_keys": {
+          "corbels_half_joints_nibs": {
+            "type": "dict",
+            "count": 2,
+            "sample": [
+              "decision_rules",
+              "constraints_by_strength"
+            ]
+          },
+          "prestressed_concrete": {
+            "type": "dict",
+            "count": 1,
+            "sample": [
+              "decision_rules"
+            ]
+          },
+          "precast_concrete": {
+            "type": "dict",
+            "count": 1,
+            "sample": [
+              "decision_rules"
+            ]
+          },
+          "water_retaining_structures": {
+            "type": "dict",
+            "count": 1,
+            "sample": [
+              "decision_rules"
+            ]
+          },
+          "general_terminology_constraint_map": {
+            "type": "dict",
+            "count": 5,
+            "sample": [
+              "shall_must",
+              "should",
+              "may",
+              "not_permitted_avoid",
+              "typical_normal_practice"
+            ]
+          }
+        }
+      },
+      "04_parameters.json": {
+        "type": "dict",
+        "keys": [
+          "corbels_half_joints_nibs",
+          "prestressed_concrete",
+          "precast_concrete",
+          "water_retaining_structures"
+        ],
+        "sub_keys": {
+          "corbels_half_joints_nibs": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "input_parameters",
+              "derived_parameters",
+              "constraints"
+            ]
+          },
+          "prestressed_concrete": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "input_parameters",
+              "derived_parameters",
+              "constraints"
+            ]
+          },
+          "precast_concrete": {
+            "type": "dict",
+            "count": 2,
+            "sample": [
+              "input_parameters",
+              "constraints"
+            ]
+          },
+          "water_retaining_structures": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "input_parameters",
+              "derived_parameters",
+              "constraints"
+            ]
+          }
+        }
+      },
+      "05_relationships.json": {
+        "type": "dict",
+        "keys": [
+          "engineering_object_model",
+          "relationships",
+          "cross_topic_interfaces"
+        ],
+        "sub_keys": {
+          "engineering_object_model": {
+            "type": "dict",
+            "count": 21,
+            "sample": [
+              "Corbel",
+              "HalfJoint",
+              "ContinuousNib",
+              "LongitudinalBar",
+              "Stirrup",
+              "ColumnLink",
+              "LacerBar",
+              "Anchorage"
+            ]
+          },
+          "relationships": {
+            "type": "list",
+            "count": 24
+          },
+          "cross_topic_interfaces": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "Corbel_to_Column",
+              "Nib_to_SupportingBeam",
+              "HalfJoint_to_SupportedMember",
+              "PrestressedSlab_to_Column",
+              "PrestressedElement_to_GeneralDetailing",
+              "WaterRetainingWall_to_Foundation"
+            ]
+          }
+        }
+      },
+      "06_drawing_conventions.json": {
+        "type": "dict",
+        "keys": [
+          "corbels_half_joints_nibs",
+          "prestressed_concrete",
+          "precast_concrete",
+          "water_retaining_structures",
+          "general_notation_observed_across_topics"
+        ],
+        "sub_keys": {
+          "corbels_half_joints_nibs": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "views_used",
+              "labelling_conventions",
+              "dimensioning_practice",
+              "bar_marks_and_schedule"
+            ]
+          },
+          "prestressed_concrete": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "views_used",
+              "tendon_legend_conventions",
+              "bar_mark_schedule_example",
+              "duct_profile_tabulation_convention",
+              "notes_style",
+              "photograph_use"
+            ]
+          },
+          "precast_concrete": {
+            "type": "dict",
+            "count": 1,
+            "sample": [
+              "views_used"
+            ]
+          },
+          "water_retaining_structures": {
+            "type": "dict",
+            "count": 2,
+            "sample": [
+              "views_used",
+              "labelling_conventions"
+            ]
+          },
+          "general_notation_observed_across_topics": {
+            "type": "list",
+            "count": 4
+          }
+        }
+      },
+      "07_examples.json": {
+        "type": "dict",
+        "keys": [
+          "note",
+          "example_1_untensioned_reinforcement_layout_unbonded_slab",
+          "example_2_tendon_profile_numerical_table",
+          "example_3_band_beam_and_slab_layout",
+          "corbels_half_joints_nibs_examples"
+        ],
+        "sub_keys": {
+          "note": {
+            "type": "str"
+          },
+          "example_1_untensioned_reinforcement_layout_unbonded_slab": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "fact_type",
+              "source",
+              "context",
+              "reinforcement_schedule_entries_observed",
+              "engineering_takeaway",
+              "drawing_implication"
+            ]
+          },
+          "example_2_tendon_profile_numerical_table": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "fact_type",
+              "source",
+              "data",
+              "engineering_takeaway"
+            ]
+          },
+          "example_3_band_beam_and_slab_layout": {
+            "type": "dict",
+            "count": 6,
+            "sample": [
+              "fact_type",
+              "source",
+              "context",
+              "key_dimensions_stated",
+              "engineering_takeaway",
+              "caveat"
+            ]
+          },
+          "corbels_half_joints_nibs_examples": {
+            "type": "dict",
+            "count": 1,
+            "sample": [
+              "note"
+            ]
+          }
+        }
+      },
+      "08_diagram_analysis.json": {
+        "type": "dict",
+        "keys": [
+          "diagrams"
+        ],
+        "sub_keys": {
+          "diagrams": {
+            "type": "list",
+            "count": 11,
+            "item_keys": [
+              "id",
+              "member",
+              "caption",
+              "represents",
+              "geometry",
+              "reinforcement",
+              "dimensions_labels",
+              "detailing_principle",
+              "fact_type"
+            ]
+          }
+        }
+      },
+      "11_validation_cases.json": {
+        "type": "dict",
+        "keys": [
+          "purpose",
+          "positive_cases",
+          "negative_cases_should_raise",
+          "generator_smoke_test_result"
+        ],
+        "sub_keys": {
+          "purpose": {
+            "type": "str"
+          },
+          "positive_cases": {
+            "type": "list",
+            "count": 12,
+            "item_keys": [
+              "id",
+              "description",
+              "input",
+              "expected"
+            ]
+          },
+          "negative_cases_should_raise": {
+            "type": "list",
+            "count": 5,
+            "item_keys": [
+              "id",
+              "description",
+              "input",
+              "expected_error"
+            ]
+          },
+          "generator_smoke_test_result": {
+            "type": "dict",
+            "count": 2,
+            "sample": [
+              "status",
+              "note"
+            ]
+          }
+        }
+      }
+    },
+    "md": {
+      "01_source_analysis.md": {
+        "bytes": 3280,
+        "headings": [
+          "# 01 \u2014 Source Analysis",
+          "## Source document",
+          "## Topics contained in this extract (NOT a single member type)",
+          "## Approach taken",
+          "## OCR / scan quality notes"
+        ]
+      },
+      "09_generator_design.md": {
+        "bytes": 4082,
+        "headings": [
+          "# 09 \u2014 Generator Design",
+          "## Scope decision",
+          "## Engineering logic \u2192 drawing logic",
+          "## Object/function architecture",
+          "## Parametric variation",
+          "## Known simplifications (flagged, not hidden)"
+        ]
+      },
+      "12_unresolved_questions.md": {
+        "bytes": 5723,
+        "headings": [
+          "# 12 \u2014 Unresolved Questions / Information Gaps / Dependencies",
+          "## A. General-chapter dependencies (mandatory section per instructions)",
+          "## B. Missing numerical values",
+          "## C. Ambiguous diagrams / geometry not fully recoverable from OCR text alone",
+          "## D. Rules referenced elsewhere requiring another chapter/topic",
+          "## E. Conflicting or unclear statements",
+          "## F. Terminology requiring clarification"
+        ]
+      }
+    },
+    "py": {
+      "10_generator.py": {
+        "bytes": 17313,
+        "classes": [
+          "RuleEngine:",
+          "CorbelGeometry:",
+          "HalfJointGeometry:",
+          "NibGeometry:"
+        ],
+        "defs": [
+          "draw_bar",
+          "draw_link",
+          "add_rebar_callout",
+          "add_dimension",
+          "add_weld_symbol",
+          "add_bend",
+          "add_section_marker",
+          "create_corbel",
+          "create_half_joint",
+          "create_nib",
+          "create_end_block_bursting_zone",
+          "create_duct_profile_table"
+        ]
+      }
+    },
+    "dxf": {
+      "corbels_half_joints_nibs_reference.dxf": {
+        "bytes": 25665
+      }
+    }
+  },
+  "files (6)": {
+    "json": {
+      "ch6_02_engineering_knowledge.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "chapter_5_general",
+          "chapter_6_slabs",
+          "chapter_6_beams",
+          "chapter_6_columns"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "chapter_5_general": {
+            "type": "dict",
+            "count": 20,
+            "sample": [
+              "bar_notation",
+              "preferred_bar_sizes_mm",
+              "non_preferred_sizes_note",
+              "actual_vs_nominal_size_mm",
+              "bar_areas_and_mass",
+              "stock_lengths",
+              "rebending_bars",
+              "large_diameter_bends_required_where"
+            ]
+          },
+          "chapter_6_slabs": {
+            "type": "dict",
+            "count": 15,
+            "sample": [
+              "scope",
+              "concrete_grade_standard",
+              "nominal_cover",
+              "minimum_reinforcement_solid_slab",
+              "minimum_reinforcement_cantilever_slab",
+              "minimum_reinforcement_ribbed_slab",
+              "bar_spacing_slabs",
+              "anchorage_lap_lengths_slab"
+            ]
+          },
+          "chapter_6_beams": {
+            "type": "dict",
+            "count": 13,
+            "sample": [
+              "scope",
+              "concrete_grade_standard",
+              "nominal_cover_beams",
+              "minimum_reinforcement_beams",
+              "bar_spacing_beams",
+              "side_face_bars",
+              "links",
+              "anchorage_lap_lengths_beams"
+            ]
+          },
+          "chapter_6_columns": {
+            "type": "dict",
+            "count": 13,
+            "sample": [
+              "scope",
+              "concrete_grade_min",
+              "column_to_slab_beam_grade_ratio_max",
+              "nominal_cover_columns",
+              "minimum_reinforcement",
+              "maximum_reinforcement",
+              "bar_spacing",
+              "anchorage_lap_columns"
+            ]
+          }
+        }
+      },
+      "ch6_03_detailing_rules.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "general_rules",
+          "slab_rules",
+          "beam_rules",
+          "column_rules"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "general_rules": {
+            "type": "list",
+            "count": 7,
+            "item_keys": [
+              "id",
+              "source",
+              "condition",
+              "action",
+              "constraint_type"
+            ]
+          },
+          "slab_rules": {
+            "type": "list",
+            "count": 12,
+            "item_keys": [
+              "id",
+              "source",
+              "condition",
+              "action",
+              "constraint_type"
+            ]
+          },
+          "beam_rules": {
+            "type": "list",
+            "count": 15,
+            "item_keys": [
+              "id",
+              "source",
+              "condition",
+              "action",
+              "constraint_type"
+            ]
+          },
+          "column_rules": {
+            "type": "list",
+            "count": 10,
+            "item_keys": [
+              "id",
+              "source",
+              "condition",
+              "action",
+              "constraint_type"
+            ]
+          }
+        }
+      },
+      "ch6_04_parameters.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "general_material_parameters",
+          "slab_parameters",
+          "beam_parameters",
+          "column_parameters",
+          "anchorage_lap_parameters"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "general_material_parameters": {
+            "type": "dict",
+            "count": 2,
+            "sample": [
+              "input",
+              "derived"
+            ]
+          },
+          "slab_parameters": {
+            "type": "dict",
+            "count": 4,
+            "sample": [
+              "input",
+              "derived",
+              "constraints",
+              "flat_slab_specific"
+            ]
+          },
+          "beam_parameters": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "input",
+              "derived",
+              "constraints"
+            ]
+          },
+          "column_parameters": {
+            "type": "dict",
+            "count": 3,
+            "sample": [
+              "input",
+              "derived",
+              "constraints"
+            ]
+          },
+          "anchorage_lap_parameters": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "alpha1",
+              "alpha2_straight_tension",
+              "alpha2_other_tension",
+              "alpha3",
+              "alpha4_welded_transverse",
+              "alpha5_transverse_pressure",
+              "alpha6_from_percentage_lapped",
+              "K_values_beams_slabs"
+            ]
+          }
+        }
+      },
+      "ch6_05_relationships.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "structural_object_relationships",
+          "reinforcement_layer_relationships"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "structural_object_relationships": {
+            "type": "list",
+            "count": 44,
+            "item_keys": [
+              "subject",
+              "predicate",
+              "object",
+              "context"
+            ]
+          },
+          "reinforcement_layer_relationships": {
+            "type": "list",
+            "count": 4,
+            "item_keys": [
+              "context",
+              "outer_bottom",
+              "second_bottom",
+              "second_top",
+              "outer_top"
+            ]
+          }
+        }
+      },
+      "ch6_06_drawing_conventions.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "slab_drawing_conventions",
+          "beam_drawing_conventions"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "slab_drawing_conventions": {
+            "type": "dict",
+            "count": 11,
+            "sample": [
+              "layer_notation",
+              "typical_bar_representation_on_plan",
+              "fixing_dimensions",
+              "bars_in_elevation",
+              "bars_of_varying_length",
+              "bars_in_long_panels",
+              "fabric_on_plan",
+              "view_types_slab"
+            ]
+          },
+          "beam_drawing_conventions": {
+            "type": "dict",
+            "count": 8,
+            "sample": [
+              "traditional_method",
+              "representational_method",
+              "broad_beam_method",
+              "link_notation",
+              "u_bar_notation",
+              "link_closer_notation",
+              "te_suffix",
+              "spacer_bar_notation"
+            ]
+          }
+        }
+      },
+      "ch6_07_examples.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "tolerance_examples",
+          "slab_drawing_examples",
+          "beam_drawing_examples",
+          "tying_reinforcement_formulas"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "tolerance_examples": {
+            "type": "list",
+            "count": 3,
+            "item_keys": [
+              "id",
+              "name",
+              "source",
+              "geometry",
+              "analysis",
+              "consequences",
+              "status"
+            ]
+          },
+          "slab_drawing_examples": {
+            "type": "list",
+            "count": 2,
+            "item_keys": [
+              "id",
+              "name",
+              "source",
+              "type",
+              "bars_identified",
+              "bar_notation_examples",
+              "group_counts_in_brackets",
+              "status"
+            ]
+          },
+          "beam_drawing_examples": {
+            "type": "list",
+            "count": 3,
+            "item_keys": [
+              "id",
+              "name",
+              "source",
+              "geometry",
+              "reinforcement",
+              "link_zones",
+              "sections",
+              "status"
+            ]
+          },
+          "tying_reinforcement_formulas": {
+            "type": "list",
+            "count": 3,
+            "item_keys": [
+              "id",
+              "name",
+              "formula",
+              "variables",
+              "location",
+              "source",
+              "status"
+            ]
+          }
+        }
+      },
+      "ch6_08_diagram_analysis.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "diagrams"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "diagrams": {
+            "type": "list",
+            "count": 27,
+            "item_keys": [
+              "figure",
+              "page",
+              "caption",
+              "type",
+              "panels",
+              "key_dimension",
+              "status"
+            ]
+          }
+        }
+      },
+      "ch6_11_validation_cases.json": {
+        "type": "dict",
+        "keys": [
+          "document",
+          "validation_cases"
+        ],
+        "sub_keys": {
+          "document": {
+            "type": "str"
+          },
+          "validation_cases": {
+            "type": "list",
+            "count": 31,
+            "item_keys": [
+              "id",
+              "category",
+              "name",
+              "source",
+              "inputs",
+              "expected"
+            ]
+          }
+        }
+      }
+    },
+    "md": {
+      "ch6_01_source_analysis.md": {
+        "bytes": 4323,
+        "headings": [
+          "# 01 SOURCE ANALYSIS \u2014 Chapters 5 & 6 (Slabs, Beams, Columns partial)",
+          "## Document Details",
+          "## Nature of Content",
+          "## Key Figure List",
+          "## Fact vs Inference Classification"
+        ]
+      },
+      "ch6_09_generator_design.md": {
+        "bytes": 8214,
+        "headings": [
+          "# 09 GENERATOR DESIGN \u2014 Slabs, Beams, Columns",
+          "## Philosophy",
+          "## A. SLAB GENERATOR",
+          "### Inputs",
+          "### Engineering Steps",
+          "### Drawing Steps",
+          "### Key Functions",
+          "## B. BEAM GENERATOR",
+          "### Inputs",
+          "### Engineering Steps",
+          "### Zone Definition",
+          "### Drawing Steps"
+        ]
+      },
+      "ch6_12_unresolved_questions.md": {
+        "bytes": 8013,
+        "headings": [
+          "# 12 UNRESOLVED QUESTIONS / INFORMATION GAPS / DEPENDENCIES",
+          "## MANDATORY: DEPENDENCIES ON GENERAL DETAILING INFORMATION",
+          "## DEPENDENCIES ON OTHER CHAPTER 6 SECTIONS (NOT IN THIS EXTRACT)",
+          "### A. Model Detail MS2A, MS2B, MS2C \u2014 Slab wall connections",
+          "### B. Section 6.5 \u2014 Walls",
+          "### C. Section 6.7 \u2014 Ground beams and foundations",
+          "### D. Section 5.8 \u2014 Equivalent bar size for bundled bars",
+          "### E. EC2 Part 1.2 \u2014 Fire resistance",
+          "### F. Tables at end of manual",
+          "## INFORMATION GAPS AND AMBIGUITIES",
+          "### G1 \u2014 Beam curtailment, \"simplified rules\" detail",
+          "### G2 \u2014 Hanger bar area at internal supports"
+        ]
+      }
+    },
+    "py": {
+      "ch6_10_generator.py": {
+        "bytes": 26510,
+        "classes": [
+          "SlabParams:",
+          "SlabReinforcement:",
+          "BeamParams:",
+          "BeamReinforcement:"
+        ],
+        "defs": [
+          "anchorage_lap",
+          "alpha6",
+          "as_min_slab",
+          "as_min_beam_tension",
+          "setup_layers",
+          "new_doc",
+          "compute_slab_reinforcement",
+          "_ms1_dist_pitch",
+          "draw_slab_elevation",
+          "_add_dim",
+          "compute_beam_reinforcement",
+          "draw_beam_elevation",
+          "_draw_link_zone",
+          "_draw_u_bar",
+          "draw_beam_section",
+          "main"
+        ]
+      }
+    },
+    "dxf": {
+      "slab_beam_generator.dxf": {
+        "bytes": 28818
+      }
+    }
+  }
+}

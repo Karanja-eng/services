@@ -1,0 +1,179 @@
+{
+  "document": "IStructE/Concrete Society SMDS Chapters 1–5 — Drawing Conventions",
+
+  "reinforcement_notation_on_drawings": {
+    "format": "N H D - M - S L",
+    "fields": {
+      "N": "number of bars",
+      "H": "bar type (H = high yield deformed)",
+      "D": "nominal diameter mm",
+      "M": "bar mark",
+      "S": "bar centres/spacing mm",
+      "L": "location/layer code (e.g. B1, T1, F1, N1)"
+    },
+    "full_example": "20H16-63-150B1",
+    "full_example_decoded": "20 No. H16 bars, mark 63, at 150mm centres, bottom face outer layer",
+    "note_beams_columns": "Bar centres and location usually not required for beams and columns — see 6.3 and 6.4",
+    "source": "Section 4.2.1, page 25"
+  },
+
+  "layer_notation": {
+    "B1": "bottom face outer layer",
+    "B2": "bottom face second layer",
+    "T1": "top face outer layer",
+    "T2": "top face second layer",
+    "F1": "far face outer layer",
+    "F2": "far face second layer",
+    "N1": "near face outer layer",
+    "N2": "near face second layer",
+    "note": "Must be illustrated by a sketch on relevant drawings as contractor may not be familiar",
+    "source": "Section 4.2.1, page 25"
+  },
+
+  "line_types": {
+    "concrete_outlines": "continuous line, 0.35mm",
+    "main_reinforcing_bars": "continuous line, 0.7mm",
+    "links": "continuous line, 0.35–0.7mm",
+    "dimension_lines": "thin continuous line, 0.25mm",
+    "centre_lines": "chain-dotted or thin, 0.25mm",
+    "members_behind_cut": "dashed lines",
+    "members_in_cutting_plane": "full lines",
+    "lower_column_profile_on_plan": "dotted if larger than above",
+    "soffit_profile_of_downstand_beam": "dotted line on plan",
+    "joints": "bold chain-dotted line on plan",
+    "hole_below_section": "cross shown dotted",
+    "source": "Sections 3.10, 3.16–3.18, 3.20.2"
+  },
+
+  "plan_view_conventions": {
+    "support_below": "shown as broken lines",
+    "section_position": "horizontal cut assumed immediately above surface of structural arrangement",
+    "span_direction_slab": [
+      "one-way spanning: single arrow",
+      "two-way spanning: crossed arrows",
+      "cantilever: labeled"
+    ],
+    "column_size_notation": "overall concrete size with clear indication of orientation",
+    "beam_notation": "beam reference + h×b, preferably at centre of span",
+    "downstand_beam_soffit": "dotted line plots lowest beam soffit profile",
+    "source": "Sections 3.16, 3.20.2"
+  },
+
+  "elevation_conventions": {
+    "section_position": "vertical cut immediately adjacent to element under consideration",
+    "members_in_cut": "full lines",
+    "connecting_members_behind": "dashed lines",
+    "source": "Section 3.17, page 16"
+  },
+
+  "section_conventions": {
+    "content": "only material in cutting plane shown — no features beyond",
+    "cut_member_shading": "may be shaded for clarity",
+    "beam_section_direction": "looking towards the left",
+    "column_section_direction": "looking downwards",
+    "placement": "as near as possible to the detail it relates to",
+    "cross_sections_of_rebar": "drawn approximately to scale",
+    "source": "Sections 3.10, 3.18, pages 14, 16"
+  },
+
+  "dimension_placement": {
+    "reading_direction": "from bottom or right-hand side of drawing",
+    "placement": "near to and above the line, not through the line",
+    "kept_clear_of": "structural detail",
+    "on_GA": "all setting-out dimensions and member sizes",
+    "on_rebar_drawing": "only dimensions necessary for correct location of reinforcement",
+    "source": "Section 3.13, page 14–15"
+  },
+
+  "levels_notation": {
+    "SSL": "Structural Slab Level",
+    "FFL": "Finished Floor Level",
+    "EL": "Existing Level",
+    "units": "metres",
+    "on_plan": "displayed prominently with symbol",
+    "on_section": "projected beyond drawing with closed arrowhead",
+    "both_SSL_and_FFL": "both shown when relevant",
+    "source": "Sections 3.14, 3.20.2(n), pages 15, 20"
+  },
+
+  "holes_on_drawings": {
+    "identification": "cross symbol",
+    "groups_of_holes": "CL to group centre",
+    "hole_through_beam_or_wall": "indicate level to bottom of hole",
+    "hole_below_section": "cross shown dotted",
+    "large_or_complex_holes": "elevation required",
+    "source": "Section 3.20.2(s), page 21"
+  },
+
+  "pockets_and_recesses": {
+    "area_identification": "diagonal hatch only",
+    "small_pockets": "large dot",
+    "dimensioning": "locate with dimensions from datum",
+    "source": "Section 3.20.2(t), page 21"
+  },
+
+  "joints_on_drawings": {
+    "plan": "bold chain-dotted line",
+    "section_for_clarification": "required if not clear from plan",
+    "source": "Section 3.20.2(q), page 20"
+  },
+
+  "steps_in_level": {
+    "plan_representation": "sectional hatching at change in level",
+    "splay_on_soffit": "shown dotted",
+    "source": "Section 3.20.2(p), page 20"
+  },
+
+  "framing_plan_notation": {
+    "column_ref": "at intersection of grid letters and numbers (e.g. B2 at grid B, line 2)",
+    "beam_ref": "column ref + suffix (e.g. B21 for first beam spanning up in panel B2)",
+    "beams_on_grid_lines": "labels may be omitted; described as 'beams along grid line B/1 to 3'",
+    "source": "Section 3.19, page 16"
+  },
+
+  "checking_colour_system": {
+    "correct": "blue or yellow",
+    "additions_and_corrections": "red",
+    "source": "Section 4.6.4, page 33"
+  },
+
+  "abbreviations": {
+    "RC": "reinforced concrete",
+    "blk": "blockwork",
+    "bwk": "brickwork",
+    "drg": "drawing",
+    "FS": "full size",
+    "NTS": "not to scale",
+    "dia_or_phi": "diameter",
+    "crs": "centres",
+    "SOP": "setting-out point",
+    "SOL": "setting-out line",
+    "FFL": "finished floor level",
+    "SSL": "structural slab level",
+    "EL": "existing level",
+    "horiz": "horizontal",
+    "vert": "vertical",
+    "pkt": "pocket",
+    "source": "Section 3.4, page 13"
+  },
+
+  "bar_identification_visual": {
+    "grade_A_500": "two or more series of parallel transverse ribs, same angle and direction each series",
+    "grade_B_500": "two or more series of parallel transverse ribs; one series at contrary angle (2-3 rib series) or two at contrary angle (4 rib series)",
+    "grade_C_500": "same as Grade B but ribs alternate between higher and lower angle (differing by at least 10deg)",
+    "CARES_mark": "dot-dash-dot mark plus country and mill identity",
+    "UK_country_ribs": 5,
+    "source": "Section 5.1.3, Figure 5.1, page 34"
+  },
+
+  "typical_drawing_views_by_member": {
+    "flat_slab": ["plan showing required steel areas by grid zone"],
+    "beam": ["typical elevation", "typical section"],
+    "column": ["typical elevation", "typical section"],
+    "staircase": ["typical elevation"],
+    "pile_cap": ["sketched details on calculation sheets"],
+    "foundation_layout": ["plan with grid references", "section showing blinding and levels"],
+    "general_arrangement": ["floor plan", "general cross-sections", "local sections"],
+    "source": "Section 2.6, pages 8–11"
+  }
+}

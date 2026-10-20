@@ -1,0 +1,169 @@
+{
+  "document": "Recovered General Detailing Knowledge, Rules, and Conventions",
+  "provenance_summary": "Extracted from SMDS Section 5.2.1, 5.2.2, 5.2.3, 5.4.2, 5.4.5, 6.2.2, 6.2.3, 6.2.4, 6.3.2, 6.3.4, 6.4.2",
+  "status": "EXTRACTED",
+
+  "cover_rules": {
+    "A1_nominal_cover_definition": {
+      "rule": "c_nom = c_min + Δcdev",
+      "applied_to": "reinforcement NEAREST to concrete surface (e.g. links in beam, not main bars)",
+      "source": "Section 5.2.1, page 37",
+      "status": "EXTRACTED"
+    },
+    "A2_cover_to_main_bar_via_link": {
+      "rule": "Nominal cover to the LINK must be such that resulting cover to MAIN BAR is at least: bar_dia_main (or equivalent bn) + Δcdev",
+      "formula": "c_link >= c_main_required - link_dia, where c_main_required = bar_dia_main + Δcdev",
+      "no_links_rule": "c_nom >= bar_dia + Δcdev directly to bar",
+      "source": "Section 5.2.1, page 37",
+      "status": "EXTRACTED"
+    },
+    "A3_surface_treatment_addition": {
+      "rule": "Where special surface treatments used (e.g. bush hammering): add expected depth of treatment to nominal cover",
+      "source": "Section 5.2.1, page 37",
+      "status": "EXTRACTED"
+    },
+    "A4_aggregate_rule": {
+      "rule": "Nominal cover >= maximum (nominal) aggregate size dg",
+      "source": "Section 5.2.1, page 37",
+      "status": "EXTRACTED"
+    },
+    "A5_durability_cover": {
+      "rule": "Cover for durability governed by exposure class per EC2 Clause 4.2. Typical values in manual are guide only; Designer must confirm.",
+      "source": "Section 5.2.2, page 38",
+      "status": "EXTRACTED"
+    },
+    "A6_fire_cover": {
+      "rule": "Cover for fire resistance is expressed as AXIS DISTANCE (centre of bar to concrete surface), not nominal cover (BS EN 1992-1-2).",
+      "source": "Section 5.2.3, page 38; Sections 6.3.2 and 6.4.2",
+      "status": "EXTRACTED"
+    },
+    "A7_fire_spalling_threshold": {
+      "rule": "IF nominal cover to outermost steel > 40mm (i.e. axis distance to main reinforcement > 70mm) THEN spalling danger in fire -> provide surface mesh: spacing <= 100mm, dia >= 4mm",
+      "applies_to": ["beams (§6.3.2)", "columns (§6.4.2)"],
+      "reference_EC2": "EC2 Part 1.2, Clause 4.5.2",
+      "source": "Sections 6.3.2 (p74) and 6.4.2 (p85)",
+      "status": "EXTRACTED"
+    },
+    "A8_beam_top_cover_note": {
+      "rule": "Top cover to beam bars may be determined by slab or transverse beam reinforcement: cover_beam = cover_slab + bar_dia_slab",
+      "source": "Section 6.3.2, page 74 note",
+      "status": "EXTRACTED"
+    },
+    "A9_bundled_bar_equivalent_dia": {
+      "formula": "bn = bar_dia * sqrt(nb); max 55mm",
+      "source": "Section 5.4.5, page 43; referenced in Sections 6.3.2 and 6.4.2",
+      "status": "EXTRACTED"
+    }
+  },
+
+  "general_detailing_rules": {
+    "H1_nominal_lap_minimum_for_nominal_bars": {
+      "rule": "Lap lengths for nominal bars etc. shall NOT be less than max(15 * bar_size, 200mm)",
+      "source": "Section 6.2.2, page 49",
+      "status": "EXTRACTED"
+    },
+    "H2_slab_simplified_curtailment_condition_5_1_3": {
+      "rule": "Simplified curtailment for slabs (Figs 6.3-6.4) permitted ONLY when analysis is for single load case all-spans-loaded per UK NA 5.1.3(1)P AND no shear reinforcement required",
+      "source": "Section 6.2.2, page 50",
+      "status": "EXTRACTED"
+    },
+    "H3_fabric_lap_area_allowance": {
+      "rule": "For coffered slabs with fabric, if designer does not specify additional lap area, 22% assumed for 300mm laps",
+      "source": "Section 6.2.3, page 61",
+      "status": "EXTRACTED"
+    },
+    "H4_detailing_information_cover_defaults": {
+      "rule": "Standard cover for detailing information: 20mm internal, 40mm external (slabs §6.2.3); 35mm internal, 40mm external (corbels §6.9.3)",
+      "source": "Section 6.2.3, p.61; Section 6.9.3, p.130",
+      "status": "EXTRACTED"
+    },
+    "H5_direct_support_reduced_anchorage": {
+      "rule": "Direct supports: anchorage beyond face of support may be reduced to d, but not less than max(0.3 * l_b_rqd, 10 * bar_dia, 100mm)",
+      "exception": "Abnormally high loading or point loads close to support require EC2 Sec 8 & 9 check",
+      "source": "Section 6.2.2, page 49, Fig 6.1a",
+      "status": "EXTRACTED"
+    },
+    "H6_indirect_support_full_anchorage": {
+      "rule": "Indirect supports: full anchorage l_bd applies from line of contact. No reduction permitted.",
+      "source": "Section 6.2.2, page 49, Fig 6.1b",
+      "status": "EXTRACTED"
+    },
+    "H7_partial_fixity_slab_top_bars": {
+      "rule": "Minimum top reinforcement where partial fixity exists: 25% of maximum required in span (>= As_min). May be reduced to 15% for END support.",
+      "source": "Section 6.2.2, page 48",
+      "status": "EXTRACTED"
+    },
+    "H8_moment_connection_corner_bar": {
+      "rule": "For L-bar beam-to-edge-column: standard bend radius permitted PROVIDED a bar of same size OR GREATER is placed inside corner, normal to it.",
+      "source": "Section 6.4.2, page 87",
+      "status": "EXTRACTED"
+    },
+    "H9_wide_beam_narrow_column_corbel": {
+      "rule": "IF beam_width > column_width + 2 * d THEN provide design transverse top steel at column position for corbel action (plus tying)",
+      "source": "Section 6.3.2, page 78",
+      "status": "EXTRACTED"
+    },
+    "H10_direct_support_transverse_wire_exception": {
+      "rule": "For direct supports: l_bd may be taken < l_b_min provided >= 1 transverse wire welded within support, >= 15mm from face",
+      "source": "Section 5.4.2, page 41",
+      "status": "EXTRACTED"
+    }
+  },
+
+  "drawing_notations": {
+    "I1_placement_stagger_notations": {
+      "AP": "Alternately Placed",
+      "AS": "Alternately Staggered",
+      "EF": "Each Face",
+      "TEF": "Top Each Face",
+      "P_A_S": "Placed As Shown",
+      "source": "Sections 6.2.4 & 6.3.4, pp.51-52, 62-63, 79-80",
+      "status": "EXTRACTED"
+    },
+    "I2_zone_subcount_brackets": {
+      "format": "Total count followed by sub-counts per zone in parentheses: '20H10-63-150T1 (12) (8)'",
+      "source": "Section 6.2.2, page 51",
+      "status": "EXTRACTED"
+    },
+    "I3_link_elevation_notation": {
+      "format": "count/spacing e.g. '19/300 5/200 13/150'; '37 H12 07 LINKS P.A.S'; '29 H12 08 300 LINK CLOSERS'",
+      "source": "Section 6.3.4, page 79",
+      "status": "EXTRACTED"
+    },
+    "I5_spacer_bar_beam_notation": {
+      "format": "'4 H25 10 SPACERS', dia >= max(25mm, main_bar_dia)",
+      "source": "Model Detail MB1, page 82; Section 6.3.4, page 79",
+      "status": "EXTRACTED"
+    },
+    "I6_U_bar_notation": {
+      "format": "'2 H20 02 UB'; 'U-BARS LONG LEG B1'",
+      "source": "Sections 6.2.4 & 6.3.4, pages 62, 79",
+      "status": "EXTRACTED"
+    },
+    "I7_curtailment_30deg_mark": {
+      "rule": "Curtailed bars in elevation identified by short 30° oblique lines at bar end with bar mark",
+      "source": "Section 6.2.2, page 52",
+      "status": "EXTRACTED"
+    },
+    "I8_fan_zone_bars": {
+      "rule": "Indicator line on datum radius for measuring pitch; ends located to datum; notation includes s.o.p (setting out point)",
+      "source": "Section 6.2.2, page 52",
+      "status": "EXTRACTED"
+    },
+    "I9_cranked_bent_bars_plan": {
+      "rule": "Clarify flat vs upright fixing with sections and notes",
+      "source": "Section 6.2.2, page 52",
+      "status": "EXTRACTED"
+    },
+    "I10_representational_beam_table": {
+      "columns": ["BEAM", "DIM1", "DIM2", "A", "B", "C", "D", "E", "L1", "L2", "L3", "SECTIONS"],
+      "source": "Section 6.3.4, page 80",
+      "status": "EXTRACTED"
+    },
+    "I11_fabric_reinforcement_plan_line": {
+      "line_type": "chain double-dashed line (DASHDOT2)",
+      "source": "Section 6.2.2, page 56",
+      "status": "EXTRACTED"
+    }
+  }
+}

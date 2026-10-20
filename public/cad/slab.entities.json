@@ -1,0 +1,219 @@
+{
+  "model_id": "slab",
+  "drawing_id": "slab-r1",
+  "entity_link_count": 23,
+  "by_status": {
+    "ok": 23
+  },
+  "elements": {
+    "slab.slab": [
+      {
+        "handle": "45",
+        "drawing_id": "slab-r1",
+        "layer": "CONCRETE",
+        "entity_type": "LWPOLYLINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "46",
+        "drawing_id": "slab-r1",
+        "layer": "CONCRETE",
+        "entity_type": "LWPOLYLINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "47",
+        "drawing_id": "slab-r1",
+        "layer": "CONCRETE",
+        "entity_type": "LWPOLYLINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "48",
+        "drawing_id": "slab-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "49",
+        "drawing_id": "slab-r1",
+        "layer": "REBAR_TOP",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4A",
+        "drawing_id": "slab-r1",
+        "layer": "REBAR_TOP",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4B",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4C",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4D",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4E",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4F",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "50",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "TEXT",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "51",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "52",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "53",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "54",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "55",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "56",
+        "drawing_id": "slab-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "TEXT",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "57",
+        "drawing_id": "slab-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "58",
+        "drawing_id": "slab-r1",
+        "layer": "REBAR_MAIN",
+        "entity_type": "CIRCLE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "59",
+        "drawing_id": "slab-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "5A",
+        "drawing_id": "slab-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "5B",
+        "drawing_id": "slab-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      }
+    ]
+  }
+}

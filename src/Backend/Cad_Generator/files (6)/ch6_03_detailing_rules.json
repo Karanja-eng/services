@@ -1,0 +1,279 @@
+{
+  "document": "IStructE/Concrete Society SMDS Ch5-6 — Decision Rules",
+
+  "general_rules": [
+    {
+      "id": "GR-001", "source": "Section 5.2.5",
+      "condition": "any reinforcing bar",
+      "action": "min clear distance = max(bar_dia, dg+5mm, 20mm)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "GR-002", "source": "Section 5.3, Table 5.5",
+      "condition": "bar fits between two concrete faces, distance 0-1m",
+      "action": "deduct 10mm from nominal dimension for links and bent bars; 40mm for straight bars",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "GR-003", "source": "Section 5.4.3",
+      "condition": "lap in tension, bar dia >= 20mm",
+      "action": "provide transverse reinforcement: ΣAst >= As of one lapped bar",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "GR-004", "source": "Section 5.4.3",
+      "condition": ">50% bars lapped at one point AND adjacent lap spacing a <= 10ø",
+      "action": "transverse reinforcement must be links or U-bars anchored in body of section, positioned at outer sections of lap",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "GR-005", "source": "Section 5.4.4",
+      "condition": "bar dia > 40mm, straight anchorage",
+      "action": "provide additional confining links in anchorage zone: Ash = 0.25As×n1 parallel to tension face; Asv = 0.25As×n2 perpendicular; spacing ≤ 5×longitudinal bar dia",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "GR-006", "source": "Section 5.4.4",
+      "condition": "bar dia > 40mm, lapping",
+      "action": "NOT permitted unless section minimum dimension >= 1m OR stress <= 80% design ultimate",
+      "constraint_type": "MUST NOT (except conditions)"
+    },
+    {
+      "id": "GR-007", "source": "Section 5.1.7",
+      "condition": "rebending bars on site",
+      "action": "Generally NOT permitted; exception for Class B/C ≤ 12mm with mandrel ≥ 4ø; larger only with proprietary CARES-approved system",
+      "constraint_type": "GENERALLY NOT PERMITTED"
+    }
+  ],
+
+  "slab_rules": [
+    {
+      "id": "SR-001", "source": "Section 6.2.2",
+      "condition": "minimum reinforcement only provided",
+      "action": "Must NOT be curtailed",
+      "constraint_type": "MUST NOT"
+    },
+    {
+      "id": "SR-002", "source": "Section 6.2.2",
+      "condition": "bottom reinforcement at end support, no fixity assumed",
+      "action": "area >= 0.25 × span area",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-003", "source": "Section 6.2.2",
+      "condition": "flat slab — negative moment in column strip",
+      "action": "2/3 of column strip negative moment in central half of column strip width",
+      "constraint_type": "SHOULD"
+    },
+    {
+      "id": "SR-004", "source": "Section 6.2.2",
+      "condition": "flat slab — any bottom reinforcement",
+      "action": "at least two bottom bars pass through each column",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-005", "source": "Section 6.2.2",
+      "condition": "hole sides <= 150mm",
+      "action": "May be ignored structurally; show on drawing",
+      "constraint_type": "MAY IGNORE structurally"
+    },
+    {
+      "id": "SR-006", "source": "Section 6.2.2",
+      "condition": "hole sides 150-500mm",
+      "action": "Displace bars or cut/trim: compensating bars + trimmers extending min 45ø beyond hole",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-007", "source": "Section 6.2.2",
+      "condition": "hole sides 500-1000mm",
+      "action": "As SR-006 PLUS trim top and bottom; if slab depth > 250mm add diagonal reinforcement",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-008", "source": "Section 6.2.2",
+      "condition": "slab corner held down on both sides",
+      "action": "Provide torsion reinforcement extending ≥ 1/5 shorter span; area each leg ≥ 3/4 max mid-span moment area",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-009", "source": "Section 6.2.2",
+      "condition": "punching shear reinforcement required",
+      "action": "Place between column and 1.5d inside control perimeter; ≥2 perimeters; perimeter spacing ≤0.75d",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-010", "source": "Model Detail MS1",
+      "condition": "slab span and internal support, standard conditions",
+      "action": "Bottom bars: length = 0.8×span + 0.5×tension_lap, alternately reversed. Top bars: extend 0.3×span each side; stagger alternately; outer limit 0.1×short_span or 600mm",
+      "constraint_type": "STANDARD PRACTICE"
+    },
+    {
+      "id": "SR-011", "source": "Section 6.2.2",
+      "condition": "ribbed or coffered slab",
+      "action": "Rib spacing ≤ 1.5m; rib depth (excl. topping) ≤ 4×top width; otherwise design as beams",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-012", "source": "Model Detail MS4",
+      "condition": "cantilever slab",
+      "action": "Top bar min length = 2×cantilever over simple support; alternately staggered. Bottom area ≥ 0.5×top area",
+      "constraint_type": "MUST"
+    }
+  ],
+
+  "beam_rules": [
+    {
+      "id": "BR-001", "source": "Section 6.3.2",
+      "condition": "beam depth >= 1000mm",
+      "action": "Provide 16mm side bars inside links at max 250mm pitch",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-002", "source": "Section 6.3.2",
+      "condition": "beam with links, min pitch",
+      "action": "min pitch = max(100mm, 50 + 12.5 × no_of_legs)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-003", "source": "Section 6.3.2",
+      "condition": "beam links, max pitch",
+      "action": "max pitch = min(300mm, 0.75d, 12×compression_bar_dia)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-004", "source": "Section 6.3.2",
+      "condition": "beam links, lateral spacing of legs",
+      "action": "max lateral pitch = min(600mm, 0.75d); tension/compression bar must be within 150mm of vertical leg",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-005", "source": "Section 6.3.2",
+      "condition": "top bars at internal support, simplified rules",
+      "action": "≥60% of max support area extends 0.25L from support face; minimum any bar extends: max(0.15L, 45ø)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-006", "source": "Section 6.3.2",
+      "condition": "bottom bars in span, continuous beam, simplified rules",
+      "action": "≥30% of max span area continues to 25mm from support; remainder within 0.15L of internal supports",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-007", "source": "Section 6.3.2",
+      "condition": "bottom bars at end support, no fixity",
+      "action": "Area ≥ 0.25 × span area",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-008", "source": "Section 6.3.2",
+      "condition": "simple support assumed but monolithic construction",
+      "action": "Design for bending moment ≥ 0.15 × max span moment",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-009", "source": "Section 6.3.2",
+      "condition": "bending top bars up into column",
+      "action": "NOT recommended",
+      "constraint_type": "NOT RECOMMENDED"
+    },
+    {
+      "id": "BR-010", "source": "Section 6.3.2",
+      "condition": "overlapping links",
+      "action": "NOT recommended — makes it difficult to fix reinforcement",
+      "constraint_type": "NOT RECOMMENDED"
+    },
+    {
+      "id": "BR-011", "source": "Section 6.3.2",
+      "condition": "open links (L-hooks), rib width",
+      "action": "Only permitted where rib width >= 450mm; must add top locking link",
+      "constraint_type": "ONLY WHEN"
+    },
+    {
+      "id": "BR-012", "source": "Section 6.3.2",
+      "condition": "torsion links",
+      "action": "Must be closed links with specified 135° hook shape (Figure 6.22)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-013", "source": "Section 6.3.2",
+      "condition": "beam span < 3 × overall depth",
+      "action": "Treat as deep beam; provide orthogonal mesh per face; min area max(0.001Ac, 150mm²/m); spacing ≤ min(2×width, 300mm)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-014", "source": "Model Detail MB1",
+      "condition": "beam width >= 300mm with open links",
+      "action": "Use 'closer' bars (link closers)",
+      "constraint_type": "SHOULD"
+    },
+    {
+      "id": "BR-015", "source": "Section 6.3.1",
+      "condition": "holes in beams",
+      "action": "Must not be detailed without specific design instructions — they can dramatically affect structural safety",
+      "constraint_type": "MUST NOT (without design)"
+    }
+  ],
+
+  "column_rules": [
+    {
+      "id": "CR-001", "source": "Section 6.4.2",
+      "condition": "column, area reinforcement",
+      "action": "0.002Ac ≤ As ≤ 0.04Ac; at laps ≤ 0.08Ac",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-002", "source": "Section 6.4.2",
+      "condition": "column reinforcement < 0.002Ac",
+      "action": "Consider as plain column (EC2 Section 12)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-003", "source": "Section 6.4.2",
+      "condition": "rectangular column, minimum bars",
+      "action": "≥4 bars",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-004", "source": "Section 6.4.2",
+      "condition": "circular column, minimum bars",
+      "action": "≥6 bars (≥4 if dia < 200mm)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-005", "source": "Section 6.4.2",
+      "condition": "column links, maximum spacing",
+      "action": "min(20×long_bar_dia, lesser_column_dim, 400mm); reduce to 0.6× within larger_dim of column from beam/slab",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-006", "source": "Section 6.4.2",
+      "condition": "column bars, link restraint",
+      "action": "All compression bars must be within 150mm of a restrained bar; additional links required if not satisfied; not required for circular columns",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-007", "source": "Section 6.4.2",
+      "condition": "column bar dia >= 20mm, lapping zone",
+      "action": "Links for bursting: ΣAst >= As of one lapped bar; positioned at outer l0/3 sections of lap",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "CR-008", "source": "Section 6.4.2",
+      "condition": "moment connection, beam to edge column",
+      "action": "Prefer U-bars in beam depth; use L-bars only when distance A < anchorage length for that dia",
+      "constraint_type": "PREFERRED / CONDITIONAL"
+    },
+    {
+      "id": "CR-009", "source": "Section 6.4.2",
+      "condition": "column design concrete grade",
+      "action": "Grade < 28/35 MPa not normally used; column grade must not exceed 1.4 × intersecting slab/beam grade",
+      "constraint_type": "MUST (normally)"
+    },
+    {
+      "id": "CR-010", "source": "Section 6.4.2",
+      "condition": "column nominal cover > 40mm",
+      "action": "Provide surface reinforcement mesh: spacing ≤ 100mm, dia ≥ 4mm",
+      "constraint_type": "MUST"
+    }
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "document": "IStructE/Concrete Society SMDS Ch5-6 — Diagram Analysis",
+
+  "diagrams": [
+    {
+      "figure": "5.2", "page": 40, "caption": "Description of bond conditions",
+      "type": "four-panel diagram",
+      "panels": {
+        "a": "bar inclined 45-90° during casting — GOOD bond all bars",
+        "b": "member h ≤ 250mm — GOOD bond all bars",
+        "c": "member h > 250mm — GOOD bond in unhatched zone (below 250mm from bottom); POOR in hatched (above 250mm); threshold = 300mm from bottom (INFERRED from 250mm cast position limit)",
+        "d": "member h > 600mm — GOOD bond in lower 300mm and inclined bars; POOR in hatched zones above 300mm"
+      },
+      "key_dimension": "h = member height; 250mm threshold; 300mm zone",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "5.3", "page": 41, "caption": "Values of cd for beams and slabs",
+      "type": "three-panel cross-section diagram",
+      "panels": {
+        "a_straight_bars": "cd = min(a/2, c1, c) where a = clear spacing, c1 = side cover, c = bottom cover",
+        "b_bent_hooked": "cd = min(a/2, c1)",
+        "c_looped": "cd = c"
+      },
+      "DXF_objects": ["LINE (bar)", "LINE (cover dimensions)", "TEXT (cd formula)", "DIMENSION"],
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "5.4", "page": 41, "caption": "Values of K for beams and slabs",
+      "type": "three-panel diagram showing K values",
+      "panels": {
+        "K_0_1": "corner bar with transverse bar As at corner — K = 0.1",
+        "K_0_05": "single row bar with transverse — K = 0.05",
+        "K_0": "bar in element without transverse — K = 0"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "5.5", "page": 41, "caption": "Adjacent laps",
+      "type": "three-row elevation diagram",
+      "geometry": {
+        "top_row": "staggered laps; gap between laps ≥ 0.3×l0; bar diameter ø shown; end distance ≤ 50mm; offset ≤ 4ø",
+        "middle_row": "adjacent laps with dimension 'a'; clear distance ≥ max(2ø, 20mm)",
+        "bottom_row": "continuous (un-lapped) reference bar"
+      },
+      "DXF_reconstruction": {
+        "bars": "LINE (horizontal)",
+        "lap_zone": "overlapping LINE segments",
+        "dimensions": "DIMENSION for 0.3l0, l0, 50mm, 4ø, 2ø",
+        "stagger_mark": "offset between lap start points"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "5.6", "page": 42, "caption": "Transverse reinforcement for lapped splices",
+      "type": "elevation diagram — two panels",
+      "panels": {
+        "a_tension": "Transverse reinforcement (ΣAst/2) at each outer section of lap; within l0/3 from lap ends; gap ≤ 150mm between laps",
+        "b_compression": "Same as (a) PLUS one bar outside each end within 4ø of lap end"
+      },
+      "key_dimensions": {"position_from_lap_end_tension": "l0/3", "gap_max": "≤150mm", "compression_extra_bar": "within 4ø"},
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "5.7", "page": 43, "caption": "Additional reinforcement in anchorage for large dia bars",
+      "panels": {
+        "left": "n1=1, n2=2 — one layer of 2 bars anchored",
+        "right": "n1=2, n2=2 — two layers of 2 bars each"
+      },
+      "formula_reference": "Ash = 0.25As×n1; Asv = 0.25As×n2",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "5.8", "page": 43, "caption": "Anchorage of widely staggered bars in bundle",
+      "geometry": "Tension bar bundle; stagger ≥ l_b; stagger for dia-based lbd ≥ 1.3lb; section A-A shows bundle cross-section",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "5.9", "page": 44, "caption": "Lap joint in tension including a fourth bar",
+      "geometry": {
+        "bars_1_to_3": "main bars in bundle",
+        "bar_4": "lapping bar — used as splice",
+        "stagger_distance": "1.3×l0 between each successive lap",
+        "constraint": "max 4 bars in any lap cross-section"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "5.10", "page": 44, "caption": "Lapping of welded fabric",
+      "panels": {
+        "a_intermeshed": "wires interleave — lap per EC2 rules",
+        "b_layered": "sheets stacked flat — lap in low-stress zones; 100% if As/s ≤ 1200mm²/m, 60% otherwise",
+        "c_flying_ends": "extended overhangs eliminate layer build-up"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.1", "page": 49, "caption": "Anchorage of bottom reinforcement at end supports",
+      "panels": {
+        "a_direct_support": "supported by wall/column; lbd starts from face of support; bar extends into support",
+        "b_indirect_support": "supported by another beam; lbd measured from line of contact"
+      },
+      "DXF_reconstruction": {
+        "support": "POLYLINE rectangle (wall or beam)",
+        "slab": "POLYLINE (slab outline)",
+        "bottom_bar": "LINE",
+        "anchorage_dimension": "DIMENSION (lbd from face of support)",
+        "bar_diameter_symbol": "ø TEXT"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.2", "page": 49, "caption": "Adjacent laps (slab)",
+      "geometry": {
+        "upper_pair": "staggered laps; gap ≥ 0.3×l0; overlap ≤ 50mm; pitch ≤ 4ø from top",
+        "lower_pair": "adjacent laps; clear distance 'a' ≥ max(2ø, 20mm)",
+        "continuous_bar": "un-lapped reference"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.3", "page": 50, "caption": "Simplified curtailment rules for top bars",
+      "panels": {
+        "internal_support": {
+          "bending_moment_diagram": "shown with maximum moment peak",
+          "top_bars": "four bars (a, b, c, d) with two alternating stagger positions (1, 2)",
+          "extensions": "a+b and c+d from support face; tension anchorage at cutoff; effective depth or 12×dia beyond zero moment"
+        },
+        "external_support": {
+          "bars": "alternately staggered; tension anchorage",
+          "zero_moment_line": "shown explicitly"
+        }
+      },
+      "DXF_reconstruction": {
+        "bending_moment_diagram": "SPLINE or POLYLINE",
+        "top_bars_plan_view": "LINE segments at top of slab",
+        "curtailment_marks": "30° oblique short lines",
+        "dimensions": "a, b, c, d labeled; tension anchorage dimension",
+        "stagger_points": "labeled 1 and 2"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.4", "page": 50, "caption": "Simplified curtailment rules for bottom bars",
+      "panels": {
+        "internal_span": {
+          "top_bar": "length b (longer set)",
+          "bottom_bar": "length a (shorter set)",
+          "stagger_at_positions": "1 and 2",
+          "end_condition": "tension lap for bottom bars into support; tension anchorage at cutoff"
+        },
+        "external_span": {
+          "end_support": "50mm offset; tension lap; tension anchorage",
+          "bottom_bars": "alternating lengths a and b"
+        }
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.5", "page": 53, "caption": "Arrangement of reinforcement strips for two-way slabs",
+      "geometry": {
+        "plan": "Ly × Lx panel",
+        "edge_strips": "width Ly/8 and Lx/8 each side",
+        "middle_strip": "central Lx zone",
+        "edge_strip_bars": "same dia and length as middle strip but pitch may increase to minimum reinforcement"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.6", "page": 53, "caption": "Division of reinforcement strips for flat slabs",
+      "geometry": {
+        "plan": "Lx × Ly panel",
+        "column_strip_x": "Ly/4 each side of column centreline (total Ly/2)",
+        "column_strip_y": "Lx/4 each side (total Lx/2)",
+        "middle_strip_x": "3Ly/4 minus column strip",
+        "nominal_strip": "one-way strip when aspect ratio > 2"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.10", "page": 58, "caption": "Punching shear reinforcement",
+      "panels": {
+        "a_links": {
+          "column": "central square",
+          "inner_perimeter": "0.5d from column face",
+          "link_perimeters": "at 0.75d centres",
+          "outer_control": "at 1.5d from last link",
+          "leg_spacing_within_2d": "≤ 1.5d",
+          "leg_spacing_beyond_2d": "≤ 2d"
+        },
+        "b_bent_up_bars": {
+          "first_bent_bar": "0.5d from column",
+          "spacing": "≤ 1.5d (within first perimeter); ≤ 2d outside"
+        }
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.14", "page": 75, "caption": "Illustration of the curtailment of longitudinal reinforcement in beams",
+      "geometry": {
+        "tension_envelope": "MEd/z + NEd envelope shown as dashed parabolic curve",
+        "resisting_force": "stepped profile as bars are curtailed",
+        "anchorage_lengths": "lbd shown at each cutoff point",
+        "al_shift": "horizontal shift from zero-moment point to actual cutoff",
+        "Ftd": "design tensile force at support"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.15", "page": 76, "caption": "Layout of reinforcement for flexible detailing of beams",
+      "type": "elevation diagram",
+      "elements": {
+        "top_bars_internal": "at top near support; curtailed in span",
+        "hanger_bars": "continuous full length",
+        "bars_in_bottom_span": "main bottom span bars",
+        "bottom_splice_bars": "at internal supports; lapped with span bars",
+        "u_bars_at_end": "at end support; top and bottom leg",
+        "lacer_bars": "at sides (side-face bars)"
+      },
+      "DXF_reconstruction": {
+        "beam_outline": "POLYLINE (rectangle with supports)",
+        "each_bar_group": "LINE (longitudinal); different layer",
+        "section_cuts": "section markers at key positions",
+        "dimensions": "span L, support width, 0.25L, 0.15L, 45ø"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.19", "page": 77, "caption": "Preferred arrangement of links",
+      "geometry": "Cross-section views showing enclosed + additional links for bar restraint; no overlap",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.20", "page": 77, "caption": "Overlapping of links is NOT recommended",
+      "geometry": "Shows overlapping open links — explicitly marked as not recommended",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.21", "page": 77, "caption": "Open links with top locking links",
+      "geometry": {
+        "open_link": "L-hook at top; 10ø hook; 75mm min straight extension",
+        "locking_link": "horizontal bar across top to close the link"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.22", "page": 77, "caption": "Required shape of torsion links",
+      "geometry": "Closed rectangular link with 135° hooks; hook extension = 10ø",
+      "DXF_reconstruction": {
+        "outline": "POLYLINE rectangle",
+        "hook_at_each_corner": "short diagonal LINE at 135°",
+        "extension": "LINE of length 10ø beyond hook bend"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.24", "page": 86, "caption": "Requirement of links in columns",
+      "panels": {
+        "left": "bars at < 150mm centres — every other bar restrained",
+        "right": "bars at > 150mm centres — each bar restrained"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.25", "page": 86, "caption": "Links required for bursting at column laps",
+      "geometry": {
+        "lap_zone": "length l0",
+        "transverse_links": "ΣAst/2 at each outer l0/3 section",
+        "end_zone": "4ø from end of lap",
+        "gap_max": "≤ 150mm"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.26", "page": 87, "caption": "Moment connection between beam and edge column",
+      "panels": {
+        "u_bar": "U-bar placed in beam depth; both legs horizontal; no penetration into column",
+        "standard_bend": "top bar bent down into column; standard bend radius acceptable with corner bar inside",
+        "non_standard_bend": "required if no corner bar; critical effective depth may vary; check thoroughly"
+      },
+      "dimension_A": "distance from face of column to nearest main reinforcement — determines whether U-bar or L-bar used",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure": "6.27", "page": 87, "caption": "Shear enhancement of column",
+      "geometry": "Section through column showing horizontal U-bars extending into beam depth where no edge beam exists",
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "model_MS1": {
+        "name": "SLABS MS1 — One and two way slabs, span and internal support",
+        "page": 66,
+        "key_geometry": {
+          "bottom_bar_length": "0.8×span + 0.5×tension_lap; alternately reversed",
+          "top_bar_extension": "0.3×span from support face",
+          "top_bar_end_limit": "0.1×short_span or 600mm whichever shorter",
+          "top_bars_stagger": "alternately as shown",
+          "distribution_pitch_table": "see Table MS1 in engineering knowledge"
+        },
+        "DXF_reconstruction": {
+          "slab_outline": "POLYLINE (rectangle with wall supports at ends)",
+          "bottom_bars": "LINE pairs with alternating start/end offsets",
+          "top_bars": "LINE pairs with 0.3L extension each side",
+          "bending_moment_diagram": "SPLINE (optional for annotation)",
+          "optional_mesh": "hatched rectangle mid-span"
+        }
+      },
+      "model_MB1": {
+        "name": "BEAMS MB1 — Span and support details",
+        "page": 82,
+        "key_geometry": {
+          "top_of_elevation": {
+            "hanger_bars": "full length; 20% max support area; min 2H16 if h≥500",
+            "top_support_bars": "curtailed per 6.3.2; inside hanger bars",
+            "link_nominal_spacing": "0.75d or 12×compression dia whichever less"
+          },
+          "bottom_of_elevation": {
+            "bottom_span_bars": "curtailed per 6.3.2",
+            "bottom_splice_bars": "at supports; inside main bars; area ≥30% max span"
+          },
+          "u_bars_at_end": "tension lap; area = max(moment, 30% or 50% span area)",
+          "closer_bar": "for beam width ≥ 300mm with open links",
+          "spacer_bars": "between multiple layers; dia 25 or main bar dia"
+        },
+        "section_A_A": "At span; shows main bottom layers, hanger bar positions, link",
+        "section_B_B": "At support; shows splice bars inside main bars, congestion note"
+      }
+    }
+  ]
+}

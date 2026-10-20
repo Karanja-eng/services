@@ -1,0 +1,211 @@
+{
+  "document": "IStructE/Concrete Society SMDS Chapters 1–5 — Diagram Analysis",
+
+  "diagrams": [
+    {
+      "figure_number": "4.1",
+      "caption": "Internal beam/column intersection showing flexible detailing of reinforcement",
+      "page": 26,
+      "type": "3D isometric view",
+      "member_types": ["primary beam", "secondary beam", "column"],
+      "elements_visible": {
+        "column_bars": "straight through junction (vertical, continuous through beam depth zone)",
+        "top_support_bars_primary": "horizontal, at top of primary beam, placed ABOVE secondary beam bars",
+        "top_support_bars_secondary": "horizontal, at top of secondary beam, below primary beam top bars",
+        "bottom_span_bars": "horizontal in bottom zone of beam spans, STOPPING SHORT of column faces (both primary and secondary)",
+        "link_hanger_bars": "L-shaped or straight, stopping short of column face",
+        "links_stirrups": "closed rectangular links visible on beam spans",
+        "bottom_support_bars": "separate bars at column zone providing bottom continuity"
+      },
+      "key_spatial_relationships": [
+        "Bottom span bars terminate at column face — do not enter column",
+        "Link hanger bars terminate at column face",
+        "Column bars are vertical and continuous",
+        "Support bars at top are layered: primary above secondary",
+        "Separate bottom support bars provide continuity through column zone"
+      ],
+      "DXF_primitives_needed": [
+        "POLYLINE (column outline plan)",
+        "LINE (bar representations in 3D, simplified to 2D for plan/elevation)",
+        "CIRCLE (bar cross-sections)",
+        "TEXT (labels)"
+      ],
+      "status": "INFERRED from visual analysis"
+    },
+    {
+      "figure_number": "4.2",
+      "caption": "Elevation of reinforcement at beam/column intersection",
+      "page": 27,
+      "type": "Elevation (vertical cross-section)",
+      "elements_visible": {
+        "column_above": "column reinforcement from above, cranked inside at 1:10 ratio with 50mm offset at kicker level",
+        "kicker": "small concrete kicker visible at base of upper column",
+        "lap_zone": "compression or tension lap depending on design — shown on column as vertical zone",
+        "beam_bars": "horizontal bars at both top and bottom of beam cross-section",
+        "beam_links": "closed rectangular links at regular spacing",
+        "slab_reinforcement_zone": "space must be checked for slab bars at correct cover",
+        "nominal_lacing_bar": "longitudinal lacing bar visible",
+        "cross_ties": "at 1000mm centres to limit link free height to 400mm",
+        "spacer_bars": "at base of column zone",
+        "vibrator_holes": "holes in formwork; 75mm per 300mm beam width"
+      },
+      "key_dimensions": {
+        "crank_ratio": "1:10",
+        "crank_offset_mm": 50,
+        "cross_tie_spacing_mm": 1000,
+        "max_link_free_height_mm": 400,
+        "vibrator_space_per_300mm_beam_width_mm": 75
+      },
+      "notes_from_figure": [
+        "Column bars cranked inside at Crank 1:10",
+        "Check column bars when cranked do not foul other reinforcement",
+        "Compression or tension lap depending on design",
+        "Hole for vibrator: allow 75mm space for every 300mm of beam width",
+        "Check sufficient space for slab reinforcement at correct cover",
+        "Nominal longitudinal lacing bar",
+        "Cross ties at 1000 crs to limit free height of link to 400mm",
+        "Check concrete cover is maintained to link",
+        "Check if chamfers and fillets required (they may affect cover to reinforcement)",
+        "See note 2 (secondary beam position)",
+        "See note 3 (secondary beam increased cover — lever arm check)",
+        "Spacer bars at base"
+      ],
+      "DXF_reconstruction": {
+        "concrete_outline": "POLYLINE — rectangular beam section + column above and below",
+        "column_bars_elevation": "LINE — vertical, cranked with 1:10 slope, offset 50mm",
+        "beam_bars": "LINE — horizontal at top and bottom covers",
+        "links": "POLYLINE — closed rectangle at each link position",
+        "cross_ties": "LINE — short horizontal at 1000mm vertical spacing",
+        "dimension_lines": "DIMENSION entity for 1:10 crank, 50mm offset",
+        "leader_notes": "LEADER + MTEXT for all annotations"
+      },
+      "status": "DIRECTLY STATED (notes from figure) + INFERRED (geometry from visual)"
+    },
+    {
+      "figure_number": "4.3",
+      "caption": "Detail of beam corner",
+      "page": 28,
+      "type": "3D perspective detail at beam corner",
+      "elements_visible": {
+        "main_beam_bars": "large circular cross-sections (3–4 bars shown) within link",
+        "link": "closed rectangular stirrup encompassing main bars",
+        "space_bars": "at 1000mm centres along beam",
+        "corner_condition": "if corner bar must move to the right due to link radius, use smaller diameter — check with Designer"
+      },
+      "key_rules_illustrated": [
+        "Standard radius for both links and secondary beam reinforcement must pass between main reinforcement",
+        "If displaced, main bar must not foul any other bar",
+        "Corner bar must fit into radius of link; if not, use smaller diameter — check with Designer",
+        "Space bars at 1000mm centres"
+      ],
+      "reference_to": "Section 5.2.5 (not in this extract)",
+      "status": "INFERRED from visual + DIRECTLY STATED (notes)"
+    },
+    {
+      "figure_number": "4.4",
+      "caption": "Plan of reinforcement at beam/column intersection",
+      "page": 28,
+      "type": "Plan view (horizontal cross-section at beam level)",
+      "elements_visible": {
+        "column_section": "large square cross-section with column bars shown as filled circles (bars from below)",
+        "beam_links": "rectangular closed links extending either side of column section",
+        "returned_legs_of_link": "visible at column zone — contribute to actual clear space",
+        "beam_bars": "circular cross-sections in rows within links",
+        "cross_bar_arrangement": "X-pattern bars in column zone connecting different beam directions",
+        "central_area_large_column": "advisable to keep free of links for formwork cleaning access"
+      },
+      "key_rules_illustrated": [
+        "Check sufficient space between links for concrete and vibrator to pass",
+        "Add returned leg thickness to get actual clear space between links",
+        "Returned legs of link are NOT the same as the link body",
+        "With large columns, keep central area free of links for formwork access",
+        "Chamfers if required affect cover to reinforcement",
+        "Column bars from below = filled circle symbol"
+      ],
+      "symbol_conventions": {
+        "column_bar_from_below": "filled solid circle",
+        "bar_cross_section_in_beam": "hollow circle or filled circle depending on convention"
+      },
+      "status": "INFERRED from visual + DIRECTLY STATED (notes)"
+    },
+    {
+      "figure_number": "4.5",
+      "caption": "External beam/column intersection showing flexible detailing of reinforcement",
+      "page": 29,
+      "type": "3D isometric view — external (edge) column",
+      "elements_visible": {
+        "column": "square section, exterior position",
+        "beam": "spans from column into structure",
+        "u_bars": "U-shaped bars inserted into column, angled towards far face",
+        "beam_cage": "prefabricated cage being placed from side"
+      },
+      "key_rules_illustrated": [
+        "U-bars go into column reinforcement before prefabricated beam cage placed",
+        "U-bars must be as close to far face of column as possible",
+        "Construction sequence: lower column cast → U-bars inserted → beam cage placed"
+      ],
+      "status": "INFERRED from visual + DIRECTLY STATED (caption and text)"
+    },
+    {
+      "figure_number": "4.6",
+      "caption": "External beam/column intersection showing main top beam bars bent down into the column",
+      "page": 30,
+      "type": "3D perspective — external column with L-bars",
+      "elements_visible": {
+        "top_beam_bars": "horizontal bars bent down (L-shape) into lower column",
+        "column": "vertical member at end of beam",
+        "beam_cage": "rectangular cage with links"
+      },
+      "key_rules_illustrated": [
+        "L-bars cast into lower column before beam cage placed",
+        "Position of L-bars must be clearly shown on drawings",
+        "If reinforcement not in correct position, construction can be delayed",
+        "Reference to Model Detail MS2 for this configuration"
+      ],
+      "status": "INFERRED from visual + DIRECTLY STATED (caption and text)"
+    },
+    {
+      "figure_number": "5.1",
+      "caption": "Example of manufacturer's identification mark for Grade B500A (using dots)",
+      "page": 34,
+      "type": "Bar rib identification diagram",
+      "elements_visible": {
+        "cares_mark": "dot-dash-dot pattern",
+        "country_ribs": "5 ribs for UK",
+        "mill_reference": "2 ribs between marks",
+        "transverse_ribs": "angled ribs on bar surface",
+        "one_rib_between_dots": "visible between CARES dots"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure_number": "3.2",
+      "caption": "Layout of key information on drawings",
+      "page": 14,
+      "type": "Drawing layout diagram",
+      "elements": {
+        "panel_A": "bottom right corner — main information block (180mm nominal width)",
+        "panel_B": "vertically above panel A — revisions and notes",
+        "schedule_ref_box": "immediately above panel A",
+        "filing_border_left": "20mm",
+        "border_A0_A1_other": "20mm minimum",
+        "border_A2_A4_other": "10mm minimum"
+      },
+      "status": "DIRECTLY STATED"
+    },
+    {
+      "figure_number": "3.5",
+      "caption": "Framing plan",
+      "page": 16,
+      "type": "Structural framing plan with grid notation",
+      "elements": {
+        "grid_letters": "A, B, C, Ba on vertical axis",
+        "grid_numbers": "1, 2, 3, 2.5 on horizontal axis",
+        "column_refs": "intersection labels e.g. B2, C1, A1",
+        "beam_refs": "B11, B12, B21, B22, B23, B24, B25, B31",
+        "supplementary_column": "Ba 2.5 with beam Ba2:52"
+      },
+      "status": "DIRECTLY STATED"
+    }
+  ]
+}

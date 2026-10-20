@@ -1,0 +1,568 @@
+{
+  "engineering_knowledge": {
+    "scope": {
+      "types_covered": [
+        "single-way orthogonal",
+        "two-way orthogonal",
+        "cantilever",
+        "flat slabs",
+        "trough",
+        "coffered"
+      ],
+      "not_covered": "Ground slabs (see Concrete Society TR34)",
+      "rib_spacing_max_for_rib_design_m": 1.5,
+      "rib_depth_to_width_max_ratio": 4,
+      "note": "Six or more layers may be required for irregular slabs"
+    },
+    "concrete_grade_standard": "30/37 MPa (cylinder/cube), max aggregate 20mm",
+    "nominal_cover": {
+      "solid_slab_internal_XC1": "max(15mm, bar_dia) + \u0394cdev",
+      "solid_slab_external_XC3": "35mm + \u0394cdev",
+      "ribbed_slab_fire_gt_2hr": "Consider supplementary reinforcement (Model Detail MS8)",
+      "model_details_assume_delta_cdev_mm": 5,
+      "source": "Section 6.2.2, page 48",
+      "status": "DIRECTLY STATED"
+    },
+    "minimum_reinforcement_solid_slab": {
+      "tension": {
+        "formula": "As,min = 0.26 \u00d7 bt \u00d7 d \u00d7 fctm / fyk \u2265 0.0013 \u00d7 bt \u00d7 d",
+        "for_C30_37_and_fyk_500": "As,min = 0.0015 \u00d7 bt \u00d7 d",
+        "also_nominal": "Same formula applies for nominal reinforcement"
+      },
+      "min_bottom_in_span_direction": "40% of maximum required reinforcement",
+      "min_top_at_support_partial_fixity": "25% of max required in span (not less than As,min); may be reduced to 15% for end support",
+      "secondary_transverse": "20% of main reinforcement (except near continuous wall supports with no transverse bending)",
+      "preferred_min_dia_mm": 10,
+      "source": "Section 6.2.2, page 48",
+      "status": "DIRECTLY STATED"
+    },
+    "minimum_reinforcement_cantilever_slab": {
+      "exposed_cantilever_bottom_in_span": "Relate to top reinforcement (say 50%) where shrinkage and temperature affect deflection",
+      "source": "Section 6.2.2, page 49",
+      "status": "DIRECTLY STATED"
+    },
+    "minimum_reinforcement_ribbed_slab": {
+      "min_bar_dia_in_rib_mm": 16,
+      "flange_reinforcement": "Same as single-way slab minimum",
+      "fabric_spacing": "Wire spacing must not exceed half the pitch of ribs",
+      "source": "Section 6.2.2, page 49",
+      "status": "DIRECTLY STATED"
+    },
+    "bar_spacing_slabs": {
+      "recommended_min_pitch_mm": 75,
+      "min_pitch_at_laps_mm": 100,
+      "max_pitch_main_bars": "3h \u2264 400mm (concentrated loads: 2h \u2264 250mm)",
+      "max_pitch_secondary_bars": "3.5h \u2264 450mm (concentrated loads: 3h \u2264 400mm)",
+      "source": "Section 6.2.2, page 49",
+      "status": "DIRECTLY STATED"
+    },
+    "anchorage_lap_lengths_slab": {
+      "table_6_1": {
+        "note1": "Bar size \u2264 32mm; \u03b11=\u03b12=\u03b13=\u03b14=\u03b15=1.0",
+        "note2": "\u226433% bars lapped at one place, \u03b16=1.15",
+        "data": [
+          {
+            "condition": "full_tension_compression_anchorage_good",
+            "C25_30": 40,
+            "C28_35": 37,
+            "C30_37": 36,
+            "C32_40": 34
+          },
+          {
+            "condition": "full_tension_compression_anchorage_poor",
+            "C25_30": 58,
+            "C28_35": 53,
+            "C30_37": 51,
+            "C32_40": 49
+          },
+          {
+            "condition": "full_tension_compression_lap_good",
+            "C25_30": 46,
+            "C28_35": 43,
+            "C30_37": 42,
+            "C32_40": 39
+          },
+          {
+            "condition": "full_tension_compression_lap_poor",
+            "C25_30": 66,
+            "C28_35": 61,
+            "C30_37": 59,
+            "C32_40": 56
+          }
+        ],
+        "units": "bar_diameters"
+      },
+      "direct_support_reduction": "Anchorage beyond face of support may be reduced to d, but \u2265 max(0.3\u00d7l_b,rqd; 10\u00f8; 100mm)",
+      "nominal_lap_minimum": "max(15\u00f8, 200mm)",
+      "bottom_steel_at_support_minimum_area": "0.25 \u00d7 span area",
+      "source": "Section 6.2.2, Table 6.1, Figure 6.1, page 49",
+      "status": "DIRECTLY STATED"
+    },
+    "curtailment_slabs": {
+      "when_min_reinforcement_only": "Must NOT be curtailed",
+      "simplified_rules_conditions": [
+        "Adjacent spans approximately equal (within 15%)",
+        "Loading uniformly distributed",
+        "Use Model Details MS1-MS5"
+      ],
+      "al_for_slabs_without_shear_reinforcement": "d",
+      "top_bars_internal_support": {
+        "calculate_length_for_alternate_bars": "a+b and c+d",
+        "if_difference_lt_500mm": "Make all bars equal to greater value",
+        "stagger_alternately": "Points 1 and 2 are outer limits",
+        "end_supports": "Alternately staggered, normally as two sets of U-bars"
+      },
+      "continuous_top_mat_recommended": {
+        "reasons": [
+          "control shrinkage cracking",
+          "reduce deflections",
+          "remove trip hazards"
+        ],
+        "minimum_mesh": "A252"
+      },
+      "bottom_bars_internal_bay": "Length = greater of a and b; alternate bars staggered",
+      "bottom_bars_end_bay": "Alternate bars of lengths a and b",
+      "source": "Section 6.2.2, Figures 6.3-6.4, page 50",
+      "status": "DIRECTLY STATED"
+    },
+    "flat_slab_rules": {
+      "column_strip_width": "Normally half the shorter panel dimension",
+      "column_drop_strip_width": "Set equal to column drop width",
+      "aspect_ratio_gt_2_one_way_zone": "Distribution reinforcement parallel to short side in centre",
+      "moment_apportionment_table_6_2": {
+        "column_strip_negative": "75%",
+        "column_strip_positive": "55%",
+        "middle_strip_negative": "25%",
+        "middle_strip_positive": "45%"
+      },
+      "negative_moment_concentration": "2/3 of column strip negative moment in centre half of column strip",
+      "min_bottom_bars_through_column": 2,
+      "edge_and_corner_column_effective_width": {
+        "edge_column": "be = cx + 2y",
+        "corner_column": "be = z + y"
+      },
+      "source": "Section 6.2.2, Figures 6.6-6.7, Tables 6.2, pages 53-54",
+      "status": "DIRECTLY STATED"
+    },
+    "torsion_reinforcement_slab_corners": {
+      "condition": "Corners held down on both sides",
+      "extension_into_slab_min": "\u2265 1/5 of shorter span",
+      "area_each_leg": "\u2265 3/4 of area for maximum mid-span design moment",
+      "corner_one_discontinuous_edge": "Half area sufficient",
+      "source": "Section 6.2.2, Figure 6.9, page 54",
+      "status": "DIRECTLY STATED"
+    },
+    "edge_reinforcement": {
+      "location": "Along free (unsupported) edges and corners supported on both sides",
+      "form": "U-bars (Figure 6.8)",
+      "depth_U_bar_minimum": "h (slab depth), leg \u2265 2h",
+      "source": "Section 6.2.2, Figure 6.8, page 54",
+      "status": "DIRECTLY STATED"
+    },
+    "holes_in_slabs": {
+      "structurally_insignificant_rules": {
+        "min_unsupported_edge_distance": "= width of hole w1",
+        "max_isolated_opening_width_perpendicular_to_span": "1000mm",
+        "max_isolated_opening_length_parallel_to_span": "0.25 \u00d7 span lx",
+        "max_total_width_multiple_holes": "0.25 \u00d7 span ly",
+        "small_holes_can_ignore_sides_le_mm": 150,
+        "medium_holes_sides_le_500mm": {
+          "option_1": "Displace affected bars equally either side of hole",
+          "option_2": "Cut/slide bars to face of hole; compensating bars of equal area; trimmers extend min 45\u00f8 beyond hole"
+        },
+        "large_holes_sides_500_to_1000mm": {
+          "extra": "Also trim top of holes with similar bars",
+          "diagonal_reinforcement": "If depth > 250mm, provide diagonal reinforcement of similar area in top and bottom (consider congestion of multiple layers)"
+        },
+        "groups_boundary_le_500mm": "Trim as single hole per medium hole rules",
+        "groups_boundary_500_to_1000mm": "Trim as single hole per large hole rules"
+      },
+      "source": "Section 6.2.2, page 54-56",
+      "status": "DIRECTLY STATED"
+    },
+    "punching_shear": {
+      "placement_zone": "Between loaded area/column and 1.5d inside outer control perimeter; min 1.5d from column",
+      "min_perimeters": 2,
+      "link_perimeter_spacing_max": "0.75d",
+      "link_leg_spacing_within_first_perimeter_max": "1.5d (within 2d from loaded area)",
+      "link_leg_spacing_outside_first_perimeter_max": "2d (for perimeters contributing to shear capacity)",
+      "model_detail_MS6": {
+        "perimeter_spacing": "0.75d from column face; link leg perimeters at 0.75d centres",
+        "last_perimeter_link_to_outer_control": "0.5d",
+        "link_size_min": "10\u00f8 but \u2265 70mm (overall link height)",
+        "fixing_bar_dia": "12mm",
+        "fixing_bar_anchorage": "Tension anchorage beyond last link"
+      },
+      "proprietary_systems": [
+        "Stud rail system",
+        "Shear ladders",
+        "Structural steel shear head"
+      ],
+      "source": "Section 6.2.2, Figure 6.10, Model Detail MS6, pages 58-59, 71",
+      "status": "DIRECTLY STATED"
+    },
+    "model_details_slabs": {
+      "MS1": {
+        "name": "One and two way slabs \u2014 Span and internal support",
+        "bottom_bar_length": "0.8 \u00d7 span + 0.5 \u00d7 tension lap",
+        "top_bar_extension_from_support": "0.3 \u00d7 span each side",
+        "top_bar_stagger": "Alternately staggered",
+        "top_bar_extension_from_face": "0.1 \u00d7 short span or 600mm (whichever shorter)",
+        "distribution_bar_pitch_table": {
+          "dia_10_depth_100": 350,
+          "dia_10_depth_125": 425,
+          "dia_10_depth_150": 425,
+          "dia_10_depth_175": 350,
+          "dia_10_depth_200": 300,
+          "dia_10_depth_225": 275,
+          "dia_10_depth_250": 225,
+          "dia_10_depth_275": 200,
+          "dia_10_depth_300": 200,
+          "dia_10_depth_325": 175,
+          "dia_10_depth_350": 150,
+          "dia_10_depth_375": 150,
+          "dia_10_depth_400": 125,
+          "dia_12_depth_150": 450,
+          "dia_12_depth_175": 450,
+          "dia_12_depth_200": 450,
+          "dia_12_depth_225": 400,
+          "dia_12_depth_250": 350,
+          "dia_12_depth_275": 325,
+          "dia_12_depth_300": 275,
+          "dia_12_depth_325": 250,
+          "dia_12_depth_350": 250,
+          "dia_12_depth_375": 250,
+          "dia_12_depth_400": 200,
+          "dia_16_depth_200": 450,
+          "dia_16_depth_225": 450,
+          "dia_16_depth_250": 450,
+          "dia_16_depth_275": 450,
+          "dia_16_depth_300": 450,
+          "dia_16_depth_325": 425,
+          "dia_16_depth_350": 400,
+          "dia_16_depth_375": 375
+        },
+        "note": "Not less than 2 bars of distribution reinforcement"
+      },
+      "MS2": {
+        "name": "One and two way slabs \u2014 External restrained supports",
+        "detail_A_when_X_gt_anchorage_length": {
+          "u_bar_area": "= half bottom steel at mid-span",
+          "top_leg_from_support": "0.3 \u00d7 span",
+          "bottom_extension": "500mm or tension lap (greater)",
+          "u_bar_pitch": "Alternately placed, p1 pitch"
+        },
+        "detail_B_when_X_lt_anchorage": "Straight bar with tension anchorage length; bearing stress inside bend must not exceed limit",
+        "detail_C": "Non-standard bend radius required if bearing stress governs"
+      },
+      "MS3": {
+        "name": "One and two way slabs \u2014 External unrestrained supports (also free edges)",
+        "detail_A_depth_ge_150": {
+          "end_u_bar": "same dia as bottom bars",
+          "anchorage_beyond_face": "max(0.1\u00d7span, 45\u00f8)",
+          "extension_into_span": "max(500mm, tension lap)"
+        },
+        "detail_B_support_lt_200": {
+          "anchorage": "max(d, 0.3\u00d7l_b,rqd, 10\u00f8, 100mm)"
+        },
+        "detail_C_support_ge_200": "Suitable for fabric reinforcement"
+      },
+      "MS4": {
+        "name": "Cantilever slabs",
+        "top_bar_min_length": "2 \u00d7 cantilever length over simple supports; alternately staggered",
+        "bottom_bar_area": "\u2265 0.5 \u00d7 top reinforcement area",
+        "bottom_bar_extension_from_support_mm": 300,
+        "bottom_bar_min_into_cantilever": "0.5 \u00d7 cantilever length"
+      },
+      "MS5": {
+        "name": "Flat slabs \u2014 Span and internal support",
+        "column_strip_2_3_concentration": "2/3 of bars in centre half when equiv. column dia < 0.15 \u00d7 panel width",
+        "distribution_bar_length": "0.6 \u00d7 span",
+        "longer_span_bars": "Outer layer unless otherwise specified",
+        "two_bottom_bars_through_column": true,
+        "fire_rating_R90_plus": "Distribution bars area \u2265 20% of total top design reinforcement"
+      },
+      "MS6": "Flat slab shear reinforcement (see punching_shear above)",
+      "MS7": {
+        "name": "Flat slabs \u2014 Column drops",
+        "main_bottom_bars": "Carried through column drop",
+        "drop_bottom_nominal": "12mm dia at 300mm pitch",
+        "minimum_gap_below_slab": "75mm minimum"
+      },
+      "MS8": {
+        "name": "Ribbed and coffered slabs",
+        "min_rib_width_one_bar_mm": 75,
+        "min_rib_width_two_bars_mm": 125,
+        "lacing_bars": "12mm dia if overall depth > 750mm",
+        "fabric_nominal": "A252 (unless greater specified; check lap lengths per EC2 Cl.8.7.5)",
+        "fabric_overlap_cover": "Special care at fabric overlaps",
+        "cover_exceeds_40mm": "Supplementary reinforcement for fire \u2014 6mm links max pitch 200mm plus nominal lacer bar (coffered)"
+      }
+    }
+  },
+  "rules": [
+    {
+      "id": "SR-001",
+      "source": "Section 6.2.2",
+      "condition": "minimum reinforcement only provided",
+      "action": "Must NOT be curtailed",
+      "constraint_type": "MUST NOT"
+    },
+    {
+      "id": "SR-002",
+      "source": "Section 6.2.2",
+      "condition": "bottom reinforcement at end support, no fixity assumed",
+      "action": "area >= 0.25 \u00d7 span area",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-003",
+      "source": "Section 6.2.2",
+      "condition": "flat slab \u2014 negative moment in column strip",
+      "action": "2/3 of column strip negative moment in central half of column strip width",
+      "constraint_type": "SHOULD"
+    },
+    {
+      "id": "SR-004",
+      "source": "Section 6.2.2",
+      "condition": "flat slab \u2014 any bottom reinforcement",
+      "action": "at least two bottom bars pass through each column",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-005",
+      "source": "Section 6.2.2",
+      "condition": "hole sides <= 150mm",
+      "action": "May be ignored structurally; show on drawing",
+      "constraint_type": "MAY IGNORE structurally"
+    },
+    {
+      "id": "SR-006",
+      "source": "Section 6.2.2",
+      "condition": "hole sides 150-500mm",
+      "action": "Displace bars or cut/trim: compensating bars + trimmers extending min 45\u00f8 beyond hole",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-007",
+      "source": "Section 6.2.2",
+      "condition": "hole sides 500-1000mm",
+      "action": "As SR-006 PLUS trim top and bottom; if slab depth > 250mm add diagonal reinforcement",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-008",
+      "source": "Section 6.2.2",
+      "condition": "slab corner held down on both sides",
+      "action": "Provide torsion reinforcement extending \u2265 1/5 shorter span; area each leg \u2265 3/4 max mid-span moment area",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-009",
+      "source": "Section 6.2.2",
+      "condition": "punching shear reinforcement required",
+      "action": "Place between column and 1.5d inside control perimeter; \u22652 perimeters; perimeter spacing \u22640.75d",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-010",
+      "source": "Model Detail MS1",
+      "condition": "slab span and internal support, standard conditions",
+      "action": "Bottom bars: length = 0.8\u00d7span + 0.5\u00d7tension_lap, alternately reversed. Top bars: extend 0.3\u00d7span each side; stagger alternately; outer limit 0.1\u00d7short_span or 600mm",
+      "constraint_type": "STANDARD PRACTICE"
+    },
+    {
+      "id": "SR-011",
+      "source": "Section 6.2.2",
+      "condition": "ribbed or coffered slab",
+      "action": "Rib spacing \u2264 1.5m; rib depth (excl. topping) \u2264 4\u00d7top width; otherwise design as beams",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "SR-012",
+      "source": "Model Detail MS4",
+      "condition": "cantilever slab",
+      "action": "Top bar min length = 2\u00d7cantilever over simple support; alternately staggered. Bottom area \u2265 0.5\u00d7top area",
+      "constraint_type": "MUST"
+    }
+  ],
+  "parameters": {
+    "input": {
+      "slab_type": {
+        "options": [
+          "one_way",
+          "two_way",
+          "flat",
+          "cantilever",
+          "ribbed",
+          "coffered"
+        ]
+      },
+      "slab_thickness_h_mm": {
+        "min": 100,
+        "typical_range": [
+          100,
+          400
+        ]
+      },
+      "span_lx_mm": {
+        "description": "shorter span or span direction"
+      },
+      "span_ly_mm": {
+        "description": "longer span (two-way/flat)"
+      },
+      "support_type": {
+        "options": [
+          "simply_supported",
+          "continuous",
+          "cantilever",
+          "partially_fixed"
+        ]
+      },
+      "exposure_class": {
+        "options": [
+          "XC1_internal",
+          "XC3_external"
+        ]
+      },
+      "fire_rating_hours": {
+        "options": [
+          1,
+          1.5,
+          2,
+          3,
+          4
+        ]
+      },
+      "main_bar_dia_mm": {
+        "preferred": [
+          10,
+          12,
+          16,
+          20,
+          25
+        ]
+      },
+      "distribution_bar_dia_mm": {
+        "preferred": [
+          10,
+          12,
+          16
+        ]
+      },
+      "main_bar_spacing_mm": {},
+      "distribution_bar_spacing_mm": {},
+      "cover_mm": {
+        "note": "specified by designer; model details assume 20mm internal, 40mm external"
+      }
+    },
+    "derived": {
+      "nominal_cover_mm": "max(15, bar_dia) + delta_cdev for XC1; 35 + delta_cdev for XC3",
+      "As_min_tension_mm2_per_m": "0.0015 \u00d7 slab_thickness \u00d7 1000 (for C30/37, fyk=500)",
+      "As_min_bottom_in_span": "0.40 \u00d7 As_max_required",
+      "As_min_top_at_support": "0.25 \u00d7 As_max_in_span (0.15 for end support)",
+      "As_secondary_min": "0.20 \u00d7 As_main",
+      "max_pitch_main_mm": "min(3h, 400)",
+      "max_pitch_secondary_mm": "min(3.5h, 450)",
+      "top_bar_extension_from_support_mm": "0.3 \u00d7 span",
+      "bottom_bar_length_ms1_mm": "0.8 \u00d7 span + 0.5 \u00d7 tension_lap",
+      "top_bar_end_limit_ms1_mm": "min(0.1 \u00d7 short_span, 600)",
+      "anchorage_length_bars": "from Table 6.1 (bar diameters \u00d7 bar_dia)",
+      "lap_length_bars": "from Table 6.1 (bar diameters \u00d7 bar_dia)"
+    },
+    "constraints": {
+      "min_pitch_mm": 75,
+      "min_pitch_at_laps_mm": 100,
+      "max_pitch_main_mm_concentrated_loads": "min(2h, 250)",
+      "max_pitch_secondary_mm_concentrated_loads": "min(3h, 400)",
+      "ribbed_rib_spacing_max_m": 1.5,
+      "ribbed_rib_depth_to_width_max": 4
+    },
+    "flat_slab_specific": {
+      "input": {
+        "column_width_cx_mm": {},
+        "column_depth_cy_mm": {},
+        "panel_lx_mm": {},
+        "panel_ly_mm": {}
+      },
+      "derived": {
+        "column_strip_width_mm": "min(lx/2, ly/2) in each direction; normally half shorter panel dimension",
+        "middle_strip_width_mm": "panel_width - column_strip_width",
+        "column_strip_neg_moment_fraction": 0.75,
+        "column_strip_pos_moment_fraction": 0.55,
+        "centre_concentration_width": "half column strip width",
+        "centre_neg_moment_fraction": "2/3 of column strip negative moment",
+        "effective_width_edge_column": "cx + 2y",
+        "effective_width_corner_column": "z + y"
+      }
+    },
+    "recovered_information_pass": {
+      "provenance": "RECOVERY_gap_fill (1).json SECTIONS B, C, D, H",
+      "MS2_external_restrained_supports": {
+        "source": "Model Detail MS2, page 67",
+        "status": "EXTRACTED",
+        "detail_A": {
+          "condition": "X > anchorage length",
+          "u_bar_top_extension": "min(0.1 * span, 600mm)",
+          "u_bar_bottom_leg": "into wall; max(500mm, tension_lap)",
+          "u_bar_area": "0.5 * bottom steel at midspan",
+          "corner_bar": "Inside each corner of U",
+          "top_bar_extension": "0.3 * span",
+          "bend_offset_mm": 50
+        },
+        "detail_B": {
+          "condition": "X < anchorage length and bearing stress <= limit",
+          "geometry": "bottom bar hooked down into wall; bar pitch p at bottom, 0.5p stagger into wall"
+        },
+        "detail_C": {
+          "condition": "bearing stress inside bend requires non-standard radius of bend",
+          "geometry": "tension anchorage length large radius bend into wall"
+        },
+        "X_parameter": "Horizontal distance from face of support to termination point",
+        "slab_wall_connections": {
+          "MS2A": "Wall continues above and below (simple continuity)",
+          "MS2B": "Large bending moment transfer; top rebar passes down into wall (easy bends)",
+          "MS2C": "Alternative large moment configuration"
+        }
+      },
+      "MS3_external_unrestrained_supports": {
+        "source": "Model Detail MS3, page 68",
+        "status": "EXTRACTED",
+        "detail_A": {
+          "condition": "Slab depth >= 150mm",
+          "end_U_bars": "Same diameter as bottom bars",
+          "top_extension": "max(0.1 * span, 45 * bar_dia)",
+          "bottom_extension": "max(500mm, tension_lap)"
+        },
+        "detail_B": {
+          "condition": "Slab depth < 150mm and support width < 200mm",
+          "anchorage_at_support": "max(d, 0.3 * l_b_rqd, 10 * bar_dia, 100mm)",
+          "extension_into_span": "max(500mm, tension_lap)",
+          "bobbed_bars": "May be laid over for cover"
+        },
+        "detail_C": {
+          "condition": "Slab depth < 150mm and support width >= 200mm",
+          "anchorage_at_support": "max(d, 0.3 * l_b_rqd, 10 * bar_dia, 100mm)",
+          "extension_into_span": "max(500mm, tension_lap)"
+        }
+      },
+      "MS4_cantilever_slabs": {
+        "source": "Model Detail MS4, page 69",
+        "status": "EXTRACTED",
+        "top_bar_minimum_length": "2 * cantilever length over simple support; alternately staggered",
+        "support_extension_mm": 300,
+        "bottom_bar_extension_from_support_min": "0.5 * cantilever length",
+        "bottom_bar_lap": "0.5 * tension lap at end of cantilever zone",
+        "bottom_bar_area": ">= 0.5 * top reinforcement area (to control deflection)",
+        "end_U_bar": "U bar ensures lever arm retained"
+      },
+      "recovered_general_slab_rules": {
+        "H2_simplified_curtailment_condition_5_1_3": "Analysis for single load case all-spans-loaded per UK NA 5.1.3(1)P and no shear rebar required.",
+        "H3_fabric_lap_area_allowance": "22% assumed for 300mm laps in coffered slabs.",
+        "H5_direct_support_anchorage": "Reduced to d, not less than max(0.3 * l_b_rqd, 10 * bar_dia, 100mm).",
+        "H6_indirect_support_anchorage": "Full anchorage l_bd from line of contact.",
+        "H7_partial_fixity_top_bars": "Min top steel at support: 25% of max in span (reduced to 15% for end support)."
+      }
+    }
+  }
+}

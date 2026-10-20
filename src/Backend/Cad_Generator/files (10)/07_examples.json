@@ -1,0 +1,190 @@
+{
+  "note": "The chapter has NO worked calculations; only presentation/working-drawing examples. These are recorded as drawing examples.",
+  "examples": [
+    {
+      "id": "E-W1",
+      "page": 100,
+      "title": "Wall on line 'A' between grids 2 and 3, levels 12.675 to 16.675",
+      "callouts": [
+        "14 H10 05 200 (7NF 7FF)",
+        "10 H12 03 200 (UB's in pairs)",
+        "2 H16 06",
+        "20 H10 04 200 UB",
+        "4 H16 02 (2 NF 2 FF)",
+        "52 H12 01 200 (25 FF 27 NF)",
+        "12 H10 04 200 UB",
+        "12 H10 07 200 UB",
+        "40 H10 08 200 (20 NF 20 FF)",
+        "20 H10 07 200 UB",
+        "20 H10 09 (200 links)"
+      ],
+      "dims": [
+        "600",
+        "75"
+      ],
+      "sections": [
+        "1-1 through wall thickness with 05,06,03,0303",
+        "2-2 end plan with 01,07,08,09",
+        "3-3 plan L-shaped end with 01,02,04"
+      ],
+      "drawing_implication": "Elevation + 3 sections; every bar mark repeated across views."
+    },
+    {
+      "id": "E-RW1",
+      "page": 107,
+      "title": "Free-standing retaining wall panel C",
+      "callouts": [
+        "47 H16 01 150 T",
+        "47 H12 02 150 B",
+        "16 H12 03 250 8H 8B",
+        "8 H16 04 250 T",
+        "8 H12 05 250 B",
+        "54 H12 06 150 NF",
+        "54 H16 07 150 FF",
+        "54 H12 08 150 NF",
+        "54 H16 09 150 FF",
+        "22 H12 10 250 11NF 11FF",
+        "22 H12 11 250 NF 11 H12 12 250 FF",
+        "11 H10 13 (a-k) 250 (UB)",
+        "54 H10 14 150 UB"
+      ],
+      "levels": [
+        4.3,
+        1.8
+      ],
+      "dims": [
+        "500",
+        "75",
+        "150",
+        "50"
+      ]
+    },
+    {
+      "id": "E-RW2",
+      "page": 108,
+      "title": "Basement retaining wall A",
+      "callouts": [
+        "34 H12 13 150 17NF 18FF",
+        "34 H12 14 150 17NF 18FF",
+        "65 H12 11 150 UB",
+        "65 H12 09 150 NF",
+        "65 H16 10 150 FF",
+        "65 H12 07 150 NF",
+        "65 H16 08 150 FF",
+        "17 H12 12 150 UB",
+        "29 H12 04 300 T",
+        "29 H12 05 300 B",
+        "29 H12 06 300 B",
+        "8 H16 01/02 4B 4T",
+        "2 H12 03 SIDE"
+      ],
+      "covers": [
+        "40 CVR",
+        "50 CVR",
+        "75 CVR",
+        "50"
+      ],
+      "levels": [
+        10.3,
+        6.8
+      ]
+    },
+    {
+      "id": "E-F1",
+      "page": 116,
+      "title": "Traditional method - base K/12",
+      "callouts": [
+        "13 H25 01 250 B2",
+        "13 H25 02 250 B2",
+        "4H20.03",
+        "3H10.04.300 LINKS"
+      ],
+      "note": "65 cover to 03 in cage section 2-2; level 2.75"
+    },
+    {
+      "id": "E-F2",
+      "page": 117,
+      "title": "Representational method table",
+      "table": [
+        [
+          "A1,A3,A5,A7,F1,F3,F7",
+          7,
+          2.75,
+          "15 H25 01 200",
+          "15 H25 01 200",
+          "2-2",
+          "6 H32 10",
+          "3 H10 12 300"
+        ],
+        [
+          "F5",
+          1,
+          2.75,
+          "15 H25 02 200",
+          "18 H25 02 200",
+          "3-3",
+          "8 H25 13",
+          "3 H10 14 300"
+        ],
+        [
+          "C2,C4,C6",
+          3,
+          3.9,
+          "18 H25 06 225",
+          "18 H25 06 200",
+          "2-2",
+          "6 H40 16",
+          "3 H10 17 300"
+        ],
+        [
+          "C5",
+          1,
+          4.2,
+          "12 H20 08 250",
+          "12 H20 08 250",
+          "4-4",
+          "8 H20 21",
+          "3 H10 22 300"
+        ]
+      ],
+      "columns": [
+        "Column ref",
+        "No off",
+        "Base level",
+        "MK A",
+        "MK B",
+        "Cage section",
+        "Starters MK C",
+        "Starters MK D"
+      ],
+      "note": "Reproduced as read from image; MK B pitch entries may differ from MK A in scan - verify."
+    },
+    {
+      "id": "E-S1",
+      "page": 125,
+      "title": "End-supported stair flight B with landing (levels 12.102 / 15.642)",
+      "callouts": [
+        "5 H10 10 200 (UB)",
+        "1 H10 12 UB",
+        "12 H10 01 200",
+        "12 H10 09 200 6T. 6B",
+        "15 H10 11 200 B",
+        "6 H10 11 200 T",
+        "6 sets of bars at 200 each set (H10 02 B..H10 07 T, H10 C8 T[sic])"
+      ],
+      "note": "'C8' is likely a typo for 08 - unresolved"
+    },
+    {
+      "id": "E-S2",
+      "page": 126,
+      "title": "Cantilever stair flight B (10 treads)",
+      "callouts": [
+        "6 H8 04 200 links per tread",
+        "11 H8 03 UB 1 per tread",
+        "20 H10 01. 2 per tread",
+        "11 H10 02 B",
+        "6 sets of bars at 200 each set (H10 05 B..H10 11 T)"
+      ]
+    }
+  ]
+}

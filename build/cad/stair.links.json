@@ -1,0 +1,59 @@
+{
+  "model_id": "stair",
+  "revision": 1,
+  "model_hash": "2aaa9170b2998470b16819be1c1e874952c57799f0db8d80b6b55dd312c554c2",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "links": [
+    {
+      "model_id": "stair",
+      "internal_id": "stair.flight",
+      "ifc_guid": "3zj3yMCu5Gh8r$exWqLHnl",
+      "ifc_class": "IfcStairFlight",
+      "dxf_handle": "45",
+      "drawing_id": "stair-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "8714dd7d20c10505bb1c1114e1f7cc7bc18e201d158b1e6330d632dddf9df6f8",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T19:15:09+00:00"
+    },
+    {
+      "model_id": "stair",
+      "internal_id": "stair.landing",
+      "ifc_guid": "1qvU2XlcvTfAJ$7U0jQhk$",
+      "ifc_class": "IfcSlab",
+      "dxf_handle": "45",
+      "drawing_id": "stair-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "644cae00da61ab8f2e2774bacd4d6e3a5ad1f92747803c00b9427c4d507c8f14",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T19:15:09+00:00"
+    },
+    {
+      "model_id": "stair",
+      "internal_id": "stair.stair",
+      "ifc_guid": "0nXOa7t7jHje0L_ZvSJ_Di",
+      "ifc_class": "IfcStair",
+      "dxf_handle": "45",
+      "drawing_id": "stair-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "e821dd9dca9d00e725675870a27db038c5bd794f83e7a876b4c4a773c9ef204a",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T19:15:09+00:00"
+    }
+  ],
+  "by_status": {
+    "ok": 3
+  }
+}

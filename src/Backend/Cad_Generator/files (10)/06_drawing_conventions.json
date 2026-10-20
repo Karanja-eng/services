@@ -1,0 +1,59 @@
+{
+  "bar_callout": {
+    "format": "<qty> <type><dia> <mark> <pitch> <face/loc>",
+    "examples": [
+      "14 H10 05 200 (7NF 7FF)",
+      "52 H12 01 200 (25 FF 27 NF)",
+      "20 H10 07 200 UB",
+      "47 H16 01 150 T",
+      "47 H12 02 150 B",
+      "54 H12 08 150 NF",
+      "22 H12 11 250 NF / 11 H12 12 250 FF",
+      "11 H10 13 (a-k) 250 (UB)",
+      "4H20.03 (footing section style)",
+      "3H10.04.300 LINKS",
+      "13 H25 01 250 B2",
+      "6 H8 04 200 links per tread",
+      "11 H10 02 B"
+    ],
+    "note": "Type H = high yield. NF/FF near/far face; T/B top/bottom; UB = 'U' bars; B1/B2 = bottom layer 1/2. Wall note 6.5.2 shows an alternative hyphenated form: 20H10-63-150N1; two-face zone: 40H10-63-150 (20N1-20F2). Ambiguity: pitch shown as 200 in drawings vs 150 in note examples - just examples.",
+    "status": "DIRECTLY STATED (examples); field grammar INFERRED"
+  },
+  "layers_of_reinforcement": "N near face, F far face; identical bars in different faces itemised separately (unique marks).",
+  "bar_marks": "2-digit marks (01,02...) placed at bar end/lead; same mark repeated across plan, elevation and sections; ranged marks '13 (a-k)' for varied bars; leader dot marks the bar; short slash pair marks extent limit.",
+  "symbols": {
+    "section_marker": "filled triangle with arrow, section number in adjacent text, grid circle labels (A,1,2...)",
+    "level_marker": "inverted filled triangle with level e.g. 12.675",
+    "grid": "circled grid refs; wall lines 'A'",
+    "spacing_zone": "dimension-like line with end ticks between extents; '=' marks for equal spacing (representational footing)",
+    "cover_notes": "e.g. '75 COVER TO 03', '40 CVR','50 CVR','75 CVR'"
+  },
+  "views": {
+    "wall": [
+      "elevation (wall on line 'A')",
+      "sections 1-1 (vertical through thickness), 2-2/3-3 (plan sections at ends/corners)",
+      "key/panel plan"
+    ],
+    "retaining_wall": [
+      "plan panel",
+      "elevation panel (1 No OFF)",
+      "section 1-1 through stem+base",
+      "end sections 2-2, 3-3",
+      "key plan with panels A/B/B/B/C",
+      "basement: plan wall A (detailed with wall B), elevation wall A, sections 1-1,2-2,3-3, key plan"
+    ],
+    "foundations": [
+      "traditional: plan per footing on grid (BASE K/12) + section 1-1 + cage section 2-2",
+      "representational: generic X-Y plan + sections + table (Column ref, No off, Base level, Base steel MK A/MK B, Cage sect., Starters MK C/D)"
+    ],
+    "stairs": [
+      "plan (flight B with landing, 2 No THUS)",
+      "longitudinal section 1-1 with slab reinforcement",
+      "section 2-2 (cantilever)",
+      "key plan STAIR S1/S2 with flights A/B/C"
+    ]
+  },
+  "cross_references": "Starter bars for slabs (MS2 B/C) detailed with wall drawings else cross-referenced; column starters shown on footing drawings or comprehensive cross referencing essential; 'SEE PANEL B/D', 'SEE SLAB DRG', 'See drg R021'.",
+  "dimensioning": "Lap/extension dimensions leader to bar mark; cover dims; kicker 75/150; 'Structural floor level'; spacing via 'pitch' in callout; levels in m to 3 dp.",
+  "status": "DIRECTLY STATED + INFERRED from drawings"
+}

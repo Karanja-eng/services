@@ -1,0 +1,176 @@
+{
+  "document": "IStructE/Concrete Society SMDS Ch5-6 — Parametric Variables",
+
+  "general_material_parameters": {
+    "input": {
+      "concrete_grade_fck_fcu": {"typical": "30/37", "min_column": "28/35", "type": "string e.g. '30/37'"},
+      "steel_grade": {"typical": "H (500 MPa)", "options": ["H", "B", "C", "S", "X"]},
+      "max_aggregate_size_mm": {"typical": 20},
+      "delta_cdev_mm": {"with_quality_system": 5, "without": 10}
+    },
+    "derived": {
+      "fbd": "2.25 × η1 × η2 × 0.14 × fck^(2/3)",
+      "fctm": "from EC2 Table 3.2 (used in As,min)"
+    }
+  },
+
+  "slab_parameters": {
+    "input": {
+      "slab_type": {"options": ["one_way", "two_way", "flat", "cantilever", "ribbed", "coffered"]},
+      "slab_thickness_h_mm": {"min": 100, "typical_range": [100, 400]},
+      "span_lx_mm": {"description": "shorter span or span direction"},
+      "span_ly_mm": {"description": "longer span (two-way/flat)"},
+      "support_type": {"options": ["simply_supported", "continuous", "cantilever", "partially_fixed"]},
+      "exposure_class": {"options": ["XC1_internal", "XC3_external"]},
+      "fire_rating_hours": {"options": [1, 1.5, 2, 3, 4]},
+      "main_bar_dia_mm": {"preferred": [10, 12, 16, 20, 25]},
+      "distribution_bar_dia_mm": {"preferred": [10, 12, 16]},
+      "main_bar_spacing_mm": {},
+      "distribution_bar_spacing_mm": {},
+      "cover_mm": {"note": "specified by designer; model details assume 20mm internal, 40mm external"}
+    },
+    "derived": {
+      "nominal_cover_mm": "max(15, bar_dia) + delta_cdev for XC1; 35 + delta_cdev for XC3",
+      "As_min_tension_mm2_per_m": "0.0015 × slab_thickness × 1000 (for C30/37, fyk=500)",
+      "As_min_bottom_in_span": "0.40 × As_max_required",
+      "As_min_top_at_support": "0.25 × As_max_in_span (0.15 for end support)",
+      "As_secondary_min": "0.20 × As_main",
+      "max_pitch_main_mm": "min(3h, 400)",
+      "max_pitch_secondary_mm": "min(3.5h, 450)",
+      "top_bar_extension_from_support_mm": "0.3 × span",
+      "bottom_bar_length_ms1_mm": "0.8 × span + 0.5 × tension_lap",
+      "top_bar_end_limit_ms1_mm": "min(0.1 × short_span, 600)",
+      "anchorage_length_bars": "from Table 6.1 (bar diameters × bar_dia)",
+      "lap_length_bars": "from Table 6.1 (bar diameters × bar_dia)"
+    },
+    "constraints": {
+      "min_pitch_mm": 75,
+      "min_pitch_at_laps_mm": 100,
+      "max_pitch_main_mm_concentrated_loads": "min(2h, 250)",
+      "max_pitch_secondary_mm_concentrated_loads": "min(3h, 400)",
+      "ribbed_rib_spacing_max_m": 1.5,
+      "ribbed_rib_depth_to_width_max": 4
+    },
+
+    "flat_slab_specific": {
+      "input": {
+        "column_width_cx_mm": {},
+        "column_depth_cy_mm": {},
+        "panel_lx_mm": {},
+        "panel_ly_mm": {}
+      },
+      "derived": {
+        "column_strip_width_mm": "min(lx/2, ly/2) in each direction; normally half shorter panel dimension",
+        "middle_strip_width_mm": "panel_width - column_strip_width",
+        "column_strip_neg_moment_fraction": 0.75,
+        "column_strip_pos_moment_fraction": 0.55,
+        "centre_concentration_width": "half column strip width",
+        "centre_neg_moment_fraction": "2/3 of column strip negative moment",
+        "effective_width_edge_column": "cx + 2y",
+        "effective_width_corner_column": "z + y"
+      }
+    }
+  },
+
+  "beam_parameters": {
+    "input": {
+      "beam_width_bw_mm": {"typical_range": [200, 600]},
+      "beam_depth_h_mm": {"typical_range": [300, 1200]},
+      "flange_width_b_mm": {"for_T_beams": true},
+      "flange_depth_hf_mm": {"for_T_beams": true},
+      "span_L_mm": {},
+      "support_width_mm": {},
+      "cover_mm": {"internal_typical": 35, "external_typical": 40},
+      "main_bar_dia_mm": {"preferred": [12, 16, 20, 25, 32, 40]},
+      "main_bar_count": {},
+      "link_dia_mm": {"preferred_min": 8},
+      "link_legs": {},
+      "hanger_bar_dia_mm": {"preferred": 16},
+      "side_bar_dia_mm": {"if_depth_ge_1000": 16},
+      "service_stress_MPa": {"default": 310},
+      "wk_target_mm": {"options": [0.2, 0.3, 0.4]}
+    },
+    "derived": {
+      "effective_depth_d_mm": "h - cover - link_dia - main_bar_dia/2",
+      "As_min_tension": "0.0015 × bw × d",
+      "Asc_min_compression": "0.002 × bw × h",
+      "hanger_bar_area": "max(0.20 × As_support_max, compression_area_required)",
+      "bottom_splice_area": "max(0.30 × As_span_max, As_min)",
+      "link_area": "Asw = link_legs × π/4 × link_dia²",
+      "link_min_area_ratio": "0.00085 × bw",
+      "link_max_spacing_mm": "min(300, 0.75d, 12×compression_bar_dia)",
+      "link_min_spacing_mm": "max(100, 50 + 12.5 × link_legs)",
+      "link_max_lateral_spacing_mm": "min(600, 0.75d)",
+      "side_bar_pitch_mm_if_deep": 250,
+      "max_bar_spacing_tension_mm": "from Table 6.3 (function of service_stress and wk_target)",
+      "anchorage_length_bars": "from Table 6.4",
+      "lap_length_bars": "from Table 6.4",
+      "al_shift_rule_mm": "1.25d (default)",
+      "curtailment_top_min_extension_mm": "max(0.15L, 45×bar_dia)",
+      "curtailment_top_default_extension_mm": "0.25L",
+      "bottom_splice_extension_mm": "tension lap or compression lap",
+      "U_bar_area": "max(tension area for support moment, 0.30 × As_span_max)",
+      "effective_flange_width_beff": "Σ(0.2×bi + 0.1×l0) + bw ≤ b"
+    },
+    "constraints": {
+      "min_main_bar_dia_mm": 12,
+      "min_horizontal_pitch_mm": 75,
+      "min_horizontal_pitch_pairs_mm": 100,
+      "min_vertical_pitch_mm": "max(25, bar_dia)",
+      "max_compression_bar_spacing_mm": 300,
+      "max_distance_bar_from_link_leg_mm": 150,
+      "side_bar_trigger_depth_mm": 1000,
+      "deep_beam_trigger": "span < 3 × h"
+    }
+  },
+
+  "column_parameters": {
+    "input": {
+      "column_width_mm": {},
+      "column_depth_mm": {},
+      "clear_height_mm": {},
+      "axial_force_NEd_kN": {},
+      "cover_mm": {"internal_typical": 30, "external_typical": 35},
+      "main_bar_dia_mm": {"preferred_min": 16},
+      "main_bar_count": {"min_rectangular": 4, "min_circular": 6},
+      "link_dia_mm": {},
+      "concrete_grade": {"min_fck_fcu": "28/35"}
+    },
+    "derived": {
+      "Ac_mm2": "column_width × column_depth",
+      "As_min_mm2": "max(0.002 × Ac, 0.10 × NEd / fyd)",
+      "As_max_mm2": "0.04 × Ac",
+      "As_max_at_laps_mm2": "0.08 × Ac",
+      "link_dia_min_mm": "max(main_bar_dia/4, 8)",
+      "link_max_spacing_mm": "min(20 × main_bar_dia, lesser_column_dim, 400)",
+      "link_spacing_at_beam_slab_mm": "0.6 × link_max_spacing_mm",
+      "anchorage_length_bars": "from Table 6.5",
+      "lap_length_bars": "from Table 6.5",
+      "lap_bursting_links_area": "1.0 × As_one_lapped_bar (if main_bar_dia >= 20mm)"
+    },
+    "constraints": {
+      "grade_to_slab_ratio_max": 1.4,
+      "surface_mesh_trigger_cover_mm": 40,
+      "surface_mesh_spacing_max_mm": 100,
+      "surface_mesh_dia_min_mm": 4
+    }
+  },
+
+  "anchorage_lap_parameters": {
+    "alpha1": {
+      "straight_tension": 1.0, "other_tension_cd_gt_3dia": 0.7,
+      "other_tension_otherwise": 1.0, "compression": 1.0
+    },
+    "alpha2_straight_tension": "1 - 0.15(cd - ø)/ø; clamped [0.7, 1.0]",
+    "alpha2_other_tension": "1 - 0.15(cd - 3ø)/ø; clamped [0.7, 1.0]",
+    "alpha3": "1 - K×λ; clamped [0.7, 1.0]; K from Figure 5.4",
+    "alpha4_welded_transverse": 0.7,
+    "alpha5_transverse_pressure": "1 - 0.04p; clamped [0.7, 1.0]",
+    "alpha6_from_percentage_lapped": {
+      "lt_25": 1.0, "33": 1.15, "50": 1.4, "gt_50": 1.5
+    },
+    "K_values_beams_slabs": {
+      "corner_confined": 0.1, "side_partial": 0.05, "unconfined": 0.0
+    }
+  }
+}

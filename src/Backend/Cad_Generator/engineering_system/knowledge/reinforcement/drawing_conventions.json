@@ -1,0 +1,65 @@
+{
+  "bar_type_drawing_symbols": {
+    "description": "Single-letter symbols used on drawings/schedules to denote reinforcement type/grade, by historical period. See 02_engineering_knowledge.json material_property_periods for the full period-by-period mapping.",
+    "symbols_seen": {
+      "R": "Plain/deformed grade 250 (varies slightly by era) — BS4466:1981 onward",
+      "T": "Type 2 deformed bars, grade 460/425 or Ductility B (varies by era)",
+      "X": "Not covered by other listed symbols / type defined in design or contract specification",
+      "S": "Stainless reinforcement (1985-2004 era) OR a not-otherwise-listed type (BS8666 era) — symbol meaning shifted between eras, see source",
+      "W": "Plain reinforcement to BS4482 (1985-2004) OR Ductility A/B deformed Type 2 to BS4449 (BS8666 era) — meaning shifted between eras",
+      "D": "Type 1 deformed reinforcement to BS4482 (1985-2004) OR plain round to BS4482/fabric to BS4483 (BS8666 era)",
+      "F": "Deformed Type 2 to BS4482 or Ductility A of BS4449 (BS8666 era only)",
+      "B": "Specified grade/type of stainless steel to BS6744 (BS8666 era only)",
+      "H": "Used throughout the separately-processed Columns/Walls/Foundations/Staircases chapter (e.g. 'H20', 'H10') for high-yield deformed bar. INFERRED equivalent to BS8666-era high-yield deformed bar; not itself defined in this appendix (see gaps file)."
+    },
+    "caution": "The same letter symbol (S, W, D, T, R, X) can mean a DIFFERENT bar type/grade depending on which historical period's table applies. A generator reproducing period-accurate drawings MUST select the symbol table by the target drawing's era/code, never assume a fixed universal mapping."
+  },
+
+  "bar_callout_notation_general": {
+    "pattern_observed_in_member_chapter": "{number_of_bars} {type_symbol}{diameter} {bar_mark_number} {spacing_if_relevant}",
+    "example": "4 H20 19  =  4 bars, high-yield deformed, 20mm diameter, bar mark 19",
+    "example_with_spacing": "15 H8 20 200  =  15 bars, high-yield deformed, 8mm dia, bar mark 20, at 200mm centres",
+    "wall_zone_suffix_example": "20H10-63-150N1  =  20 bars, H10, bar mark 63, at 150mm centres, Near Face, layer 1",
+    "source_note": "This callout pattern is DIRECTLY STATED in the previously processed member chapter (pp.88-127), not this appendix; included here because it is the notation that Appendix B's shape-code/dimension data ultimately feeds (the number+diameter+mark+spacing callout references a schedule row keyed by bar mark, and the schedule row's shape code + A-E dimensions come from this appendix's Table catalogue)."
+  },
+
+  "bar_bending_schedule_fields": {
+    "description": "Implied schedule row structure, reconstructed from the shape-code table's column headings and the constraint language ('Neither A nor... shall be less than P').",
+    "fields": [
+      {"field": "bar_mark", "meaning": "unique reference number tying a schedule row to drawing callouts"},
+      {"field": "shape_code", "meaning": "2-digit code from the standard catalogue (00-99), selects the length formula and the dimension-letter template (A,B,C,D,E)"},
+      {"field": "dimension_A", "meaning": "primary controlled dimension; not a free/tolerance dimension unless code 99 says otherwise"},
+      {"field": "dimension_B_through_E", "meaning": "further dimensions as required by the shape code template; the one shown in parentheses in the standard table is the free/tolerance-absorbing dimension"},
+      {"field": "bar_type_symbol", "meaning": "single letter per bar_type_drawing_symbols, era-dependent"},
+      {"field": "bar_size_d", "meaning": "nominal diameter in mm"},
+      {"field": "number_of_bars", "meaning": "quantity for this mark"},
+      {"field": "total_length_L", "meaning": "computed via the shape code's length formula from A..E, d, and r"},
+      {"field": "member_reference", "meaning": "which member/location this bar belongs to (as seen in the member chapter's per-member tables, e.g. 'COLUMN REF' or 'FLIGHT B')"}
+    ],
+    "fact_status": "INFERRED structure (the schedule columns themselves are not shown as a table image in this appendix extract) but individual field meanings are DIRECTLY STATED elsewhere in the shape-code descriptions and constraint text."
+  },
+
+  "shape_diagram_drawing_conventions": {
+    "dimension_letter_convention": "Each shape uses up to 5 dimension letters A, B, C, D, E laid out along the bar's segments in the schematic. A dimension shown in parentheses, e.g. (C), is the free/tolerance dimension — the fabricator/detailer allows deviation to land there rather than on the other controlled dimensions.",
+    "bend_geometry_symbols": {
+      "r": "minimum scheduling radius (internal bend radius), read from Table B.1 by bar size",
+      "R": "an explicit/design-specified bend radius, used instead of the standard r in some shapes (e.g. shape 12)",
+      "d": "nominal bar diameter, used directly in every length-adjustment term of every formula (bend allowance deduction)"
+    },
+    "special_shape_conventions": {
+      "shape_47_and_51_and_63": "Offer both an exact formula and an alternative 'minimized' formula expressed directly in terms of bar diameter (e.g. max(16d,160)) for when the free dimensions (C)/(D) are to be minimized rather than solved from stated A/B — i.e., two valid ways to dimension the same shape depending on detailer intent.",
+      "shape_67": "Refers out to BS8666 Clause 10 rather than giving an in-manual formula — an explicit DEPENDENCY on an external code clause not reproduced here.",
+      "shape_98": "Explicitly noted as an isometric sketch convention — used for genuinely 3-dimensional bar shapes (e.g. spatial cranks) that cannot be shown in a single 2D elevation.",
+      "shape_99": "The escape-hatch convention: any shape not matching 00-98 must be drawn as a fully dimensioned sketch with an explicit free dimension in parentheses; used, per this manual's earlier member chapter, for special/one-off details (e.g. Model Detail shapes referenced by name rather than code, such as MC2, MW3, MF5)."
+    }
+  },
+
+  "cross_reference_to_member_chapter_notation": {
+    "note_labels_seen_in_member_chapter": [
+      "N = Near face, F = Far face (wall reinforcement layer notation, 6.5.2)",
+      "T = Top, B = Bottom (column/footing bar layer notation, e.g. '8 H16 04 250 T')",
+      "UB = Undefined/unbanded? or 'U-bar' shorthand — appears as suffix in schedules (e.g. '5 H10 10 200 (UB)') — meaning not explicitly defined in the extracted member chapter text; flagged as a gap",
+      "Model Detail codes (e.g. MC1-MC6, MW1-MW4, MRW1-MRW3, MF1-MF5, MST1-MST2) act as named, reusable standard-detail references cross-linking a specific bar arrangement to a generic detail rather than redrawing it per instance"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "model_id": "wall",
+  "revision": 1,
+  "model_hash": "715ec573e07a8d953d1bee883b0b4deafd02d1e84fca562aa830579864dbdd83",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "links": [
+    {
+      "model_id": "wall",
+      "internal_id": "wall.wall",
+      "ifc_guid": "09P03sAOvGagngRCyagB24",
+      "ifc_class": "IfcWall",
+      "dxf_handle": "45",
+      "drawing_id": "wall-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "19355856c6481e2559a48c4ac33143ed9f2d083fc534d4524ea9258f4c9a3e52",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T19:15:05+00:00"
+    }
+  ],
+  "by_status": {
+    "ok": 1
+  }
+}

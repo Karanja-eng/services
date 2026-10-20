@@ -1,0 +1,59 @@
+{
+  "note": "No fully worked numerical calculation examples (with input loads, step-by-step arithmetic, and a final designed reinforcement quantity) are present in this chunk. The source provides generic Model Details (essentially reusable templates) and one illustrative untensioned-reinforcement LAYOUT example for a prestressed flat slab, plus a tendon-profile numerical table. These are captured below as the closest available 'examples'.",
+
+  "example_1_untensioned_reinforcement_layout_unbonded_slab": {
+    "fact_type": "DIRECTLY STATED (figure content), partially INFERRED (overall layout logic)",
+    "source": {"figure": "Figure 7.31", "page": 155, "caption": "Example of untensioned reinforcement layout for an unbonded system"},
+    "context": "Floor plan showing reinforcement bars (not tendons) required in the top of the slab at columns and prestressing anchorages, and in the bottom of slab at mid-span, for an unbonded post-tensioned flat slab.",
+    "reinforcement_schedule_entries_observed": [
+      "8H12 – 2 – 200T1",
+      "6H12 – 10 – 300 (U-bars)",
+      "4H10 – 12 (2–B2 + 2–T2)",
+      "6H12 – 1 – 200T2",
+      "4H10 – 11 (2–B2 + 2–T2)",
+      "6H12 – 5 – 200T2",
+      "8H12 – 6 – 200T1",
+      "8H12 – 14 (2–B1 + 2–B2 + 2–T1 + 2–T2) — typical bars at columns 'Y' (12 no.)",
+      "8H12 – 7 – 200T2",
+      "8H12 – 8 – 200T2",
+      "8H12 – 3 – 200T2",
+      "8H12 – 4 – 200T1 — typical bars at columns 'X' (12 no.)",
+      "8 x 4H10 – 13 (2–B2 – 2–T2)",
+      "192H12 – 10 – 300 (U-bars), min lap = 300",
+      "28H12 – 10 – 300 (U-bars)",
+      "101 (A193) — a fabric reinforcement reference"
+    ],
+    "engineering_takeaway": "Reinforcement is concentrated and grouped near columns (typical column bar groups repeated at each of several column positions, e.g. 12 no. per column type), with U-bar groups used at slab edges/mid-span, and a fabric sheet (A193) supplementing distributed reinforcement — consistent with the general rule (§7.4.1) that flat slabs need top un-tensioned reinforcement at columns and sometimes bottom reinforcement at mid-span.",
+    "drawing_implication": "The reinforcement drawing is prepared SEPARATELY from the post-tensioning profile drawing (explicit rule, not just this example) — i.e. two overlapping but distinct drawing layers/sheets for the same slab."
+  },
+
+  "example_2_tendon_profile_numerical_table": {
+    "fact_type": "DIRECTLY STATED",
+    "source": {"figure": "Figure 7.9 (context)", "page": 141, "caption": "Duct setting-out profiles"},
+    "data": {
+      "distance_along_member_fraction_of_span": [0, 0.05, 0.10, 0.15, 0.20],
+      "tendon_1_ordinate_above_soffit_mm": [1340, 1203, 1061, 938, 833],
+      "tendon_2_ordinate_above_soffit_mm": [888, 771, 679, 602, 536],
+      "tendon_1_distance_from_outside_face_mm": [560, 300, 150, 105, 105],
+      "tendon_2_distance_from_outside_face_mm": [1020, 770, 600, 570, 570]
+    },
+    "engineering_takeaway": "Demonstrates the actual tabular format used to set out a curved tendon profile: two coordinates (y = height above soffit, z = distance from outside/end face) are given at 5%-of-span intervals near the anchorage, for each of (here) two tendons in a row. This is directly reusable as a data structure for a parametric duct-profile generator (see 10_generator.py)."
+  },
+
+  "example_3_band_beam_and_slab_layout": {
+    "fact_type": "DIRECTLY STATED (dimensions transcribed from OCR of a dimensioned drawing)",
+    "source": {"figure": "Figure 7.32a/b, 7.33", "pages": "156-157", "caption": "Typical tendon profile in a post-tensioned band beam and slab"},
+    "context": "Full-floor plan showing column grid (gridlines 21-39 vertically, 1-20 horizontally), tendon spacing dimensions (numerous vertical dimension strings such as '150 65 35 70', '2500', '1250', repeating per bay), slab/beam thickness note.",
+    "key_dimensions_stated": {
+      "slab_thickness_mm": 240,
+      "beam_depth_mm": 475,
+      "bay_dimensioning_pattern": "Repeating dimension groups of the general form 40/80/120/440(or 425/390)/120/80/40 across each beam width, with tendon 'high point' sections dimensioned separately (Fig 7.32b) showing cover callouts of 25, 30, 40, 50mm at different chair heights (425/405 Chair)."
+    },
+    "engineering_takeaway": "Illustrates that a band-beam-and-slab post-tensioned floor is dimensioned as a repeating parametric bay pattern (grid spacing × standard beam cross-section profile), which supports a generator design where one bay's tendon/cover profile is defined once and repeated across the grid — see 10_generator.py `create_band_beam_bay()`.",
+    "caveat": "OCR of this dense engineering drawing is unreliable for exact numeric reconstruction; treat the specific numbers as illustrative/approximate, not verified. Flagged in 12_unresolved_questions.md."
+  },
+
+  "corbels_half_joints_nibs_examples": {
+    "note": "No numerical worked design example (e.g. 'corbel loaded with X kN, therefore As = Y mm²') is given for this topic in this extract. Only the generic reusable Model Details (MCB1, MCB2, MHJ, MN1, MN2) are provided, which function as template patterns rather than solved instances. These templates ARE the reusable engineering pattern requested by the ROLE instructions (do not build a generator that reproduces one instance — build one that reproduces the Model Detail logic parametrically)."
+  }
+}

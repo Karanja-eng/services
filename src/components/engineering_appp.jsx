@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import FloatingPalette from "./FloatingPalette";
 import "./floatingPalette.css";
 import {
   BrowserRouter as Router,
@@ -9,7 +8,6 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import axios from "axios";
 import {
   Settings,
   House,
@@ -19,9 +17,7 @@ import {
   X,
   Maximize2,
   Minimize2,
-  Hammer,
-  Box,
-  DraftingCompass
+  Hammer
 } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
@@ -225,6 +221,7 @@ const ChatInputWithLogic = ({ input, setInput, handleSend, attachments, setAttac
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask Fundi anything..."
+                aria-label="Ask Fundi"
                 className="w-full bg-transparent border-none focus:ring-0 px-4 py-1.5 text-gray-800 dark:text-white placeholder-gray-500 resize-none max-h-[150px] overflow-y-auto custom-scrollbar leading-relaxed"
                 rows={1}
                 style={{ minHeight: '36px' }}
@@ -233,21 +230,27 @@ const ChatInputWithLogic = ({ input, setInput, handleSend, attachments, setAttac
 
             <div className="flex items-center pb-1 gap-1 pl-2">
               <button
+                type="button"
                 onClick={handleExpandToggle}
                 className="p-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                 title="Expand to fullscreen"
+                aria-label="Expand query editor"
               >
                 <Maximize2 size={18} />
               </button>
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                aria-label="Attach files"
               >
                 <Paperclip size={18} />
               </button>
               <button
+                type="button"
                 onClick={handleSend}
                 className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-md"
+                aria-label="Send message"
               >
                 <Send size={18} />
               </button>
@@ -278,6 +281,7 @@ const ChatInputWithLogic = ({ input, setInput, handleSend, attachments, setAttac
                 onChange={(e) => setInput(e.target.value)}
                 className="w-full h-full bg-transparent border-none focus:ring-0 text-gray-800 dark:text-white text-lg leading-relaxed resize-none p-0"
                 placeholder="Type your detailed engineering query here..."
+                aria-label="Detailed engineering query"
                 autoFocus
               />
             </div>
@@ -287,12 +291,14 @@ const ChatInputWithLogic = ({ input, setInput, handleSend, attachments, setAttac
               </div>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Paperclip size={18} /> Attach
                 </button>
                 <button
+                  type="button"
                   onClick={() => { handleSend(); handleExpandToggle(); }}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
                 >
@@ -325,32 +331,16 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
 
   // AI Quality of Life Features
   const [thinkingTime, setThinkingTime] = useState(0);
-  const [isAiLive, setIsAiLive] = useState(false);
+  // null = not verified yet; true/false is set from real request outcomes so the
+  // status badge never claims the service is online or offline without evidence.
+  const [isAiLive, setIsAiLive] = useState(null);
   const timerRef = useRef(null);
-
-  /*
-  // Check AI Status every 30 seconds
-  useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:8001/qwen_model/status");
-        setIsAiLive(response.data.status === "live");
-      } catch (err) {
-        setIsAiLive(false);
-      }
-    };
-    checkStatus();
-    const interval = setInterval(checkStatus, 30000);
-    return () => clearInterval(interval);
-  }, []);
-  */
 
   const navigate = useNavigate();
   const location = useLocation();
   const isHomePage = location.pathname === "/";
 
   const handleSend = async () => {
-    console.log("DEBUG: handleSend triggered", input);
     if (!input.trim() && attachments.length === 0) return;
 
     setChatOpen(true); // Open chat view when sending
@@ -366,63 +356,59 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
     setAttachments([]);
     setLoading(true);
 
-    try {
-      // Adding a temporary AI message for streaming
-      const aiMessageId = Date.now() + 1;
-      const aiMessage = {
+    // Insert an empty assistant message before the request so both streamed
+    // text and service errors update the same bubble.
+    const aiMessageId = Date.now() + 1;
+    setMessages((prev) => [
+      ...prev,
+      {
         id: aiMessageId,
         text: "",
         user: false,
         timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
+      },
+    ]);
 
-      // Timer Logic for Thinking Time
-      setThinkingTime(0);
-      const startTime = Date.now();
-      timerRef.current = setInterval(() => {
-        setThinkingTime(((Date.now() - startTime) / 1000).toFixed(1));
-      }, 100);
+    // Timer Logic for Thinking Time
+    setThinkingTime(0);
+    const startTime = Date.now();
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setThinkingTime(((Date.now() - startTime) / 1000).toFixed(1));
+    }, 100);
 
-      console.log("DEBUG: Calling fetch at http://127.0.0.1:8001/qwen_model/generate_stream");
+    try {
       const response = await fetch("http://127.0.0.1:8001/qwen_model/generate_stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: userMessage.text }),
       });
 
-      console.log("DEBUG: Fetch response status:", response.status);
-
       if (!response.ok) {
-        console.error("DEBUG: Fetch NOT OK:", response.status);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.log("DEBUG: Fetch OK, getting reader");
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let accumulatedResponse = "";
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) {
-          console.log("DEBUG: Reader done");
-          break;
-        }
+        if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        console.log("DEBUG: Received chunk:", chunk);
 
-        // Stop timer on first chunk
+        // Stop timer and confirm the service on the first chunk.
         if (accumulatedResponse === "") {
-          console.log("DEBUG: Stopping timer (first chunk received)");
           clearInterval(timerRef.current);
+          setIsAiLive(true);
         }
 
         accumulatedResponse += chunk;
 
-        // Update the specific AI message incrementally
-        const currentChunkResult = accumulatedResponse; // Capture current state
+        // Snapshot the text for this update so a deferred state update cannot
+        // read a later chunk (also keeps the loop callback lint-clean).
+        const currentChunkResult = accumulatedResponse;
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === aiMessageId ? { ...msg, text: currentChunkResult } : msg
@@ -430,26 +416,38 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
         );
       }
 
-      console.log("DEBUG: Streaming loop finished. Final length:", accumulatedResponse.length);
+      if (!accumulatedResponse.trim()) {
+        setIsAiLive(false);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiMessageId
+              ? {
+                  ...msg,
+                  text: "Fundi service returned no content.\n\nThe AI service responded without any analysis text, so no engineering result is available. Check the service logs, then try again.",
+                }
+              : msg
+          )
+        );
+      }
       setLoading(false);
 
     } catch (err) {
-      console.error("DEBUG: Backend error caught in handleSend:", err);
-      // MOCK RESPONSE FOR TESTING UI
-      setTimeout(() => {
-        const mockResponse = {
-          text: `**Fundi AI Analysis (Mock):**\n\nBased on your query regarding "${userMessage.text.substring(0, 30)}${userMessage.text.length > 30 ? '...' : ''}", here is a preliminary analysis:\n\n1. **Design Considerations:** Checked against Eurocode standards.\n2. **Recommendation:** Verify load cases in the Structural module.\n\n*Note: This is a placeholder response because the backend is currently unreachable (tried http://127.0.0.1:8001/qwen_model/generate_stream).*`,
-          user: false,
-          timestamp: new Date().toISOString()
-        };
-        setMessages((prev) =>
-          prev.some(m => m.user === false && m.text === "")
-            ? prev.map(m => (m.user === false && m.text === "") ? mockResponse : m)
-            : [...prev, mockResponse]
-        );
-        setLoading(false);
-        clearInterval(timerRef.current);
-      }, 1500);
+      console.error("Fundi AI service error:", err);
+      clearInterval(timerRef.current);
+      setIsAiLive(false);
+      // Never fabricate an engineering answer. Report the service failure
+      // explicitly instead of the previous mock "analysis".
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === aiMessageId
+            ? {
+                ...msg,
+                text: "Fundi service unavailable.\n\nThe assistant could not reach the Fundi AI service at http://127.0.0.1:8001/qwen_model/generate_stream. No engineering analysis was generated.\n\nCheck that the backend is running, then send the request again. The engineering modules remain usable while the assistant is offline.",
+              }
+            : msg
+        )
+      );
+      setLoading(false);
     }
   };
 
@@ -479,31 +477,78 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
     />
   );
 
+  // Escape closes the topmost open drawer or the chat overlay.
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key !== "Escape") return;
+      if (chatOpen) {
+        setChatOpen(false);
+      } else if (rightSidebarOpen) {
+        setRightSidebarOpen(false);
+      } else if (leftSidebarOpen) {
+        setLeftSidebarOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [chatOpen, rightSidebarOpen, leftSidebarOpen]);
+
+  const aiStatusMeta = {
+    live: {
+      badge: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      dot: "bg-green-500 animate-pulse",
+      label: "AI Live",
+    },
+    offline: {
+      badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+      dot: "bg-red-500",
+      label: "AI Offline",
+    },
+    connecting: {
+      badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+      dot: "bg-amber-500 animate-pulse",
+      label: "Connecting",
+    },
+    standby: {
+      badge: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300",
+      dot: "bg-gray-400",
+      label: "AI Standby",
+    },
+  };
+  const aiStatus =
+    loading ? "connecting" : isAiLive === true ? "live" : isAiLive === false ? "offline" : "standby";
+  const { badge: aiBadgeClass, dot: aiDotClass, label: aiStatusLabel } = aiStatusMeta[aiStatus];
+
   return (
     <div className={`flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-black transition-colors duration-300 ${isDark ? "dark" : ""}`}>
       {/* Floating Palette Overlay removed from global layout so it can be used per-window */}
 
-      {/* Top Bar */}
-      <div className={`absolute top-0 left-0 w-full z-40 px-4 py-2 flex items-center justify-between pointer-events-none transition-all duration-300 ${isHomePage ? '' : 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm'}`}>
+      {/* Top Bar - wraps to two rows on small screens so the chat input stays usable */}
+      <div className={`absolute top-0 left-0 w-full z-40 px-3 sm:px-4 py-2 flex flex-wrap items-center gap-2 pointer-events-none transition-all duration-300 ${isHomePage ? '' : 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm'}`}>
 
         {/* Top Left Controls */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center gap-1 sm:gap-2 pointer-events-auto shrink-0">
           <div className="flex flex-row items-center gap-1 text-blue-500-to-blue-700 ">
             <Hammer size={16} className="text-blue-600 dark:text-blue-600" />
 
-            <h1 className=" font-bold text-blue-600 dark:text-blue-600">Fundi</h1>
+            <h1 className="hidden sm:block font-bold text-blue-600 dark:text-blue-600">Fundi</h1>
 
           </div>
           <button
+            type="button"
             onClick={() => setLeftSidebarOpen(true)}
             className="p-2 hover:bg-white/20 dark:hover:bg-black/20 rounded-xl transition-colors"
+            aria-label="Open navigation and history"
+            aria-expanded={leftSidebarOpen}
           >
             <Menu size={20} className="text-gray-800 dark:text-white drop-shadow-md" />
           </button>
           <div className="h-6 w-px bg-gray-400/50 dark:bg-gray-500/50 mx-1" />
           <button
+            type="button"
             onClick={() => navigate("/")}
             className="p-2 hover:bg-white/20 dark:hover:bg-black/20 rounded-xl transition-colors"
+            aria-label="Go to home"
           >
             <House size={20} className="text-gray-800 dark:text-white drop-shadow-md" />
           </button>
@@ -511,16 +556,19 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
 
         {/* Center Top Floating Chat Input - ONLY IF NOT ON HOME PAGE */}
         {!isHomePage && (
-          <div className="pointer-events-auto w-full max-w-xl mx-4">
+          <div className="pointer-events-auto order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1 sm:mx-4 sm:max-w-xl">
             {renderSearchInput()}
           </div>
         )}
 
         {/* Top Right Controls */}
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto ml-auto">
           <button
+            type="button"
             onClick={() => setRightSidebarOpen(true)}
             className="p-2 hover:bg-white/20 dark:hover:bg-black/20 rounded-xl transition-colors"
+            aria-label="Open settings"
+            aria-expanded={rightSidebarOpen}
           >
             <Settings size={20} className="text-gray-800 dark:text-white drop-shadow-md" />
           </button>
@@ -529,10 +577,15 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
 
       {/* Full Screen Chat Overlay */}
       {chatOpen && (
-        <div className="fixed inset-0 z-[60] bg-gray-50 dark:bg-black flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+        <div
+          className="fixed inset-0 z-[60] bg-gray-50 dark:bg-black flex flex-col animate-in slide-in-from-bottom-5 duration-300"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fundi engineering assistant conversation"
+        >
 
           {/* Messages Area - Scrollable */}
-          <div className="flex-1 overflow-y-auto w-full mx-auto p-4 space-y-6 pb-32 pt-6">
+          <div className="flex-1 overflow-y-auto w-full mx-auto p-4 space-y-6 pb-32 pt-6" role="log" aria-live="polite" aria-relevant="additions text">
             <div className="flex justify-between items-center mb-6 pt-2">
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -541,17 +594,22 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-gray-800 dark:text-gray-100">Engineering Assistant</h3>
-                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isAiLive ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${isAiLive ? "bg-green-500 animate-pulse" : "bg-red-500"}`}></div>
-                      {isAiLive ? "AI Live" : "AI Offline"}
+                    <div
+                      className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${aiBadgeClass}`}
+                      title={aiStatus === "standby" ? "Service status is verified when you send a message." : undefined}
+                    >
+                      <div className={`w-1.5 h-1.5 rounded-full ${aiDotClass}`}></div>
+                      {aiStatusLabel}
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Powered by Fundi AI</p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setChatOpen(false)}
                 className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors"
+                aria-label="Close conversation"
               >
                 <X size={24} className="text-gray-500 dark:text-gray-400" />
               </button>
@@ -575,7 +633,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
                     {msg.text}
                   </div>
 
-                  {/* Render Mock Attachments/Rich Media if any */}
+                  {/* Attachments included with the message */}
                   {msg.attachments && msg.attachments.length > 0 && (
                     <div className="mt-3 grid gap-2 grid-cols-2">
                       {msg.attachments.map((att, i) => (
@@ -584,27 +642,6 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
                           <span className="truncate">{att.name}</span>
                         </div>
                       ))}
-                    </div>
-                  )}
-
-                  {/* Placeholder for AI Rich Output (Diagrams/3D - Mock implementation) */}
-                  {!msg.user && msg.text.includes("structural") && (
-                    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800">
-                      <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        <Box size={14} /> AI Generated Preview
-                      </div>
-                      {/* Placeholder visual */}
-                      <div className="h-32 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden group cursor-pointer hover:ring-2 ring-blue-500 transition-all">
-                        <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-20">
-                          {[...Array(36)].map((_, n) => <div key={n} className="border-[0.5px] border-gray-500/30"></div>)}
-                        </div>
-                        <div className="z-10 text-xs text-gray-500 flex flex-col items-center">
-                          <div className="w-16 h-16 border-2 border-blue-500 rounded flex items-center justify-center mb-2 bg-white/50 backdrop-blur-sm">
-                            <DraftingCompass size={24} className="text-blue-600" />
-                          </div>
-                          Click to view interactive model
-                        </div>
-                      </div>
                     </div>
                   )}
 
@@ -647,7 +684,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
 
       {/* Main Content Area */}
       <div className="flex-1 relative z-0 pt-0 overflow-hidden">
-        <main className={`h-full w-full overflow-y-auto transition-all duration-300 ${isHomePage ? '' : 'pt-24'}`}>
+        <main className={`h-full w-full overflow-y-auto transition-all duration-300 ${isHomePage ? '' : 'pt-32 sm:pt-24'}`}>
           {/* Pass renderSearchInput to children if they are standard Routes, but since Routes are nested below, we must pass it as a prop to ChatPage explicitly.
           */}
           <Routes>

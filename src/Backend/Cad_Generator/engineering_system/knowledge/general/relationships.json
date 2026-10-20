@@ -1,0 +1,125 @@
+{
+  "document": "IStructE/Concrete Society SMDS Chapters 1–5 — Object Relationships",
+
+  "structural_relationships": [
+    {
+      "subject": "PrimaryBeam",
+      "predicate": "intersects_with",
+      "object": "Column",
+      "type": "internal_junction",
+      "detailing_consequence": [
+        "Top support bars of primary beam placed above secondary beam bars",
+        "Bottom span bars of primary beam stop short of column face",
+        "Link hanger bars stop short of column face",
+        "Continuity through column provided by main support bars + bottom support bars"
+      ],
+      "source": "Figure 4.1, Section 4.2.3"
+    },
+    {
+      "subject": "PrimaryBeam",
+      "predicate": "intersects_with",
+      "object": "SecondaryBeam",
+      "type": "beam_beam_junction",
+      "detailing_consequence": [
+        "Primary beam top support bars placed above secondary beam top bars",
+        "Layers must pass over each other with correct cover to upper and lower layers",
+        "Check secondary beam increased top cover does not reduce lever arm unsatisfactorily"
+      ],
+      "source": "Sections 4.2.1, 4.2.2"
+    },
+    {
+      "subject": "Beam",
+      "predicate": "connects_to",
+      "object": "EdgeColumn",
+      "type": "external_junction",
+      "detailing_consequence": [
+        "U-bars placed into column reinforcement, as close to far face of column as possible",
+        "OR L-bars cast into lower column before beam cage placed",
+        "Construction sequence critical"
+      ],
+      "source": "Section 4.2.3, Figures 4.5, 4.6"
+    },
+    {
+      "subject": "Slab",
+      "predicate": "frames_into",
+      "object": "Beam",
+      "type": "slab_beam_junction",
+      "detailing_consequence": [
+        "Cover over beam reinforcement must be sufficient for slab top steel to pass over beam with correct cover"
+      ],
+      "source": "Section 4.2.1"
+    },
+    {
+      "subject": "ColumnBar",
+      "predicate": "retained_by",
+      "object": "Link",
+      "conditions": [
+        {"if": "spacing > 150mm", "then": "every column bar"},
+        {"if": "spacing <= 150mm", "then": "every other column bar"}
+      ],
+      "source": "Section 4.2.2"
+    },
+    {
+      "subject": "LongitudinalBar",
+      "predicate": "stops_at",
+      "object": "ColumnFace",
+      "context": "bottom span bars and link hanger bars in preferred (flexible) detailing method",
+      "source": "Figure 4.1, Section 4.2.3"
+    },
+    {
+      "subject": "ColumnBar",
+      "predicate": "passes_through",
+      "object": "BeamColumnJunction",
+      "note": "Column bars go straight through junction",
+      "source": "Figure 4.1"
+    },
+    {
+      "subject": "Link",
+      "predicate": "encloses",
+      "object": "LongitudinalBar",
+      "constraints": [
+        "Sufficient space between links for concrete and vibrator: 75mm per 300mm beam width",
+        "Returned legs of link must be included in actual space calculation",
+        "Free height of link limited to 400mm by cross ties at 1000mm centres"
+      ],
+      "source": "Figures 4.2, 4.4"
+    },
+    {
+      "subject": "Hole",
+      "predicate": "interrupts",
+      "object": "Reinforcement",
+      "condition": "hole diameter > 150mm or size > 150x150mm",
+      "consequence": "Additional trimming reinforcement required around hole; hole must be shown on rebar drawing",
+      "source": "Section 3.2.2"
+    },
+    {
+      "subject": "BarSchedule",
+      "predicate": "references",
+      "object": "ReinforcementDrawing",
+      "rule": "Each schedule references only one drawing; schedule reference number + bar mark form unique combination",
+      "source": "Section 4.5.1"
+    },
+    {
+      "subject": "BarMark",
+      "predicate": "belongs_to",
+      "object": "MemberName",
+      "rule": "Bar mark must not repeat within same member name; every bar mark must have a member name",
+      "source": "Section 2.5 (EDI) and 4.5.1"
+    }
+  ],
+
+  "information_flow_relationships": [
+    {
+      "from": "Designer",
+      "to": "Detailer",
+      "via": ["GA drawings", "design calculations", "marked-up GAs", "element schedules", "proforma drawings", "CAD sketches"],
+      "must_include": ["concrete grade", "cover", "fire resistance", "durability requirements", "curtailment instructions", "reinforcement layering directions"]
+    },
+    {
+      "from": "Detailer",
+      "to": "Site/Fabricator",
+      "via": ["Reinforcement drawings", "Bar schedules", "Fabric schedules"],
+      "standard": "BS 8666"
+    }
+  ]
+}

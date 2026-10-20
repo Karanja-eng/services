@@ -1,0 +1,588 @@
+{
+  "model_id": "pad-footing",
+  "drawing_id": "pad_footing-r1",
+  "entity_link_count": 64,
+  "by_status": {
+    "ok": 64
+  },
+  "elements": {
+    "pad-footing.footing": [
+      {
+        "handle": "45",
+        "drawing_id": "pad_footing-r1",
+        "layer": "CONCRETE",
+        "entity_type": "LWPOLYLINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "46",
+        "drawing_id": "pad_footing-r1",
+        "layer": "CONCRETE",
+        "entity_type": "LWPOLYLINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "47",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "48",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "49",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4A",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4B",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4C",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4D",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4E",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "4F",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "50",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "51",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "52",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "53",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "54",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "55",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "56",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "57",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "58",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "59",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "5A",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "5B",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "5C",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "5D",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "5E",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "5F",
+        "drawing_id": "pad_footing-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "60",
+        "drawing_id": "pad_footing-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "61",
+        "drawing_id": "pad_footing-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "62",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "63",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "64",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "65",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "66",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "67",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "TEXT",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "68",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "69",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "6A",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "6B",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "6C",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "6D",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "TEXT",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "6E",
+        "drawing_id": "pad_footing-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "plan",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "6F",
+        "drawing_id": "pad_footing-r1",
+        "layer": "CONCRETE",
+        "entity_type": "LWPOLYLINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "70",
+        "drawing_id": "pad_footing-r1",
+        "layer": "CONCRETE",
+        "entity_type": "LWPOLYLINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "71",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_BOT",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "72",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_MAIN",
+        "entity_type": "LWPOLYLINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "73",
+        "drawing_id": "pad_footing-r1",
+        "layer": "REBAR_MAIN",
+        "entity_type": "LWPOLYLINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "74",
+        "drawing_id": "pad_footing-r1",
+        "layer": "CENTRELINES",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "75",
+        "drawing_id": "pad_footing-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "76",
+        "drawing_id": "pad_footing-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "77",
+        "drawing_id": "pad_footing-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "78",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "79",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "7A",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "7B",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "7C",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "7D",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "TEXT",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "7E",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "7F",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "80",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "81",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "82",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "83",
+        "drawing_id": "pad_footing-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "TEXT",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "84",
+        "drawing_id": "pad_footing-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      }
+    ]
+  }
+}

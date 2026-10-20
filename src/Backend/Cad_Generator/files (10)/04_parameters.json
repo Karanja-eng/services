@@ -1,0 +1,179 @@
+{
+  "input_parameters": {
+    "wall": [
+      "t",
+      "L",
+      "H",
+      "concrete_grade",
+      "exposure(XC1/XC3)",
+      "dcdev",
+      "vertical_dia",
+      "vertical_pitch",
+      "horizontal_dia",
+      "horizontal_pitch",
+      "opening{x,y,w,h}",
+      "kicker_height",
+      "below_ground(bool)",
+      "support_type(foundation/slab)"
+    ],
+    "retaining_wall": [
+      "stem_height",
+      "stem_thickness_top/bottom",
+      "base_length",
+      "base_thickness",
+      "toe_length",
+      "key(bool)",
+      "earth_face_dia/pitch",
+      "exposed_face_dia/pitch",
+      "base_bar_dia/pitch",
+      "joint_type",
+      "joint_spacing"
+    ],
+    "pad_footing": [
+      "lx",
+      "ly",
+      "depth",
+      "cx",
+      "cy",
+      "bar_dia_x/y",
+      "pitch_x/y",
+      "cover",
+      "column_starter_dia/count",
+      "link_dia/pitch",
+      "bond(good/poor)"
+    ],
+    "pile_cap": [
+      "n_piles",
+      "pile_dia",
+      "pile_spacing",
+      "bar_dia",
+      "bob_length"
+    ],
+    "stair": [
+      "type",
+      "span",
+      "waist_thickness",
+      "rise",
+      "going",
+      "n_steps",
+      "landing_lengths",
+      "main_dia/pitch",
+      "distribution_dia/pitch",
+      "cover",
+      "top_U_bar_ratio"
+    ]
+  },
+  "derived_parameters": {
+    "min_area_wall_vertical": "0.002*Ac",
+    "min_area_wall_horizontal_each_face": "max(0.25*As_v, 0.001*Ac)",
+    "max_area_vertical": "0.04*Ac",
+    "max_pitch_wall": "min(3*t,400)",
+    "cover_internal_wall": "max(15 or 20, dia)+dcdev",
+    "tension_anchorage": "table lookup * dia",
+    "lap_length": "max(table*dia, 15*dia, 200)",
+    "MST1_A": "max(0.1*span, lbd, 500)",
+    "band_width": "cx+3d",
+    "MF5_tension_lap": "1.4*lbd",
+    "As_min_flexure": "max(0.26*bt*d*fctm/fyk, 0.0013*bt*d)"
+  },
+  "constraints": [
+    "t>=150 (recommended)",
+    "dia_v>=12 (walls)",
+    "dia_h>=dia_v/4 (preferred)",
+    "pitch>=75 (100 if dia>=40)",
+    "pitch<=min(3t,400) walls; <=200 retaining walls",
+    "opening trim: t>=175",
+    "foundation bars dia>=16 (except lacers)",
+    "pad band when lx>1.5(cx+3d)"
+  ],
+  "tables": {
+    "anchorage_lap_lengths_in_bar_dia": {
+      "walls_TableG6.6_50pct_lapped": {
+        "fck_fcu": [
+          "25/30",
+          "28/35",
+          "30/37",
+          "32/40"
+        ],
+        "lbd": [
+          40,
+          37,
+          36,
+          34
+        ],
+        "l0": [
+          61,
+          56,
+          54,
+          51
+        ]
+      },
+      "retaining_walls_Table6.7_50pct": {
+        "lbd": [
+          40,
+          37,
+          36,
+          34
+        ],
+        "l0": [
+          61,
+          56,
+          54,
+          51
+        ]
+      },
+      "foundations_Table6.9_33pct": {
+        "lbd_good": [
+          40,
+          37,
+          36,
+          34
+        ],
+        "lbd_poor": [
+          48,
+          45,
+          43,
+          41
+        ],
+        "l0_good": [
+          46,
+          43,
+          42,
+          39
+        ],
+        "l0_poor": [
+          66,
+          61,
+          59,
+          56
+        ]
+      },
+      "stairs_Table6.11_33pct": {
+        "lbd_good": [
+          40,
+          37,
+          36,
+          34
+        ],
+        "lbd_poor": [
+          58,
+          53,
+          51,
+          49
+        ],
+        "l0_good": [
+          46,
+          43,
+          42,
+          39
+        ],
+        "l0_poor": [
+          66,
+          61,
+          59,
+          56
+        ]
+      }
+    }
+  }
+}

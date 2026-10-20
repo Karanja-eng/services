@@ -1,0 +1,939 @@
+{
+  "document": "IStructE/Concrete Society SMDS — Chapters 5 (continued) & 6 (Slabs, Beams, Columns partial)",
+
+  "chapter_5_general": {
+
+    "bar_notation": {
+      "H": {"grade": "500A, 500B or 500C", "type": "high yield deformed"},
+      "B": {"grade": "500B or B500C"},
+      "C": {"grade": "500C"},
+      "S": {"grade": "stainless steel ribbed", "standard": "BS 6744"},
+      "X": {"grade": "other — defined in contract specification"},
+      "source": "Section 5.1.4, page 35",
+      "status": "DIRECTLY STATED"
+    },
+
+    "preferred_bar_sizes_mm": [8, 10, 12, 16, 20, 25, 32, 40],
+    "non_preferred_sizes_note": {
+      "6mm": "not commonly available — low demand and infrequent rollings",
+      "50mm": "not generally stocked — order cut to length from mill; consider 40mm in bundles instead",
+      "source": "Section 5.1.5, page 35"
+    },
+
+    "actual_vs_nominal_size_mm": {
+      "note": "Nominal size is diameter of circle with area equal to effective cross-section. Most deformed bars contained in circle 10% larger. Individual sections can measure 13-14% more at largest cross-dimension.",
+      "table": {
+        "6":  {"nominal_mm": 6,  "actual_max_mm": 8},
+        "8":  {"nominal_mm": 8,  "actual_max_mm": 11},
+        "10": {"nominal_mm": 10, "actual_max_mm": 13},
+        "12": {"nominal_mm": 12, "actual_max_mm": 14},
+        "16": {"nominal_mm": 16, "actual_max_mm": 19},
+        "20": {"nominal_mm": 20, "actual_max_mm": 23},
+        "25": {"nominal_mm": 25, "actual_max_mm": 29},
+        "32": {"nominal_mm": 32, "actual_max_mm": 37},
+        "40": {"nominal_mm": 40, "actual_max_mm": 46},
+        "50": {"nominal_mm": 50, "actual_max_mm": 57}
+      },
+      "source": "Section 5.1.5, Table 5.2, page 35",
+      "status": "DIRECTLY STATED"
+    },
+
+    "bar_areas_and_mass": {
+      "table": {
+        "6":  {"area_mm2": 28.3,   "mass_kg_per_m": 0.222},
+        "8":  {"area_mm2": 50.3,   "mass_kg_per_m": 0.395},
+        "10": {"area_mm2": 78.5,   "mass_kg_per_m": 0.616},
+        "12": {"area_mm2": 113.1,  "mass_kg_per_m": 0.888},
+        "16": {"area_mm2": 201.1,  "mass_kg_per_m": 1.579},
+        "20": {"area_mm2": 314.2,  "mass_kg_per_m": 2.466},
+        "25": {"area_mm2": 490.9,  "mass_kg_per_m": 3.854},
+        "32": {"area_mm2": 804.2,  "mass_kg_per_m": 6.313},
+        "40": {"area_mm2": 1256.6, "mass_kg_per_m": 9.864},
+        "50": {"area_mm2": 1963.5, "mass_kg_per_m": 15.413}
+      },
+      "mass_basis": "0.00785 kg per mm2 per metre run",
+      "source": "Section 5.1.5, Table 5.3, page 35",
+      "status": "DIRECTLY STATED"
+    },
+
+    "stock_lengths": {
+      "size_12_and_above_standard_stock_m": 12,
+      "size_8_and_10_stock_options_m": [8, 9, 10],
+      "max_transportable_m": 18,
+      "note_exceeding_12m": "Extra cost and delays may be involved if 12m exceeded",
+      "bent_bar_transportability": "Shape must be contained by imaginary rectangle where shortest side does not exceed 2.75m",
+      "source": "Section 5.1.6, page 35",
+      "status": "DIRECTLY STATED"
+    },
+
+    "rebending_bars": {
+      "min_mandrel_dia_le_16mm": "4 × bar size",
+      "min_mandrel_dia_gt_16mm": "7 × bar size",
+      "general_rule": "Generally rebending bars on site should not be permitted",
+      "exception_class_B_or_C_le_12mm": "May be rebent provided mandrel not reduced below 4 × bar size, and bars are sufficiently ductile (Class B or C)",
+      "exception_larger_bars": "Only within a proprietary system with Technical Approval from accredited body (e.g. CARES UK) and testing showing no damage",
+      "warning": "Rebending can cause damage to concrete surface",
+      "source": "Section 5.1.7, page 35",
+      "status": "DIRECTLY STATED"
+    },
+
+    "large_diameter_bends_required_where": [
+      "end of column and wall connections to beams or slabs",
+      "cantilever retaining walls",
+      "corbels",
+      "bottom bars for pile caps"
+    ],
+    "large_diameter_bends_note": "Designer normally responsible for calculation; tables at end of manual give mandrel sizes",
+    "source_large_bends": "Section 5.1.8, page 36",
+
+    "fabric_reinforcement": {
+      "classifications": ["Designated (Standard)", "Scheduled (Non-Standard)", "Detailed (Purpose Made)"],
+      "standard_sheet_size": {"length_m": 4.8, "width_m": 2.4, "edge_overhangs": "0.5 × wire centres"},
+      "type_A_square": {"description": "equal wire size both directions, 200mm centres", "wire_sizes_mm": "5–10 (excluding 9mm)"},
+      "type_B_structural": {"description": "main in long direction at 100mm centres, transverse at 200mm", "main_wire_sizes_mm": "5–12 (excluding 9 and 11mm)"},
+      "type_C_long": {"description": "main at 100mm, transverse nominal at 400mm", "main_wire_sizes_mm": "6–10"},
+      "type_D49": {"description": "lightweight, often used for crack control"},
+      "flying_end_fabric": "Extended overhangs — eliminate layer build-up at laps",
+      "scheduled_non_standard": {"max_wire_size_mm": 12, "non_standard_spacing_increments_mm": 50},
+      "bending": "Generally all fabrics can be cut and bent to most BS shapes; wire > 12mm may not be possible by automatic machine",
+      "source": "Section 5.1.10, pages 36–37",
+      "status": "DIRECTLY STATED"
+    },
+
+    "cover": {
+      "purposes": [
+        "safe transmission of bond forces: min cover >= bar size (or equivalent for bundles)",
+        "protection against corrosion",
+        "adequate fire resistance"
+      ],
+      "nominal_cover_definition": "cmin + Δcdev",
+      "cover_to_link_rule": "Nominal cover to link must result in cover to main bar >= main bar size + Δcdev",
+      "no_link_rule": "Nominal cover >= bar size + Δcdev",
+      "surface_treatment_rule": "Add expected depth of surface treatment to nominal cover",
+      "aggregate_rule": "Nominal cover >= maximum aggregate size",
+      "deviation_delta_cdev": {
+        "recognised_quality_system": "5mm (e.g. SpeCC member)",
+        "otherwise": "10mm",
+        "source": "EC2, Clause 4.4.1.3"
+      },
+      "cover_for_durability": "Exposure class governs — specified by Designer (EC2, Clause 4.2)",
+      "cover_for_fire": "Axis distance — specified by Designer (BS EN 1992-1-2)",
+      "fire_axis_distance_note": "BS EN 1992-1-2 uses axis distance = distance from centre of bar to concrete surface",
+      "source": "Section 5.2, pages 37–38",
+      "status": "DIRECTLY STATED"
+    },
+
+    "fixing_reinforcement_for_cover": {
+      "tying": "No. 16 gauge annealed soft iron wire — not every intersection needed",
+      "spacers_chairs": "Most common method; BS 7973 provides specification",
+      "beam_bar_spacers": "Short lengths of bar; specify spacing on drawings (usually 1m); detail in schedules",
+      "source": "Section 5.2.4, page 38",
+      "status": "DIRECTLY STATED"
+    },
+
+    "minimum_clear_spacing": {
+      "rule": "min(bar_size, dg + 5mm, 20mm) where dg = max aggregate size",
+      "horizontal_layers": "Bars in each layer located vertically above each other; sufficient space for vibrators",
+      "source": "Section 5.2.5, page 38",
+      "status": "DIRECTLY STATED"
+    },
+
+    "cutting_bending_tolerances": {
+      "straight_bars_all_lengths": "±25mm",
+      "bending_dim_less_than_1m": "±5mm",
+      "bending_dim_1_to_2m": "+5mm to -10mm",
+      "bending_dim_greater_than_2m": "+5mm to -25mm",
+      "wires_in_fabric": "greater of ±25mm or ±0.5% of length",
+      "cutting_length": "sum of bending dimensions and allowances, rounded UP to nearest 25mm",
+      "source": "Section 5.3, Table 5.4, page 38",
+      "status": "DIRECTLY STATED"
+    },
+
+    "closed_detailing_tolerances": {
+      "description": "Deduction from nominal concrete dimension for bars fitting between two concrete faces (beams, columns)",
+      "assumption": "Member size tolerance: 5mm for size up to 2m, 10mm otherwise. Plus allowance for bar deformities.",
+      "table": [
+        {"distance_between_faces_m": "0–1",  "bar_type": "links and bent bars", "total_deduction_mm": 10},
+        {"distance_between_faces_m": "1–2",  "bar_type": "links and bent bars", "total_deduction_mm": 15},
+        {"distance_between_faces_m": ">2",   "bar_type": "links and bent bars", "total_deduction_mm": 20},
+        {"distance_between_faces_m": "any",  "bar_type": "straight bars",       "total_deduction_mm": 40}
+      ],
+      "source": "Section 5.3, Table 5.5, page 38",
+      "status": "DIRECTLY STATED"
+    },
+
+    "tolerance_examples": {
+      "example_1_beam_corner": {
+        "description": "H16 link with H40 main bar",
+        "H16_actual_size_mm": 18,
+        "nominal_cover_mm": 40,
+        "position_A_cover_to_one_face_mm": 48,
+        "position_B_cover_to_both_faces_mm": 14,
+        "source": "Section 5.3 example 1, page 39",
+        "status": "DIRECTLY STATED"
+      },
+      "example_2_beam_column_junction": {
+        "description": "H12 link, 5 × H32 beam bars, column width 275mm with 40mm cover each side",
+        "space_inside_link_calculated_mm": "275 - 80 - 2(12+1) - 10 = 159mm",
+        "space_required_for_5_H32_mm": 176,
+        "conclusion": "Bars will not fit — tolerance deduction has real physical consequence",
+        "source": "Section 5.3 example 2, page 39",
+        "status": "DIRECTLY STATED"
+      },
+      "example_3_flanged_beam": {
+        "description": "Gap between bars A and B is 3mm without tolerances. With 5mm link tolerance and actual bar size, bar A could be 12mm lower; bar B cover could be <10mm if formwork 2-3mm out.",
+        "source": "Section 5.3 example 3, page 39",
+        "status": "DIRECTLY STATED"
+      }
+    },
+
+    "anchorage_and_laps": {
+      "bond_conditions": {
+        "good": [
+          "bars inclined 45–90° during casting",
+          "bars in members h ≤ 250mm (all positions)",
+          "unhatched zones in members h > 250mm (lower 250mm and inclined bars)",
+          "unhatched zones in members h > 600mm (lower 300mm)"
+        ],
+        "poor": [
+          "hatched zones in members h > 250mm (above 250mm from bottom)",
+          "hatched zones in members h > 600mm (above 300mm from bottom)"
+        ],
+        "source": "Figure 5.2, Section 5.4.1, page 40",
+        "status": "DIRECTLY STATED"
+      },
+
+      "design_anchorage_length": {
+        "formula": "l_bd = α1 × α2 × α3 × α4 × α5 × l_b,rqd ≥ l_b,min",
+        "l_b_rqd": "(ø/4) × (σ_sd / f_bd)",
+        "f_bd": "2.25 × η1 × η2 × 0.14 × f_ck^(2/3)  [for f_ck ≤ 50 MPa]",
+        "eta1_good": 1.0,
+        "eta1_poor": 0.7,
+        "eta2_le_32mm": 1.0,
+        "eta2_gt_32mm": "(132 - ø) / 100",
+        "alpha_coefficients": {
+          "α1_shape_straight_tension": 1.0,
+          "α1_shape_other_tension_if_cd_gt_3ø": 0.7,
+          "α1_shape_other_tension_otherwise": 1.0,
+          "α1_compression_all": 1.0,
+          "α2_straight_tension": "1 - 0.15(cd - ø)/ø; min 0.7, max 1.0",
+          "α2_other_tension": "1 - 0.15(cd - 3ø)/ø; min 0.7, max 1.0",
+          "α2_compression": 1.0,
+          "α3_tension": "1 - Kλ; min 0.7, max 1.0",
+          "α3_compression": 1.0,
+          "α4_welded_transverse": 0.7,
+          "α5_transverse_pressure": "1 - 0.04p; min 0.7, max 1.0",
+          "constraint": "(α2 × α3 × α5) ≥ 0.7"
+        },
+        "K_values": {
+          "corner_bar_with_confinement": 0.1,
+          "bar_with_partial_confinement": 0.05,
+          "bar_without_confinement": 0.0,
+          "source": "Figure 5.4"
+        },
+        "cd_values": {
+          "straight_bars": "min(a/2, c1, c)",
+          "bent_or_hooked_bars": "min(a/2, c1)",
+          "looped_bars": "c",
+          "source": "Figure 5.3"
+        },
+        "l_b_min_tension": "max(0.3 × l_b,rqd; 10ø; 100mm)",
+        "l_b_min_compression": "max(0.6 × l_b,rqd; 10ø; 100mm)",
+        "direct_support_exception": "l_bd may be less than l_b,min if at least one transverse wire welded ≥15mm from face of support",
+        "source": "Section 5.4.2, Table 5.6, Figures 5.3-5.4, pages 40-41",
+        "status": "DIRECTLY STATED"
+      },
+
+      "design_lap_length": {
+        "formula": "l_0 = α1 × α2 × α3 × α5 × α6 × l_b,rqd ≥ l_0,min",
+        "l_0_min": "max(0.3 × α6 × l_b,rqd; 15ø; 200mm)",
+        "alpha6": {
+          "formula": "(ρ1/25)^0.5; min 1.0, max 1.5",
+          "ρ1_definition": "percentage of reinforcement lapped within 0.65 × l_0 from centre of lap",
+          "table": {
+            "lt_25_percent": 1.0,
+            "33_percent": 1.15,
+            "50_percent": 1.4,
+            "gt_50_percent": 1.5
+          }
+        },
+        "alpha3_for_laps": "ΣAst,min = 1.0 × As × (σsd / fyd)",
+        "compression_all": "All bars in compression may be lapped in one section",
+        "secondary_distribution_all": "All secondary (distribution) bars may be lapped in one section",
+        "source": "Section 5.4.3, Table 5.7, page 42",
+        "status": "DIRECTLY STATED"
+      },
+
+      "lap_arrangement_rules": {
+        "stagger": "Laps should normally be staggered, not in areas of high moments/forces (e.g. plastic hinges)",
+        "symmetric": "Should normally be arranged symmetrically in any section",
+        "clear_distance_between_lapped_bars_max": "4ø or 50mm; otherwise increase lap length by excess clear space",
+        "longitudinal_distance_between_adjacent_laps_min": "0.3 × l_0",
+        "clear_distance_between_adjacent_bars_in_lap_min": "max(2ø, 20mm)",
+        "permissible_percent_in_tension_one_layer": "100% (when rules above satisfied)",
+        "permissible_percent_in_tension_several_layers": "50%",
+        "source": "Section 5.4.3, Figure 5.5, page 41",
+        "status": "DIRECTLY STATED"
+      },
+
+      "transverse_reinforcement_for_laps": {
+        "tension_small_bars_or_few_lapped": {
+          "condition": "bar dia < 20mm OR lapped bars < 25% of section",
+          "rule": "Existing transverse reinforcement/links sufficient — no additional justification needed"
+        },
+        "tension_large_bars": {
+          "condition": "bar dia >= 20mm",
+          "rule": "Total area Ast (legs parallel to spliced reinforcement) >= area As of one lapped bar",
+          "position": "Perpendicular to lapped reinforcement, between it and concrete surface",
+          "more_than_50_percent_lapped_adjacent": {
+            "condition": "more than 50% lapped AND distance a between adjacent laps ≤ 10ø",
+            "rule": "Transverse reinforcement must be links or U-bars anchored in body of section",
+            "position": "At outer sections of lap — see Figure 5.6(a)"
+          }
+        },
+        "compression": {
+          "extra_rule": "One bar of transverse reinforcement outside each end of lap AND within 4ø of lap end",
+          "source": "Figure 5.6(b)"
+        },
+        "source": "Section 5.4.3, Figure 5.6, page 42",
+        "status": "DIRECTLY STATED"
+      },
+
+      "large_bars_gt_40mm": {
+        "splitting_forces": "Higher splitting forces and dowel action",
+        "prefer_mechanical_anchorage": true,
+        "if_straight_anchorage_additional_links": {
+          "parallel_to_tension_face": "Ash = 0.25 × As × n1",
+          "perpendicular_to_tension_face": "Asv = 0.25 × As × n2",
+          "spacing": "≤ 5 × diameter of longitudinal reinforcement",
+          "distribution": "Uniformly in anchorage zone"
+        },
+        "no_lapping_except": "Sections with minimum dimension ≥ 1m OR stress ≤ 80% design ultimate",
+        "surface_reinforcement": "May be required for crack control (EC2 7.3.4, 8.8, 9.2.4)",
+        "source": "Section 5.4.4, Figure 5.7, page 42-43",
+        "status": "DIRECTLY STATED"
+      },
+
+      "bundled_bars": {
+        "same_characteristics": "All bars in bundle same type and grade",
+        "different_size_ratio_max": 1.7,
+        "equivalent_diameter": "bn = ø × √nb; max 55mm",
+        "max_nb_compression_vertical_or_lapped_joint": 4,
+        "max_nb_other_cases": 3,
+        "clear_distance_between_bundles": "Measured from actual external contour",
+        "cover_from_external_contour": "≥ bn",
+        "two_touching_bars_vertically_good_bond": "Need not be treated as bundle",
+        "anchorage": {
+          "bn_lt_32mm_in_tension": "May be curtailed near support without staggering",
+          "bn_ge_32mm_in_tension": "Must be staggered in longitudinal direction (see Figure 5.8)",
+          "stagger_distance_gt_1_3_lb_rqd": "May use bar diameter (not bn) for lbd",
+          "compression_no_stagger_needed": true,
+          "compression_bn_ge_32mm_links": "At least 4 links dia ≥ 12mm at ends of bundle; plus one just beyond curtailed bar end"
+        },
+        "lapping": {
+          "two_bars_bn_lt_32mm": "May be lapped without staggering; use bn for l_0",
+          "two_bars_bn_ge_32mm_or_three_bars": "Individual bars staggered by ≥ 1.3l_0 (Figure 5.9); bar 4 used as lapping bar",
+          "max_bars_in_lap_cross_section": 4,
+          "no_lapping_bundles_gt_3_bars": true
+        },
+        "source": "Section 5.4.5, Figures 5.8-5.9, pages 43-44",
+        "status": "DIRECTLY STATED"
+      },
+
+      "fabric_laps": {
+        "main_reinforcement_intermeshed": {
+          "rule": "Per 5.3.3; ignore favourable effects of transverse bars (α3 = 1.0)"
+        },
+        "main_reinforcement_layered": {
+          "stress_condition": "Generally in zones where stress ≤ 80% design strength",
+          "permissible_percent": {
+            "As_per_s_le_1200_mm2_per_m": "100%",
+            "As_per_s_gt_1200_mm2_per_m": "60%"
+          },
+          "stagger_multiple_joints": "≥ 1.3 × l_0"
+        },
+        "secondary_distribution_wires": {
+          "all_may_be_lapped_at_same_location": true,
+          "lap_covers_two_main_bars": true,
+          "minimum_lap_table": {
+            "dia_le_6mm": "≥ 150mm and at least 1 wire pitch within lap",
+            "dia_6_to_8_5mm": "≥ 250mm and at least 2 wire pitches",
+            "dia_8_5_to_12mm": "≥ 350mm and at least 2 wire pitches"
+          }
+        },
+        "source": "Section 5.4.6, Table 5.8, Figure 5.10, pages 44",
+        "status": "DIRECTLY STATED"
+      }
+    },
+
+    "mechanical_couplers": {
+      "types": ["tension couplers", "compression couplers"],
+      "default": "tension couplers unless specified otherwise",
+      "cover_rule": "Cover for couplers = cover specified for reinforcement",
+      "notation_on_drawings": "'E' just before the bar mark",
+      "certification_UK": "Must be from company holding valid third party technical approval (CARES UK, BBA etc.)",
+      "types_detail": {
+        "type_1a": "Parallel thread, threaded portion smaller diameter than bar — rarely used (reduced load capacity)",
+        "type_1b": "Parallel thread, threaded area ≥ nominal bar area — widely used",
+        "type_2": "Taper-cut threads — popular for standard rotation cases; positional/transitional variants for non-rotation",
+        "type_3": "Integral threads over full length bar (helical deformations) with locknuts",
+        "type_4": "Metal sleeve swaged hydraulically — wholly in-situ; large bars ≥H40 may need mechanical support",
+        "type_5": "Threaded couplers swaged on bar ends joined by threaded stud",
+        "type_6": "Wedge locking — compression only; bar faces must be cut accurately within 3° tolerance",
+        "type_7": "Shear bolts and serrated saddles — no threading required; visual install check (bolt heads shear off)"
+      },
+      "source": "Section 5.5, Figure 5.11-5.13, pages 45-47",
+      "status": "DIRECTLY STATED"
+    },
+
+    "welding": {
+      "general": "Should be avoided wherever possible",
+      "if_essential": "Comply with BS EN 287-1, BS EN 288-3, BS EN 1011-2 and CARES Appendices 6 and 10",
+      "tack_welding_on_site": "Should not be permitted except with special approval",
+      "carbon_equivalent_gt_0_42": "Must follow BS EN 1011-2 procedures",
+      "source": "Section 5.6, page 47",
+      "status": "DIRECTLY STATED"
+    }
+  },
+
+  "chapter_6_slabs": {
+
+    "scope": {
+      "types_covered": ["single-way orthogonal", "two-way orthogonal", "cantilever", "flat slabs", "trough", "coffered"],
+      "not_covered": "Ground slabs (see Concrete Society TR34)",
+      "rib_spacing_max_for_rib_design_m": 1.5,
+      "rib_depth_to_width_max_ratio": 4,
+      "note": "Six or more layers may be required for irregular slabs"
+    },
+
+    "concrete_grade_standard": "30/37 MPa (cylinder/cube), max aggregate 20mm",
+
+    "nominal_cover": {
+      "solid_slab_internal_XC1": "max(15mm, bar_dia) + Δcdev",
+      "solid_slab_external_XC3": "35mm + Δcdev",
+      "ribbed_slab_fire_gt_2hr": "Consider supplementary reinforcement (Model Detail MS8)",
+      "model_details_assume_delta_cdev_mm": 5,
+      "source": "Section 6.2.2, page 48",
+      "status": "DIRECTLY STATED"
+    },
+
+    "minimum_reinforcement_solid_slab": {
+      "tension": {
+        "formula": "As,min = 0.26 × bt × d × fctm / fyk ≥ 0.0013 × bt × d",
+        "for_C30_37_and_fyk_500": "As,min = 0.0015 × bt × d",
+        "also_nominal": "Same formula applies for nominal reinforcement"
+      },
+      "min_bottom_in_span_direction": "40% of maximum required reinforcement",
+      "min_top_at_support_partial_fixity": "25% of max required in span (not less than As,min); may be reduced to 15% for end support",
+      "secondary_transverse": "20% of main reinforcement (except near continuous wall supports with no transverse bending)",
+      "preferred_min_dia_mm": 10,
+      "source": "Section 6.2.2, page 48",
+      "status": "DIRECTLY STATED"
+    },
+
+    "minimum_reinforcement_cantilever_slab": {
+      "exposed_cantilever_bottom_in_span": "Relate to top reinforcement (say 50%) where shrinkage and temperature affect deflection",
+      "source": "Section 6.2.2, page 49",
+      "status": "DIRECTLY STATED"
+    },
+
+    "minimum_reinforcement_ribbed_slab": {
+      "min_bar_dia_in_rib_mm": 16,
+      "flange_reinforcement": "Same as single-way slab minimum",
+      "fabric_spacing": "Wire spacing must not exceed half the pitch of ribs",
+      "source": "Section 6.2.2, page 49",
+      "status": "DIRECTLY STATED"
+    },
+
+    "bar_spacing_slabs": {
+      "recommended_min_pitch_mm": 75,
+      "min_pitch_at_laps_mm": 100,
+      "max_pitch_main_bars": "3h ≤ 400mm (concentrated loads: 2h ≤ 250mm)",
+      "max_pitch_secondary_bars": "3.5h ≤ 450mm (concentrated loads: 3h ≤ 400mm)",
+      "source": "Section 6.2.2, page 49",
+      "status": "DIRECTLY STATED"
+    },
+
+    "anchorage_lap_lengths_slab": {
+      "table_6_1": {
+        "note1": "Bar size ≤ 32mm; α1=α2=α3=α4=α5=1.0",
+        "note2": "≤33% bars lapped at one place, α6=1.15",
+        "data": [
+          {"condition": "full_tension_compression_anchorage_good", "C25_30": 40, "C28_35": 37, "C30_37": 36, "C32_40": 34},
+          {"condition": "full_tension_compression_anchorage_poor", "C25_30": 58, "C28_35": 53, "C30_37": 51, "C32_40": 49},
+          {"condition": "full_tension_compression_lap_good",       "C25_30": 46, "C28_35": 43, "C30_37": 42, "C32_40": 39},
+          {"condition": "full_tension_compression_lap_poor",       "C25_30": 66, "C28_35": 61, "C30_37": 59, "C32_40": 56}
+        ],
+        "units": "bar_diameters"
+      },
+      "direct_support_reduction": "Anchorage beyond face of support may be reduced to d, but ≥ max(0.3×l_b,rqd; 10ø; 100mm)",
+      "nominal_lap_minimum": "max(15ø, 200mm)",
+      "bottom_steel_at_support_minimum_area": "0.25 × span area",
+      "source": "Section 6.2.2, Table 6.1, Figure 6.1, page 49",
+      "status": "DIRECTLY STATED"
+    },
+
+    "curtailment_slabs": {
+      "when_min_reinforcement_only": "Must NOT be curtailed",
+      "simplified_rules_conditions": [
+        "Adjacent spans approximately equal (within 15%)",
+        "Loading uniformly distributed",
+        "Use Model Details MS1-MS5"
+      ],
+      "al_for_slabs_without_shear_reinforcement": "d",
+      "top_bars_internal_support": {
+        "calculate_length_for_alternate_bars": "a+b and c+d",
+        "if_difference_lt_500mm": "Make all bars equal to greater value",
+        "stagger_alternately": "Points 1 and 2 are outer limits",
+        "end_supports": "Alternately staggered, normally as two sets of U-bars"
+      },
+      "continuous_top_mat_recommended": {
+        "reasons": ["control shrinkage cracking", "reduce deflections", "remove trip hazards"],
+        "minimum_mesh": "A252"
+      },
+      "bottom_bars_internal_bay": "Length = greater of a and b; alternate bars staggered",
+      "bottom_bars_end_bay": "Alternate bars of lengths a and b",
+      "source": "Section 6.2.2, Figures 6.3-6.4, page 50",
+      "status": "DIRECTLY STATED"
+    },
+
+    "flat_slab_rules": {
+      "column_strip_width": "Normally half the shorter panel dimension",
+      "column_drop_strip_width": "Set equal to column drop width",
+      "aspect_ratio_gt_2_one_way_zone": "Distribution reinforcement parallel to short side in centre",
+      "moment_apportionment_table_6_2": {
+        "column_strip_negative": "75%",
+        "column_strip_positive": "55%",
+        "middle_strip_negative": "25%",
+        "middle_strip_positive": "45%"
+      },
+      "negative_moment_concentration": "2/3 of column strip negative moment in centre half of column strip",
+      "min_bottom_bars_through_column": 2,
+      "edge_and_corner_column_effective_width": {
+        "edge_column": "be = cx + 2y",
+        "corner_column": "be = z + y"
+      },
+      "source": "Section 6.2.2, Figures 6.6-6.7, Tables 6.2, pages 53-54",
+      "status": "DIRECTLY STATED"
+    },
+
+    "torsion_reinforcement_slab_corners": {
+      "condition": "Corners held down on both sides",
+      "extension_into_slab_min": "≥ 1/5 of shorter span",
+      "area_each_leg": "≥ 3/4 of area for maximum mid-span design moment",
+      "corner_one_discontinuous_edge": "Half area sufficient",
+      "source": "Section 6.2.2, Figure 6.9, page 54",
+      "status": "DIRECTLY STATED"
+    },
+
+    "edge_reinforcement": {
+      "location": "Along free (unsupported) edges and corners supported on both sides",
+      "form": "U-bars (Figure 6.8)",
+      "depth_U_bar_minimum": "h (slab depth), leg ≥ 2h",
+      "source": "Section 6.2.2, Figure 6.8, page 54",
+      "status": "DIRECTLY STATED"
+    },
+
+    "holes_in_slabs": {
+      "structurally_insignificant_rules": {
+        "min_unsupported_edge_distance": "= width of hole w1",
+        "max_isolated_opening_width_perpendicular_to_span": "1000mm",
+        "max_isolated_opening_length_parallel_to_span": "0.25 × span lx",
+        "max_total_width_multiple_holes": "0.25 × span ly",
+        "small_holes_can_ignore_sides_le_mm": 150,
+        "medium_holes_sides_le_500mm": {
+          "option_1": "Displace affected bars equally either side of hole",
+          "option_2": "Cut/slide bars to face of hole; compensating bars of equal area; trimmers extend min 45ø beyond hole"
+        },
+        "large_holes_sides_500_to_1000mm": {
+          "extra": "Also trim top of holes with similar bars",
+          "diagonal_reinforcement": "If depth > 250mm, provide diagonal reinforcement of similar area in top and bottom (consider congestion of multiple layers)"
+        },
+        "groups_boundary_le_500mm": "Trim as single hole per medium hole rules",
+        "groups_boundary_500_to_1000mm": "Trim as single hole per large hole rules"
+      },
+      "source": "Section 6.2.2, page 54-56",
+      "status": "DIRECTLY STATED"
+    },
+
+    "punching_shear": {
+      "placement_zone": "Between loaded area/column and 1.5d inside outer control perimeter; min 1.5d from column",
+      "min_perimeters": 2,
+      "link_perimeter_spacing_max": "0.75d",
+      "link_leg_spacing_within_first_perimeter_max": "1.5d (within 2d from loaded area)",
+      "link_leg_spacing_outside_first_perimeter_max": "2d (for perimeters contributing to shear capacity)",
+      "model_detail_MS6": {
+        "perimeter_spacing": "0.75d from column face; link leg perimeters at 0.75d centres",
+        "last_perimeter_link_to_outer_control": "0.5d",
+        "link_size_min": "10ø but ≥ 70mm (overall link height)",
+        "fixing_bar_dia": "12mm",
+        "fixing_bar_anchorage": "Tension anchorage beyond last link"
+      },
+      "proprietary_systems": ["Stud rail system", "Shear ladders", "Structural steel shear head"],
+      "source": "Section 6.2.2, Figure 6.10, Model Detail MS6, pages 58-59, 71",
+      "status": "DIRECTLY STATED"
+    },
+
+    "model_details_slabs": {
+      "MS1": {
+        "name": "One and two way slabs — Span and internal support",
+        "bottom_bar_length": "0.8 × span + 0.5 × tension lap",
+        "top_bar_extension_from_support": "0.3 × span each side",
+        "top_bar_stagger": "Alternately staggered",
+        "top_bar_extension_from_face": "0.1 × short span or 600mm (whichever shorter)",
+        "distribution_bar_pitch_table": {
+          "dia_10_depth_100": 350, "dia_10_depth_125": 425, "dia_10_depth_150": 425,
+          "dia_10_depth_175": 350, "dia_10_depth_200": 300, "dia_10_depth_225": 275,
+          "dia_10_depth_250": 225, "dia_10_depth_275": 200, "dia_10_depth_300": 200,
+          "dia_10_depth_325": 175, "dia_10_depth_350": 150, "dia_10_depth_375": 150, "dia_10_depth_400": 125,
+          "dia_12_depth_150": 450, "dia_12_depth_175": 450, "dia_12_depth_200": 450,
+          "dia_12_depth_225": 400, "dia_12_depth_250": 350, "dia_12_depth_275": 325, "dia_12_depth_300": 275,
+          "dia_12_depth_325": 250, "dia_12_depth_350": 250, "dia_12_depth_375": 250, "dia_12_depth_400": 200,
+          "dia_16_depth_200": 450, "dia_16_depth_225": 450, "dia_16_depth_250": 450, "dia_16_depth_275": 450,
+          "dia_16_depth_300": 450, "dia_16_depth_325": 425, "dia_16_depth_350": 400, "dia_16_depth_375": 375
+        },
+        "note": "Not less than 2 bars of distribution reinforcement"
+      },
+      "MS2": {
+        "name": "One and two way slabs — External restrained supports",
+        "detail_A_when_X_gt_anchorage_length": {
+          "u_bar_area": "= half bottom steel at mid-span",
+          "top_leg_from_support": "0.3 × span",
+          "bottom_extension": "500mm or tension lap (greater)",
+          "u_bar_pitch": "Alternately placed, p1 pitch"
+        },
+        "detail_B_when_X_lt_anchorage": "Straight bar with tension anchorage length; bearing stress inside bend must not exceed limit",
+        "detail_C": "Non-standard bend radius required if bearing stress governs"
+      },
+      "MS3": {
+        "name": "One and two way slabs — External unrestrained supports (also free edges)",
+        "detail_A_depth_ge_150": {"end_u_bar": "same dia as bottom bars", "anchorage_beyond_face": "max(0.1×span, 45ø)", "extension_into_span": "max(500mm, tension lap)"},
+        "detail_B_support_lt_200": {"anchorage": "max(d, 0.3×l_b,rqd, 10ø, 100mm)"},
+        "detail_C_support_ge_200": "Suitable for fabric reinforcement"
+      },
+      "MS4": {
+        "name": "Cantilever slabs",
+        "top_bar_min_length": "2 × cantilever length over simple supports; alternately staggered",
+        "bottom_bar_area": "≥ 0.5 × top reinforcement area",
+        "bottom_bar_extension_from_support_mm": 300,
+        "bottom_bar_min_into_cantilever": "0.5 × cantilever length"
+      },
+      "MS5": {
+        "name": "Flat slabs — Span and internal support",
+        "column_strip_2_3_concentration": "2/3 of bars in centre half when equiv. column dia < 0.15 × panel width",
+        "distribution_bar_length": "0.6 × span",
+        "longer_span_bars": "Outer layer unless otherwise specified",
+        "two_bottom_bars_through_column": true,
+        "fire_rating_R90_plus": "Distribution bars area ≥ 20% of total top design reinforcement"
+      },
+      "MS6": "Flat slab shear reinforcement (see punching_shear above)",
+      "MS7": {
+        "name": "Flat slabs — Column drops",
+        "main_bottom_bars": "Carried through column drop",
+        "drop_bottom_nominal": "12mm dia at 300mm pitch",
+        "minimum_gap_below_slab": "75mm minimum"
+      },
+      "MS8": {
+        "name": "Ribbed and coffered slabs",
+        "min_rib_width_one_bar_mm": 75,
+        "min_rib_width_two_bars_mm": 125,
+        "lacing_bars": "12mm dia if overall depth > 750mm",
+        "fabric_nominal": "A252 (unless greater specified; check lap lengths per EC2 Cl.8.7.5)",
+        "fabric_overlap_cover": "Special care at fabric overlaps",
+        "cover_exceeds_40mm": "Supplementary reinforcement for fire — 6mm links max pitch 200mm plus nominal lacer bar (coffered)"
+      }
+    }
+  },
+
+  "chapter_6_beams": {
+
+    "scope": "Straight suspended beams with defined supports. Not ground beams (see 6.7). Holes require specific design instructions.",
+
+    "concrete_grade_standard": "30/37 MPa, max aggregate 20mm",
+
+    "nominal_cover_beams": {
+      "internal_XC1": "30mm + Δcdev",
+      "external_XC3": "35mm + Δcdev",
+      "grouped_bars": "Cover for equivalent bar size (see 5.8)",
+      "fire_4hr_note": "Supplementary reinforcement may be needed if nominal cover > 40mm (axis distance to link > 70mm); see EC2 Part 1.2 Clause 4.5.2",
+      "standard_values_mm": {"internal": 35, "external": 40},
+      "source": "Section 6.3.2 and Model Detail MB1"
+    },
+
+    "minimum_reinforcement_beams": {
+      "tension_C30_37_fyk_500": "As,min ≥ 0.0015 × bt × d",
+      "compression": "Asc,min ≥ 0.002 × Ac",
+      "transverse_in_top_flange": "As,min ≥ 0.0015 × hf × l",
+      "minimum_dia_mm": 12,
+      "source": "Section 6.3.2, page 74"
+    },
+
+    "bar_spacing_beams": {
+      "min_horizontal_pitch_mm": 75,
+      "min_horizontal_pitch_pairs_mm": 100,
+      "min_vertical_pitch_mm": "max(25mm, bar_dia)",
+      "max_pitch_compression_mm": 300,
+      "max_pitch_compression_restrained_condition": "All main bars in compression zone within 150mm of a restrained bar",
+      "max_pitch_tension_from_table_6_3": {
+        "assumed_service_stress_MPa": 310,
+        "table": [
+          {"stress_MPa": 160, "wk_0_4mm": 300, "wk_0_3mm": 300, "wk_0_2mm": 200},
+          {"stress_MPa": 200, "wk_0_4mm": 300, "wk_0_3mm": 250, "wk_0_2mm": 150},
+          {"stress_MPa": 240, "wk_0_4mm": 250, "wk_0_3mm": 200, "wk_0_2mm": 100},
+          {"stress_MPa": 280, "wk_0_4mm": 200, "wk_0_3mm": 150, "wk_0_2mm": 50},
+          {"stress_MPa": 310, "wk_0_4mm": 165, "wk_0_3mm": 115, "wk_0_2mm": null},
+          {"stress_MPa": 320, "wk_0_4mm": 150, "wk_0_3mm": 100, "wk_0_2mm": null},
+          {"stress_MPa": 360, "wk_0_4mm": 100, "wk_0_3mm": 50,  "wk_0_2mm": null}
+        ]
+      },
+      "source": "Section 6.3.2, Table 6.3, page 74"
+    },
+
+    "side_face_bars": {
+      "condition": "Beam total depth ≥ 1000mm",
+      "size_mm": 16,
+      "location": "Inside links at sides of beam",
+      "max_pitch_mm": 250,
+      "source": "Section 6.3.2, page 74"
+    },
+
+    "links": {
+      "min_area": "Asw/s × bw ≥ 0.085% where bw = avg breadth below upper flange",
+      "max_spacing_compression_link": "s ≤ 15 × main compression bar dia",
+      "min_dia_preferred_mm": 8,
+      "min_pitch_mm": "max(100mm, 50 + 12.5 × no_of_legs)",
+      "max_pitch_mm": "min(300mm, 0.75d, 12 × compression_bar_dia)",
+      "max_lateral_pitch_of_legs": "min(600mm, 0.75d)",
+      "max_distance_bar_from_vertical_leg_mm": 150,
+      "arrangement": "Preferred arrangements per Figure 6.19; overlapping links NOT recommended (Figure 6.20)",
+      "open_links_with_locking": "Permitted for beam-slab with rib width ≥ 450mm; use L-hooks with top locking link (Figure 6.21); hook 10ø, min 75mm",
+      "torsion_links_shape": "Closed with 135° hooks, 10ø extension (Figure 6.22)",
+      "source": "Section 6.3.2, Figures 6.19-6.22, pages 74-77"
+    },
+
+    "anchorage_lap_lengths_beams": {
+      "min_anchorage": "max(10ø, 100mm)",
+      "table_6_4": {
+        "notes": "Bar ≤ 32mm; α1=α2=α4=α5=1.0; α3=0.9 (λ=1.35, K=0.05). Lap: α6=1.15 (≤33% lapped)",
+        "data": [
+          {"condition": "full_tension_compression_anchorage_good", "C25_30": 36, "C28_35": 34, "C30_37": 32, "C32_40": 31},
+          {"condition": "full_tension_compression_anchorage_poor", "C25_30": 48, "C28_35": 45, "C30_37": 43, "C32_40": 41},
+          {"condition": "full_tension_compression_lap_good",       "C25_30": 42, "C28_35": 39, "C30_37": 37, "C32_40": 35},
+          {"condition": "full_tension_compression_lap_poor",       "C25_30": 56, "C28_35": 52, "C30_37": 49, "C32_40": 47}
+        ],
+        "units": "bar_diameters"
+      },
+      "source": "Section 6.3.2, Table 6.4, page 75"
+    },
+
+    "curtailment_beams": {
+      "shift_rule": "FE = |VEd| × al / z + NEd",
+      "default_al": "1.25d (if designer not specified)",
+      "curtailment_length_from_design": "l_bd + al from line of contact between beam and support",
+      "simplified_rules_conditions": [
+        "Qk ≤ Gk",
+        "Loads substantially uniformly distributed",
+        "≥ 3 spans",
+        "Span variation ≤ 15% of longest",
+        "Effective span L = min(clear span + d, actual span)"
+      ],
+      "hanger_bars": {
+        "area": "≥ max(20% max support area, compression area required)",
+        "carried_to_distance_from_support_mm": 25,
+        "preferred_dia_mm": 16,
+        "min_for_beams_500_deep_or_more": "2 H16s"
+      },
+      "top_bars_internal_support": {
+        "min_60_percent_continues_to": "Point where hanger bars sufficient + tension lap OR zero moment point",
+        "default_extension_from_support_face": "0.25L",
+        "absolute_minimum_extension": "max(0.15L, 45ø)"
+      },
+      "bottom_splice_bars_internal_support": {
+        "min_area": "Not less than minimum reinforcement; ≥ 30% max span area",
+        "extension": "Tension lap with main bottom bars OR compression lap (if in compression) to end of compression zone"
+      },
+      "bottom_bars_in_span": {
+        "continuous_beams_min_continuous": "30% of max span area to 25mm from support",
+        "simply_supported_min_continuous": "50% of max span area to 25mm from support",
+        "remainder_extension_to_internal_support": "within 0.15L",
+        "remainder_extension_to_external_support": "within 0.1L",
+        "remainder_extension_to_simply_supported": "within 0.08L",
+        "support_reference_point": "up to d/2 inside face"
+      },
+      "u_bars_at_end": {
+        "area": "max(tension area for support moment, 30% max span area [50% for simple supports])",
+        "top_leg_length": "Same as for internal support bars",
+        "bottom_leg_length": "Same as internal support splice bars",
+        "simple_support_crack_control": "Sufficient top steel for crack control; replace U-bars with L-bars (top and bottom) if much less than bottom",
+        "extension_from_support": "Tension lap, both top and bottom"
+      },
+      "bottom_at_end_support": "Area ≥ 0.25 × span area",
+      "partial_fixity_monolithic": "Design for bending moment ≥ 0.15 × max span moment even with simple supports assumed",
+      "cantilever_curtailment": "Always relate to bending moment diagram; ≥ 50% continues to end of cantilever",
+      "source": "Section 6.3.2, Figures 6.14-6.15, pages 75-77"
+    },
+
+    "flanged_beams": {
+      "tension_reinforcement": "Spread over effective flange width; part may be concentrated over web",
+      "effective_flange_width": {
+        "formula": "beff = Σ beff,i + bw ≤ b",
+        "beff_i": "0.2bi + 0.1l0 ≤ min(0.2l0, bi)",
+        "l0_definitions": {
+          "end_span": "0.85 × l1",
+          "interior_span": "0.7 × l2",
+          "at_internal_support": "0.15 × (l1 + l2)",
+          "at_cantilever_support": "0.15 × l2 + l3"
+        },
+        "cantilever_rule": "l3 < half adjacent span; ratio adjacent spans between 1/2 and 1/1"
+      },
+      "source": "Section 6.3.2, Figures 6.16-6.18, pages 76-77"
+    },
+
+    "edge_support_connections": {
+      "preferred": "U-bars within depth of beam",
+      "moment_connection_to_column": "See 6.4.2",
+      "do_not_bend_top_bars_up": "Bending top bars up into column is NOT recommended",
+      "narrow_edge_support_anchorage_option_1": "12ø beyond centre of support; no bend before centre of support",
+      "narrow_edge_support_anchorage_option_2": "12ø + d/2 from face of support; no bend before d/2 from face",
+      "wall_support_with_vertical_rebar": "Horizontal bars threaded through U-bars (Figure 6.23)",
+      "source": "Section 6.3.2, Figure 6.23, pages 77-78"
+    },
+
+    "deep_beams": {
+      "definition": "Span < 3 × overall section depth",
+      "reference": "CIRIA Guide 2",
+      "min_reinforcement_per_face": "max(0.001Ac, 150mm²/m) in each face and each direction",
+      "max_bar_spacing": "min(2 × beam width, 300mm)",
+      "main_tension_anchorage": "Fully anchored at support node by bending, U-bars or mechanical anchorage",
+      "source": "Section 6.3.2, page 78"
+    },
+
+    "model_details_beams": {
+      "MB1": {
+        "name": "Span and support details",
+        "cover": "Internal 35mm, External 40mm (normally)",
+        "spacer_dia": "max(25mm, main bar dia)",
+        "link_nominal_spacing": "min(0.75d, 12 × compression bar dia)",
+        "side_bars_depth_ge_1000": "Min H12s at 150mm pitch",
+        "hanger_bars_min_for_deep_beams": "2 H16s for beams ≥ 500mm deep",
+        "vibrator_space_mm": 75,
+        "main_top_bars": "Inside hanger bars",
+        "bottom_splice_bars": "Inside main bars; area ≥ 30% max span area",
+        "closer_bars": "Used with open links for beam width ≥ 300mm",
+        "top_bars_A_A_section": "Multiple layers with spacers",
+        "source": "Model Detail MB1, page 82"
+      },
+      "MB2": {
+        "name": "Broad shallow sections",
+        "link_space_longitudinal_per_set": "3 × bar size",
+        "external_support_anchorage": "Treat as for slabs (see Model Detail MS2)",
+        "closer_bar": "For overall link",
+        "internal_links_no_overlap": true,
+        "max_lateral_link_leg_spacing": "Effective beam depth",
+        "tension_bar_max_distance_from_leg_mm": 150,
+        "dimensions": {
+          "link_extension_top": "max(10ø, 70mm)",
+          "link_extension_side": "max(5ø, 50mm)",
+          "minimum_concrete_cover_to_link": "75mm minimum"
+        },
+        "source": "Model Detail MB2, page 83"
+      },
+      "MB3": {
+        "name": "Cantilever beams",
+        "cantilever_bars_min_50_percent_anchored": "1.5 × cantilever length",
+        "no_rebar_stops_less_than": "0.75 × cantilever (unless designer specified)",
+        "min_50_percent_continues_to_end": true,
+        "bottom_bars": "Specified by designer; minimum 2 H16s",
+        "u_bar_extension": "Tension lap",
+        "source": "Model Detail MB3, page 84"
+      }
+    }
+  },
+
+  "chapter_6_columns": {
+
+    "scope": "In-situ rectangular and circular columns. Not applicable for earthquake. Walls (b/t > 4) covered in 6.5.",
+
+    "concrete_grade_min": "28/35 MPa",
+    "column_to_slab_beam_grade_ratio_max": 1.4,
+
+    "nominal_cover_columns": {
+      "internal_XC1": "30mm + Δcdev",
+      "external_XC3": "35mm + Δcdev",
+      "cover_gt_40mm_fire_risk": "Surface reinforcement required — mesh spacing ≤ 100mm, dia ≥ 4mm",
+      "bundled_bars_cover": "For equivalent bar size"
+    },
+
+    "minimum_reinforcement": {
+      "formula": "max(0.002Ac, 0.10 × NEd / fyd)",
+      "less_than_0_002Ac": "Treat as plain column (EC2 Section 12)",
+      "min_dia_mm": 16,
+      "exception_small_columns_lt_200mm_min_dia_mm": 8,
+      "min_bars_rectangular": 4,
+      "min_bars_circular": 6,
+      "exception_small_columns_lt_200mm_min_bars_circular": 4
+    },
+
+    "maximum_reinforcement": {
+      "general": "0.04Ac",
+      "at_laps_max": "0.08Ac",
+      "congestion_note": "Use mechanical splices where congestion is a problem"
+    },
+
+    "bar_spacing": {
+      "min_main_bars_mm": 75,
+      "min_main_bars_40mm_plus_mm": 100,
+      "min_pairs_mm": 100,
+      "max_compression_bars_mm": 300,
+      "compression_restrained_condition_mm": 150,
+      "max_tension_bars_mm": 175
+    },
+
+    "anchorage_lap_columns": {
+      "min_anchorage": "max(10ø, 100mm)",
+      "table_6_5": {
+        "notes": "Good bond conditions; bar ≤ 32mm; α1=α2=α4=α5=1.0; α3=0.9 (λ=1.35, K=0.05). Lap: α6=1.5 (>50% bars lapped at once)",
+        "data": [
+          {"condition": "full_tension_compression_anchorage", "C25_30": 36, "C28_35": 34, "C30_37": 32, "C32_40": 31},
+          {"condition": "full_tension_compression_lap",       "C25_30": 54, "C28_35": 51, "C30_37": 48, "C32_40": 46}
+        ],
+        "units": "bar_diameters"
+      }
+    },
+
+    "links": {
+      "size_min": "max(ø_main/4, 8mm)",
+      "exception_small_columns_lt_200mm_min_mm": 6,
+      "bundled_bars_link_size": "Based on equivalent single bar of same area",
+      "arrangement": "Overall enclosing link + additional restraining links for alternate bars or bundles; no additional links if all compression bars within 150mm of restrained bar",
+      "circular_columns": "No additional links required beyond overall enclosing link",
+      "max_spacing": "min(20 × longitudinal_bar_dia, lesser_column_dim, 400mm)",
+      "spacing_reduction_at_beam_slab": "Reduce by factor 0.6 within distance = larger column dim above and below beam/slab",
+      "spacing_at_crank": "Link must be close to cranking position; ignore if change in direction ≤ 1:12"
+    },
+
+    "links_for_bursting_at_laps": {
+      "condition": "Longitudinal bar dia ≥ 20mm",
+      "total_transverse_area": "ΣAst ≥ 1.0 × As (area of one lapped bar)",
+      "position": "At outer sections of lap (see Figure 6.25)",
+      "geometry": "l0/3 from each end of lap; ΣAst/2 at each end; 4ø from end of lap"
+    },
+
+    "moment_connection_beam_edge_column": {
+      "preferred": "U-bars within depth of beam (fixed with beam; no precise fixing during column concreting)",
+      "when_use_L_bars": "When distance A (Figure 6.26) < anchorage length for that bar dia",
+      "L_bar_note": "Must be fixed accurately at top of column lift — difficult site task",
+      "standard_bend_ok_if": "Bar of same or greater size placed inside corner normal to it",
+      "non_standard_bend": "Required if no corner bar; check reinforcement fits and performs correctly",
+      "shear_capacity_control": "Max tensile beam reinforcement also controlled by column shear capacity",
+      "transverse_column_rebar_in_depth": "Required where no edge beam intersects at same level (links or horizontal U-bars)"
+    },
+
+    "bursting_action": "Links may be required at change of column section (especially edge/corner); may extend within or below beam/slab depth",
+
+    "starter_bars": {
+      "note": "Length specified longer than required from pad footings/pile caps due to construction tolerance risk",
+      "reference": "Model Details MF1 and MF2"
+    }
+  }
+}

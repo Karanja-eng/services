@@ -1,0 +1,145 @@
+{
+  "corbels_half_joints_nibs": {
+    "input_parameters": {
+      "shared": {
+        "concrete_grade": {"type": "enum", "typical": "≥C28/35", "unit": "MPa cylinder/cube"},
+        "exposure_class": {"type": "enum", "values": ["internal (XC1)", "external (XC3)"]},
+        "cover_nominal": {"type": "float", "unit": "mm", "depends_on": "exposure_class, member_type"},
+        "main_bar_diameter": {"type": "float", "unit": "mm", "range": "typically ≤16 (MCB1) or ≤20 (MCB2)"},
+        "main_bar_count": {"type": "int"}
+      },
+      "corbel": {
+        "corbel_width": {"unit": "mm"},
+        "corbel_projection": {"unit": "mm", "description": "cantilever length from column face to outer face"},
+        "corbel_depth_at_column": {"unit": "mm"},
+        "bearing_width": {"unit": "mm"},
+        "load_bearing_area_position": {"unit": "mm", "description": "distance from column face"},
+        "welded_option": {"type": "bool", "description": "false=MCB1, true=MCB2"},
+        "secondary_horiz_reinf_diameter": {"unit": "mm"},
+        "compression_bar_diameter": {"unit": "mm"},
+        "column_width": {"unit": "mm"},
+        "column_link_diameter": {"unit": "mm"}
+      },
+      "half_joint": {
+        "step_depth_reduction": {"unit": "mm", "description": "the drop in depth at the half joint"},
+        "bearing_length": {"unit": "mm"},
+        "hanger_link_diameter": {"unit": "mm"},
+        "hanger_link_spacing": {"default_mm": 450},
+        "general_link_spacing": {"default_mm": 150},
+        "uses_cranked_bar": {"type": "bool"},
+        "horizontal_U_bar_diameter": {"unit": "mm", "equals": "main_bottom_bar_diameter"}
+      },
+      "nib": {
+        "nib_depth": {"unit": "mm", "minimum_for_shallow_type": 140},
+        "nib_projection": {"unit": "mm"},
+        "shallow_type": {"type": "bool", "description": "false=MN1 vertical U-bars/links, true=MN2 horizontal U-bars"},
+        "link_diameter": {"unit": "mm", "max_mm_MN1": 12},
+        "U_bar_diameter": {"unit": "mm", "max_mm_MN2": 16},
+        "U_bar_pitch": {"unit": "mm", "max_mm_MN2": 250},
+        "lacer_bar_diameter": {"unit": "mm", "equals": "U_bar_diameter (MN2)"},
+        "min_reinforcement_overlap": {"default_mm": 60},
+        "concentrated_load_zone": {"type": "bool", "affects": "max bar pitch"}
+      }
+    },
+    "derived_parameters": {
+      "As_min_corbel_tension": "0.0014 × bt × d",
+      "Asc_min_corbel_compression": "0.002 × Ac",
+      "As_min_halfjoint_nib_tension": "0.26 × bt × d × fctm/fyk (≥0.0013·bt·d); simplifies to 0.0014·bt·d for C28/35 & fyk=500",
+      "min_anchorage_length": "max(10 × bar_diameter, 100mm)",
+      "min_edge_distance_to_bearing": "max(bar_diameter, 0.75 × cover)",
+      "secondary_reinf_min_area": "0.5 × main_tensile_area (corbel)",
+      "compression_bar_min_area": "1000 mm²/m width (corbel)",
+      "nib_main_bar_max_pitch": "min(3h, 400) general / min(2h, 250) concentrated-load",
+      "nib_secondary_bar_max_pitch": "min(3.5h, 450) general / min(3h, 400) concentrated-load"
+    },
+    "constraints": [
+      "concrete_grade >= C28/35",
+      "main_bar_diameter <= 16mm when welded_option == false (MCB1)",
+      "main_bar_diameter <= 20mm when welded_option == true (MCB2)",
+      "nib_depth >= 140mm when shallow_type == true (MN2)",
+      "link_diameter <= 12mm for MN1",
+      "U_bar_diameter <= 16mm for MN2",
+      "U_bar_pitch <= 250mm for MN2",
+      "bar_pitch >= 75mm (poker vibrator access)",
+      "vertical_bar_spacing >= max(25mm, bar_diameter)"
+    ]
+  },
+
+  "prestressed_concrete": {
+    "input_parameters": {
+      "tendon_type": {"enum": ["pre-tensioned", "post-tensioned"]},
+      "tendon_diameter": {"unit": "mm"},
+      "duct_diameter": {"unit": "mm", "applies_to": "post-tensioned"},
+      "duct_shape": {"enum": ["circular", "rectangular"]},
+      "max_aggregate_size_dg": {"unit": "mm"},
+      "delta_c_dev": {"default_mm": 10, "reduced_mm": 5, "condition": "special control measures"},
+      "slab_thickness": {"unit": "mm"},
+      "span_length_L": {"unit": "mm"},
+      "column_width": {"unit": "mm"},
+      "bonded_or_unbonded": {"enum": ["bonded", "unbonded"]},
+      "tendon_jacking_force_Po": {"unit": "kN"},
+      "loaded_area_half_side_ypo": {"unit": "mm"},
+      "end_block_half_side_yo": {"unit": "mm"},
+      "fire_rating_hours": {"unit": "hr"}
+    },
+    "derived_parameters": {
+      "cmin_b_circular_duct": "= duct_diameter (cap 80mm)",
+      "cmin_b_rectangular_duct": "= max(smaller_dim, 0.5 × greater_dim) (cap 80mm)",
+      "cmin_b_pretensioned_strand": "1.5 × tendon_diameter",
+      "cmin_b_pretensioned_indented_wire": "2.5 × tendon_diameter",
+      "cnom": "cmin + delta_c_dev",
+      "flat_slab_column_reinf_area": "0.00075 × Ac",
+      "flat_slab_column_reinf_extent": "1.5 × slab_depth either side of column width",
+      "flat_slab_hogging_min_reinf_pct": 0.1,
+      "bursting_force_Fbst": "lookup(ypo/yo) × Po  [Table 7.3]",
+      "unstressed_zone_reinf_area": "max(0.0013 × b × h, 0.25 × parallel_edge_reinf)"
+    },
+    "constraints": [
+      "delta_c_dev in {5,10} mm",
+      "cmin_b_duct <= 80mm",
+      "coupler_fraction_at_one_section < 0.5",
+      "tendon_deviation_without_deviator <= 0.01 rad",
+      "flat_slab_top_reinf_max_pitch <= 300mm",
+      "flat_slab_bottom_reinf_spacing <= min(3×slab_thickness, 500mm)",
+      "hogging_reinf_max_spacing <= 500mm"
+    ]
+  },
+
+  "precast_concrete": {
+    "input_parameters": {
+      "unit_length": {"unit": "m"},
+      "unit_height": {"unit": "m"},
+      "unit_width": {"unit": "m"},
+      "unit_weight": {"unit": "tonne"}
+    },
+    "constraints": [
+      "unit_length <= 27.4 (else special dispensation)",
+      "unit_height <= 4.88 (else 2-day notice)",
+      "unit_width <= 2.9 (else notification/dispensation tiers)",
+      "vehicle_plus_load_weight <= 44 tonne (else Special Types vehicle, STGO tiers)"
+    ]
+  },
+
+  "water_retaining_structures": {
+    "input_parameters": {
+      "tightness_class": {"enum": [0,1,2,3]},
+      "wall_thickness_hw": {"unit": "mm"},
+      "hydrostatic_head_hD": {"unit": "mm"},
+      "bar_stress": {"unit": "MPa"},
+      "is_prestressed_wall": {"type": "bool"},
+      "is_circular_tank": {"type": "bool"},
+      "aesthetic_critical": {"type": "bool"}
+    },
+    "derived_parameters": {
+      "wk1_crack_width": "interpolate(hD/hw): 0.2mm at ratio<=5, 0.05mm at ratio>=25, linear between",
+      "min_wall_thickness": "120 (class0) / 150 (class1,2) / per special design (class3)",
+      "bar_spacing_max": "250mm (stress<=150MPa tensile) / 150mm (distribution bars)",
+      "prestressed_wall_min_reinf": "max(300 mm²/m, 0.001 × Ac)"
+    },
+    "constraints": [
+      "cover >= 40mm",
+      "if aesthetic_critical: crack_width <= 0.1mm",
+      "if is_circular_tank: duct_diameter <= 0.2 × wall_thickness"
+    ]
+  }
+}

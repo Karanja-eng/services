@@ -1,0 +1,544 @@
+{
+  "engineering_knowledge": {
+    "member_definition": {
+      "scope": "Covers design/detailing principles for prestressed concrete elements commonly used in buildings: flat slabs, banded beams, trough/waffle slabs, transfer structures. Principles also apply to bridges (not detailed here).",
+      "methods": [
+        {
+          "name": "Pre-tensioning",
+          "description": "Reinforcement stressed between steel buttresses before casting; concrete cast around the stressed tendons. Typically factory-cast precast units delivered to site."
+        },
+        {
+          "name": "Post-tensioning",
+          "description": "Steel stressed in a duct installed in concrete after the concrete reaches specified strength. Used for in-situ concrete frames; the main focus of this section."
+        }
+      ]
+    },
+    "drawing_requirements_for_prestress_set": {
+      "fact_type": "DIRECTLY STATED",
+      "items": [
+        "Layout/arrangement of tendons incl. spacing",
+        "Minimum cover to tendons",
+        "Setting-out data per tendon: profile and tolerances (vertical & horizontal)",
+        "Tendon and duct types/sizes",
+        "Anchorage recess dimensions (if any)",
+        "Prestressing system detailed (if any)",
+        "Forces to be applied per tendon and tensioning sequence",
+        "Location of grouting points and vents",
+        "Grouting pressure and grout specification",
+        "Infill strip size and location",
+        "Connection detail consideration with shear walls/bracing points",
+        "Debonded tendons marked on sections/elevations with method and length of debonding",
+        "Tendon deflection dimensioned horizontally and vertically (radius of curvature per manufacturer)",
+        "Concrete grade and minimum strength at transfer of prestress",
+        "Design parameters: relaxation of prestressing steel, duct friction/wobble factors, anchorage draw-in, modulus of elasticity/tendon extension, movement of permanent structure at stressing, camber variation",
+        "Method of marking tendons on slab soffit",
+        "Demolition sequence where required (per CDM)"
+      ],
+      "notes": [
+        "Choice of prestressing system left to specialist contractor when not shown on drawings, or where alternative system is permitted \u2014 must be stated.",
+        "Original Detailer/Designer should check any contractor-proposed alternative, especially reinforcement modifications.",
+        "Where clashes occur between tendons and reinforcement (links/main steel), inserts, or pipes \u2014 tendons take priority (must be stated on drawings).",
+        "Calcium chloride (harmful additive, corrosive to tendons) must not be used \u2014 must be stated."
+      ]
+    },
+    "geometry_pretensioned": {
+      "min_clear_spacing_pretensioned_tendons": {
+        "formula": "\u2265 \u03c6, \u2265 dg, \u2265 2\u03c6, \u2265 dg+5, \u2265 2\u03c6, \u2265 20",
+        "note": "\u03c6 = tendon diameter, dg = max aggregate size; multiple governing minima per Figure 7.4 (values partially OCR-garbled \u2014 see information gaps)."
+      },
+      "centroid_rule": "For symmetrical concrete sections, centroid of tendons should lie on the vertical centroidal axis (Fig. 7.3)."
+    },
+    "geometry_posttensioned_ducts": {
+      "min_clear_spacing_posttensioned_ducts": {
+        "formula_partial": "\u2265 \u03c6, \u226540mm, \u2265dg+5, \u2265\u03c6, \u226550mm, \u2265dg, \u2265\u03c6, \u226540mm",
+        "note": "\u03c6 = duct diameter, dg = max aggregate size (Fig. 7.5; values OCR-garbled \u2014 treat with caution)."
+      },
+      "coupler_location_rule": "Couplers located away from intermediate supports; avoid placing couplers on \u226550% of tendons at one cross-section.",
+      "tendon_deviation_without_deviator": "Up to 0.01 radians permitted without a deviator."
+    },
+    "nominal_cover_prestressing": {
+      "definition": "cnom = cmin + \u0394cdev",
+      "cmin_b_posttensioned_ducts": {
+        "circular": "= duct diameter",
+        "rectangular": "greater of smaller dimension or half the greater dimension",
+        "cap": "No requirement for more than 80mm for either duct shape."
+      },
+      "cmin_b_pretensioned_tendons": {
+        "strand_or_plain_wire": "1.5 \u00d7 diameter",
+        "indented_wire": "2.5 \u00d7 diameter"
+      },
+      "\u0394cdev": {
+        "value_mm": 10,
+        "reduced_value_mm": 5,
+        "condition_for_reduction": "special control measures in place"
+      },
+      "durability_cover": "cmin,dur + \u0394cdev as for reinforced concrete (slabs 6.2 / beams 6.3 \u2014 not in this extract; dependency)."
+    },
+    "reinforcement_types": [
+      {
+        "name": "Bursting reinforcement (end block)",
+        "purpose": "Resist tensile bursting forces behind anchorages, acting in all lateral planes.",
+        "form": "Closed hoops or spirals",
+        "detailing_requirement": "Full tensile laps; large radius bends to avoid crushing concrete.",
+        "positioning": "As near as possible to outer edge of largest similar/concentric prism to the anchor plate; at least 50mm outside edge of anchor plate.",
+        "distribution_zone": "0.2\u00b7yo to 2\u00b7yo from loaded face",
+        "design_stress": "200 N/mm\u00b2"
+      },
+      {
+        "name": "Face-zone reinforcement (spalling control)",
+        "purpose": "Resist tensile stresses on end-block faces adjacent to anchorages, prevent spalling.",
+        "placement": "Two directions at right angles, as close to end face as cover permits."
+      },
+      {
+        "name": "Un-tensioned reinforcement at column positions (flat slabs)",
+        "area": "\u2265 0.075% gross concrete cross-section (0.00075\u00b7Ac)",
+        "placement": "Concentrated between lines 1.5\u00d7slab depth either side of column width; near top of floor.",
+        "extension": "At least anchorage length beyond 0.2\u00d7L into span, or as needed by calculation.",
+        "max_pitch_mm": 300
+      },
+      {
+        "name": "Un-tensioned bottom reinforcement (flat slabs, span zone, unbonded tendons)",
+        "condition": "Required when unbonded tendons used in span zone.",
+        "extension": "At least to within 0.2\u00d7L (plus anchorage length) from centre of support.",
+        "spacing": "3\u00d7slab thickness or 500mm, whichever lesser."
+      },
+      {
+        "name": "Hogging-zone minimum reinforcement/bonded tendons (flat slabs)",
+        "area_pct": 0.1,
+        "max_spacing_mm": 500
+      },
+      {
+        "name": "Shear reinforcement (post-tensioned beams)",
+        "form": "Open links or pairs of lapping U-bars (to allow tendon positioning around them)."
+      },
+      {
+        "name": "Anti-spalling reinforcement",
+        "condition": "Fire ratings > 2 hours, when no other reinforcement provided in soffit."
+      },
+      {
+        "name": "Trimmer bars (stressing pockets)",
+        "note": "Require proper anchorage; total area of longitudinal bars to equal area of prestressing steel being anchored at pocket."
+      },
+      {
+        "name": "Reinforcement in unstressed slab zones",
+        "area": "Greater of 0.13%\u00b7b\u00b7h, or 1/4 of reinforcement parallel to edge.",
+        "placement": "Evenly between anchorages.",
+        "extension": "Greater of la or 0.7\u00b7la, plus full anchorage length into slab."
+      },
+      {
+        "name": "Reinforcement at end zone of pre-tensioned beam (transmission length)",
+        "form": "Standard stirrups, closer spacing (e.g. 75mm) in transmission zone."
+      }
+    ],
+    "laps": {
+      "end_block_links": "Reinforcement links for adjacent anchorages should be overlapped; longitudinal bars positioned in corners.",
+      "general_note": "Bursting reinforcement (hoops/spirals) must be detailed with full tensile laps."
+    },
+    "anchorage_and_development": {
+      "corner_bars_end_block": "At all corners, bars should have large radius bends to avoid crushing concrete, or pass round a longitudinal bar/tendon of at least the same diameter.",
+      "un_tensioned_flat_slab_reinf": "Extends beyond 0.2\u00d7L an anchorage length (see above)."
+    },
+    "spacing": [
+      {
+        "condition": "Pre-tensioned tendons",
+        "rule": "Per Figure 7.4 minima (\u03c6, dg-based)"
+      },
+      {
+        "condition": "Post-tensioned ducts",
+        "rule": "Per Figure 7.5 minima (\u03c6, dg-based)"
+      },
+      {
+        "condition": "Un-tensioned top reinforcement at flat-slab columns",
+        "rule": "Max pitch 300mm"
+      },
+      {
+        "condition": "Un-tensioned bottom reinforcement, span zone, unbonded tendons",
+        "rule": "3\u00d7slab thickness or 500mm, lesser"
+      },
+      {
+        "condition": "Hogging-zone reinforcement",
+        "rule": "Max spacing 500mm"
+      },
+      {
+        "condition": "Pre-tensioned beam end-zone stirrups",
+        "rule": "e.g. 75mm (closer than typical)"
+      }
+    ],
+    "formulas": [
+      {
+        "name": "bursting_force_ratio",
+        "formula": "Fbst/Po per Table 7.3, keyed by ypo/yo",
+        "variables": {
+          "ypo": "half side of loaded area",
+          "yo": "half side of end block",
+          "Po": "tendon jacking force",
+          "Fbst": "bursting force"
+        },
+        "table_values": {
+          "0.2": 0.2,
+          "0.3": 0.18,
+          "0.4": 0.15,
+          "0.5": 0.13,
+          "0.6": 0.1,
+          "0.7": 0.08
+        },
+        "source": {
+          "table": "Table 7.3",
+          "page": 144
+        }
+      },
+      {
+        "name": "grouting_pressure",
+        "value": "0.1 MPa typical for slabs and beams",
+        "source": {
+          "section": "7.4.6",
+          "page": 150
+        }
+      }
+    ],
+    "drawing_conventions_specific": {
+      "tendon_legend_symbols": "Symbols for 1\u20135+ tendons per group (dot patterns), live end, dead end, intermediate anchor/stressing anchor, weave, 'add tendons', placing sequence numbers, colour code, tendon stressing reference numbers (Figs 7.29\u20137.30).",
+      "duct_profile_tabulation": "Duct profile given in tabular form (x, y, z coordinates per Fig 7.9), profiles tabulated separately per vertical row of ducts, referenced to an on-site datum; dimensions to top or bottom of duct, frequent enough to define the curvature.",
+      "soffit_marking": "Soffit of slabs should be marked to show tendon positions (for future reference / to avoid drilling into tendons)."
+    },
+    "notes_and_callouts": [
+      "Choice of prestressing system left to specialist contractor where not shown / alternative permitted \u2014 statement required on drawing.",
+      "Tendons take priority over reinforcement/inserts/pipes at clashes \u2014 statement required on drawing.",
+      "Calcium chloride must not be used \u2014 statement required on drawing.",
+      "Drilling/demolition: specify specialist drilling techniques to avoid hitting tendons; specify safe demolition sequence per CDM, particularly for unbonded tendons (sudden energy release risk)."
+    ],
+    "material_information": {
+      "concrete_grade_generic": "Not fixed generically in this section (project/design specific); grade referenced elsewhere (e.g. transfer strength, minimum start grade for corbels/nibs is 28/35 from \u00a76.9).",
+      "prestressing_strand_types_table_7_1": [
+        {
+          "type": "12.9 Super",
+          "steel_no": "1.1373",
+          "tensile_MPa": 1860,
+          "dia_mm": 12.9,
+          "area_mm2": 100,
+          "mass_kgm": 0.781,
+          "char_max_force_kN": 186,
+          "max_force_kN": 213,
+          "proof_force_0.1pct_kN": 160
+        },
+        {
+          "type": "12.7 Super",
+          "steel_no": "1.1372",
+          "tensile_MPa": 1860,
+          "dia_mm": 12.7,
+          "area_mm2": 112,
+          "mass_kgm": 0.875,
+          "char_max_force_kN": 209,
+          "max_force_kN": 238,
+          "proof_force_0.1pct_kN": 180
+        },
+        {
+          "type": "15.7 Super",
+          "steel_no": "1.1375",
+          "tensile_MPa": 1770,
+          "dia_mm": 15.7,
+          "area_mm2": 150,
+          "mass_kgm": 1.17,
+          "char_max_force_kN": 265,
+          "max_force_kN": 302,
+          "proof_force_0.1pct_kN": 228
+        },
+        {
+          "type": "15.7 Euro",
+          "steel_no": "1.1373",
+          "tensile_MPa": 1860,
+          "dia_mm": 15.7,
+          "area_mm2": 150,
+          "mass_kgm": 1.17,
+          "char_max_force_kN": 279,
+          "max_force_kN": 319,
+          "proof_force_0.1pct_kN": 240
+        },
+        {
+          "type": "15.2 Drawn",
+          "steel_no": "1.1371",
+          "tensile_MPa": 1820,
+          "dia_mm": 15.2,
+          "area_mm2": 165,
+          "mass_kgm": 1.29,
+          "char_max_force_kN": 300,
+          "max_force_kN": 342,
+          "proof_force_0.1pct_kN": 258
+        }
+      ]
+    }
+  },
+  "rules": {
+    "decision_rules": [
+      {
+        "id": "PST-001",
+        "rule": "IF a prestressed concrete structure is being detailed THEN a separate set of drawings must be prepared detailing the prestress, in addition to general arrangement/reinforcement drawings.",
+        "type": "mandatory"
+      },
+      {
+        "id": "PST-002",
+        "rule": "IF the prestressing system is not shown on drawings, or an alternative to the detailed system is permitted, THEN the drawings must state that the choice is left to the specialist contractor.",
+        "type": "mandatory"
+      },
+      {
+        "id": "PST-003",
+        "rule": "IF a contractor proposes an alternative prestressing system THEN the original Detailer/Designer should check it, particularly any required reinforcement modifications.",
+        "type": "mandatory ('should')"
+      },
+      {
+        "id": "PST-004",
+        "rule": "IF a clash occurs between tendons and reinforcement bars (links or main steel), inserts, or pipes THEN tendons should take priority \u2014 this must be stated on the drawings.",
+        "type": "mandatory"
+      },
+      {
+        "id": "PST-005",
+        "rule": "Calcium chloride or other harmful/corrosive additives must NOT be used with prestressing tendons \u2014 must be stated on drawings.",
+        "type": "mandatory prohibition"
+      },
+      {
+        "id": "PST-006",
+        "rule": "IF designed for symmetrical concrete sections with pre-tensioned tendons THEN the centroid of the tendons should lie on the vertical centroidal axis.",
+        "type": "recommendation"
+      },
+      {
+        "id": "PST-007",
+        "rule": "IF spacing post-tensioning couplers THEN they should be located away from intermediate supports, AND placing couplers on 50% or more of the tendons at one cross-section should be avoided.",
+        "type": "recommendation with explicit avoidance threshold"
+      },
+      {
+        "id": "PST-008",
+        "rule": "IF a designed tendon deviation is \u2264 0.01 radians THEN a deviator is not required.",
+        "type": "conditional permission"
+      },
+      {
+        "id": "PST-009",
+        "rule": "IF determining \u0394cdev for prestressing THEN use 10mm, UNLESS special control measures are in place, in which case 5mm may be used.",
+        "type": "mandatory with conditional reduction"
+      },
+      {
+        "id": "PST-010",
+        "rule": "IF a one-way spanning floor uses bonded tendons THEN there are no minimum un-tensioned reinforcement requirements (sufficient tendon-concrete bond assumed) \u2014 BUT sufficient reinforcement must still guard against pre-stressing cracking if early phased stressing is not used.",
+        "type": "conditional exemption with caveat"
+      },
+      {
+        "id": "PST-011",
+        "rule": "IF a one-way spanning floor uses unbonded tendons THEN minimum reinforcement per EC2 Section 9 is required, spread evenly across the full slab width per EC2 Sections 8 and 9 spacing rules.",
+        "type": "mandatory"
+      },
+      {
+        "id": "PST-012",
+        "rule": "IF a flat slab (two-way, discrete column supports) is detailed THEN minimum un-tensioned reinforcement at column positions = 0.075% (0.00075\u00b7Ac) of gross concrete cross-section, concentrated between lines 1.5\u00d7slab-depth either side of the column width, near top of floor, max pitch 300mm, extending at least an anchorage length beyond 0.2\u00d7L into span (or as required by calculation).",
+        "type": "mandatory minimum with geometric placement rule"
+      },
+      {
+        "id": "PST-013",
+        "rule": "IF a flat slab uses unbonded tendons in the span zone THEN designed un-tensioned bottom reinforcement is normally necessary, extending to within 0.2\u00d7L (plus anchorage length) from support centreline, spaced at 3\u00d7slab thickness or 500mm (lesser).",
+        "type": "conditional mandatory"
+      },
+      {
+        "id": "PST-014",
+        "rule": "IF a flat slab hogging region is detailed THEN minimum reinforcement (or bonded tendons) of 0.1% is required, spacing \u2264500mm.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "PST-015",
+        "rule": "IF fire rating > 2 hours is required AND no other reinforcement is provided in the soffit THEN anti-spalling reinforcement should be placed in the soffit.",
+        "type": "conditional recommendation"
+      },
+      {
+        "id": "PST-016",
+        "rule": "IF designing end-block bursting reinforcement THEN it should be closed hoops/spirals, detailed with full tensile laps and large-radius bends, positioned as near as possible to the outer edge of the loaded-area-similar prism and at least 50mm outside the anchor-plate edge, distributed through 0.2yo\u20132yo from the loaded face, at a design stress of 200 N/mm\u00b2.",
+        "type": "mandatory design/detailing method"
+      },
+      {
+        "id": "PST-017",
+        "rule": "IF proprietary anchorages include spirals as part of the anchorage system THEN additional reinforcement may still be required to fully resist bursting forces.",
+        "type": "conditional requirement"
+      },
+      {
+        "id": "PST-018",
+        "rule": "IF reinforcement links serve adjacent anchorages THEN they should be overlapped, with longitudinal bars positioned in the corners.",
+        "type": "recommendation"
+      },
+      {
+        "id": "PST-019",
+        "rule": "IF detailing end-block corner bars THEN they should have large radius bends to avoid crushing concrete, OR pass round a longitudinal bar/tendon of at least the same diameter.",
+        "type": "mandatory (either/or)"
+      },
+      {
+        "id": "PST-020",
+        "rule": "IF couplers on 50%+ of tendons occur at one cross-section (avoided per PST-007) BUT still used THEN cracking must be controlled by distributing tendons around the cross-section, providing fully anchored reinforcement, or leaving some tendons uncoupled across the joint.",
+        "type": "mitigating requirement"
+      },
+      {
+        "id": "PST-021",
+        "rule": "IF unstressed zones exist near slab edges (post-tensioned) THEN reinforcement perpendicular to the edge = greater of 0.13%\u00b7b\u00b7h or 1/4 of reinforcement parallel to edge, placed evenly between anchorages, extending the greater of la or 0.7\u00b7la plus a full anchorage length into the slab.",
+        "type": "mandatory minimum"
+      },
+      {
+        "id": "PST-022",
+        "rule": "IF an infill strip is required in a prestressed element THEN it should be designed as a reinforced concrete element and suitably reinforced, with minimum time before concreting specified on drawings.",
+        "type": "mandatory"
+      },
+      {
+        "id": "PST-023",
+        "rule": "IF stiff points (e.g. core walls) occur near a post-tensioned floor THEN additional reinforcement may be required for shrinkage cracking, shown on reinforcement drawings.",
+        "type": "conditional requirement"
+      },
+      {
+        "id": "PST-024",
+        "rule": "IF a post-tensioned slab/frame is detailed THEN long-term movements at movement joints (accounting for long-term creep/shrinkage) must be specified on drawings.",
+        "type": "mandatory"
+      },
+      {
+        "id": "PST-025",
+        "rule": "IF pre-tensioned tendons are concentrated in groups (not evenly distributed) THEN overall internal equilibrium of the transmission zone should be considered and reinforcement provided as necessary; IF tendons are distributed per the linear prestress distribution remote from the transmission zone THEN no additional reinforcement is needed there.",
+        "type": "conditional requirement"
+      },
+      {
+        "id": "PST-026",
+        "rule": "IF detailing the end zone of a pre-tensioned beam THEN it is recommended to design/detail it as a reinforced concrete element with longitudinal and shear reinforcement, typically standard stirrups at closer spacing (e.g. 75mm) in the transmission zone.",
+        "type": "recommendation"
+      },
+      {
+        "id": "PST-027",
+        "rule": "IF locating construction joints in prestressed elements THEN avoid cast-in components (anchorages, couplers); where joints intersect duct planes, position to avoid areas with restricted vibration/scabbling access.",
+        "type": "mandatory avoidance rule"
+      },
+      {
+        "id": "PST-028",
+        "rule": "IF using unbonded tendons THEN a safe de-stressing method/sequence prior to demolition must be specified per current CDM regulations, due to risk of sudden high-energy release.",
+        "type": "mandatory (safety)"
+      }
+    ]
+  },
+  "parameters": {
+    "input_parameters": {
+      "tendon_type": {
+        "enum": [
+          "pre-tensioned",
+          "post-tensioned"
+        ]
+      },
+      "tendon_diameter": {
+        "unit": "mm"
+      },
+      "duct_diameter": {
+        "unit": "mm",
+        "applies_to": "post-tensioned"
+      },
+      "duct_shape": {
+        "enum": [
+          "circular",
+          "rectangular"
+        ]
+      },
+      "max_aggregate_size_dg": {
+        "unit": "mm"
+      },
+      "delta_c_dev": {
+        "default_mm": 10,
+        "reduced_mm": 5,
+        "condition": "special control measures"
+      },
+      "slab_thickness": {
+        "unit": "mm"
+      },
+      "span_length_L": {
+        "unit": "mm"
+      },
+      "column_width": {
+        "unit": "mm"
+      },
+      "bonded_or_unbonded": {
+        "enum": [
+          "bonded",
+          "unbonded"
+        ]
+      },
+      "tendon_jacking_force_Po": {
+        "unit": "kN"
+      },
+      "loaded_area_half_side_ypo": {
+        "unit": "mm"
+      },
+      "end_block_half_side_yo": {
+        "unit": "mm"
+      },
+      "fire_rating_hours": {
+        "unit": "hr"
+      }
+    },
+    "derived_parameters": {
+      "cmin_b_circular_duct": "= duct_diameter (cap 80mm)",
+      "cmin_b_rectangular_duct": "= max(smaller_dim, 0.5 \u00d7 greater_dim) (cap 80mm)",
+      "cmin_b_pretensioned_strand": "1.5 \u00d7 tendon_diameter",
+      "cmin_b_pretensioned_indented_wire": "2.5 \u00d7 tendon_diameter",
+      "cnom": "cmin + delta_c_dev",
+      "flat_slab_column_reinf_area": "0.00075 \u00d7 Ac",
+      "flat_slab_column_reinf_extent": "1.5 \u00d7 slab_depth either side of column width",
+      "flat_slab_hogging_min_reinf_pct": 0.1,
+      "bursting_force_Fbst": "lookup(ypo/yo) \u00d7 Po  [Table 7.3]",
+      "unstressed_zone_reinf_area": "max(0.0013 \u00d7 b \u00d7 h, 0.25 \u00d7 parallel_edge_reinf)"
+    },
+    "constraints": [
+      "delta_c_dev in {5,10} mm",
+      "cmin_b_duct <= 80mm",
+      "coupler_fraction_at_one_section < 0.5",
+      "tendon_deviation_without_deviator <= 0.01 rad",
+      "flat_slab_top_reinf_max_pitch <= 300mm",
+      "flat_slab_bottom_reinf_spacing <= min(3\u00d7slab_thickness, 500mm)",
+      "hogging_reinf_max_spacing <= 500mm"
+    ],
+    "recovered_information_pass": {
+      "provenance": "13_audit_recovered_information (1).md (Ch.7, pp.136–159)",
+      "P1_pretensioned_unit_types": "Hollowcore and double-tee units (floor slabs); pre-tensioned beams also used for transfer structures (§7.3.1, p.137).",
+      "P2_bearing_plates_elastic_shortening": "Bearing plates or similar should be designed to allow elastic shortening of the element to take place (§7.3.1, p.137).",
+      "P3_single_strand_type_rule": "Recommended that only one particular type of wire/strand should be employed on a specific project to avoid installation errors (§7.3.2, p.137).",
+      "P4_strand_designation_syntax": "EN 10138-3-Y1860S7-12.9 (Y = prestressing steel, S = strand); BS EN 10138 Table 4 (§7.3.2, p.138).",
+      "P5_anchorage_classification": "Live (stressing), dead-end, passive anchorages, or anchorage couplings; BS 4447 & ETAG 013 (§7.3.2, p.138).",
+      "P6_duct_sizing": "Identified by internal diameter per supplier recommendation (§7.3.2, p.138).",
+      "P7_duct_materials": "Semi-rigid corrugated steel or plastic sheathing (Concrete Society TR 43); rigid steel sheathing (§7.3.2, p.138).",
+      "P8_duct_fixing": "Duct/sheathing must be adequately fixed/supported against displacement during detailing (§7.3.2, p.138).",
+      "P10_governing_duct_spacing_clause": "EC2 Clause 8.10.1 (§7.3.2, p.138).",
+      "P13_multilayer_tendons": "Arranged in vertical rows with sufficient space between rows for proper placing/compaction (p.139, Fig 7.6).",
+      "P14_stressing_sequence_phasing": {
+        "rule": "1st Stage Stressing (After first phase construction); 2nd Stage Stressing (Min three days after third phase construction)",
+        "dimensions": "4ø100mm CTS (x4 groups), 150 150, 935, 1110, 760, 370, 180 (Fig 7.6, p.139)"
+      },
+      "P15_curved_tendon_support": "Sufficient concrete must be provided to give full support to duct to prevent radial force pulling tendon through duct wall (p.139–140).",
+      "P16_small_radius_curves": "Increased duct spacing and tensile reinforcement normally required at small-radius curves (p.140).",
+      "P18_anchorage_straight_length": "Minimum straight length of tendon required at anchorage connection; obtained from manufacturer (p.140, Fig 7.7).",
+      "P19_grouting_vents": "Vents required at ALL high points; intermediate vents advisable at low points (p.140–141, Fig 7.8).",
+      "P20_plastic_vent_pipe_diameter": "Internal diameter not less than 20mm (p.141).",
+      "P21_vent_pipe_fixing": "Punch sheathing with soft steel punch; plastic pipe connected and supported, possibly by loose bar or strand length (p.141).",
+      "P22_anchorage_alignment": "Axially in line with last straight length of tendon (p.141, Fig 7.10).",
+      "P24_anchorage_recess_sockets": "Screw small diameter bars into sockets provided in faces of recess to retain mortar/concrete filling (p.142).",
+      "P25_jack_clearances": "1000mm min to obstruction; 75mm callout near jack (Fig 7.12, p.143).",
+      "P26_end_block_definition": "Zone in which prestressing force is dispersed from tendon anchorages to approximately linear distribution across section (§7.4.2, p.144).",
+      "P27_end_block_overall_equilibrium": "Both vertical and horizontal equilibrium should be considered and reinforcement provided to resist induced tensile forces (p.144).",
+      "P30_stressing_pockets": "Curved stressing chairs reduce pocket dimensions; provide minimum well distributed reinforcement to control cracking (p.146, Fig 7.14).",
+      "P31_anchorage_blisters": "Locate at stiffer points in structure; local strut-and-tie models used (p.146–147, Fig 7.15).",
+      "P32_blister_force_labels": "Force labels 3/4 P, P/16, P/4, relation T = C - P/16 (OCR layout uncertain) (Fig 7.15, p.147).",
+      "P33_duct_width_deduction": "Deduct width of ducts when determining net area of concrete in tension (Fig 7.16, p.147).",
+      "P34_secondary_reinforcement_scope": "Enhance shear AND torsion resistance, crack control, fire resistance (§7.4.3, p.148).",
+      "P35_early_thermal_restraint": "Longitudinal rebar provided to resist tensile forces caused by restraints to early thermal movement before stressing (§7.4.3, p.148).",
+      "P36_holes_reinforcement_section_7_4_4": "Holes induce compressive stress parallel and tensile stress normal to prestress; stress concentration ~3x nominal; rebar fully anchored into surrounding concrete (§7.4.4, Fig 7.18, p.148).",
+      "P39_normal_component_section_7_4_5": "Angular deviation causes forces normal to tendon; local shear and moments require reinforcement; additional links beyond tangent points (p.148–149, Fig 7.19).",
+      "P41_curved_beams_web_bending": "Lateral tendon force balanced by web/flange compression; induces web bending (p.149, Fig 7.20).",
+      "P42_looped_anchorages": "Large radial force at loops requires local reinforcement similar to end blocks (p.149, Fig 7.21).",
+      "P43_grouting_pressure_tr47": "Per Concrete Society TR 47; sheathings and couplers do not resist grouting pressure, transmitting tensile stresses to concrete (§7.4.6, p.150).",
+      "P45_grouting_tensile_stress_zones": "Ducts in thin members, reduction at couplers, local bending at rectangular ducts (Fig 7.22, p.150).",
+      "P46_intermediate_anchorages_section_7_4_7": "Deformation creates tensile forces parallel to tendon; reinforcement fully anchored each side of anchorage (§7.4.7, Fig 7.23, p.150–151).",
+      "P47_unstressed_zone_geometry": "45° lines define extent of unstressed zone near slab edges (Fig 7.25, p.151).",
+      "P48_pretensioned_poisson_effect": "Release causes tendon diameter increase (Poisson effect), inducing radial compression and circumferential tension (p.152).",
+      "P49_permanent_structure_movements_section_7_5_1": "Elastic shortening and falsework deflection impose additional forces; phased falsework release; temporary restraints identified (§7.5.1, p.152–153).",
+      "P50_camber_variation_section_7_5_2": "Camber variation between adjacent floor units influences average screed thickness (§7.5.2, p.153).",
+      "P51_demolition_bonded_vs_unbonded": "Bonded tendons demolished like ordinary RC; unbonded tendons require de-stressing (§7.5.3, p.153).",
+      "P52_column_band_strip_helix": "R10 helix, 6 turns, 50 pitch, 250 O/A (Fig 7.36, p.158).",
+      "P53_infill_strip_width": "Say 1000mm typical with temporary prop (Fig 7.37, p.159).",
+      "P54_pour_strip_dimensions": "1000mm either side of 1000mm pour strip with cross rods at both faces (Figs 7.34–7.35, p.158).",
+      "P55_tendon_support_chairs": "Tendon support bars / chairs (e.g. 425 Chair, 405 Chair) detailed separately from ordinary rebar (§7.6, Fig 7.32b)."
+    }
+  }
+}

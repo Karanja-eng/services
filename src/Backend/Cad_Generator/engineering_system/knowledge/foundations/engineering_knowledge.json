@@ -1,0 +1,27 @@
+{
+  "foundations": {
+    "types": [
+      "rectangular pad footings",
+      "multi-column bases",
+      "piled foundations (pile caps 2-7 piles)",
+      "rafts",
+      "ground beams",
+      "ground slabs",
+      "ducts/trenches"
+    ],
+    "components": [
+      "bottom bars x/y",
+      "banded bars",
+      "bobs/L-bends",
+      "column starters",
+      "starter links (H10-300, 3 no min)",
+      "lacers H12",
+      "distribution H16@300",
+      "chairs",
+      "edge U-bars",
+      "A193 mesh",
+      "splice bars"
+    ],
+    "starter_rule": "450 mm min horizontal leg unless lightly loaded (<50% capacity)"
+  }
+}

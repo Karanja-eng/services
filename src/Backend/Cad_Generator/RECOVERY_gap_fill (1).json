@@ -1,0 +1,637 @@
+{
+  "document": "SMDS Recovery — Missing & Recovered Knowledge (Gap-Fill Pass)",
+  "merge_into": ["ch6_02_engineering_knowledge.json", "ch6_03_detailing_rules.json", "ch6_04_parameters.json", "01_source_analysis.md", "ch6_12_unresolved_questions.md"],
+  "method": "Systematic re-read of both PDFs plus visual rasterisation of every model-detail page",
+
+  "SECTION_A_COVER_RULES_RECOVERED": {
+    "label": "Cover — exact chain from nominal to main bar",
+    "status": "EXTRACTED",
+    "source": "Section 5.2.1, page 37",
+
+    "A1_nominal_cover_definition": {
+      "rule": "Nominal cover c_nom = c_min + Δcdev",
+      "applied_to": "reinforcement NEAREST to the concrete surface (e.g. links in a beam, not main bars)",
+      "status": "EXTRACTED"
+    },
+
+    "A2_cover_to_main_bar_via_link": {
+      "rule": "Nominal cover to the LINK must be such that the resulting cover to the MAIN BAR is at least: bar_dia_main (or equivalent dia for pairs/bundles of ≥3 bars) + Δcdev",
+      "derived_formula": "c_link ≥ (c_main_required − link_dia)  where  c_main_required = bar_dia_main + Δcdev",
+      "no_links_present_rule": "Nominal cover ≥ bar_dia + Δcdev directly to bar",
+      "source": "Section 5.2.1, page 37",
+      "status": "EXTRACTED",
+      "was_omitted": true,
+      "note": "Previous extraction stated the rule verbally but did NOT encode the chain: cover_to_link + link_dia + cover_to_main ≥ bar_dia_main + Δcdev"
+    },
+
+    "A3_surface_treatment_addition": {
+      "rule": "Where special surface treatments used (e.g. bush hammering): add expected depth of treatment to nominal cover",
+      "source": "Section 5.2.1, page 37",
+      "status": "EXTRACTED"
+    },
+
+    "A4_aggregate_rule": {
+      "rule": "Nominal cover ≥ maximum (nominal) aggregate size",
+      "source": "Section 5.2.1, page 37",
+      "status": "EXTRACTED"
+    },
+
+    "A5_durability_cover": {
+      "rule": "Cover for durability governed by exposure class — specified by Designer per EC2 Clause 4.2. This manual gives TYPICAL values only; Designer must confirm.",
+      "source": "Section 5.2.2, page 38",
+      "status": "EXTRACTED",
+      "was_omitted": true,
+      "note": "Previous extraction did not flag that the typical cover values in Chapter 6 are NOT the durability table; the full exposure-class table is in EC2, not reproduced here."
+    },
+
+    "A6_fire_cover": {
+      "rule": "Cover for fire resistance is expressed as AXIS DISTANCE (centre of bar to concrete surface), not nominal cover. Size of members and axis distance are specified by the Designer per BS EN 1992-1-2.",
+      "axis_distance_definition": "distance from CENTRE of reinforcing bar to surface of concrete",
+      "not_same_as": "nominal cover (which is to outermost steel = link face)",
+      "source": "Section 5.2.3, page 38; Sections 6.3.2 and 6.4.2",
+      "status": "EXTRACTED",
+      "was_omitted": true,
+      "note": "Previous extraction mentioned fire but did not encode the axis-distance vs. nominal-cover distinction as a computable rule"
+    },
+
+    "A7_fire_spalling_threshold": {
+      "rule": "IF nominal cover to outermost steel > 40mm (i.e. axis distance to MAIN reinforcement > 70mm) THEN there is a danger of concrete spalling in fire → provide surface reinforcement mesh: spacing ≤ 100mm, diameter ≥ 4mm",
+      "applies_to": ["beams (§6.3.2)", "columns (§6.4.2)"],
+      "reference_EC2": "EC2 Part 1.2, Clause 4.5.2",
+      "source": "Sections 6.3.2 (p74) and 6.4.2 (p85)",
+      "status": "EXTRACTED",
+      "was_omitted": false,
+      "note": "Was in previous extraction but the 70mm threshold for AXIS DISTANCE (not nominal cover) was not made explicit"
+    },
+
+    "A8_beam_top_cover_note": {
+      "rule": "For beams: top cover may be determined by slab or transverse beam reinforcement — not solely by nominal cover to the beam's own bars",
+      "source": "Section 6.3.2, page 74 note",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "A9_section_5_8_reference_clarification": {
+      "rule": "References to 'see 5.8' in Sections 6.3.2 and 6.4.2 mean: use the equivalent bar diameter (bn = ø√nb ≤ 55mm) from Section 5.4.5 (bundled bars) to determine cover for grouped bars",
+      "section_5_8_in_these_pdfs": false,
+      "equivalent_diameter_formula": "bn = ø × √nb;  max 55mm",
+      "source": "Sections 6.3.2 and 6.4.2 (note 'see 5.8'); bn formula from Section 5.4.5 p43",
+      "status": "EXTRACTED — formula from 5.4.5; section 5.8 itself UNRESOLVED (not in these PDFs)"
+    }
+  },
+
+  "SECTION_B_MS2_FULL_GEOMETRY": {
+    "label": "Model Detail MS2 — One and two way slabs, External RESTRAINED supports",
+    "status": "EXTRACTED",
+    "source": "Model Detail MS2, page 67",
+    "was_omitted_from_previous": "Geometry was summarised; decision tree was incomplete",
+
+    "B1_conditions_for_each_detail": {
+      "detail_A": {
+        "condition": "X > anchorage length (X is the horizontal distance available to bend/anchor bottom bars at support)",
+        "geometry": {
+          "bottom_bars_U_shaped": "U-bars at support",
+          "u_bar_top_leg_extension_past_support_face": "0.1 × span or 600mm whichever is SMALLER",
+          "u_bar_pitch": "p1 — alternately placed",
+          "u_bar_bottom_leg": "into wall; 500mm or tension lap whichever is greater",
+          "u_bar_area": "= half the bottom steel at mid-span UNLESS otherwise specified",
+          "corner_bar": "A bar is placed inside each corner of the U",
+          "top_bar_extension_from_support": "0.3 × span",
+          "top_bar_curtailment": "as specified (minimum as for detail A top limit)",
+          "50mm_offset": "50mm shown at top of U-bar bend"
+        },
+        "status": "EXTRACTED"
+      },
+      "detail_B": {
+        "condition": "X < anchorage length AND bearing stress inside standard bend does not exceed the limit (otherwise use detail C)",
+        "geometry": {
+          "bottom_bar_bent": "tension anchorage length straight then bent; bar hooks down into wall",
+          "bar_pitch": "p at bottom, 0.5 × p stagger into wall",
+          "bars_extending_into_wall": "detailed with wall drawings wherever possible; otherwise clearly cross-referenced",
+          "top_bar_curtailment": "as specified; minimum as for detail A"
+        },
+        "status": "EXTRACTED"
+      },
+      "detail_C": {
+        "condition": "bearing stress inside bend REQUIRES a non-standard radius of bend",
+        "geometry": {
+          "bottom_bar": "tension anchorage length; large radius bend into wall",
+          "bar_into_wall": "detailed with wall drawings; cross-referenced if not",
+          "top_bar_curtailment": "as specified; minimum as for detail A"
+        },
+        "status": "EXTRACTED"
+      }
+    },
+
+    "B2_X_parameter_definition": {
+      "X": "horizontal distance from face of support to the point where the bottom bar would naturally terminate — determines whether a standard bend fits or a non-standard radius is needed",
+      "status": "INFERRED from figure geometry; not numerically defined in text",
+      "was_omitted": true
+    },
+
+    "B3_distribution_bars": {
+      "rule": "Distribution bars as for Model Detail MS1",
+      "status": "EXTRACTED"
+    },
+
+    "B4_cover": {
+      "rule": "Nominal cover specified by designer; at least 20mm or bar size whichever is greater",
+      "status": "EXTRACTED"
+    },
+
+    "B5_MS2A_MS2B_MS2C_slab_wall_connections": {
+      "MS2A": {
+        "applies_when": "Wall continues above AND below the slab — simple continuity",
+        "detail": "Standard restrained support as MS2",
+        "source": "Section 6.2.2, page 60",
+        "status": "EXTRACTED — referenced; full geometry in Chapter 6 wall section (not in these PDFs)"
+      },
+      "MS2B": {
+        "applies_when": "Large bending moment transfer from slab to wall — top slab reinforcement must pass DOWN into wall",
+        "note": "May require easy (large radius) bends — see Section 5.1.8",
+        "source": "Section 6.2.2, page 60",
+        "status": "EXTRACTED — referenced; full geometry UNRESOLVED (Model Detail MS2B not in these PDFs)"
+      },
+      "MS2C": {
+        "applies_when": "Same as MS2B, alternative configuration",
+        "source": "Section 6.2.2, page 60",
+        "status": "EXTRACTED — referenced; full geometry UNRESOLVED (Model Detail MS2C not in these PDFs)"
+      },
+      "rebend_edge_bars": {
+        "rule": "Where construction requires edge bars cast flush with wall face then rebent to project into slab — proprietary systems are available",
+        "source": "Section 6.2.2, page 60",
+        "status": "EXTRACTED"
+      }
+    }
+  },
+
+  "SECTION_C_MS3_FULL_GEOMETRY": {
+    "label": "Model Detail MS3 — One and two way slabs, External UNRESTRAINED supports (and free edges)",
+    "status": "EXTRACTED",
+    "source": "Model Detail MS3, page 68",
+    "was_omitted": "Geometry partially extracted; decision tree incomplete",
+
+    "C1_detail_A": {
+      "condition": "Slab depth ≥ 150mm",
+      "geometry": {
+        "end_U_bars": "Same diameter as bottom bars",
+        "top_extension_beyond_support": "max(0.1 × span, 45 × bar_dia)",
+        "bottom_extension_into_span": "max(500mm, tension lap)",
+        "bobbed_bar_note": "N/A for detail A (slab depth sufficient)"
+      },
+      "status": "EXTRACTED"
+    },
+    "C1_detail_B": {
+      "condition": "Slab depth < 150mm AND support width < 200mm",
+      "geometry": {
+        "anchorage_at_support": "max(d, 0.3 × l_b,rqd, 10 × bar_dia, 100mm)",
+        "extension_into_span": "max(500mm, tension lap)",
+        "bobbed_bars": "May be laid over to ensure sufficient top cover"
+      },
+      "status": "EXTRACTED"
+    },
+    "C1_detail_C": {
+      "condition": "Slab depth < 150mm AND support width ≥ 200mm (also suitable for fabric reinforcement)",
+      "geometry": {
+        "anchorage_at_support": "max(d, 0.3 × l_b,rqd, 10 × bar_dia, 100mm)",
+        "extension_into_span": "max(500mm, tension lap)"
+      },
+      "status": "EXTRACTED"
+    }
+  },
+
+  "SECTION_D_MS4_FULL_GEOMETRY": {
+    "label": "Model Detail MS4 — Cantilever slabs",
+    "status": "EXTRACTED",
+    "source": "Model Detail MS4, page 69",
+    "was_omitted": "300mm and 0.5×cantilever dimension omitted from previous extraction",
+
+    "D1_geometry": {
+      "top_bar_minimum_length": "2 × cantilever length OVER SIMPLE SUPPORT; alternately staggered",
+      "support_extension_mm": 300,
+      "bottom_bar_extension_from_support_min_mm": "0.5 × cantilever length (minimum)",
+      "bottom_bar_lap": "0.5 × tension lap at end of cantilever zone",
+      "bottom_bar_area": "≥ 0.5 × area of top reinforcement (to control deflection)",
+      "U_bar_at_end": "'U' bar ensures lever arm retained",
+      "U_bar_note": "was_omitted — the 300mm fixed support extension and 0.5×cantilever into span were in the figure but not encoded numerically"
+    },
+    "status": "EXTRACTED"
+  },
+
+  "SECTION_E_SECTION_5_15_STATUS": {
+    "label": "Section 5.15 — Secondary beam lever arm check",
+    "status": "UNRESOLVED",
+    "source": "Referenced at Section 4.2.2 note 3 (page 26 PDF1) and in context of secondary beam increased cover",
+    "what_it_covers": "Where secondary beam reinforcement increases top cover, check that resulting reduction in lever arm is satisfactory",
+    "in_these_pdfs": false,
+    "section_5_15_page": "Estimated ~page 50–60 of full manual (not in either PDF extract)",
+    "action": "DEPENDENCY — must be extracted from the full manual's Section 5.15",
+    "note": "The rule itself is a design check (z = d - x/2 recalculation); the detailing consequence is that secondary beam top cover drives the effective depth check. No numerical rule can be encoded without Section 5.15."
+  },
+
+  "SECTION_F_RECOVERED_BEAM_RULES": {
+    "label": "Beam rules recovered — partially or wholly omitted",
+
+    "F1_wide_shallow_beam_corbel_rule": {
+      "rule": "Where wide shallow beams required with narrow columns, may be necessary to provide design transverse top steel at the column position to cater for CORBEL ACTION, in addition to shear links",
+      "trigger_condition": "beam_width > column_width + 2 × effective_depth  (rule of thumb)",
+      "applicability": "Most likely where precast slabs used with no transverse beams; tying action must also be considered",
+      "source": "Section 6.3.2, page 78",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "F2_beam_4hr_fire_supplementary": {
+      "rule": "For 4-hour fire resistance: supplementary reinforcement may be required where nominal cover exceeds 40mm. Trigger is axis distance to LINK reinforcement > 70mm.",
+      "reference": "EC2 Part 1.2, Clause 4.5.2",
+      "source": "Section 6.3.2, page 74",
+      "status": "EXTRACTED",
+      "was_omitted": "Not fully encoded — the axis-distance-to-link threshold (70mm) was present but not coded as a decision rule"
+    },
+
+    "F3_beam_top_cover_from_slab": {
+      "rule": "Top cover to beam bars may be determined by slab reinforcement or transverse beam reinforcement passing over the beam top",
+      "source": "Section 6.3.2, page 74 — note under nominal cover",
+      "status": "EXTRACTED",
+      "was_omitted": true,
+      "DXF_impact": "When generating beam cross-section at slab junction, top cover to beam bars = cover_to_slab_bar + slab_bar_dia"
+    },
+
+    "F4_compression_transverse_flange_min_rebar": {
+      "rule": "As,min for transverse reinforcement in top flange of flanged beams: As,min ≥ 0.0015 × hf × l  (where hf = flange depth, l = span)",
+      "source": "Section 6.3.2, page 74",
+      "status": "EXTRACTED",
+      "was_omitted": "Listed in previous extraction but not included in the parametric formula section"
+    },
+
+    "F5_curtailment_al_default": {
+      "rule": "If designer does not specify curtailment length: Detailer shall assume al = 1.25d",
+      "source": "Section 6.3.2, page 75",
+      "status": "EXTRACTED",
+      "was_omitted": "Was present but not encoded as a default fallback decision rule"
+    },
+
+    "F6_simplified_curtailment_conditions_complete": {
+      "all_four_conditions_required_simultaneously": [
+        "Qk (characteristic imposed load) ≤ Gk (characteristic dead load)",
+        "Loads substantially uniformly distributed",
+        "Three or more spans",
+        "Variation in span length ≤ 15% of longest span"
+      ],
+      "effective_span_cap": "L = min(clear_span + d, actual_span)",
+      "source": "Section 6.3.2, page 75",
+      "status": "EXTRACTED",
+      "was_omitted": "Previous extraction listed conditions but omitted the effective-span cap formula"
+    },
+
+    "F7_hanger_bar_rule_complete": {
+      "area_rule": "At least max(20% of maximum support top steel area, compression steel required) must be carried to 25mm from each support",
+      "diameter_preferred_mm": 16,
+      "for_beams_h_ge_500_minimum": "2 H16 bars",
+      "placement": "Hanger bars to be placed inside main top bars at support (MB1)",
+      "source": "Section 6.3.2 (page 75) and Model Detail MB1 (page 82)",
+      "status": "EXTRACTED",
+      "was_omitted": "20% area rule was present; 'inside main top bars' placement from MB1 was present; the exact 'whichever is greater' logic between 20% area and compression area needed was implicit"
+    },
+
+    "F8_bottom_bar_span_end_bay_rule": {
+      "rule": "For end bays: lengths of alternate bars are 'a' and 'b' (from bending moment diagram). For internal bays: all bars = max(a, b), alternately staggered.",
+      "source": "Section 6.2.2, Figures 6.3-6.4, page 50 (stated for slabs; beam equivalent via simplified rules)",
+      "status": "EXTRACTED",
+      "was_omitted": "End-bay vs internal-bay distinction for bottom bar curtailment not separately encoded for slabs"
+    }
+  },
+
+  "SECTION_G_RECOVERED_COLUMN_RULES": {
+    "label": "Column rules recovered",
+
+    "G1_column_tension_bar_max_spacing": {
+      "rule": "Maximum spacing of TENSION bars in column: 175mm",
+      "source": "Section 6.4.2, page 85",
+      "status": "EXTRACTED",
+      "was_omitted": true,
+      "note": "Previous extraction gave compression bar maximum (300mm) and listed '175mm' as tension in one line but it was not encoded as a named constraint"
+    },
+
+    "G2_column_32mm_spacing_lapping_allowance": {
+      "rule": "When considering minimum spacing of bars of 32mm size or greater, allowance must be made for lapping of bars",
+      "source": "Section 6.4.2, page 85",
+      "status": "EXTRACTED",
+      "was_omitted": true,
+      "practical_meaning": "At laps, two 32mm bars side by side need clear spacing of max(bar_dia, dg+5mm, 20mm) computed on the LAPPING bars — can govern minimum column width"
+    },
+
+    "G3_column_concrete_grade_cap": {
+      "rule": "Column concrete grade must not exceed 1.4 × concrete grade of intersecting slab or beam UNLESS special measures taken to resist bursting forces",
+      "source": "Section 6.4.2, page 85",
+      "status": "EXTRACTED",
+      "was_omitted": "Was present; decision rule was not encoded as a computable check"
+    },
+
+    "G4_column_5_8_bundle_cover": {
+      "rule": "Cover to bundled bars in columns = cover to EQUIVALENT bar size bn (see Section 5.8 / Section 5.4.5: bn = ø√nb ≤ 55mm)",
+      "source": "Section 6.4.2, page 85",
+      "status": "EXTRACTED (bn formula from 5.4.5); Section 5.8 itself UNRESOLVED"
+    }
+  },
+
+  "SECTION_H_RECOVERED_GENERAL_RULES": {
+    "label": "General rules recovered — previously summarised only",
+
+    "H1_nominal_lap_minimum_for_nominal_bars": {
+      "rule": "Lap lengths provided for nominal bars etc. shall NOT be less than max(15 × bar_size, 200mm)",
+      "source": "Section 6.2.2, page 49 (slabs); applies generally",
+      "status": "EXTRACTED",
+      "was_omitted": "Was present in slab section but not encoded as a separate general constraint independent of the alpha-factor table"
+    },
+
+    "H2_slab_simplified_curtailment_condition_5_1_3": {
+      "rule": "The simplified curtailment method for slabs (Figures 6.3 and 6.4) may be used ONLY when analysis is carried out for the single load case of all spans loaded per 5.1.3(1)P of UK National Annex of EC2 AND no shear reinforcement is required",
+      "source": "Section 6.2.2, page 50",
+      "status": "EXTRACTED",
+      "was_omitted": true,
+      "section_5_1_3": "UNRESOLVED — Section 5.1.3 is not in these PDFs; it is a UK NA load combination rule in EC2"
+    },
+
+    "H3_fabric_lap_area_allowance_for_slab_detailing_info": {
+      "rule": "When providing detailing information for coffered slabs with fabric, if Designer does not specify the additional area required for laps, 22% will be assumed for 300mm laps",
+      "source": "Section 6.2.3, page 61",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "H4_slab_cover_for_detailing_information_standard": {
+      "rule": "Standard cover for detailing information: 20mm for internal conditions, 40mm for external conditions (slab detailing information section 6.2.3)",
+      "source": "Section 6.2.3, page 61",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "H5_direct_support_reduced_anchorage": {
+      "rule": "For direct supports (slab supported by wall or column — Figure 6.1a): anchorage length beyond face of support may be reduced to d, but NOT less than max(0.3 × l_b,rqd, 10ø, 100mm). Exception: where loading abnormally high or point loads close to support → refer to EC2 Sections 8 and 9.",
+      "figure": "6.1",
+      "source": "Section 6.2.2, page 49",
+      "status": "EXTRACTED",
+      "was_omitted": "The exception condition (abnormal loading / point loads) was not encoded in the previous extraction"
+    },
+
+    "H6_indirect_support_full_anchorage": {
+      "rule": "For indirect supports (slab supported by another beam — Figure 6.1b): full anchorage length l_bd applies from line of contact. No reduction permitted.",
+      "figure": "6.1",
+      "source": "Section 6.2.2, page 49",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "H7_partial_fixity_slab_top_bars": {
+      "rule": "Minimum top reinforcement at support where partial fixity exists: 25% of maximum required reinforcement in span (not less than As,min). May be REDUCED TO 15% for an END support.",
+      "source": "Section 6.2.2, page 48",
+      "status": "EXTRACTED",
+      "was_omitted": "15% end-support reduction was present but not coded as a separate conditional rule"
+    },
+
+    "H8_moment_connection_corner_bar_rule_beam_column": {
+      "rule": "For L-bar beam-to-edge-column connection: a STANDARD bend radius may normally be used PROVIDED a bar of the same size OR GREATER is placed INSIDE THE CORNER, normal to it. If no corner bar is present, a NON-STANDARD bend may be required.",
+      "source": "Section 6.4.2, page 87",
+      "status": "EXTRACTED",
+      "was_omitted": "Was present; the 'same size or greater' quantification of the corner bar was not encoded"
+    },
+
+    "H9_wide_beam_narrow_column_corbel_trigger": {
+      "rule": "IF beam_width > column_width + 2 × d THEN consider design transverse top steel at column for corbel action (plus tying)",
+      "source": "Section 6.3.2, page 78",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "H10_direct_support_transverse_wire_exception": {
+      "rule": "For direct supports: l_bd may be taken LESS THAN l_b,min provided there is at least ONE transverse wire welded WITHIN the support, and at least 15mm from the face of the support",
+      "source": "Section 5.4.2, page 41",
+      "status": "EXTRACTED",
+      "was_omitted": "The 15mm from face of support dimension was present in previous extraction but the 'one transverse wire welded' specific condition was not separately encoded as a decision rule"
+    }
+  },
+
+  "SECTION_I_RECOVERED_DRAWING_NOTATION": {
+    "label": "Drawing notation and scheduling rules recovered",
+
+    "I1_bar_notation_AP_AS_meanings": {
+      "AP": "Alternately Placed — bars of alternating marks placed in the same zone",
+      "AS": "Alternately Staggered — bars of same mark staggered alternately",
+      "EF": "Each Face — bar on each face of member (e.g. side bars)",
+      "P_A_S_for_links": "Placed As Shown — links placed as shown on elevation",
+      "source": "Working drawing examples Sections 6.2.4 and 6.3.4, pages 51-52, 62-63, 79-80",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "I2_slab_bar_count_bracket_notation": {
+      "rule": "Where multiple zones of similar bar marks occur: show total count followed by sub-counts per zone in brackets, e.g. '20H10-63-150T1 (12) (8)'",
+      "source": "Section 6.2.2, page 51",
+      "status": "EXTRACTED",
+      "was_omitted": "Was present in a list; not encoded as a drawing-convention rule with example"
+    },
+
+    "I3_link_elevation_notation": {
+      "format": "count/spacing — e.g. '19/300' means 19 links at 300mm centres; multiple zones: '19/300   5/200   13/150'",
+      "P_A_S_suffix": "'37 H12 07 LINKS P.A.S' — 37 H12 links, bar mark 07, placed as shown",
+      "CLOSERS_notation": "'29 H12 08 300 LINK CLOSERS' — link closers at 300mm",
+      "source": "Section 6.3.4 Traditional method example, page 79",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "I4_TEF_notation": {
+      "TEF": "Top Each Face — bar on each face at top of member, e.g. side bars in a broad beam: '2 H12 09 TEF'",
+      "source": "Section 6.3.4 example, page 79",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "I5_spacer_bar_notation_beam": {
+      "rule": "Spacer bars between multiple layers of beam main bars: notation '4 H25 10 SPACERS' on elevation; dia ≥ max(25mm, main bar dia)",
+      "source": "Model Detail MB1, page 82; Section 6.3.4 page 79",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "I6_beam_UB_notation": {
+      "rule": "U-bar suffix on bar notation: '2 H20 02 UB' — marks bar as a U-bar; also 'U-BARS LONG LEG B1' specifies which leg is the reference layer",
+      "source": "Sections 6.2.4 and 6.3.4, pages 62, 79",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "I7_curtailment_mark_30deg": {
+      "rule": "Curtailed bars in elevation are identified by short 30° oblique lines at the bar end, with appropriate bar mark. If bars are congested, ends should be clarified with pointers.",
+      "source": "Section 6.2.2, page 52",
+      "status": "EXTRACTED",
+      "was_omitted": "Was partially described; 30° angle not encoded"
+    },
+
+    "I8_slab_fan_zone_bars": {
+      "rule": "Bars set out from a radius in a 'fan' zone: indicator line located on datum radius for measuring pitch. End of bars located to datum. Notation includes s.o.p (setting out point).",
+      "source": "Section 6.2.2, page 52",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "I9_cranked_bent_bars_on_plan": {
+      "rule": "Cranked and bent bars are sometimes drawn on plan as though laid flat. Sections and notes MUST be provided to clarify if some bars are fixed flat and some upright, to avoid site confusion.",
+      "source": "Section 6.2.2, page 52",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    },
+
+    "I10_representational_beam_table_format": {
+      "rule": "Representational method for beams: one general elevation + specific cross-sections + table. Table columns: BEAM, DIM1, DIM2, reinforcement zones (A, B, C, D, E, L1, L2, L3), SECTION references. Bar location letters cross-reference elevation to table. Position of each beam shown on key plan with grid lines.",
+      "source": "Section 6.3.4, page 80",
+      "status": "EXTRACTED",
+      "was_omitted": "Described but table column format not fully encoded as a data structure"
+    },
+
+    "I11_slab_fabric_chain_dashed_line": {
+      "rule": "Fabric reinforcement on plan identified by chain double-dashed line (not a solid or dashed line)",
+      "source": "Section 6.2.2, page 56",
+      "status": "EXTRACTED",
+      "was_omitted": true
+    }
+  },
+
+  "SECTION_J_UNRESOLVED_CONFIRMED": {
+    "label": "Items confirmed as UNRESOLVED after full re-read",
+
+    "J1": {
+      "item": "Section 5.8 — Equivalent bar size (used for cover to grouped bars)",
+      "status": "UNRESOLVED — referenced but not in either PDF"
+    },
+    "J2": {
+      "item": "Section 5.15 — Secondary beam lever arm check when top cover is increased",
+      "status": "UNRESOLVED — referenced at Section 4.2.2 only; not in either PDF"
+    },
+    "J3": {
+      "item": "Section 5.1.3(1)P UK National Annex — single load case all-spans-loaded condition for simplified curtailment",
+      "status": "UNRESOLVED — referenced in Section 6.2.2; not in these PDFs; rule is in EC2 UK National Annex"
+    },
+    "J4": {
+      "item": "Model Details MS2B and MS2C — full geometry for large moment transfer slab-to-wall connections",
+      "status": "UNRESOLVED — referenced in Section 6.2.2; model detail pages not in these PDFs"
+    },
+    "J5": {
+      "item": "Model Details MS2A — slab-to-wall where wall continues above and below (simple continuity case)",
+      "status": "UNRESOLVED — referenced; not reproduced in these PDFs"
+    },
+    "J6": {
+      "item": "Model Details MF1 and MF2 — column starter bars from pad footings and pile caps",
+      "status": "UNRESOLVED — referenced in Section 6.4.2; Foundation details not in these PDFs"
+    },
+    "J7": {
+      "item": "Tables at end of manual — BS 8666 shape codes, mandrel sizes by concrete grade, BS fabric types",
+      "status": "UNRESOLVED — referenced multiple times; not in these PDFs"
+    },
+    "J8": {
+      "item": "EC2 Table 7.3N — source table for Table 6.3 (max bar spacing for crack control)",
+      "status": "UNRESOLVED — Table 6.3 is fully extracted; its source in EC2 is external"
+    },
+    "J9": {
+      "item": "EC2 Part 1.2 — full fire resistance rules (axis distances, member sizes by fire period)",
+      "status": "UNRESOLVED — referenced; external to this manual extract"
+    },
+    "J10": {
+      "item": "Section 5.1.3 — load combination rules referenced by UK National Annex",
+      "status": "UNRESOLVED — not in these PDFs"
+    },
+    "J11": {
+      "item": "CIRIA Guide 2 — deep beam design rules beyond minimum reinforcement",
+      "status": "UNRESOLVED — external reference"
+    },
+    "J12": {
+      "item": "The Structural Engineer Feb 1994 — column shear capacity formula for moment connections",
+      "status": "UNRESOLVED — external reference"
+    }
+  },
+
+  "SECTION_K_VALIDATION_ADDITIONS": {
+    "label": "Additional validation cases not in previous extraction",
+
+    "K1": {
+      "id": "VC-R01", "category": "cover_chain",
+      "name": "Cover to main bar via H10 link, H25 main bar, internal beam",
+      "source": "Section 5.2.1",
+      "inputs": {"cover_to_link_mm": 35, "link_dia_mm": 10, "main_bar_dia_mm": 25, "delta_cdev_mm": 5},
+      "check": "cover_to_main = 35 - 10 = 25mm; required = 25 + 5 = 30mm; 25 < 30 → FAIL",
+      "correct_cover_to_link": "cover_to_link ≥ 10 + 25 + 5 = 40mm",
+      "status": "EXTRACTED"
+    },
+    "K2": {
+      "id": "VC-R02", "category": "MS2",
+      "name": "MS2 Detail A: U-bar area for 5m span slab, bottom As = 600mm²/m",
+      "source": "Model Detail MS2",
+      "inputs": {"bottom_As_mid_span_mm2_per_m": 600},
+      "expected": {"U_bar_area_mm2_per_m": 300},
+      "formula": "= 0.5 × 600 = 300mm²/m (half bottom steel at mid-span)",
+      "status": "EXTRACTED"
+    },
+    "K3": {
+      "id": "VC-R03", "category": "MS2",
+      "name": "MS2 Detail A: top bar extension from support, span=6000",
+      "source": "Model Detail MS2",
+      "inputs": {"span_mm": 6000},
+      "expected": {"top_bar_extension_mm": 1800},
+      "formula": "0.3 × 6000 = 1800mm",
+      "status": "EXTRACTED"
+    },
+    "K4": {
+      "id": "VC-R04", "category": "MS2",
+      "name": "MS2 Detail A: U-bar top extension, span=6000",
+      "source": "Model Detail MS2",
+      "inputs": {"span_mm": 6000},
+      "expected": {"U_bar_top_extension_mm": 600},
+      "formula": "min(0.1 × 6000, 600) = min(600, 600) = 600mm",
+      "status": "EXTRACTED"
+    },
+    "K5": {
+      "id": "VC-R05", "category": "wide_beam",
+      "name": "Wide-beam corbel check: beam 800mm wide, column 300mm wide, d=500mm",
+      "source": "Section 6.3.2",
+      "inputs": {"beam_width_mm": 800, "column_width_mm": 300, "d_mm": 500},
+      "check": "800 > 300 + 2×500 = 1300? NO (800 < 1300) → corbel action NOT triggered",
+      "status": "EXTRACTED"
+    },
+    "K6": {
+      "id": "VC-R06", "category": "wide_beam",
+      "name": "Wide-beam corbel check: beam 1500mm wide, column 300mm wide, d=500mm",
+      "source": "Section 6.3.2",
+      "inputs": {"beam_width_mm": 1500, "column_width_mm": 300, "d_mm": 500},
+      "check": "1500 > 300 + 2×500 = 1300? YES → provide design transverse top steel for corbel action",
+      "status": "EXTRACTED"
+    },
+    "K7": {
+      "id": "VC-R07", "category": "cover_fire",
+      "name": "Column cover fire spalling check: nominal cover 45mm",
+      "source": "Section 6.4.2",
+      "inputs": {"nominal_cover_to_link_mm": 45, "link_dia_mm": 10, "main_bar_dia_mm": 32},
+      "axis_distance_to_main_mm": "45 + 10 + 16 = 71mm",
+      "check": "71 > 70mm → surface mesh required: spacing ≤100mm, dia ≥4mm",
+      "status": "EXTRACTED"
+    },
+    "K8": {
+      "id": "VC-R08", "category": "laps_general",
+      "name": "Nominal lap minimum for 10mm bars",
+      "source": "Section 6.2.2",
+      "inputs": {"bar_dia_mm": 10},
+      "expected": {"min_lap_mm": 200},
+      "formula": "max(15 × 10, 200) = max(150, 200) = 200mm",
+      "status": "EXTRACTED"
+    },
+    "K9": {
+      "id": "VC-R09", "category": "laps_general",
+      "name": "Nominal lap minimum for 16mm bars",
+      "source": "Section 6.2.2",
+      "inputs": {"bar_dia_mm": 16},
+      "expected": {"min_lap_mm": 240},
+      "formula": "max(15 × 16, 200) = max(240, 200) = 240mm",
+      "status": "EXTRACTED"
+    }
+  }
+}

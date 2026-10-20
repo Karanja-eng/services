@@ -1,0 +1,49 @@
+{
+  "diagrams": [
+    {
+      "id": "shape_code_schematics_00_99",
+      "location": "Appendix B table, pp.172-177",
+      "what_it_represents": "36 small schematic line-drawings, one per shape code, each showing a bar's centreline shape (straight, single bend, U, Z-crank, closed link, helix, etc.) with dimension letters A-E annotated on the relevant segments and, where relevant, a radius arrow labelled r or R.",
+      "cad_recreation_notes": "Each schematic is recreatable as a 2D polyline (straight segments) with arc segments at each bend (arc radius = r from Table B.1, or explicit R). Dimension letters correspond 1:1 to segment lengths or arc-related offsets per the field list in 06_drawing_conventions.json. Link shapes (41,44,46,47,51,56,63,64) are closed or near-closed rectangular polylines representing stirrup/link cross-sections. Shape 75/77 are circles/helices (circular arc or 3D helix respectively) rather than polylines.",
+      "fact_status": "INFERRED geometry from the textual shape descriptions and formulas — the actual line-art was not transcribable from this text-extracted source; only the associated formulas, dimension-letter sets, and constraint notes are DIRECTLY STATED."
+    },
+    {
+      "id": "table_B1_bend_geometry_header_diagram",
+      "location": "Appendix B, p.178",
+      "what_it_represents": "A small header diagram showing a single bend with 'r' (internal radius) and '5d' / 'P' end-projection labelled, illustrating what r, M (bending former diameter = 2r), and P mean physically.",
+      "cad_recreation_notes": "Single arc of radius r, with a straight tangent leg of length P leaving the bend, tick-marked '5d' near the free end to show the minimum straight portion."
+    },
+    {
+      "id": "L_bar_anchorage_diagram",
+      "location": "Appendix B, p.181 (top)",
+      "what_it_represents": "An L-shaped bar (90-degree hook) with a labelled 5d lead-in segment and a labelled 'Mandrel dia.' arc, illustrating the effective_anchorage_length_L_bars formula/table.",
+      "geometry": {"type": "polyline + arc", "segments": ["straight leg (anchorage length, computed)", "arc of mandrel-derived radius", "5d straight tail"]}
+    },
+    {
+      "id": "U_bar_anchorage_diagram",
+      "location": "Appendix B, p.181 (bottom)",
+      "what_it_represents": "A U-shaped bar (180-degree hook) with a labelled 5d lead-in and 'Mandrel dia.' arc, illustrating the effective_anchorage_length_U_bars formula/table.",
+      "geometry": {"type": "polyline + arc", "segments": ["straight leg", "180-degree arc of mandrel-derived radius", "straight leg", "5d straight tail"]}
+    },
+    {
+      "id": "hook_end_shape_diagram",
+      "location": "Appendix B, p.182 (top)",
+      "what_it_represents": "A 'Hook' end-detail: straight bar with 5d lead-in bending through dimension B (the mandrel diameter) at fy=500MPa, referencing the minimum_overall_depth_U_bar_end_shapes.hook_shape table.",
+      "geometry": {"type": "polyline + arc", "segments": ["straight run", "5d lead", "arc of diameter B"]}
+    },
+    {
+      "id": "trombone_end_shape_diagram",
+      "location": "Appendix B, p.182 (bottom)",
+      "what_it_represents": "A 'Trombone' end-detail: straight bar, 5d lead-in, a 4d offset segment (4øB per label), then bend through dimension B (mandrel diameter), referencing minimum_overall_depth_U_bar_end_shapes.trombone_shape table.",
+      "geometry": {"type": "polyline + arc", "segments": ["straight run", "5d lead", "4d offset ('4øB')", "arc of diameter B"]}
+    }
+  ],
+  "diagrams_referenced_but_not_reproduced_numerically": [
+    {
+      "id": "large_diameter_bend_header_diagrams",
+      "location": "Appendix B, pp.183-188, repeated per concrete class",
+      "what_it_represents": "A bend-in-a-slab/beam schematic showing Fbt (tensile force arrow), ab (half bar spacing or cover+b/2), and b (bar diameter) as the inputs to the bm_min formula.",
+      "status": "Formula and variable meanings are DIRECTLY STATED (see 03_detailing_rules.json); the six large numeric tables that follow each diagram are treated as DERIVED (computable from the formula) rather than transcribed — see large_diameter_bends_minimum_mandrel_size in 03_detailing_rules.json for the rationale."
+    }
+  ]
+}

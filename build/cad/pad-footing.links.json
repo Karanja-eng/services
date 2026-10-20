@@ -1,0 +1,31 @@
+{
+  "model_id": "pad-footing",
+  "revision": 1,
+  "model_hash": "eee9bae2c647398c6700257588c342266cbd78587a1e448eaa7d240a034103a6",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "links": [
+    {
+      "model_id": "pad-footing",
+      "internal_id": "pad-footing.footing",
+      "ifc_guid": "3WHtO1Z0DLlQnMWKvNX29u",
+      "ifc_class": "IfcFooting",
+      "dxf_handle": "45",
+      "drawing_id": "pad_footing-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "99ec10968489bcadd9bf729a235abdf1976117835f48f7babcaf6ba11a06d97d",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T19:15:08+00:00"
+    }
+  ],
+  "by_status": {
+    "ok": 1
+  }
+}

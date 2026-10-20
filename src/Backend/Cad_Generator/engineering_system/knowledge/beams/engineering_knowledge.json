@@ -1,0 +1,507 @@
+{
+  "engineering_knowledge": {
+    "scope": "Straight suspended beams with defined supports. Not ground beams (see 6.7). Holes require specific design instructions.",
+    "concrete_grade_standard": "30/37 MPa, max aggregate 20mm",
+    "nominal_cover_beams": {
+      "internal_XC1": "30mm + \u0394cdev",
+      "external_XC3": "35mm + \u0394cdev",
+      "grouped_bars": "Cover for equivalent bar size (see 5.8)",
+      "fire_4hr_note": "Supplementary reinforcement may be needed if nominal cover > 40mm (axis distance to link > 70mm); see EC2 Part 1.2 Clause 4.5.2",
+      "standard_values_mm": {
+        "internal": 35,
+        "external": 40
+      },
+      "source": "Section 6.3.2 and Model Detail MB1"
+    },
+    "minimum_reinforcement_beams": {
+      "tension_C30_37_fyk_500": "As,min \u2265 0.0015 \u00d7 bt \u00d7 d",
+      "compression": "Asc,min \u2265 0.002 \u00d7 Ac",
+      "transverse_in_top_flange": "As,min \u2265 0.0015 \u00d7 hf \u00d7 l",
+      "minimum_dia_mm": 12,
+      "source": "Section 6.3.2, page 74"
+    },
+    "bar_spacing_beams": {
+      "min_horizontal_pitch_mm": 75,
+      "min_horizontal_pitch_pairs_mm": 100,
+      "min_vertical_pitch_mm": "max(25mm, bar_dia)",
+      "max_pitch_compression_mm": 300,
+      "max_pitch_compression_restrained_condition": "All main bars in compression zone within 150mm of a restrained bar",
+      "max_pitch_tension_from_table_6_3": {
+        "assumed_service_stress_MPa": 310,
+        "table": [
+          {
+            "stress_MPa": 160,
+            "wk_0_4mm": 300,
+            "wk_0_3mm": 300,
+            "wk_0_2mm": 200
+          },
+          {
+            "stress_MPa": 200,
+            "wk_0_4mm": 300,
+            "wk_0_3mm": 250,
+            "wk_0_2mm": 150
+          },
+          {
+            "stress_MPa": 240,
+            "wk_0_4mm": 250,
+            "wk_0_3mm": 200,
+            "wk_0_2mm": 100
+          },
+          {
+            "stress_MPa": 280,
+            "wk_0_4mm": 200,
+            "wk_0_3mm": 150,
+            "wk_0_2mm": 50
+          },
+          {
+            "stress_MPa": 310,
+            "wk_0_4mm": 165,
+            "wk_0_3mm": 115,
+            "wk_0_2mm": null
+          },
+          {
+            "stress_MPa": 320,
+            "wk_0_4mm": 150,
+            "wk_0_3mm": 100,
+            "wk_0_2mm": null
+          },
+          {
+            "stress_MPa": 360,
+            "wk_0_4mm": 100,
+            "wk_0_3mm": 50,
+            "wk_0_2mm": null
+          }
+        ]
+      },
+      "source": "Section 6.3.2, Table 6.3, page 74"
+    },
+    "side_face_bars": {
+      "condition": "Beam total depth \u2265 1000mm",
+      "size_mm": 16,
+      "location": "Inside links at sides of beam",
+      "max_pitch_mm": 250,
+      "source": "Section 6.3.2, page 74"
+    },
+    "links": {
+      "min_area": "Asw/s \u00d7 bw \u2265 0.085% where bw = avg breadth below upper flange",
+      "max_spacing_compression_link": "s \u2264 15 \u00d7 main compression bar dia",
+      "min_dia_preferred_mm": 8,
+      "min_pitch_mm": "max(100mm, 50 + 12.5 \u00d7 no_of_legs)",
+      "max_pitch_mm": "min(300mm, 0.75d, 12 \u00d7 compression_bar_dia)",
+      "max_lateral_pitch_of_legs": "min(600mm, 0.75d)",
+      "max_distance_bar_from_vertical_leg_mm": 150,
+      "arrangement": "Preferred arrangements per Figure 6.19; overlapping links NOT recommended (Figure 6.20)",
+      "open_links_with_locking": "Permitted for beam-slab with rib width \u2265 450mm; use L-hooks with top locking link (Figure 6.21); hook 10\u00f8, min 75mm",
+      "torsion_links_shape": "Closed with 135\u00b0 hooks, 10\u00f8 extension (Figure 6.22)",
+      "source": "Section 6.3.2, Figures 6.19-6.22, pages 74-77"
+    },
+    "anchorage_lap_lengths_beams": {
+      "min_anchorage": "max(10\u00f8, 100mm)",
+      "table_6_4": {
+        "notes": "Bar \u2264 32mm; \u03b11=\u03b12=\u03b14=\u03b15=1.0; \u03b13=0.9 (\u03bb=1.35, K=0.05). Lap: \u03b16=1.15 (\u226433% lapped)",
+        "data": [
+          {
+            "condition": "full_tension_compression_anchorage_good",
+            "C25_30": 36,
+            "C28_35": 34,
+            "C30_37": 32,
+            "C32_40": 31
+          },
+          {
+            "condition": "full_tension_compression_anchorage_poor",
+            "C25_30": 48,
+            "C28_35": 45,
+            "C30_37": 43,
+            "C32_40": 41
+          },
+          {
+            "condition": "full_tension_compression_lap_good",
+            "C25_30": 42,
+            "C28_35": 39,
+            "C30_37": 37,
+            "C32_40": 35
+          },
+          {
+            "condition": "full_tension_compression_lap_poor",
+            "C25_30": 56,
+            "C28_35": 52,
+            "C30_37": 49,
+            "C32_40": 47
+          }
+        ],
+        "units": "bar_diameters"
+      },
+      "source": "Section 6.3.2, Table 6.4, page 75"
+    },
+    "curtailment_beams": {
+      "shift_rule": "FE = |VEd| \u00d7 al / z + NEd",
+      "default_al": "1.25d (if designer not specified)",
+      "curtailment_length_from_design": "l_bd + al from line of contact between beam and support",
+      "simplified_rules_conditions": [
+        "Qk \u2264 Gk",
+        "Loads substantially uniformly distributed",
+        "\u2265 3 spans",
+        "Span variation \u2264 15% of longest",
+        "Effective span L = min(clear span + d, actual span)"
+      ],
+      "hanger_bars": {
+        "area": "\u2265 max(20% max support area, compression area required)",
+        "carried_to_distance_from_support_mm": 25,
+        "preferred_dia_mm": 16,
+        "min_for_beams_500_deep_or_more": "2 H16s"
+      },
+      "top_bars_internal_support": {
+        "min_60_percent_continues_to": "Point where hanger bars sufficient + tension lap OR zero moment point",
+        "default_extension_from_support_face": "0.25L",
+        "absolute_minimum_extension": "max(0.15L, 45\u00f8)"
+      },
+      "bottom_splice_bars_internal_support": {
+        "min_area": "Not less than minimum reinforcement; \u2265 30% max span area",
+        "extension": "Tension lap with main bottom bars OR compression lap (if in compression) to end of compression zone"
+      },
+      "bottom_bars_in_span": {
+        "continuous_beams_min_continuous": "30% of max span area to 25mm from support",
+        "simply_supported_min_continuous": "50% of max span area to 25mm from support",
+        "remainder_extension_to_internal_support": "within 0.15L",
+        "remainder_extension_to_external_support": "within 0.1L",
+        "remainder_extension_to_simply_supported": "within 0.08L",
+        "support_reference_point": "up to d/2 inside face"
+      },
+      "u_bars_at_end": {
+        "area": "max(tension area for support moment, 30% max span area [50% for simple supports])",
+        "top_leg_length": "Same as for internal support bars",
+        "bottom_leg_length": "Same as internal support splice bars",
+        "simple_support_crack_control": "Sufficient top steel for crack control; replace U-bars with L-bars (top and bottom) if much less than bottom",
+        "extension_from_support": "Tension lap, both top and bottom"
+      },
+      "bottom_at_end_support": "Area \u2265 0.25 \u00d7 span area",
+      "partial_fixity_monolithic": "Design for bending moment \u2265 0.15 \u00d7 max span moment even with simple supports assumed",
+      "cantilever_curtailment": "Always relate to bending moment diagram; \u2265 50% continues to end of cantilever",
+      "source": "Section 6.3.2, Figures 6.14-6.15, pages 75-77"
+    },
+    "flanged_beams": {
+      "tension_reinforcement": "Spread over effective flange width; part may be concentrated over web",
+      "effective_flange_width": {
+        "formula": "beff = \u03a3 beff,i + bw \u2264 b",
+        "beff_i": "0.2bi + 0.1l0 \u2264 min(0.2l0, bi)",
+        "l0_definitions": {
+          "end_span": "0.85 \u00d7 l1",
+          "interior_span": "0.7 \u00d7 l2",
+          "at_internal_support": "0.15 \u00d7 (l1 + l2)",
+          "at_cantilever_support": "0.15 \u00d7 l2 + l3"
+        },
+        "cantilever_rule": "l3 < half adjacent span; ratio adjacent spans between 1/2 and 1/1"
+      },
+      "source": "Section 6.3.2, Figures 6.16-6.18, pages 76-77"
+    },
+    "edge_support_connections": {
+      "preferred": "U-bars within depth of beam",
+      "moment_connection_to_column": "See 6.4.2",
+      "do_not_bend_top_bars_up": "Bending top bars up into column is NOT recommended",
+      "narrow_edge_support_anchorage_option_1": "12\u00f8 beyond centre of support; no bend before centre of support",
+      "narrow_edge_support_anchorage_option_2": "12\u00f8 + d/2 from face of support; no bend before d/2 from face",
+      "wall_support_with_vertical_rebar": "Horizontal bars threaded through U-bars (Figure 6.23)",
+      "source": "Section 6.3.2, Figure 6.23, pages 77-78"
+    },
+    "deep_beams": {
+      "definition": "Span < 3 \u00d7 overall section depth",
+      "reference": "CIRIA Guide 2",
+      "min_reinforcement_per_face": "max(0.001Ac, 150mm\u00b2/m) in each face and each direction",
+      "max_bar_spacing": "min(2 \u00d7 beam width, 300mm)",
+      "main_tension_anchorage": "Fully anchored at support node by bending, U-bars or mechanical anchorage",
+      "source": "Section 6.3.2, page 78"
+    },
+    "model_details_beams": {
+      "MB1": {
+        "name": "Span and support details",
+        "cover": "Internal 35mm, External 40mm (normally)",
+        "spacer_dia": "max(25mm, main bar dia)",
+        "link_nominal_spacing": "min(0.75d, 12 \u00d7 compression bar dia)",
+        "side_bars_depth_ge_1000": "Min H12s at 150mm pitch",
+        "hanger_bars_min_for_deep_beams": "2 H16s for beams \u2265 500mm deep",
+        "vibrator_space_mm": 75,
+        "main_top_bars": "Inside hanger bars",
+        "bottom_splice_bars": "Inside main bars; area \u2265 30% max span area",
+        "closer_bars": "Used with open links for beam width \u2265 300mm",
+        "top_bars_A_A_section": "Multiple layers with spacers",
+        "source": "Model Detail MB1, page 82"
+      },
+      "MB2": {
+        "name": "Broad shallow sections",
+        "link_space_longitudinal_per_set": "3 \u00d7 bar size",
+        "external_support_anchorage": "Treat as for slabs (see Model Detail MS2)",
+        "closer_bar": "For overall link",
+        "internal_links_no_overlap": true,
+        "max_lateral_link_leg_spacing": "Effective beam depth",
+        "tension_bar_max_distance_from_leg_mm": 150,
+        "dimensions": {
+          "link_extension_top": "max(10\u00f8, 70mm)",
+          "link_extension_side": "max(5\u00f8, 50mm)",
+          "minimum_concrete_cover_to_link": "75mm minimum"
+        },
+        "source": "Model Detail MB2, page 83"
+      },
+      "MB3": {
+        "name": "Cantilever beams",
+        "cantilever_bars_min_50_percent_anchored": "1.5 \u00d7 cantilever length",
+        "no_rebar_stops_less_than": "0.75 \u00d7 cantilever (unless designer specified)",
+        "min_50_percent_continues_to_end": true,
+        "bottom_bars": "Specified by designer; minimum 2 H16s",
+        "u_bar_extension": "Tension lap",
+        "source": "Model Detail MB3, page 84"
+      }
+    }
+  },
+  "rules": [
+    {
+      "id": "BR-001",
+      "source": "Section 6.3.2",
+      "condition": "beam depth >= 1000mm",
+      "action": "Provide 16mm side bars inside links at max 250mm pitch",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-002",
+      "source": "Section 6.3.2",
+      "condition": "beam with links, min pitch",
+      "action": "min pitch = max(100mm, 50 + 12.5 \u00d7 no_of_legs)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-003",
+      "source": "Section 6.3.2",
+      "condition": "beam links, max pitch",
+      "action": "max pitch = min(300mm, 0.75d, 12\u00d7compression_bar_dia)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-004",
+      "source": "Section 6.3.2",
+      "condition": "beam links, lateral spacing of legs",
+      "action": "max lateral pitch = min(600mm, 0.75d); tension/compression bar must be within 150mm of vertical leg",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-005",
+      "source": "Section 6.3.2",
+      "condition": "top bars at internal support, simplified rules",
+      "action": "\u226560% of max support area extends 0.25L from support face; minimum any bar extends: max(0.15L, 45\u00f8)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-006",
+      "source": "Section 6.3.2",
+      "condition": "bottom bars in span, continuous beam, simplified rules",
+      "action": "\u226530% of max span area continues to 25mm from support; remainder within 0.15L of internal supports",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-007",
+      "source": "Section 6.3.2",
+      "condition": "bottom bars at end support, no fixity",
+      "action": "Area \u2265 0.25 \u00d7 span area",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-008",
+      "source": "Section 6.3.2",
+      "condition": "simple support assumed but monolithic construction",
+      "action": "Design for bending moment \u2265 0.15 \u00d7 max span moment",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-009",
+      "source": "Section 6.3.2",
+      "condition": "bending top bars up into column",
+      "action": "NOT recommended",
+      "constraint_type": "NOT RECOMMENDED"
+    },
+    {
+      "id": "BR-010",
+      "source": "Section 6.3.2",
+      "condition": "overlapping links",
+      "action": "NOT recommended \u2014 makes it difficult to fix reinforcement",
+      "constraint_type": "NOT RECOMMENDED"
+    },
+    {
+      "id": "BR-011",
+      "source": "Section 6.3.2",
+      "condition": "open links (L-hooks), rib width",
+      "action": "Only permitted where rib width >= 450mm; must add top locking link",
+      "constraint_type": "ONLY WHEN"
+    },
+    {
+      "id": "BR-012",
+      "source": "Section 6.3.2",
+      "condition": "torsion links",
+      "action": "Must be closed links with specified 135\u00b0 hook shape (Figure 6.22)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-013",
+      "source": "Section 6.3.2",
+      "condition": "beam span < 3 \u00d7 overall depth",
+      "action": "Treat as deep beam; provide orthogonal mesh per face; min area max(0.001Ac, 150mm\u00b2/m); spacing \u2264 min(2\u00d7width, 300mm)",
+      "constraint_type": "MUST"
+    },
+    {
+      "id": "BR-014",
+      "source": "Model Detail MB1",
+      "condition": "beam width >= 300mm with open links",
+      "action": "Use 'closer' bars (link closers)",
+      "constraint_type": "SHOULD"
+    },
+    {
+      "id": "BR-015",
+      "source": "Section 6.3.1",
+      "condition": "holes in beams",
+      "action": "Must not be detailed without specific design instructions \u2014 they can dramatically affect structural safety",
+      "constraint_type": "MUST NOT (without design)"
+    }
+  ],
+  "parameters": {
+    "input": {
+      "beam_width_bw_mm": {
+        "typical_range": [
+          200,
+          600
+        ]
+      },
+      "beam_depth_h_mm": {
+        "typical_range": [
+          300,
+          1200
+        ]
+      },
+      "flange_width_b_mm": {
+        "for_T_beams": true
+      },
+      "flange_depth_hf_mm": {
+        "for_T_beams": true
+      },
+      "span_L_mm": {},
+      "support_width_mm": {},
+      "cover_mm": {
+        "internal_typical": 35,
+        "external_typical": 40
+      },
+      "main_bar_dia_mm": {
+        "preferred": [
+          12,
+          16,
+          20,
+          25,
+          32,
+          40
+        ]
+      },
+      "main_bar_count": {},
+      "link_dia_mm": {
+        "preferred_min": 8
+      },
+      "link_legs": {},
+      "hanger_bar_dia_mm": {
+        "preferred": 16
+      },
+      "side_bar_dia_mm": {
+        "if_depth_ge_1000": 16
+      },
+      "service_stress_MPa": {
+        "default": 310
+      },
+      "wk_target_mm": {
+        "options": [
+          0.2,
+          0.3,
+          0.4
+        ]
+      }
+    },
+    "derived": {
+      "effective_depth_d_mm": "h - cover - link_dia - main_bar_dia/2",
+      "As_min_tension": "0.0015 \u00d7 bw \u00d7 d",
+      "Asc_min_compression": "0.002 \u00d7 bw \u00d7 h",
+      "hanger_bar_area": "max(0.20 \u00d7 As_support_max, compression_area_required)",
+      "bottom_splice_area": "max(0.30 \u00d7 As_span_max, As_min)",
+      "link_area": "Asw = link_legs \u00d7 \u03c0/4 \u00d7 link_dia\u00b2",
+      "link_min_area_ratio": "0.00085 \u00d7 bw",
+      "link_max_spacing_mm": "min(300, 0.75d, 12\u00d7compression_bar_dia)",
+      "link_min_spacing_mm": "max(100, 50 + 12.5 \u00d7 link_legs)",
+      "link_max_lateral_spacing_mm": "min(600, 0.75d)",
+      "side_bar_pitch_mm_if_deep": 250,
+      "max_bar_spacing_tension_mm": "from Table 6.3 (function of service_stress and wk_target)",
+      "anchorage_length_bars": "from Table 6.4",
+      "lap_length_bars": "from Table 6.4",
+      "al_shift_rule_mm": "1.25d (default)",
+      "curtailment_top_min_extension_mm": "max(0.15L, 45\u00d7bar_dia)",
+      "curtailment_top_default_extension_mm": "0.25L",
+      "bottom_splice_extension_mm": "tension lap or compression lap",
+      "U_bar_area": "max(tension area for support moment, 0.30 \u00d7 As_span_max)",
+      "effective_flange_width_beff": "\u03a3(0.2\u00d7bi + 0.1\u00d7l0) + bw \u2264 b"
+    },
+    "constraints": {
+      "min_main_bar_dia_mm": 12,
+      "min_horizontal_pitch_mm": 75,
+      "min_horizontal_pitch_pairs_mm": 100,
+      "min_vertical_pitch_mm": "max(25, bar_dia)",
+      "max_compression_bar_spacing_mm": 300,
+      "max_distance_bar_from_link_leg_mm": 150,
+      "side_bar_trigger_depth_mm": 1000,
+      "deep_beam_trigger": "span < 3 \u00d7 h"
+    },
+    "recovered_information_pass": {
+      "provenance": "RECOVERY_gap_fill (1).json SECTION_F (Section 6.3.2, 6.3.4, 6.2.2)",
+      "F1_wide_shallow_beam_corbel_rule": {
+        "rule": "Where wide shallow beams required with narrow columns, may be necessary to provide design transverse top steel at column position for corbel action, in addition to shear links.",
+        "trigger": "beam_width > column_width + 2 * effective_depth",
+        "source": "Section 6.3.2, page 78",
+        "status": "EXTRACTED"
+      },
+      "F2_beam_4hr_fire_supplementary": {
+        "rule": "For 4-hour fire resistance: supplementary mesh required where nominal cover > 40mm and axis distance to link > 70mm.",
+        "reference": "EC2 Part 1.2, Clause 4.5.2",
+        "source": "Section 6.3.2, page 74",
+        "status": "EXTRACTED"
+      },
+      "F3_beam_top_cover_from_slab": {
+        "rule": "Top cover to beam bars may be determined by slab reinforcement or transverse beam reinforcement passing over beam top: cover_beam = cover_slab + bar_dia_slab.",
+        "source": "Section 6.3.2, page 74",
+        "status": "EXTRACTED"
+      },
+      "F4_compression_transverse_flange_min_rebar": {
+        "rule": "As,min for transverse reinforcement in top flange of flanged beams: As,min >= 0.0015 * hf * l (hf = flange depth, l = span).",
+        "source": "Section 6.3.2, page 74",
+        "status": "EXTRACTED"
+      },
+      "F5_curtailment_al_default": {
+        "rule": "If designer does not specify curtailment length: Detailer shall assume al = 1.25d.",
+        "source": "Section 6.3.2, page 75",
+        "status": "EXTRACTED"
+      },
+      "F6_simplified_curtailment_conditions_complete": {
+        "all_four_conditions_required": [
+          "Qk <= Gk",
+          "Loads substantially uniformly distributed",
+          "Three or more spans",
+          "Variation in span length <= 15% of longest span"
+        ],
+        "effective_span_cap": "L = min(clear_span + d, actual_span)",
+        "source": "Section 6.3.2, page 75",
+        "status": "EXTRACTED"
+      },
+      "F7_hanger_bar_rule_complete": {
+        "area_rule": "At least max(20% of maximum support top steel area, compression steel required) must be carried to 25mm from each support.",
+        "preferred_dia_mm": 16,
+        "for_beams_h_ge_500_min": "2 H16 bars",
+        "placement": "Placed inside main top bars at support (MB1)",
+        "source": "Section 6.3.2 (p.75) and Model Detail MB1 (p.82)",
+        "status": "EXTRACTED"
+      },
+      "F8_bottom_bar_span_end_bay_rule": {
+        "rule": "For end bays: lengths of alternate bars are 'a' and 'b'. For internal bays: all bars = max(a, b), alternately staggered.",
+        "source": "Section 6.2.2, Figs 6.3-6.4, page 50",
+        "status": "EXTRACTED"
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "document": "IStructE/Concrete Society SMDS Ch5-6 — Object Relationships",
+
+  "structural_object_relationships": [
+
+    {"subject": "Slab", "predicate": "contains", "object": "MainBar", "context": "span reinforcement"},
+    {"subject": "Slab", "predicate": "contains", "object": "DistributionBar", "context": "transverse to main"},
+    {"subject": "Slab", "predicate": "contains", "object": "TorsionBar", "context": "at held-down corners"},
+    {"subject": "Slab", "predicate": "contains", "object": "UBar", "context": "at restrained edge supports and free edges"},
+    {"subject": "Slab", "predicate": "contains", "object": "TopBar", "context": "over supports"},
+    {"subject": "Slab", "predicate": "contains", "object": "BottomBar", "context": "in span"},
+    {"subject": "Slab", "predicate": "may_contain", "object": "PunchingShearReinforcement", "context": "flat slab at column"},
+    {"subject": "Slab", "predicate": "may_contain", "object": "TrimmingBar", "context": "around holes > 150mm"},
+    {"subject": "FlatSlab", "predicate": "divided_into", "object": "ColumnStrip", "context": "negative 75%, positive 55%"},
+    {"subject": "FlatSlab", "predicate": "divided_into", "object": "MiddleStrip", "context": "negative 25%, positive 45%"},
+    {"subject": "ColumnStrip", "predicate": "further_concentrated_in", "object": "CentreHalfColumnStrip", "context": "2/3 of negative moment"},
+
+    {"subject": "Beam", "predicate": "contains", "object": "MainTopBar", "context": "top longitudinal reinforcement"},
+    {"subject": "Beam", "predicate": "contains", "object": "MainBottomBar", "context": "bottom longitudinal reinforcement"},
+    {"subject": "Beam", "predicate": "contains", "object": "HangerBar", "context": "≥20% max support area; min 2H16 if h≥500"},
+    {"subject": "Beam", "predicate": "contains", "object": "BottomSpliceBar", "context": "at internal supports; ≥30% max span area"},
+    {"subject": "Beam", "predicate": "contains", "object": "Link", "context": "shear and torsion reinforcement"},
+    {"subject": "Beam", "predicate": "contains", "object": "UBarAtEnd", "context": "end support; area = max(moment area, 30% span area)"},
+    {"subject": "Beam", "predicate": "may_contain", "object": "SideBar", "context": "if h >= 1000mm; 16mm at 250mm pitch"},
+    {"subject": "Beam", "predicate": "may_contain", "object": "CloserBar", "context": "if beam width >= 300mm with open links"},
+    {"subject": "Beam", "predicate": "may_contain", "object": "LacerBar", "context": "at sides (see 6.3.2)"},
+
+    {"subject": "Column", "predicate": "contains", "object": "LongitudinalBar", "context": "min 4 (rectangular) or 6 (circular)"},
+    {"subject": "Column", "predicate": "contains", "object": "EnclosingLink", "context": "overall column link"},
+    {"subject": "Column", "predicate": "may_contain", "object": "AdditionalRestrainingLink", "context": "if bars >150mm from restrained bar"},
+    {"subject": "Column", "predicate": "may_contain", "object": "BurstingLink", "context": "at laps if bar dia >= 20mm"},
+    {"subject": "Column", "predicate": "may_contain", "object": "SurfaceMesh", "context": "if cover > 40mm"},
+    {"subject": "Column", "predicate": "may_have", "object": "StarterBar", "context": "from foundation; specified longer than required"},
+
+    {"subject": "MainTopBar", "predicate": "curtailed_at", "object": "CurtailmentPoint", "context": "max(0.15L, 45ø) from face; typically 0.25L"},
+    {"subject": "MainBottomBar", "predicate": "curtailed_at", "object": "SupportFace", "context": "within 0.15L of internal support (30% continues to 25mm from support)"},
+    {"subject": "BottomSpliceBar", "predicate": "laps_with", "object": "MainBottomBar", "context": "tension lap"},
+    {"subject": "UBarAtEnd", "predicate": "provides_continuity_at", "object": "EndSupport"},
+    {"subject": "HangerBar", "predicate": "extends_to", "object": "25mm_from_support"},
+    {"subject": "Link", "predicate": "encloses", "object": "LongitudinalBar"},
+    {"subject": "Link", "predicate": "spaced_at", "object": "LinkSpacingZone", "context": "different spacing in shear zones vs span"},
+
+    {"subject": "Beam", "predicate": "connects_to", "object": "Column", "interface": "BeamColumnJunction"},
+    {"subject": "Beam", "predicate": "connects_to", "object": "Wall", "interface": "BeamWallConnection"},
+    {"subject": "Beam", "predicate": "supports", "object": "Slab", "interface": "SlabBeamInterface"},
+    {"subject": "Slab", "predicate": "connects_to", "object": "Column", "interface": "PunchingShearZone"},
+    {"subject": "Slab", "predicate": "connects_to", "object": "Wall", "interface": "SlabWallJunction"},
+
+    {"subject": "MomentConnectionBar", "predicate": "is", "object": "UBar_preferred_OR_LBar_if_A_lt_anchorage", "source": "Figure 6.26"},
+    {"subject": "LBar_column_edge", "predicate": "requires", "object": "CornerBarInsideBend", "condition": "standard radius bend acceptable"},
+    {"subject": "Hole", "predicate": "requires", "object": "TrimmingBar", "condition": "sides > 150mm", "extension": "45ø beyond hole"},
+    {"subject": "Hole_large", "predicate": "requires", "object": "DiagonalBar", "condition": "sides 500-1000mm AND slab depth > 250mm"},
+
+    {"subject": "PunchingShear", "predicate": "requires", "object": "LinkPerimeter", "min_perimeters": 2, "spacing": "0.75d"},
+    {"subject": "TorsionLink", "predicate": "has_shape", "object": "ClosedLinkWith135degHook"}
+  ],
+
+  "reinforcement_layer_relationships": [
+    {"context": "slab", "outer_bottom": "B1", "second_bottom": "B2", "second_top": "T2", "outer_top": "T1"},
+    {"context": "beam_multiple_layers", "spacer_between_layers": "max(25mm, main_bar_dia)", "note": "spacers detailed on schedule"},
+    {"context": "flat_slab_longer_span_bars", "position": "outer layer unless otherwise specified"},
+    {"context": "beam_section", "main_top_bars": "inside hanger bars", "bottom_splice_bars": "inside main bottom bars"}
+  ]
+}

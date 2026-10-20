@@ -1,0 +1,116 @@
+{
+  "document": "Consolidated Unresolved Engineering Dependencies & Open Items",
+  "provenance_summary": "Synthesized from RECOVERY_gap_fill (1).json SECTION_J, 13_audit_recovered_information (1).md Section 6, and files (2)/12_unresolved_questions.md",
+  "status": "UNRESOLVED",
+
+  "unresolved_items": [
+    {
+      "id": "UNRES-01",
+      "item": "Section 5.8 — Equivalent bar size for grouped/bundled bars",
+      "status": "PARTIALLY RESOLVED: formula bn = ø*sqrt(nb) <= 55mm recovered from Section 5.4.5; Section 5.8 text itself remains unresolved.",
+      "needed_from": "Full manual Section 5.8"
+    },
+    {
+      "id": "UNRES-02",
+      "item": "Section 5.15 — Secondary beam lever arm check when top cover is increased",
+      "status": "UNRESOLVED: referenced at Section 4.2.2 note 3; detailing consequence is effective depth z = d - x/2 check.",
+      "needed_from": "Full manual Section 5.15"
+    },
+    {
+      "id": "UNRES-03",
+      "item": "Section 5.1.3(1)P UK National Annex — single load case all-spans-loaded condition for simplified curtailment",
+      "status": "UNRESOLVED: referenced in Section 6.2.2; external to manual (EC2 UK NA).",
+      "needed_from": "BS EN 1992-1-1 UK National Annex"
+    },
+    {
+      "id": "UNRES-04",
+      "item": "Model Details MS2A, MS2B, MS2C — slab-to-wall moment connection full geometry",
+      "status": "RESOLVED: Section 6.5 (Walls: MW1-MW4, Rule W24) and Section 6.2.2 confirm MS2 edge-wall connections, MW3 pre-bent starter U-bars (Class B/C steel, size <= 12, two fixing bars inside U-bars, tension lap) and kicker 75/150 details.",
+      "needed_from": "Chapter 6.5 Walls (MW1-MW4)"
+    },
+    {
+      "id": "UNRES-05",
+      "item": "Model Details MF1 and MF2 — column starter bars from pad footings and pile caps",
+      "status": "RESOLVED: Section 6.7 (Foundations: MF1, MF2, Rules F07, F10, F17, F18) provides starter bar minimum horizontal leg 450mm, compression lap + 150mm level tolerance, 3 No. min H10-300 column links, 75mm cover, kicker 75 (150 below ground).",
+      "needed_from": "Chapter 6.7 Foundations (MF1/MF2)"
+    },
+    {
+      "id": "UNRES-06",
+      "item": "EC2 Table 3.2 — fctm values by concrete grade",
+      "status": "UNRESOLVED: referenced in Section 6.9.2 As,min formula; EC2 material properties table.",
+      "needed_from": "EC2 Table 3.2"
+    },
+    {
+      "id": "UNRES-07",
+      "item": "Good / poor bond condition full definitions (§5.4)",
+      "status": "UNRESOLVED: referenced in Table 6.12 heading '(see 5.4)'.",
+      "needed_from": "Section 5.4 (General Detailing)"
+    },
+    {
+      "id": "UNRES-08",
+      "item": "Off-site welding practice details (§5.6)",
+      "status": "UNRESOLVED: referenced in corbel notes '(see also 5.6)'.",
+      "needed_from": "Section 5.6 (General Detailing)"
+    },
+    {
+      "id": "UNRES-09",
+      "item": "Staircase MST2 fragment overall geometry (rise / going / flight span)",
+      "status": "RESOLVED: Section 6.8 (Staircases: MST1, MST2, Fig 6.33, Rules S01-S11) provides flight geometry (going, rise, waist thickness, run, slope length), landing top U-bar extension A = max(0.1*span, lbd, 500), 50% As bottom, and MST2 cantilever rules (nominal H8 U-bar, H8@300 links, H10@300 distribution, tension anchorage into wall).",
+      "needed_from": "Section 6.8 (Staircases)"
+    },
+    {
+      "id": "UNRES-10",
+      "item": "Prestressed tendons minimum radius of curvature at deviation zones and anchorage cover",
+      "status": "UNRESOLVED: defers to BS EN 10138 and European Technical Approvals (ETA).",
+      "needed_from": "Prestressing system supplier / ETA documents"
+    },
+    {
+      "id": "UNRES-11",
+      "item": "Prestressed Fig 7.4 / Fig 7.5 exact governing minimum spacing numbers",
+      "status": "UNRESOLVED: OCR numbers partially garbled in original figure; formulas preserved with caution flag.",
+      "needed_from": "Clean source copy of Figures 7.4 and 7.5"
+    },
+    {
+      "id": "UNRES-12",
+      "item": "Blister force-couple relationship exact layout (Fig 7.15)",
+      "status": "UNRESOLVED: printed as 'T = C - P/16' with 3/4P, P/16, P/4 labels; exact fractional placement OCR-uncertain.",
+      "needed_from": "Clean source copy of Fig 7.15"
+    },
+    {
+      "id": "UNRES-13",
+      "item": "Wall internal cover: Section 6.5.2 vs MW1 drawing standard",
+      "status": "UNRESOLVED/NOTED CONFLICT: Section 6.5.2 gives max(15, bar dia)+dcdev, whereas MW1 notes state 'at least 20 or bar size' and Section 6.5.3 gives 20mm. Detailing drawing convention standard 20mm adopted.",
+      "needed_from": "IStructE Detailing Manual Chapter 6.5"
+    },
+    {
+      "id": "UNRES-14",
+      "item": "Retaining wall cover: Section 6.6.2 vs MRW1/MRW2 drawing standard",
+      "status": "UNRESOLVED/NOTED CONFLICT: Section 6.6.2 gives internal max(20, bar dia)+dcdev and earth 45+dcdev; Section 6.6.3 and MRW1/MRW2 standard details show 25 internal, 50 earth. Standard drawing values used.",
+      "needed_from": "IStructE Detailing Manual Chapter 6.6"
+    },
+    {
+      "id": "UNRES-15",
+      "item": "Poor-bond anchorage factor discrepancy between Table 6.9 (Foundations) and Table 6.11 (Stairs)",
+      "status": "UNRESOLVED/NOTED CONFLICT: Table 6.9 gives 48/45/43/41 for poor bond, whereas Table 6.11 gives 58/53/51/49 for the exact same steel and poor bond condition (ratio ~1/0.7 suggests Table 6.11 may be more accurate). Preserved verbatim from each table.",
+      "needed_from": "Source check of Tables 6.9 and 6.11"
+    },
+    {
+      "id": "UNRES-16",
+      "item": "Foundation bar spacing unheaded categories in Section 6.7.2",
+      "status": "UNRESOLVED: Section 6.7.2 lists max 200, then 'minimum 100' and 'max 300/225/175 by Ast' without element headers (likely distinguishing ground slabs vs pad/pile caps).",
+      "needed_from": "Section 6.7.2 full text"
+    },
+    {
+      "id": "UNRES-17",
+      "item": "Table 6.10 5-pile cap bar shape/size OCR pairing",
+      "status": "UNRESOLVED: Row layout in scan is partially garbled; 5-pile bar shape codes uncertain.",
+      "needed_from": "Clean scan of Table 6.10"
+    },
+    {
+      "id": "UNRES-18",
+      "item": "MW1 table thickness row overlap convention (e.g. 200mm in 175-200 and 200-250)",
+      "status": "UNRESOLVED/CONVENTION: Boundary thicknesses sit in two rows. System adopts lower row match (e.g. 200mm -> 175-200mm row).",
+      "needed_from": "Standard detailing practice rule"
+    }
+  ]
+}

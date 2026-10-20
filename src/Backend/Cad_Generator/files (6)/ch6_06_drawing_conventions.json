@@ -1,0 +1,181 @@
+{
+  "document": "IStructE/Concrete Society SMDS Ch5-6 — Drawing Conventions",
+
+  "slab_drawing_conventions": {
+
+    "layer_notation": {
+      "B1": "bottom face outer layer",
+      "B2": "bottom face second layer",
+      "T1": "top face outer layer",
+      "T2": "top face second layer",
+      "note": "Reinforcement fixed from bottom upward; bar marks should follow same sequence",
+      "source": "Section 6.2.2, page 51"
+    },
+
+    "typical_bar_representation_on_plan": {
+      "one_bar": "1H10-63-T1 — single thick line with mark indicator",
+      "two_bars": "2H10-63-150T1",
+      "zone_of_three_or_more": "20H10-63-150T1 — thick line with dot at junction; first/last bars shown as short thick lines with arrowheads at extent",
+      "multiple_zones_similar_marks": "20H10-63-150T1 (12) (8) — counts in brackets",
+      "multiple_zones_dissimilar_marks": "12H10-63-150T1 / 8H20-64-200T1 with bar marks 63 64",
+      "bends_or_hooks": "represented by medium dot at end of typical bar",
+      "bars_detailed_elsewhere": "thick dashed line with SEE DRG note",
+      "space_restricted": "calling up within indicator line zone",
+      "extreme_restricted": "written along bar itself",
+      "stagger_instruction": "Stg.",
+      "alternate_instruction": "Alt. (with 63 / 64 marks)",
+      "fan_zone_from_radius": "indicator line on datum radius; note s.o.p (setting out point)",
+      "source": "Section 6.2.2, pages 51-52"
+    },
+
+    "fixing_dimensions": {
+      "description": "Dimensions (mm) required by steel-fixer to locate bars not controlled by end covers",
+      "dimension_line_style": "thin lines terminated by short obliques (not arrowheads)"
+    },
+
+    "bars_in_elevation": {
+      "representation": "thick line with mark indicator",
+      "first_last_in_zone": "dot in section with appropriate mark",
+      "curtailed_bars": "short 30° obliques with mark; pointers if congested"
+    },
+
+    "bars_of_varying_length": {
+      "same_mark_different_suffix": "beginning with 'a' (e.g. bar marks 1a, 1b, 1c)",
+      "schedule_entry": "different lengths allocated to each suffix"
+    },
+
+    "bars_in_long_panels": {
+      "method": "identical bars of convenient length lapped end to end; state minimum lap",
+      "example": "3×8H10-63-150B2 / min. lap 300",
+      "note": "Random length bars not recommended"
+    },
+
+    "fabric_on_plan": {
+      "identification": "chain double-dashed line",
+      "each_sheet": "given mark number; relate to concrete outline; indicate main reinforcement direction and layer",
+      "identical_multiple_sheets": "combined notation",
+      "double_layering": "increases area of reinforcement",
+      "nesting": "maximises lever arm",
+      "C_fabric_one_directional": "main bars facing same direction",
+      "lap_location": "away from high tensile force regions; stagger sheets",
+      "lap_dimensions": "shown on plan or as note"
+    },
+
+    "view_types_slab": {
+      "plan": {
+        "purpose": "main reinforcement layout, bar runs, spacing, extent",
+        "top_and_bottom_separate": "preferred; on same drawing",
+        "shows": ["bar marks", "bar notation (NHD-M-SL)", "extents", "stagger instructions", "laps", "key plan"]
+      },
+      "sections": {
+        "purpose": "show depth, layering, cover, curtailment",
+        "typical_count": "4-6 sections for a multi-bay slab",
+        "shows": ["slab depth", "bar marks", "cover callouts", "adjacent member connections"]
+      },
+      "key_plan": "small diagram showing bay references and section cuts"
+    },
+
+    "working_drawing_single_way_slab": {
+      "source": "Section 6.2.4, page 62",
+      "features": [
+        "Plan with bar runs in both directions",
+        "Top bars (T1, T2) and bottom bars (B1, B2) on same plan",
+        "U-bars shown at edges with 'U-BARS' or 'U-BARS LONG LEG B1' notation",
+        "Quantities in brackets showing per-bay counts: (2), (4), (16)",
+        "Section markers 1-1, 2-2, 3-3 etc. with cross-sections showing bar marks",
+        "AP (alternately placed) notation",
+        "AS (alternately staggered) notation",
+        "Reference to wall drawing: SEE WALL DRG R006",
+        "Dimension callouts for group extents: 250, 450, 500, 1000mm"
+      ]
+    },
+
+    "working_drawing_flat_slab": {
+      "source": "Section 6.2.4, page 63",
+      "features": [
+        "Column strip and middle strip zones visible",
+        "Concentrated column-strip bars with closer bar spacing than middle strip",
+        "Sections 1-1, 2-2 showing bar arrangements at column and mid-span",
+        "Key plan showing bay references (A, B, C) and sections",
+        "AP (alternately placed) notation for alternating bars",
+        "Dimension callouts: 600, 700, 1200, 1500, 50mm for column strip concentration"
+      ]
+    },
+
+    "working_drawing_coffered_slab": {
+      "source": "Section 6.2.4, page 64",
+      "features": [
+        "Plan showing '2 PER RIB' notation for rib bars",
+        "Sections 1-1 and 2-2 showing rib cross-section and topping",
+        "Cover callouts: '25 CVR TO 14', '15 CVR TO 13'",
+        "Mesh layer with 'MESH' label",
+        "Links shown in rib cross-sections with bar marks"
+      ]
+    }
+  },
+
+  "beam_drawing_conventions": {
+
+    "traditional_method": {
+      "description": "Individual beams drawn related to specific grid lines; used where little repetition",
+      "views": ["elevation", "cross-sections at key points"],
+      "elevation_features": [
+        "Beam outline with supports shown",
+        "Link spacing zones labeled (e.g. 19/300, 5/200, 13/150 = count/spacing)",
+        "Total link count: '37 H12 07 LINKS P.A.S + 29 H12 08 300 LINK CLOSERS'",
+        "Hanger bars and main bars labeled",
+        "Section cut markers 1-1, 2-2",
+        "Reference to slab and other beams: 'SEE SLAB DRG', 'SEE BEAMS DRG No R010'",
+        "Dimension callouts: 160, 225, 250, 1000, 2000mm for bar extent"
+      ],
+      "cross_section_features": [
+        "Beam outline with concrete section",
+        "Bar marks shown as positions: 01, 02, 03, 04, 05, 06, 07, 08, 09, 10",
+        "Slab bars shown schematically: 'SEE SLAB DRG'",
+        "Column bars shown: 'COLUMN BARS'",
+        "Link closer bar labeled 'CLOSER'",
+        "Two section positions showing different link arrangements"
+      ],
+      "source": "Section 6.3.4, page 79"
+    },
+
+    "representational_method": {
+      "description": "General beam elevation + specific cross-sections + table; for repetitive beams",
+      "features": [
+        "General elevation showing zones labeled by letter (A, B, C, D, E, L1, L2, L3)",
+        "Bar location letters cross-reference elevation to table",
+        "Fixing dimensions DIM 1, DIM 2 labeled in elevation and cross-referenced to table",
+        "Table with columns: BEAM, DIM 1, DIM 2, A, B, C, D, E, L1, L2, L3, SECTION, SECTION",
+        "Key plan showing beam positions (BEAM A, BEAM B, BEAM C) relative to grid"
+      ],
+      "table_example": {
+        "beam_A": {"DIM1": 1500, "DIM2": 250, "A": "2H32 01", "B": "4H25 02 (2+2)", "C": "2H20 03", "D": "2H12 04", "E": "2H20 05", "L1": "7H10 06 175", "L2": "10H10 06 250", "L3": "7H10 06 175", "sections": ["1-1", "4-4"]},
+        "beam_B": {"DIM1": 1400, "DIM2": 200, "A": "2H3 07", "B": "4H25 02 (2+2)", "C": "2H20 03", "D": "2H12 08", "E": "2H20 05", "L1": "7H10 06 175", "L2": "8H10 06 250", "L3": "7H10 06 175", "sections": ["2-2", "5-5"]},
+        "beam_C": {"DIM1": 1100, "DIM2": 175, "A": "2H25 09", "B": "4H20 10 (2+2)", "C": "2H20 11", "D": "2H12 12", "E": "2H20 05", "L1": "6H10 06 200", "L2": "5H10 06 300", "L3": "6H10 06 200", "sections": ["3-3", "6-6"]}
+      },
+      "source": "Section 6.3.4, page 80"
+    },
+
+    "broad_beam_method": {
+      "description": "For wide shallow beams with multiple bars side by side",
+      "features": [
+        "Elevation showing zones 1, 2, 3 with bar notation",
+        "Links shown as '22 H10 09 + 44 H10 10 LINKS IN 3s PAS. PLUS 18 H10 11 300 CLOSERS'",
+        "U-bars at supports: '5 H20 04 UB'",
+        "Multiple cross-sections 1-1, 2-2, 3-3 showing different bar arrangements",
+        "Bars shown with actual positions: 07, 04, 04, 07 / 0708 0808 0807"
+      ],
+      "source": "Section 6.3.4, page 81"
+    },
+
+    "link_notation": {
+      "format_in_elevation": "count/spacing (e.g. 19/300 = 19 links at 300mm; 5/200 = 5 links at 200mm)",
+      "total_notation": "e.g. '37 H12 07 LINKS P.A.S' (P.A.S = placed as shown)"
+    },
+
+    "u_bar_notation": "UB suffix on bar notation (e.g. '2 H20 02 UB')",
+    "link_closer_notation": "CLOSER label on bar mark",
+    "te_suffix": "TEF = top EF (top each face), used for side/face bars",
+    "spacer_bar_notation": "'4 H25 10 SPACERS' shown between layers"
+  }
+}
