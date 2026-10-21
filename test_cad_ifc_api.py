@@ -325,6 +325,112 @@ def test_standalone_launcher_mounts_the_same_router() -> None:
         _assert(required in paths, f"{required} is not mounted by the launcher")
 
 
+def test_analysis_engine_reports_availability() -> None:
+    payload = _client().get("/api/cad-ifc/analysis/engine").json()
+    _assert(payload["available"] is True, f"OpenSees engine unavailable: {payload.get('reason')}")
+    _assert(os.path.exists(payload["interpreter"]),
+            f"reported interpreter does not exist: {payload['interpreter']}")
+
+
+def test_analysis_runs_through_the_api() -> None:
+    """The analysis endpoint must run the real engine and return verified numbers."""
+    response = _client().post(
+        "/api/cad-ifc/analysis",
+        json={
+            "generator": "beam",
+            "youngs_modulus_pa": 210e9,
+            "supports": [
+                {"node": "beam.beam#start", "ux": True, "uy": True, "rz": False},
+                {"node": "beam.beam#end", "ux": False, "uy": True, "rz": False},
+            ],
+            "element_loads": [{"element": "beam.beam", "wy": -20000.0}],
+            "subdivisions": 4,
+            "case_id": "api-udl",
+        },
+    )
+    _assert(response.status_code == 200, f"{response.status_code}: {response.text[:400]}")
+    payload = response.json()
+    _assert(payload["ok"] is True, payload)
+    _assert(payload["model_id"] == "beam", payload["model_id"])
+
+    results = payload["results"]
+    _assert(results["schema"] == "fundi.analysis.results/1", results["schema"])
+    _assert(results["units"]["force"] == "N", results["units"])
+    case = results["cases"][0]
+    _assert(case["case_id"] == "api-udl", case["case_id"])
+    _assert(len(case["members"]) == 4, f"expected 4 members, got {len(case['members'])}")
+
+    # Simply supported equivalent: reactions are wL/2 each, from the canonical span (6.7 m).
+    expected = 20000.0 * 6.7 / 2.0
+    for key in ("node1", "node5"):
+        reaction = case["reactions"][key]
+        _assert(abs(reaction["Fy"] - expected) <= 1e-6 * expected,
+                f"{key} reaction {reaction['Fy']} vs {expected}")
+    _assert(case["equilibrium"]["residualRelative"] < 1e-9,
+            f"equilibrium residual {case['equilibrium']['residualRelative']}")
+    _assert(payload["analytical_model"]["members"] == 4, payload["analytical_model"])
+    _assert(payload["analytical_model"]["assumptions"], "assumptions must be reported")
+
+
+def test_analysis_rejects_incomplete_requests() -> None:
+    client = _client()
+    base = {
+        "generator": "beam",
+        "supports": [{"node": "beam.beam#start", "ux": True, "uy": True}],
+        "element_loads": [{"element": "beam.beam", "wy": -20000.0}],
+    }
+
+    no_e = client.post("/api/cad-ifc/analysis", json=base)
+    _assert(no_e.status_code == 422, f"{no_e.status_code}: {no_e.text[:200]}")
+    _assert("youngs_modulus_pa" in no_e.text, no_e.text[:300])
+
+    no_supports = client.post(
+        "/api/cad-ifc/analysis", json={**base, "youngs_modulus_pa": 210e9, "supports": []}
+    )
+    _assert(no_supports.status_code == 422, f"{no_supports.status_code}: {no_supports.text[:200]}")
+    _assert("supports" in no_supports.text, no_supports.text[:300])
+
+    no_loads = client.post(
+        "/api/cad-ifc/analysis",
+        json={**base, "youngs_modulus_pa": 210e9, "element_loads": []},
+    )
+    _assert(no_loads.status_code == 422, f"{no_loads.status_code}: {no_loads.text[:200]}")
+
+    unknown = client.post(
+        "/api/cad-ifc/analysis", json={**base, "youngs_modulus_pa": 210e9, "generator": "nope"}
+    )
+    _assert(unknown.status_code == 404, f"{unknown.status_code}: {unknown.text[:200]}")
+
+
+def test_analysis_returns_a_design_payload_only_when_requested() -> None:
+    client = _client()
+    request = {
+        "generator": "beam",
+        "youngs_modulus_pa": 210e9,
+        "supports": [
+            {"node": "beam.beam#start", "ux": True, "uy": True},
+            {"node": "beam.beam#end", "uy": True},
+        ],
+        "element_loads": [{"element": "beam.beam", "wy": -20000.0}],
+        "subdivisions": 2,
+    }
+    without = client.post("/api/cad-ifc/analysis", json=request)
+    _assert(without.status_code == 200, without.text[:300])
+    _assert("design_payload" not in without.json(), "design payload returned unrequested")
+
+    with_payload = client.post(
+        "/api/cad-ifc/analysis",
+        json={**request, "member_id": "beam.beam#e0",
+              "section": {"A": 0.18, "Iz": 0.0054, "E": 210e9}},
+    )
+    _assert(with_payload.status_code == 200, with_payload.text[:300])
+    design = with_payload.json()["design_payload"]
+    _assert(design["incomplete"] is False, design.get("incomplete_reason"))
+    _assert(design["design_checks_performed"] == [],
+            "the bridge must not claim a design check")
+    _assert(design["member"]["length_m"] > 0, design["member"])
+
+
 def main() -> int:
     tests = [
         (name, obj)

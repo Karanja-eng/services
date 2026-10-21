@@ -16,13 +16,13 @@
       "ifc_guid": "3Z65Teh7nGhP7e0KCle2OQ",
       "ifc_class": "IfcFooting",
       "dxf_handle": "45",
-      "drawing_id": "retaining_wall-r1",
+      "drawing_id": "retaining-wall-r1",
       "layer": "CONCRETE",
       "fingerprint": "eb615ca0ae838252c9642d402e71c35962d6e4bcf7056c678275317b8a25f9a2",
       "unit_scale": 1000.0,
       "status": "ok",
       "note": null,
-      "updated_at": "2026-10-18T19:15:06+00:00"
+      "updated_at": "2026-10-18T20:35:10+00:00"
     },
     {
       "model_id": "retaining-wall",
@@ -30,13 +30,13 @@
       "ifc_guid": "2HbvhloXfSrfx3opBKbK0Q",
       "ifc_class": "IfcWall",
       "dxf_handle": "45",
-      "drawing_id": "retaining_wall-r1",
+      "drawing_id": "retaining-wall-r1",
       "layer": "CONCRETE",
       "fingerprint": "a226fa0aaa73ddd9d518ca5cf6c5c5346893e4d630cab310d56c82c06e20f290",
       "unit_scale": 1000.0,
       "status": "ok",
       "note": null,
-      "updated_at": "2026-10-18T19:15:06+00:00"
+      "updated_at": "2026-10-18T20:35:10+00:00"
     }
   ],
   "by_status": {

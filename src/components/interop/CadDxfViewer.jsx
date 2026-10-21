@@ -1,35 +1,21 @@
 // src/components/interop/CadDxfViewer.jsx
 //
 // MLightCAD DXF viewer for the interoperability workbench.
-//
-// Adapted from the proven Fundi Pulse implementation
-// (siteflow-mobile/migrated-web-app/src/cad/CadViewerSpike.jsx, commit c64c098
-// "cad-viewer intergration") with the same package versions:
-//   @mlightcad/cad-simple-viewer@1.7.5
-//   @mlightcad/cad-simple-ui-plugin@1.7.5
-//
-// What it does here: opens the DXF that the Python adapter generated from the
-// canonical engineering model, so the drawing on screen is the real artefact -
-// not a re-render of React data. Entities carry FUNDI XDATA (internal element
-// id + IFC GlobalId), which is what links this drawing to the BIM model.
-//
-// Deliberate scope note: this is a CAD viewer/editor for DXF. It is *not* the
-// BIM viewer, and the app's existing React Konva drawing page remains the
-// authoring surface for Fundi's own 2D objects.
+// Safe compatibility layer prevents Webpack compilation crashes in mobile / Termux.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AcApDocManager, acedApplyUiTheme, AcEdOpenMode } from '@mlightcad/cad-simple-viewer';
+import {
+  AcApDocManager,
+  acedApplyUiTheme,
+  AcEdOpenMode,
+  acuiRegisterSimpleUiPlugin,
+  isAvailable,
+} from './compat/cadSimpleViewer';
 import { Download, RefreshCcw, Crosshair } from 'lucide-react';
 import { createViewerContainer } from './viewerHost';
 
 /**
  * Try to highlight one entity by DXF handle.
- *
- * MLightCAD 1.7.5 does not document a handle -> selection API, so this probes
- * for one at runtime and reports honestly instead of pretending. Verified
- * capabilities: the DXF database, its model-space iterator and per-entity
- * handles are public; rendering highlight requires an object id plus a view
- * exposing `highlight()` (`AcTrView2d.highlight(ids: AcDbObjectId[])`).
  */
 function tryFocusEntity(manager, handle) {
   try {
@@ -69,8 +55,12 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
   const managerRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [statusMessage, setStatusMessage] = useState('Initializing CAD viewer…');
+  const [isLoading, setIsLoading] = useState(isAvailable);
+  const [statusMessage, setStatusMessage] = useState(
+    isAvailable
+      ? 'Initializing CAD viewer…'
+      : '2D CAD engine is unavailable in this environment (mobile/Termux). DXF download is active.'
+  );
   const [activeFileName, setActiveFileName] = useState('');
 
   const publish = useCallback(
@@ -100,7 +90,6 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
         }
         setActiveFileName(fileName);
 
-        // Count entities so the UI can prove the real drawing was parsed.
         let entityCount = 0;
         const layerNames = new Set();
         try {
@@ -151,6 +140,17 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
   const handleExportDxf = useCallback(() => {
     const doc = managerRef.current?.curDocument;
     if (!doc?.database) {
+      if (dxfUrl) {
+        // Direct download fallback
+        const a = document.createElement('a');
+        a.href = dxfUrl;
+        a.download = activeFileName || 'drawing.dxf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        publish(`Downloaded ${a.download}`);
+        return;
+      }
       publish('No drawing database available to export.');
       return;
     }
@@ -169,7 +169,7 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
     } catch (error) {
       publish(`Export failed: ${error.message}`);
     }
-  }, [activeFileName, publish]);
+  }, [activeFileName, dxfUrl, publish]);
 
   const handleFileUpload = useCallback(
     (event) => {
@@ -190,6 +190,13 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
     let disposed = false;
 
     async function init() {
+      if (!isAvailable) {
+        setIsLoading(false);
+        setStatusMessage(
+          'MLightCAD engine is not bundled in this environment (Termux/Mobile). DXF downloads remain active.'
+        );
+        return;
+      }
       if (!hostRef.current) return;
       try {
         const existing = AcApDocManager.tryGetInstance();
@@ -206,10 +213,7 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
         });
         managerRef.current = manager;
 
-        const { acuiRegisterSimpleUiPlugin } = await import(
-          '@mlightcad/cad-simple-ui-plugin/register'
-        );
-        if (!disposed) {
+        if (!disposed && acuiRegisterSimpleUiPlugin) {
           await acuiRegisterSimpleUiPlugin(manager.pluginManager, {
             host: hostRef.current,
             dockPanel: { defaultOpen: false, defaultSide: 'left', defaultWidth: 280 },
@@ -238,7 +242,7 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reload when the caller supplies a new drawing URL (after regeneration).
+  // Reload when the caller supplies a new drawing URL.
   useEffect(() => {
     if (!managerRef.current || !dxfUrl) return;
     loadFromUrl(dxfUrl);
@@ -258,7 +262,7 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-[11px] text-[#909399]">Drawing:</span>
           <span className="text-[11px] text-[#e5eaf3] truncate max-w-[260px]">
-            {activeFileName || 'none'}
+            {activeFileName || (dxfUrl ? dxfUrl.split('/').pop() : 'none')}
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -297,7 +301,30 @@ export default function CadDxfViewer({ dxfUrl, onStatus, onLoaded, focusHandle, 
       </header>
 
       <div style={{ position: 'relative', flex: 1, display: 'flex', minWidth: 0, minHeight: 0 }}>
-        {/* React renders this host EMPTY on purpose (see viewerHost.js). */}
+        {!isAvailable && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-[#141414] text-[#cdd3dd] z-10">
+            <div className="max-w-md p-6 bg-[#1f2022] border border-[#4c4d4f] rounded-xl shadow-xl space-y-3">
+              <Crosshair className="w-8 h-8 text-[#409eff] mx-auto mb-1" />
+              <h3 className="text-base font-semibold text-[#e5eaf3]">2D CAD Viewer (MLightCAD)</h3>
+              <p className="text-xs text-[#909399] leading-relaxed">
+                The native 2D CAD editor engine is not installed in this environment (Android / Termux).
+                Drawings generated by the Python backend can still be downloaded as real DXF files.
+              </p>
+              {dxfUrl && (
+                <div className="pt-2">
+                  <a
+                    href={dxfUrl}
+                    download
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-[#409eff] hover:bg-[#66b1ff] text-white rounded font-medium"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download Generated DXF
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div
           ref={hostRef}
           style={{

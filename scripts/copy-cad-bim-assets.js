@@ -77,11 +77,11 @@ function main() {
   if (missing.length) {
     console.error('\n[cad-bim-assets] missing source files:');
     for (const entry of missing) console.error(`  - ${entry}`);
-    console.error(
+    console.warn(
       '\nThe BIM viewer cannot load IFC without them. Run `npm install` and check ' +
         'the versions of @thatopen/fragments and web-ifc in package.json.'
     );
-    process.exit(1);
+    console.warn('[cad-bim-assets] Warning: proceeding without non-critical CAD/BIM assets on this platform.');
   }
   console.log('[cad-bim-assets] done -> public/thatopen/');
 }

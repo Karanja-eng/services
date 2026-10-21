@@ -20,6 +20,11 @@ class PanelRegistry {
         this.notify();
     }
 
+    // Alias for togglePanel to support both calling conventions
+    toggle(id) {
+        return this.togglePanel(id);
+    }
+
     togglePanel(id) {
         const panel = this.panels.get(id);
         if (!panel) return;
@@ -39,6 +44,18 @@ class PanelRegistry {
 
         panel.isOpen = newState;
         this.notify();
+    }
+
+    open(id) {
+        const panel = this.panels.get(id);
+        if (!panel || panel.isOpen) return;
+        this.togglePanel(id);
+    }
+
+    close(id) {
+        const panel = this.panels.get(id);
+        if (!panel || !panel.isOpen) return;
+        this.togglePanel(id);
     }
 
     closeAll() {

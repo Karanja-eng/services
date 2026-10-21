@@ -136,3 +136,28 @@
 
 # Local scratch produced by the acceptance test suites
 /.test-artifacts/
+
+# --- Structural analysis (OpenSeesPy) ---------------------------------------
+# The wheels are extracted here instead of installed by pip, because pip's
+# `*.whl.metadata` step is blocked in the sandbox. This is generated, never committed.
+/.venv-opensees/
+
+# --- Solid modelling (OpenCascade.js) ----------------------------------------
+# The kernel wrapper and the septic solid adapter are ES modules (.mjs) because the
+# opencascade.js glue is ESM; the `!*.js` rule above does not cover .mjs, so without
+# these lines the whole capability would be missing from a clone.
+!/src/solid/
+!/src/solid/*.mjs
+!/src/analysis/
+!/src/analysis/*.mjs
+!/test/
+!/test/*.mjs
+!/scripts/solid/
+!/scripts/solid/*.mjs
+
+# Generated STEP files (one per solid component), produced by
+# `node scripts/solid/septic-step.mjs`; committed so the artefacts are inspectable
+# without running the 62 MB WASM kernel.
+!/public/step/
+!/public/step/*.step
+!/public/step/*.json

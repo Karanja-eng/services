@@ -330,6 +330,112 @@ def export(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
+@router.post("/analysis")
+def run_analysis(payload: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+    """Run a 2D structural analysis for one canonical model and return normalised results.
+
+    The analytical inputs are **not** inferred: `youngs_modulus_pa`, `supports` and loads
+    (`loads` and/or `element_loads`) must be supplied, and an incomplete request is
+    rejected with the reason. Optional `member_sections` overrides the gross geometric
+    `A`/`Iz`; `member_id` additionally returns a validated design-check payload.
+
+    On success the response contains the `fundi.analysis.results/1` document, which is the
+    input to the 2D/3D view adapters (`src/analysis/viewModel.mjs`).
+    """
+    from . import analysis
+
+    payload = payload or {}
+    model_id = payload.get("model_id") or payload.get("generator")
+    if not model_id:
+        raise HTTPException(status_code=422, detail="'model_id' or 'generator' is required")
+
+    if payload.get("generator"):
+        key = payload["generator"]
+        if key not in generator_registry.GENERATORS:
+            raise HTTPException(
+                status_code=404,
+                detail=f"unknown generator {key!r}; "
+                       f"available: {sorted(generator_registry.GENERATORS)}",
+            )
+        model_doc = rc_model.build_model(key)
+    else:
+        model_doc = get_model(model_id)
+
+    if "youngs_modulus_pa" not in payload:
+        raise HTTPException(
+            status_code=422,
+            detail="'youngs_modulus_pa' is required: the analysis does not assume a material",
+        )
+
+    try:
+        analytical = analysis.canonical_to_analysis(
+            model_doc,
+            youngs_modulus_pa=float(payload["youngs_modulus_pa"]),
+            supports=payload.get("supports") or [],
+            loads=payload.get("loads") or [],
+            element_loads=payload.get("element_loads") or [],
+            member_sections=payload.get("member_sections"),
+            subdivisions=int(payload.get("subdivisions") or 1),
+            case_id=str(payload.get("case_id") or "ULS-1"),
+        )
+        results = analysis.analyse(analytical)
+    except analysis.AnalysisError as exc:
+        message = str(exc)
+        # A missing engine interpreter is an environment problem, not a bad request.
+        status = 503 if "interpreter" in message else 422
+        raise HTTPException(status_code=status, detail=message) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    response: Dict[str, Any] = {
+        "ok": True,
+        "model_id": results["model_id"],
+        "case_id": results["cases"][0]["case_id"],
+        "results": results,
+        "analytical_model": {
+            "nodes": len(analytical.nodes),
+            "members": len(analytical.members),
+            "supports": len(analytical.supports),
+            "assumptions": analytical.assumptions,
+        },
+    }
+
+    member_id = payload.get("member_id")
+    if member_id:
+        try:
+            response["design_payload"] = analysis.design_check_payload(
+                results,
+                case_id=results["cases"][0]["case_id"],
+                member_id=member_id,
+                section=payload.get("section"),
+            )
+        except analysis.AnalysisError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return response
+
+
+@router.get("/analysis/engine")
+def analysis_engine() -> Dict[str, Any]:
+    """Report whether the OpenSees engine is usable, and with which interpreter.
+
+    The engine runs as a separate Python 3.12 process (OpenSeesPy links python312.dll), so
+    a UI should call this before offering an analysis button.
+    """
+    from . import analysis
+
+    try:
+        interpreter = analysis.opensees_python()
+    except analysis.AnalysisError as exc:
+        return {"available": False, "reason": str(exc)}
+    return {
+        "available": True,
+        "interpreter": interpreter,
+        "runner": analysis._runner_path(),
+        "note": "OpenSeesPy runs as a subprocess; results are returned as "
+                "fundi.analysis.results/1",
+    }
+
+
 @router.get("/file/{model_id}.{extension}")
 def get_file(model_id: str, extension: str) -> FileResponse:
     """Download a generated artefact from the controlled store.

@@ -17,7 +17,7 @@
     "vertical_pitch_mm": 0,
     "horizontal_dia_mm": 0,
     "horizontal_pitch_mm": 0,
-    "opening": "",
+    "opening": "900.0, 1000.0, 600.0, 800.0",
     "kicker_height_mm": 75.0
   },
   "units": {
@@ -76,7 +76,7 @@
         "vertical_pitch_mm": 0,
         "horizontal_dia_mm": 0,
         "horizontal_pitch_mm": 0,
-        "opening": "",
+        "opening": "900.0, 1000.0, 600.0, 800.0",
         "kicker_height_mm": 75.0,
         "length_m": 2.4,
         "thickness_m": 0.25,
@@ -111,7 +111,7 @@
           "vertical_pitch_mm": 0,
           "horizontal_dia_mm": 0,
           "horizontal_pitch_mm": 0,
-          "opening": "",
+          "opening": "900.0, 1000.0, 600.0, 800.0",
           "kicker_height_mm": 75.0
         },
         "source_model_fields": [],
@@ -119,8 +119,10 @@
         "assumptions": []
       },
       "validation": {
-        "state": "ok",
-        "warnings": []
+        "state": "warning",
+        "warnings": [
+          "the wall opening is detailed in the drawing but is not cut out of the IFC solid representation"
+        ]
       },
       "representations": {},
       "volume_m3": 1.8,
@@ -140,7 +142,7 @@
     "total_volume_m3": 1.8,
     "levels": 1,
     "relationships": 0,
-    "elements_with_warnings": 0
+    "elements_with_warnings": 1
   },
-  "model_hash": "715ec573e07a8d953d1bee883b0b4deafd02d1e84fca562aa830579864dbdd83"
+  "model_hash": "ebb5d18fdefae11560c5a6649d92d3c5d46785eac48865f7cf3a1ded5983e706"
 }

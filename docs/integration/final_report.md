@@ -354,6 +354,16 @@ npm run build
 .venv-ifc\Scripts\python.exe test_cad_ifc_poc.py
 .venv-ifc\Scripts\python.exe test_cad_ifc_engineering.py
 .venv-ifc\Scripts\python.exe test_cad_ifc_api.py
+.venv-ifc\Scripts\python.exe test_cad_ifc_analysis.py
+node test\solid-septic.test.mjs
+
+# --- solid modelling (Task 4) ---------------------------------------------
+node scripts\solid\septic-step.mjs --model .test-artifacts\solid\cli-model.json --out public\step --report .test-artifacts\solid\report.json
+
+# --- structural analysis (Task 5) -----------------------------------------
+# one-time: OpenSeesPy needs python312.dll, and pip's *.whl.metadata step is blocked here
+.venv-ifc\Scripts\python.exe scripts\install_openseespy.py
+.venv-ifc\Scripts\python.exe test_cad_ifc_analysis.py
 
 # --- generating one model from the command line, without the UI -----------
 .venv-ifc\Scripts\python.exe -c "from src.Backend.cad_ifc import pipeline, json; r = pipeline.run_generator_pipeline('beam', {'depth_mm': 650}); print(json.dumps({'drawing': r['drawing']['url'], 'ifc': r['ifc']['url'], 'elements': r['ifc']['guids']}, indent=2))"
@@ -363,10 +373,48 @@ API surface: `http://127.0.0.1:8001/api/cad-ifc` — see `ifc_that_open.md` §6.
 
 ---
 
+## 11a. Tasks 4 and 5 — solid modelling and structural analysis
+
+Detailed reports: `opencascade_solid_modeling.md` and `opensees_analysis.md`.
+
+### Dependencies added
+
+| Dependency | Version | Licence | Why |
+|---|---|---|---|
+| `opencascade.js` | **1.1.1** (exact pin) | LGPL-2.1-only | precise B-rep solids, Booleans **and** STEP writer/reader; checked against `dist/Supported APIs.md` before use |
+| `openseespy` + `openseespywin` | **3.8.0.0** (engine reports 3.8.0) | BSD-style | finite-element analysis; **links `python312.dll`**, so it runs under Python 3.12, not the backend's 3.13 |
+
+### Files added
+
+| File | Purpose |
+|---|---|
+| `src/solid/ocKernel.mjs` | OCCT kernel wrapper: Node/browser bootstrap, discovered overloads, Booleans, validity, volume, bbox, solid count, STEP I/O |
+| `src/solid/septicSolid.mjs` | canonical septic model → fused/cut solids, penetrations, access opening, verification, STEP export + inspection |
+| `scripts/solid/septic-step.mjs` | CLI: model JSON → solids → STEP files + JSON report (fresh process per export) |
+| `scripts/solid/show_report.py` | human-readable summary of that report |
+| `test/solid-septic.test.mjs` | **13** solid-modelling tests |
+| `scripts/install_openseespy.py` | installs OpenSeesPy by direct wheel extraction (pip's metadata step is blocked here) |
+| `scripts/analysis/run_opensees.py` | the Python-3.12 engine process: builds the 2D frame, runs the case, returns normalised results + equilibrium |
+| `src/Backend/cad_ifc/analysis.py` | analysis contract + validation, canonical→analytical adapter, engine invocation, result mapping, closed-form references, design-check payload |
+| `test_cad_ifc_analysis.py` | **11** analysis tests (three closed-form benchmarks) |
+| `docs/integration/opencascade_solid_modeling.md` | Task 4 report |
+| `docs/integration/opensees_analysis.md` | Task 5 report |
+
+### Defects found in existing code/data (reported, not silently patched)
+
+1. **The septic generator's tank→manhole connection reaches no wall.** It sits at z = 1.35 m; the manhole walls stop at 0.85 m and the cover at 1.05 m. The solid adapter records `PENETRATION_REACHES_NO_WALL` with both element ids instead of moving or skipping it.
+2. **The canonical model carries no supports, loads or section properties.** The analysis adapter therefore *requires* them and rejects incomplete requests; this is why Task 5 cannot start from the canonical model alone.
+3. Two engine-handling traps, each of which would have produced plausible-but-wrong numbers and are now covered by tests: `nodeReaction()` returns 0 until `ops.reactions()` is called, and element-load resultants must be integrated for equilibrium.
+
+---
+
 ## 12. Definition of done — status
 
 | Task | Definition of done | Status |
 |---|---|---|
 | 1 | Fundi Studio opens, edits, saves/exports and reopens real generated DXF files using the verified MLightCAD editor integration | **Partially verified** — opening/identity/export/reopen verified at file level and the editor is the verified integration in write mode; interactive drawing/editing/snapping remains UNVERIFIED pending the manual checklist |
 | 2 | Existing engineering generators produce a valid IFC model, and That Open can load, navigate, select and inspect its elements while R3F remains operational | **IFC side VERIFIED** (8/8 valid IFC4, 0 validator statements, dimensions match); **That Open side implemented and compiled, interactive behaviour UNVERIFIED**; R3F untouched |
-| 3 | Canonical element IDs and parameters map explicitly to CAD entities and IFC GlobalIds, with tested persistence, coordinate/unit conversion and conflict detection | **VERIFIED** — 40 engineering + 19 API tests including persistence, re-handling, deletion, edit detection, unit round-trip and conflict flagging |
+| 3 | Canonical element IDs and parameters map explicitly to CAD entities and IFC GlobalIds, with tested persistence, coordinate/unit conversion and conflict detection | **VERIFIED** — 40 engineering + 20 API tests including persistence, re-handling, deletion, edit detection, unit round-trip and conflict flagging |
+| 4 | The existing septic tank generator produces actual valid solids, openings perform real Boolean cuts, dimensions are verified, and genuine STEP export is round-trip tested | **VERIFIED** — `node test/solid-septic.test.mjs` 13/13; tank 9.563931 m³ (analytic identity to 1e-6), 3.4×2.9×2.35 m, openings match πr²t and the access-opening build-up, 18 Booleans all valid, 3 genuine STEP files with `MANIFOLD_SOLID_BREP`; **kernel STEP re-import fails in this OCCT build and is recorded per file** (structural verification used instead) |
+| 5 | The canonical model produces an OpenSees frame, independent reference calculations confirm the numbers, equilibrium is checked, and results map back to element IDs | **VERIFIED for 2D linear-elastic frames** — `test_cad_ifc_analysis.py` 11/11; three benchmarks match closed form exactly (reactions, moments, deflections, rotations), equilibrium residual 3e-16 / 0, mapping survives element permutation, incomplete input rejected; **design checks are a validated payload only, no code check claimed** |
+| E | Analysis results visualised in the existing 2D and 3D views | **NOT STARTED** — depends on Task 5 output and is not implemented |

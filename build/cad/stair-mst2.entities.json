@@ -1,15 +1,15 @@
 {
   "model_id": "stair-mst2",
-  "drawing_id": "stair_mst2-r1",
-  "entity_link_count": 108,
+  "drawing_id": "stair-mst2-r1",
+  "entity_link_count": 96,
   "by_status": {
-    "ok": 108
+    "ok": 96
   },
   "elements": {
     "stair-mst2.flight": [
       {
         "handle": "45",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -18,7 +18,7 @@
       },
       {
         "handle": "46",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -27,7 +27,7 @@
       },
       {
         "handle": "47",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -36,7 +36,7 @@
       },
       {
         "handle": "48",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -45,7 +45,7 @@
       },
       {
         "handle": "49",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -54,7 +54,7 @@
       },
       {
         "handle": "4A",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -63,7 +63,7 @@
       },
       {
         "handle": "4B",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -72,7 +72,7 @@
       },
       {
         "handle": "4C",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -81,7 +81,7 @@
       },
       {
         "handle": "4D",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -90,7 +90,7 @@
       },
       {
         "handle": "4E",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -99,7 +99,7 @@
       },
       {
         "handle": "4F",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -108,7 +108,7 @@
       },
       {
         "handle": "50",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -117,7 +117,7 @@
       },
       {
         "handle": "51",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -126,7 +126,7 @@
       },
       {
         "handle": "52",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -135,25 +135,7 @@
       },
       {
         "handle": "53",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "CONCRETE",
-        "entity_type": "LWPOLYLINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "54",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "CONCRETE",
-        "entity_type": "LWPOLYLINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "55",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_TOP",
         "entity_type": "LINE",
         "view": "section",
@@ -161,8 +143,8 @@
         "note": null
       },
       {
-        "handle": "56",
-        "drawing_id": "stair_mst2-r1",
+        "handle": "54",
+        "drawing_id": "stair-mst2-r1",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -170,8 +152,26 @@
         "note": null
       },
       {
+        "handle": "55",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "REBAR_LINKS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "56",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "REBAR_LINKS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
         "handle": "57",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -180,7 +180,7 @@
       },
       {
         "handle": "58",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -189,7 +189,7 @@
       },
       {
         "handle": "59",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -198,7 +198,7 @@
       },
       {
         "handle": "5A",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -207,7 +207,7 @@
       },
       {
         "handle": "5B",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -216,7 +216,7 @@
       },
       {
         "handle": "5C",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -225,43 +225,43 @@
       },
       {
         "handle": "5D",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "REBAR_LINKS",
-        "entity_type": "LINE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "HIDDEN",
+        "entity_type": "CIRCLE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "5E",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "REBAR_LINKS",
-        "entity_type": "LINE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "HIDDEN",
+        "entity_type": "CIRCLE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "5F",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "REBAR_LINKS",
-        "entity_type": "LINE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "HIDDEN",
+        "entity_type": "CIRCLE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "60",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "REBAR_LINKS",
-        "entity_type": "LINE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "HIDDEN",
+        "entity_type": "CIRCLE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "61",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "HIDDEN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -270,7 +270,7 @@
       },
       {
         "handle": "62",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "HIDDEN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -279,7 +279,7 @@
       },
       {
         "handle": "63",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "HIDDEN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -288,7 +288,7 @@
       },
       {
         "handle": "64",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "HIDDEN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -297,80 +297,80 @@
       },
       {
         "handle": "65",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "66",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "67",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "68",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "69",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "6A",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "6B",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "ANNOTATIONS",
-        "entity_type": "TEXT",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "6C",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "ANNOTATIONS",
-        "entity_type": "TEXT",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "6D",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "ANNOTATIONS",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
         "entity_type": "TEXT",
         "view": "section",
         "status": "ok",
@@ -378,7 +378,7 @@
       },
       {
         "handle": "6E",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -387,7 +387,7 @@
       },
       {
         "handle": "6F",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -396,7 +396,7 @@
       },
       {
         "handle": "70",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -405,7 +405,7 @@
       },
       {
         "handle": "71",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -414,7 +414,7 @@
       },
       {
         "handle": "72",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -423,7 +423,7 @@
       },
       {
         "handle": "73",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -432,61 +432,7 @@
       },
       {
         "handle": "74",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "75",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "76",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "77",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "78",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "79",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "TEXT",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "7A",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -497,7 +443,7 @@
     "stair-mst2.stair": [
       {
         "handle": "45",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -506,7 +452,7 @@
       },
       {
         "handle": "46",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -515,7 +461,7 @@
       },
       {
         "handle": "47",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -524,7 +470,7 @@
       },
       {
         "handle": "48",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -533,7 +479,7 @@
       },
       {
         "handle": "49",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -542,7 +488,7 @@
       },
       {
         "handle": "4A",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -551,7 +497,7 @@
       },
       {
         "handle": "4B",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -560,7 +506,7 @@
       },
       {
         "handle": "4C",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -569,7 +515,7 @@
       },
       {
         "handle": "4D",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -578,7 +524,7 @@
       },
       {
         "handle": "4E",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -587,7 +533,7 @@
       },
       {
         "handle": "4F",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -596,7 +542,7 @@
       },
       {
         "handle": "50",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -605,7 +551,7 @@
       },
       {
         "handle": "51",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -614,7 +560,7 @@
       },
       {
         "handle": "52",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -623,25 +569,7 @@
       },
       {
         "handle": "53",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "CONCRETE",
-        "entity_type": "LWPOLYLINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "54",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "CONCRETE",
-        "entity_type": "LWPOLYLINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "55",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_TOP",
         "entity_type": "LINE",
         "view": "section",
@@ -649,8 +577,8 @@
         "note": null
       },
       {
-        "handle": "56",
-        "drawing_id": "stair_mst2-r1",
+        "handle": "54",
+        "drawing_id": "stair-mst2-r1",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -658,8 +586,26 @@
         "note": null
       },
       {
+        "handle": "55",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "REBAR_LINKS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "56",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "REBAR_LINKS",
+        "entity_type": "LINE",
+        "view": "section",
+        "status": "ok",
+        "note": null
+      },
+      {
         "handle": "57",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -668,7 +614,7 @@
       },
       {
         "handle": "58",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -677,7 +623,7 @@
       },
       {
         "handle": "59",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -686,7 +632,7 @@
       },
       {
         "handle": "5A",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -695,7 +641,7 @@
       },
       {
         "handle": "5B",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -704,7 +650,7 @@
       },
       {
         "handle": "5C",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "section",
@@ -713,43 +659,43 @@
       },
       {
         "handle": "5D",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "REBAR_LINKS",
-        "entity_type": "LINE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "HIDDEN",
+        "entity_type": "CIRCLE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "5E",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "REBAR_LINKS",
-        "entity_type": "LINE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "HIDDEN",
+        "entity_type": "CIRCLE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "5F",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "REBAR_LINKS",
-        "entity_type": "LINE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "HIDDEN",
+        "entity_type": "CIRCLE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "60",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "REBAR_LINKS",
-        "entity_type": "LINE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "HIDDEN",
+        "entity_type": "CIRCLE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "61",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "HIDDEN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -758,7 +704,7 @@
       },
       {
         "handle": "62",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "HIDDEN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -767,7 +713,7 @@
       },
       {
         "handle": "63",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "HIDDEN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -776,7 +722,7 @@
       },
       {
         "handle": "64",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "HIDDEN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -785,80 +731,80 @@
       },
       {
         "handle": "65",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "66",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "67",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "ANNOTATIONS",
+        "entity_type": "TEXT",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "68",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "69",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "6A",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "HIDDEN",
-        "entity_type": "CIRCLE",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "6B",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "ANNOTATIONS",
-        "entity_type": "TEXT",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "6C",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "ANNOTATIONS",
-        "entity_type": "TEXT",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
         "view": "section",
         "status": "ok",
         "note": null
       },
       {
         "handle": "6D",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "ANNOTATIONS",
+        "drawing_id": "stair-mst2-r1",
+        "layer": "DIMENSIONS",
         "entity_type": "TEXT",
         "view": "section",
         "status": "ok",
@@ -866,7 +812,7 @@
       },
       {
         "handle": "6E",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -875,7 +821,7 @@
       },
       {
         "handle": "6F",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -884,7 +830,7 @@
       },
       {
         "handle": "70",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -893,7 +839,7 @@
       },
       {
         "handle": "71",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -902,7 +848,7 @@
       },
       {
         "handle": "72",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -911,7 +857,7 @@
       },
       {
         "handle": "73",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "DIMENSIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -920,61 +866,7 @@
       },
       {
         "handle": "74",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "75",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "76",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "77",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "78",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "79",
-        "drawing_id": "stair_mst2-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "TEXT",
-        "view": "section",
-        "status": "ok",
-        "note": null
-      },
-      {
-        "handle": "7A",
-        "drawing_id": "stair_mst2-r1",
+        "drawing_id": "stair-mst2-r1",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "section",

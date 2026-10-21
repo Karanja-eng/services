@@ -116,6 +116,48 @@ export function exportSeptic(params) {
   return request('/export', { method: 'POST', body: { params: params || {} } });
 }
 
+/**
+ * Run a 2D structural analysis for a canonical model.
+ *
+ * The analytical inputs are explicit — `youngsModulusPa`, `supports` and either `loads` or
+ * `elementLoads`. Nothing is defaulted here or on the backend: a missing input is rejected
+ * with the reason. Returns `{ ok, model_id, case_id, results, analytical_model }`.
+ */
+export function runAnalysis({
+  generator,
+  modelId,
+  youngsModulusPa,
+  supports,
+  loads = [],
+  elementLoads = [],
+  subdivisions = 1,
+  caseId = 'ULS-1',
+  memberId,
+  section,
+}) {
+  return request('/analysis', {
+    method: 'POST',
+    timeoutMs: 300000,
+    body: {
+      generator,
+      model_id: modelId,
+      youngs_modulus_pa: youngsModulusPa,
+      supports,
+      loads,
+      element_loads: elementLoads,
+      subdivisions,
+      case_id: caseId,
+      member_id: memberId,
+      section,
+    },
+  });
+}
+
+/** Whether the OpenSees engine (separate Python 3.12 process) is usable. */
+export function fetchAnalysisEngine() {
+  return request('/analysis/engine', { timeoutMs: 30000 });
+}
+
 /** Absolute URL for a generated artefact served from public/. */
 export function artefactUrl(relativeUrl) {
   if (!relativeUrl) return null;

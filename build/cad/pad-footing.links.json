@@ -16,13 +16,13 @@
       "ifc_guid": "3WHtO1Z0DLlQnMWKvNX29u",
       "ifc_class": "IfcFooting",
       "dxf_handle": "45",
-      "drawing_id": "pad_footing-r1",
+      "drawing_id": "pad-footing-r1",
       "layer": "CONCRETE",
       "fingerprint": "99ec10968489bcadd9bf729a235abdf1976117835f48f7babcaf6ba11a06d97d",
       "unit_scale": 1000.0,
       "status": "ok",
       "note": null,
-      "updated_at": "2026-10-18T19:15:08+00:00"
+      "updated_at": "2026-10-18T20:35:11+00:00"
     }
   ],
   "by_status": {

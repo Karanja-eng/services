@@ -27,6 +27,7 @@
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.473.0",
+    "opencascade.js": "1.1.1",
     "paper": "^0.12.18",
     "postprocessing": "^6.39.1",
     "react": "^19.0.0",

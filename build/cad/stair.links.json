@@ -22,7 +22,7 @@
       "unit_scale": 1000.0,
       "status": "ok",
       "note": null,
-      "updated_at": "2026-10-18T19:15:09+00:00"
+      "updated_at": "2026-10-18T20:35:13+00:00"
     },
     {
       "model_id": "stair",
@@ -36,7 +36,7 @@
       "unit_scale": 1000.0,
       "status": "ok",
       "note": null,
-      "updated_at": "2026-10-18T19:15:09+00:00"
+      "updated_at": "2026-10-18T20:35:13+00:00"
     },
     {
       "model_id": "stair",
@@ -50,7 +50,7 @@
       "unit_scale": 1000.0,
       "status": "ok",
       "note": null,
-      "updated_at": "2026-10-18T19:15:09+00:00"
+      "updated_at": "2026-10-18T20:35:13+00:00"
     }
   ],
   "by_status": {

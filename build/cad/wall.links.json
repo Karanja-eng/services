@@ -1,7 +1,7 @@
 {
   "model_id": "wall",
   "revision": 1,
-  "model_hash": "715ec573e07a8d953d1bee883b0b4deafd02d1e84fca562aa830579864dbdd83",
+  "model_hash": "ebb5d18fdefae11560c5a6649d92d3c5d46785eac48865f7cf3a1ded5983e706",
   "units": {
     "canonical": "metre",
     "ifc": "metre",
@@ -22,7 +22,7 @@
       "unit_scale": 1000.0,
       "status": "ok",
       "note": null,
-      "updated_at": "2026-10-18T19:15:05+00:00"
+      "updated_at": "2026-10-18T20:35:08+00:00"
     }
   ],
   "by_status": {

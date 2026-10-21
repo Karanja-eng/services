@@ -1,7 +1,7 @@
 {
   "model_id": "beam",
   "revision": 2,
-  "model_hash": "c48075a595e386cb73826319b4244d0c65bbc389bff7e0f7903110916b0e1470",
+  "model_hash": "9e67bc04c6d215484fa024c7d8825032c9d6f7d33d5fc8a75dc2af154c2c1978",
   "units": {
     "canonical": "metre",
     "ifc": "metre",
@@ -18,14 +18,14 @@
       "dxf_handle": "45",
       "drawing_id": "beam-r2",
       "layer": "CONCRETE",
-      "fingerprint": "89ece9e4936c4f51dd03e482a80b9353262d1555c65f2aeceee16f4a28020246",
+      "fingerprint": "6dbda93d77ffcb60bac7e1fdb095344d870a936c5149c887fe3c986a05b58e52",
       "unit_scale": 1000.0,
-      "status": "ok",
+      "status": "regenerated",
       "note": null,
-      "updated_at": "2026-10-18T19:15:12+00:00"
+      "updated_at": "2026-10-19T02:32:52+00:00"
     }
   ],
   "by_status": {
-    "ok": 1
+    "regenerated": 1
   }
 }

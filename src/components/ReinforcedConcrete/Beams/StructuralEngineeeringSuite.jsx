@@ -18,15 +18,21 @@ import MomentDistributionCalculator from "./distribution";
 import EnhancedThreeMomentCalculator from "./Three";
 import BSCoefficientsCalculator from "./BSCoefficientsCalculator";
 import EurocodeBeamDesign from "./Eurocode_beam";
+import DesignCodeToggle from "../../shared/primitives/DesignCodeToggle";
 
 /**
  * StructuralEngineeringSuite
- * 
- * New Workflow:
+ *
+ * Workflow:
  * 1. Design Parameters (Dimensions, Materials, BS 8110 Settings)
  * 2. Beam Configuration (Single, Continuous, Cantilever)
  * 3. Analysis Method (if Continuous)
  * 4. Analysis & Design Results
+ *
+ * UI NOTE: The design-code selector (BS 8110 / Eurocode 2) is now rendered
+ * via the shared <DesignCodeToggle> component. The `activeCode` state values
+ * ("BS8110" and "Eurocode") are unchanged — they are forwarded verbatim to
+ * calculation dispatch and backend payloads.
  */
 const StructuralEngineeringSuite = ({ isDark = false }) => {
   const [activeCode, setActiveCode] = useState("BS8110"); // new state for design code
@@ -148,26 +154,17 @@ const StructuralEngineeringSuite = ({ isDark = false }) => {
           RC Beam Designer
         </h1>
         <div className="flex justify-center mb-6">
-          <div className="inline-flex rounded-lg p-1 bg-gray-100 dark:bg-slate-700">
-            <button
-              onClick={() => setActiveCode("BS8110")}
-              className={`px-6 py-2 rounded-md font-medium text-sm transition-all ${activeCode === "BS8110"
-                ? "bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm"
-                : "text-gray-500 dark:text-slate-400 hover:text-gray-900"
-                }`}
-            >
-              BS 8110
-            </button>
-            <button
-              onClick={() => setActiveCode("Eurocode")}
-              className={`px-6 py-2 rounded-md font-medium text-sm transition-all ${activeCode === "Eurocode"
-                ? "bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm"
-                : "text-gray-500 dark:text-slate-400 hover:text-gray-900"
-                }`}
-            >
-              Eurocode 2
-            </button>
-          </div>
+          {/* Shared DesignCodeToggle — state values "BS8110" / "Eurocode" are
+              forwarded unchanged to calculation dispatch. Do not alter ids. */}
+          <DesignCodeToggle
+            value={activeCode}
+            onChange={setActiveCode}
+            isDark={isDark}
+            options={[
+              { id: "BS8110", label: "BS 8110" },
+              { id: "Eurocode", label: "Eurocode 2" },
+            ]}
+          />
         </div>
 
         {activeCode === "Eurocode" ? (
@@ -464,7 +461,7 @@ const StructuralEngineeringSuite = ({ isDark = false }) => {
                     <p className="text-gray-500">Moments and shears have been calculated.</p>
                   </div>
                   <button onClick={() => setStep("design")} className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg hover:shadow-green-500/30">
-                    Proceed to Styling & Detailing <ArrowRight className="h-5 w-5" />
+                    Proceed to Styling &amp; Detailing <ArrowRight className="h-5 w-5" />
                   </button>
                 </div>
               </div>

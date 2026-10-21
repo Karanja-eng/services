@@ -4,6 +4,7 @@ import { LoadingSpinner } from "../../components/LoadingSpinner";
 import EurocodeWallCalculator from "./eurocode_wall_calc";
 import Wall3DVisualization from "../../components/wall_3d_helper";
 import WallDetailedDrawing from "./Wall_visualiser";
+import DesignCodeToggle from "../../shared/primitives/DesignCodeToggle";
 
 // BS Codes Wall Calculator Component
 const WallDesignCalculator = ({ isDark }) => {
@@ -264,7 +265,7 @@ const WallDesignCalculator = ({ isDark }) => {
                 <div className={`${isDark ? "bg-slate-700" : "bg-slate-50"} rounded-xl p-6`}>
                   <h4 className={`text-lg font-semibold ${textPrimary} mb-4 flex items-center gap-2`}>
                     <FileText className="w-5 h-5 text-teal-500" />
-                    Capacities & Utilization
+                    Capacities &amp; Utilization
                   </h4>
                   <div className="space-y-4">
                     {[
@@ -363,6 +364,8 @@ const WallDesignCalculator = ({ isDark }) => {
 
 // Main App Component
 const MainWallDesignApp = ({ isDark = false }) => {
+  // State values "bs" and "eurocode" are forwarded verbatim to calculation
+  // dispatch and backend endpoints. Do not alter these ids.
   const [activeStandard, setActiveStandard] = useState("bs");
 
   const bgMain = isDark ? "bg-slate-900" : "bg-slate-50";
@@ -386,43 +389,31 @@ const MainWallDesignApp = ({ isDark = false }) => {
           </div>
         </div>
 
-        {/* Standard Selection Tabs */}
-        <div className={`${bgCard} rounded-lg shadow-lg p-2 mb-6`}>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setActiveStandard("bs")}
-              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${activeStandard === "bs"
-                  ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md"
-                  : isDark
-                    ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-            >
-              <BookOpen className="w-5 h-5" />
-              <div className="text-left">
-                <div className="font-bold">BS Codes</div>
-                <div className="text-xs opacity-90">
-                  BS EN 1992-1-1 / BS 8110
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveStandard("eurocode")}
-              className={`flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold transition-all ${activeStandard === "eurocode"
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-                  : isDark
-                    ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-            >
-              <Euro className="w-5 h-5" />
-              <div className="text-left">
-                <div className="font-bold">Eurocodes</div>
-                <div className="text-xs opacity-90">EN 1992-1-1:2004 (EC2)</div>
-              </div>
-            </button>
-          </div>
+        {/* Standard Selection — shared DesignCodeToggle (cards variant).
+            State ids "bs" / "eurocode" are preserved unchanged. */}
+        <div className={`${bgCard} rounded-lg shadow-lg p-4 mb-6`}>
+          <DesignCodeToggle
+            value={activeStandard}
+            onChange={setActiveStandard}
+            variant="cards"
+            isDark={isDark}
+            options={[
+              {
+                id: "bs",
+                label: "BS Codes",
+                sublabel: "BS EN 1992-1-1 / BS 8110",
+                icon: <BookOpen className="w-5 h-5" />,
+                activeColor: "from-teal-500 to-teal-600",
+              },
+              {
+                id: "eurocode",
+                label: "Eurocodes",
+                sublabel: "EN 1992-1-1:2004 (EC2)",
+                icon: <Euro className="w-5 h-5" />,
+                activeColor: "from-blue-500 to-blue-600",
+              },
+            ]}
+          />
         </div>
 
         {/* Active Standard Information Banner */}

@@ -1,9 +1,9 @@
 {
   "model_id": "wall",
   "drawing_id": "wall-r1",
-  "entity_link_count": 68,
+  "entity_link_count": 74,
   "by_status": {
-    "ok": 68
+    "ok": 74
   },
   "elements": {
     "wall.wall": [
@@ -505,8 +505,8 @@
       {
         "handle": "7C",
         "drawing_id": "wall-r1",
-        "layer": "DIMENSIONS",
-        "entity_type": "LINE",
+        "layer": "CONCRETE",
+        "entity_type": "LWPOLYLINE",
         "view": "elevation",
         "status": "ok",
         "note": null
@@ -514,7 +514,7 @@
       {
         "handle": "7D",
         "drawing_id": "wall-r1",
-        "layer": "DIMENSIONS",
+        "layer": "REBAR_MAIN",
         "entity_type": "LINE",
         "view": "elevation",
         "status": "ok",
@@ -523,7 +523,7 @@
       {
         "handle": "7E",
         "drawing_id": "wall-r1",
-        "layer": "DIMENSIONS",
+        "layer": "REBAR_MAIN",
         "entity_type": "LINE",
         "view": "elevation",
         "status": "ok",
@@ -532,7 +532,7 @@
       {
         "handle": "7F",
         "drawing_id": "wall-r1",
-        "layer": "DIMENSIONS",
+        "layer": "REBAR_MAIN",
         "entity_type": "LINE",
         "view": "elevation",
         "status": "ok",
@@ -541,7 +541,7 @@
       {
         "handle": "80",
         "drawing_id": "wall-r1",
-        "layer": "DIMENSIONS",
+        "layer": "REBAR_MAIN",
         "entity_type": "LINE",
         "view": "elevation",
         "status": "ok",
@@ -550,7 +550,7 @@
       {
         "handle": "81",
         "drawing_id": "wall-r1",
-        "layer": "DIMENSIONS",
+        "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "elevation",
         "status": "ok",
@@ -612,6 +612,60 @@
       },
       {
         "handle": "88",
+        "drawing_id": "wall-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "89",
+        "drawing_id": "wall-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "8A",
+        "drawing_id": "wall-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "8B",
+        "drawing_id": "wall-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "8C",
+        "drawing_id": "wall-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "LINE",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "8D",
+        "drawing_id": "wall-r1",
+        "layer": "DIMENSIONS",
+        "entity_type": "TEXT",
+        "view": "elevation",
+        "status": "ok",
+        "note": null
+      },
+      {
+        "handle": "8E",
         "drawing_id": "wall-r1",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",

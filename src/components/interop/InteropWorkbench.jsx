@@ -34,9 +34,14 @@ import {
   Layers,
   Link2,
   Loader2,
+  PanelLeft,
+  PanelRight,
+  ChevronLeft,
+  ChevronRight,
   Play,
   RefreshCw,
   Upload,
+  X,
   XCircle,
 } from 'lucide-react';
 
@@ -50,6 +55,7 @@ import {
   fileToBase64,
   generate,
   reconcile,
+  runAnalysis,
 } from './cadIfcApi';
 
 // The three viewers pull in large third-party stacks (MLightCAD + three,
@@ -59,10 +65,10 @@ import {
 const CadDxfViewer = lazy(() => import('./CadDxfViewer'));
 const IfcBimViewer = lazy(() => import('./IfcBimViewer'));
 const ThatOpenBimViewer = lazy(() => import('./ThatOpenBimViewer'));
+const AnalysisDiagram2D = lazy(() => import('./AnalysisDiagram2D'));
 
 /** Placeholder while a viewer chunk downloads. */
-function ViewerFallback({ label }) {
-  return (
+function ViewerFallback({ label }) {  return (
     <div className="flex w-full h-full items-center justify-center gap-2 text-[12px] text-[#909399]">
       <Loader2 className="w-4 h-4 animate-spin" />
       <span>Loading {label}…</span>
@@ -88,6 +94,7 @@ const TABS = [
   { id: 'cad', label: '2D CAD (MLightCAD)' },
   { id: 'bim', label: 'BIM (That Open)' },
   { id: 'ifc', label: 'IFC check (web-ifc)' },
+  { id: 'analysis', label: 'Analysis (2D)' },
   { id: 'existing', label: 'Existing 3D (R3F)' },
 ];
 
@@ -147,6 +154,121 @@ function ParamInput({ item, value, onChange }) {
         className="px-1.5 py-1 text-[11px] bg-[#141414] border border-[#4c4d4f] rounded text-[#e5eaf3]"
       />
     </label>
+  );
+}
+
+/**
+ * The Task E tab: collect the analytical inputs **explicitly** and render the resulting
+ * 2D view (deformed shape, reactions, diagrams).
+ *
+ * Nothing is prefilled with an engineering value: `E`, the load intensity, the support
+ * scheme and the subdivision count all start empty/zero, and Run stays disabled until the
+ * user supplies them. That mirrors the backend, which rejects incomplete requests rather
+ * than assuming a material, restraint or load.
+ */
+function AnalysisPanel({ report, fallbackGenerator, onStatus }) {
+  const [eGpa, setEGpa] = useState('');
+  const [udlKnm, setUdlKnm] = useState('');
+  const [scheme, setScheme] = useState('pin-roller');
+  const [subdivisions, setSubdivisions] = useState(4);
+  const [results, setResults] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  const elementId = report?.ifc?.guids ? Object.keys(report.ifc.guids)[0] : null;
+  const ready =
+    Boolean(elementId) &&
+    Number(eGpa) > 0 &&
+    Number(udlKnm) > 0 &&
+    !busy;
+
+  const run = async () => {
+    setBusy(true);
+    setError(null);
+    if (onStatus) onStatus({ message: 'Running OpenSees analysis…' });
+    try {
+      const fixed = scheme === 'fixed-fixed';
+      const payload = await runAnalysis({
+        generator: fallbackGenerator,
+        youngsModulusPa: Number(eGpa) * 1e9,
+        supports: [
+          { node: `${elementId}#start`, ux: true, uy: true, rz: fixed },
+          { node: `${elementId}#end`, ux: false, uy: true, rz: fixed },
+        ],
+        elementLoads: [{ element: elementId, wy: -Number(udlKnm) * 1000 }],
+        subdivisions: Number(subdivisions) || 1,
+        caseId: `UDL-${scheme}`,
+      });
+      setResults(payload.results);
+      if (onStatus) {
+        onStatus({
+          message:
+            `Analysis complete (${payload.analytical_model.members} members, ` +
+            `residual ${payload.results.cases[0].equilibrium.residualRelative.toExponential(1)})`,
+        });
+      }
+    } catch (runError) {
+      setError(runError.message);
+      if (onStatus) onStatus({ message: `Analysis failed: ${runError.message}` });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full h-full min-h-0">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-1.5 bg-[#1d1e1f] border-b border-[#4c4d4f] text-[11px] shrink-0">
+        <span className="text-[#909399]">Analytical inputs (explicit)</span>
+        <label className="flex items-center gap-1">
+          <span className="text-[#909399]">E</span>
+          <input
+            type="number" min="0" step="1" value={eGpa} placeholder="GPa"
+            onChange={(event) => setEGpa(event.target.value)}
+            className="w-16 px-1 py-0.5 bg-[#141414] border border-[#4c4d4f] rounded"
+          />
+          <span className="text-[#909399]">GPa</span>
+        </label>
+        <label className="flex items-center gap-1">
+          <span className="text-[#909399]">UDL</span>
+          <input
+            type="number" min="0" step="0.1" value={udlKnm} placeholder="kN/m"
+            onChange={(event) => setUdlKnm(event.target.value)}
+            className="w-16 px-1 py-0.5 bg-[#141414] border border-[#4c4d4f] rounded"
+          />
+          <span className="text-[#909399]">kN/m</span>
+        </label>
+        <select
+          value={scheme}
+          onChange={(event) => setScheme(event.target.value)}
+          className="px-1 py-0.5 bg-[#141414] border border-[#4c4d4f] rounded"
+        >
+          <option value="pin-roller">pin + roller</option>
+          <option value="fixed-fixed">fixed + fixed</option>
+        </select>
+        <label className="flex items-center gap-1">
+          <span className="text-[#909399]">elements</span>
+          <input
+            type="number" min="1" max="20" step="1" value={subdivisions}
+            onChange={(event) => setSubdivisions(event.target.value)}
+            className="w-12 px-1 py-0.5 bg-[#141414] border border-[#4c4d4f] rounded"
+          />
+        </label>
+        <button
+          onClick={run}
+          disabled={!ready}
+          className="px-2 py-0.5 bg-[#409eff] hover:bg-[#66b1ff] disabled:opacity-40 text-white rounded"
+        >
+          {busy ? 'Running…' : 'Run analysis'}
+        </button>
+        {!elementId && <span className="text-amber-300">generate a model first</span>}
+        {error && <span className="text-rose-300 truncate max-w-[320px]">{error}</span>}
+      </div>
+      <div className="flex-1 min-h-0">
+        <Suspense fallback={<ViewerFallback label="analysis view" />}>
+          <AnalysisDiagram2D results={results} onStatus={onStatus} />
+        </Suspense>
+      </div>
+    </div>
   );
 }
 
@@ -338,6 +460,13 @@ export default function InteropWorkbench({ isDark = false }) {
     if (row.guid) setFocusGuid(row.guid);
   }, []);
 
+  const [showLeftSidebar, setShowLeftSidebar] = useState(
+    typeof window !== 'undefined' ? window.innerWidth > 900 : true
+  );
+  const [showRightSidebar, setShowRightSidebar] = useState(
+    typeof window !== 'undefined' ? window.innerWidth > 1100 : true
+  );
+
   return (
     <div className="flex flex-col w-full h-full bg-[#181818] text-[#e5eaf3] overflow-hidden">
       {/* ---- header ------------------------------------------------------ */}
@@ -350,6 +479,32 @@ export default function InteropWorkbench({ isDark = false }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-[#141414] p-0.5 rounded border border-[#333]">
+            <button
+              onClick={() => setShowLeftSidebar((v) => !v)}
+              className={`flex items-center gap-1 px-2 py-0.5 text-[10px] rounded transition-colors ${
+                showLeftSidebar
+                  ? 'bg-[#409eff] text-white font-medium'
+                  : 'text-[#909399] hover:text-[#e5eaf3]'
+              }`}
+              title={showLeftSidebar ? 'Hide Generator panel' : 'Show Generator panel'}
+            >
+              <PanelLeft className="w-3 h-3" />
+              <span>Generators</span>
+            </button>
+            <button
+              onClick={() => setShowRightSidebar((v) => !v)}
+              className={`flex items-center gap-1 px-2 py-0.5 text-[10px] rounded transition-colors ${
+                showRightSidebar
+                  ? 'bg-[#409eff] text-white font-medium'
+                  : 'text-[#909399] hover:text-[#e5eaf3]'
+              }`}
+              title={showRightSidebar ? 'Hide Elements panel' : 'Show Elements panel'}
+            >
+              <PanelRight className="w-3 h-3" />
+              <span>Elements</span>
+            </button>
+          </div>
           {health && (
             <span className="flex items-center gap-1 text-[10px] text-[#909399]">
               <Database className="w-3 h-3" />
@@ -378,10 +533,19 @@ export default function InteropWorkbench({ isDark = false }) {
 
       <div className="flex flex-1 min-h-0">
         {/* ---- generator panel ------------------------------------------- */}
-        <aside className="w-[290px] shrink-0 border-r border-[#4c4d4f] bg-[#1a1b1c] overflow-y-auto">
-          <div className="px-3 py-2 border-b border-[#4c4d4f]">
-            <div className="text-[10px] uppercase tracking-wide text-[#909399]">
-              Engineering generator
+        {showLeftSidebar && (
+          <aside className="w-[290px] max-w-[85vw] shrink-0 border-r border-[#4c4d4f] bg-[#1a1b1c] overflow-y-auto">
+            <div className="px-3 py-2 border-b border-[#4c4d4f] flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-wide text-[#909399]">
+                Engineering generator
+              </div>
+              <button
+                onClick={() => setShowLeftSidebar(false)}
+                className="text-[#909399] hover:text-[#e5eaf3] p-0.5 rounded"
+                title="Hide generator panel"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
             </div>
             <select
               value={generatorKey}
@@ -491,6 +655,7 @@ export default function InteropWorkbench({ isDark = false }) {
             </div>
           )}
         </aside>
+        )}
 
         {/* ---- viewers --------------------------------------------------- */}
         <main className="flex-1 flex flex-col min-w-0 min-h-0">
@@ -553,6 +718,13 @@ export default function InteropWorkbench({ isDark = false }) {
                 />
               </Suspense>
             )}
+            {tab === 'analysis' && (
+              <AnalysisPanel
+                report={result}
+                fallbackGenerator={spec?.key}
+                onStatus={({ message: statusMessage }) => setMessage(statusMessage)}
+              />
+            )}
             {tab === 'existing' && (
               <div className="p-4 text-[12px] text-[#c8c9cc] space-y-2">
                 <p>
@@ -585,13 +757,22 @@ export default function InteropWorkbench({ isDark = false }) {
         </main>
 
         {/* ---- identity / mapping panel ---------------------------------- */}
-        <aside className="w-[320px] shrink-0 border-l border-[#4c4d4f] bg-[#1a1b1c] overflow-y-auto">
-          <div className="px-3 py-2 border-b border-[#4c4d4f]">
-            <div className="flex items-center gap-1.5">
-              <Link2 className="w-3.5 h-3.5 text-[#409eff]" />
-              <span className="text-[10px] uppercase tracking-wide text-[#909399]">
-                Canonical elements
-              </span>
+        {showRightSidebar && (
+          <aside className="w-[320px] max-w-[85vw] shrink-0 border-l border-[#4c4d4f] bg-[#1a1b1c] overflow-y-auto">
+            <div className="px-3 py-2 border-b border-[#4c4d4f] flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Link2 className="w-3.5 h-3.5 text-[#409eff]" />
+                <span className="text-[10px] uppercase tracking-wide text-[#909399]">
+                  Canonical elements
+                </span>
+              </div>
+              <button
+                onClick={() => setShowRightSidebar(false)}
+                className="text-[#909399] hover:text-[#e5eaf3] p-0.5 rounded"
+                title="Hide elements panel"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
             {!elementRows.length && (
               <p className="mt-1 text-[11px] text-[#909399]">
@@ -782,6 +963,7 @@ export default function InteropWorkbench({ isDark = false }) {
             )}
           </div>
         </aside>
+        )}
       </div>
 
       {/* ---- status bar --------------------------------------------------- */}
