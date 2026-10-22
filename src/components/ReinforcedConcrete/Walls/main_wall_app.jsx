@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { BookOpen, Euro, Download, FileText, CheckCircle, AlertTriangle, Eye, ArrowRight } from "lucide-react";
+import { BookOpen, Euro, Download, FileText, CheckCircle, AlertTriangle, Eye, ArrowRight, Ruler } from "lucide-react";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import EurocodeWallCalculator from "./eurocode_wall_calc";
 import Wall3DVisualization from "../../components/wall_3d_helper";
 import WallDetailedDrawing from "./Wall_visualiser";
 import DesignCodeToggle from "../../shared/primitives/DesignCodeToggle";
+import { WorkspacePage, PageHeader, MetaChip } from "../../shared/ui";
 
 // BS Codes Wall Calculator Component
 const WallDesignCalculator = ({ isDark }) => {
@@ -374,50 +375,50 @@ const MainWallDesignApp = ({ isDark = false }) => {
   const textSecondary = isDark ? "text-slate-300" : "text-slate-600";
 
   return (
-    <div className={`min-h-screen ${bgMain} transition-colors duration-300`}>
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className={`${bgCard} rounded-lg shadow-lg p-6 mb-6`}>
-          <div>
-            <h1 className={`text-3xl font-bold ${textPrimary} mb-2`}>
-              RC Wall Design Calculator
-            </h1>
-            <p className={textSecondary}>
-              Professional structural engineering tool for reinforced concrete
-              walls
-            </p>
-          </div>
-        </div>
+    <WorkspacePage width="wide">
+      <PageHeader
+        title="RC Wall Design"
+        subtitle="Shear walls and bearing walls — vertical load resistance, lateral design and reinforcement."
+        icon={<Ruler size={22} aria-hidden="true" />}
+        meta={
+          <>
+            <MetaChip tone="info">
+              {activeStandard === "bs" ? "BS 8110 · BS EN 1992" : "EN 1992-1-1:2004"}
+            </MetaChip>
+            <MetaChip>{activeStandard === "bs" ? "UK National Annex" : "Eurocode 2"}</MetaChip>
+          </>
+        }
+      />
 
-        {/* Standard Selection — shared DesignCodeToggle (cards variant).
-            State ids "bs" / "eurocode" are preserved unchanged. */}
-        <div className={`${bgCard} rounded-lg shadow-lg p-4 mb-6`}>
-          <DesignCodeToggle
-            value={activeStandard}
-            onChange={setActiveStandard}
-            variant="cards"
-            isDark={isDark}
-            options={[
-              {
-                id: "bs",
-                label: "BS Codes",
-                sublabel: "BS EN 1992-1-1 / BS 8110",
-                icon: <BookOpen className="w-5 h-5" />,
-                activeColor: "from-teal-500 to-teal-600",
-              },
-              {
-                id: "eurocode",
-                label: "Eurocodes",
-                sublabel: "EN 1992-1-1:2004 (EC2)",
-                icon: <Euro className="w-5 h-5" />,
-                activeColor: "from-blue-500 to-blue-600",
-              },
-            ]}
-          />
-        </div>
+      {/* Standard Selection — shared DesignCodeToggle (cards variant).
+          State ids "bs" / "eurocode" are preserved unchanged. */}
+      <div className="mb-4">
+        <DesignCodeToggle
+          value={activeStandard}
+          onChange={setActiveStandard}
+          variant="cards"
+          isDark={isDark}
+          options={[
+            {
+              id: "bs",
+              label: "BS Codes",
+              sublabel: "BS EN 1992-1-1 / BS 8110",
+              icon: <BookOpen className="w-5 h-5" />,
+              activeColor: "from-teal-500 to-teal-600",
+            },
+            {
+              id: "eurocode",
+              label: "Eurocodes",
+              sublabel: "EN 1992-1-1:2004 (EC2)",
+              icon: <Euro className="w-5 h-5" />,
+              activeColor: "from-blue-500 to-blue-600",
+            },
+          ]}
+        />
+      </div>
 
-        {/* Active Standard Information Banner */}
-        <div
+      {/* Active Standard Information Banner */}
+      <div
           className={`${activeStandard === "bs"
               ? isDark
                 ? "bg-teal-900/30 border-teal-700"
@@ -448,16 +449,15 @@ const MainWallDesignApp = ({ isDark = false }) => {
           </div>
         </div>
 
-        {/* Calculator Content */}
-        <div className="transition-all duration-300">
-          {activeStandard === "bs" ? (
-            <WallDesignCalculator isDark={isDark} />
-          ) : (
-            <EurocodeWallCalculator isDark={isDark} />
-          )}
-        </div>
+      {/* Calculator Content */}
+      <div className="transition-all duration-300">
+        {activeStandard === "bs" ? (
+          <WallDesignCalculator isDark={isDark} />
+        ) : (
+          <EurocodeWallCalculator isDark={isDark} />
+        )}
       </div>
-    </div>
+    </WorkspacePage>
   );
 };
 

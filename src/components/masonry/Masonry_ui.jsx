@@ -614,21 +614,21 @@ export default function MasonryUI({ isDark }) {
         <div className={`min-h-screen ${isDark ? "bg-slate-950 text-slate-100" : "bg-gray-50 text-gray-900"} font-sans transition-colors duration-300`}>
             {/* Header */}
             <header className={`border-b ${isDark ? "border-slate-800 bg-slate-950/50" : "border-gray-200 bg-white/50"} backdrop-blur-md sticky top-0 z-10`}>
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-lg ${isDark ? "bg-blue-500/10" : "bg-blue-50"}`}>
+                <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:h-16 sm:px-6">
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+                        <div className={`hidden p-2 rounded-lg sm:block ${isDark ? "bg-blue-500/10" : "bg-blue-50"}`}>
                             <Layout className={`w-5 h-5 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
                         </div>
-                        <div>
-                            <h1 className="font-bold text-lg tracking-tight">Masonry Design</h1>
-                            <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"}`}>BS 5628-1:2005 · Working Stress</p>
+                        <div className="min-w-0">
+                            <h1 className="truncate font-bold text-base tracking-tight sm:text-lg">Masonry Design</h1>
+                            <p className={`truncate text-[11px] sm:text-xs ${isDark ? "text-slate-400" : "text-gray-500"}`}>BS 5628-1:2005 · Working Stress</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                         <button
                             onClick={() => setShowVisualizer(!showVisualizer)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${showVisualizer
+                            className={`flex min-h-[44px] items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all sm:px-4 sm:text-sm ${showVisualizer
                                 ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
                                 : (isDark ? "bg-slate-900 text-slate-300 hover:bg-slate-800" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200")
                                 }`}
@@ -637,7 +637,7 @@ export default function MasonryUI({ isDark }) {
                             {showVisualizer ? "Hide Visualizer" : "Show Visualizer"}
                         </button>
 
-                        <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isDark ? "bg-slate-900 text-slate-400" : "bg-gray-100 text-gray-500"
+                        <div className={`hidden px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider sm:block ${isDark ? "bg-slate-900 text-slate-400" : "bg-gray-100 text-gray-500"
                             }`}>
                             Unit: N · mm
                         </div>
@@ -645,7 +645,7 @@ export default function MasonryUI({ isDark }) {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-8">
+            <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
                 {/* Tabs */}
                 <div className={`flex gap-1 p-1 rounded-xl mb-8 w-fit ${isDark ? "bg-slate-900" : "bg-gray-200"}`}>
                     {[

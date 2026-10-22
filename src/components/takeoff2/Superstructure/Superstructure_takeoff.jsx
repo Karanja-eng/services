@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
+import { PageHeader, MetaChip } from '../../shared/ui';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 console.log("🚀 API BASE URL:", API_BASE);
@@ -359,36 +360,42 @@ const SuperstructureTakeoffApp = () => {
   };
 
   return (
-    <div className="flex bg-gray-50 h-screen flex-col">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-none">
-        <div className="flex items-center gap-3 mb-4">
-          <Building className="w-8 h-8 text-blue-800" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Superstructure Takeoff</h1>
-            <p className="text-sm text-gray-500">Comprehensive BOQ Calculator</p>
-          </div>
-        </div>
-
-        <UniversalTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+    <div className="min-h-full bg-gray-50">
+      <div className="mx-auto w-full max-w-7xl px-3 pt-4 sm:px-5">
+        <PageHeader
+          title="Superstructure takeoff"
+          subtitle="Walls, columns, beams, slabs, parapets and rainwater goods."
+          icon={<Building size={22} aria-hidden="true" />}
+          meta={
+            <>
+              <MetaChip tone="info">{takeoffData.length} item(s) generated</MetaChip>
+              {buildingData && <MetaChip>Plan detected</MetaChip>}
+            </>
+          }
         />
+        <div className="-mx-1 mb-4 overflow-x-auto">
+          <UniversalTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+          />
+        </div>
       </div>
 
-      <main className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+      <main className="mx-auto w-full max-w-7xl px-3 pb-8 sm:px-5">
         {activeTab === "calculator" && (
           <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* Calculator Sub-Nav */}
-            <div className="flex border-b border-gray-200 bg-gray-50">
+            {/* Calculator Sub-Nav — scrolls sideways on phones. */}
+            <div className="flex overflow-x-auto border-b border-gray-200 bg-gray-50 dark:border-slate-800 dark:bg-slate-800/60">
               {["automation", "walls", "columns", "beams", "slabs", "settings"].map(tab => (
                 <button
                   key={tab}
+                  type="button"
                   onClick={() => setCalcSubTab(tab)}
-                  className={`px-6 py-3 text-sm font-medium transition-colors ${calcSubTab === tab ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  aria-current={calcSubTab === tab ? 'page' : undefined}
+                  className={`min-h-[44px] shrink-0 px-4 py-3 text-xs font-bold transition-colors sm:px-6 sm:text-sm ${calcSubTab === tab ? 'border-b-2 border-blue-600 bg-white text-blue-600 dark:bg-slate-900 dark:text-blue-300' : 'text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700'}`}
                 >
-                  {tab === "automation" ? "Auto-Takeoff" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === "automation" ? "Auto-takeoff" : tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
               ))}
             </div>

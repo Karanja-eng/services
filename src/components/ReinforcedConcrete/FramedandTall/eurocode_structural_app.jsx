@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Moon, Sun, Menu, X, ChevronDown, ChevronRight, Code2, BookOpen, ToggleRight } from 'lucide-react';
+import { Building2, Calculator, Layers, Frame, Wind, Box, Ruler, FileText, Code2, BookOpen } from 'lucide-react';
 import * as THREE from 'three';
 import RCStructuralDesign from './rc_structural_design'
+import DesignCodeToggle from '../../shared/primitives/DesignCodeToggle';
+import { PageHeader, MetaChip } from '../../shared/ui';
 
 // ============================================================================
 // EUROCODE STRUCTURAL DESIGN COMPONENT
@@ -9,7 +11,6 @@ import RCStructuralDesign from './rc_structural_design'
 
 const EurocodeComponent = ({ theme, onThemeChange }) => {
   const [activeModule, setActiveModule] = useState('actions');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Actions State (EN 1990)
   const [actionsData, setActionsData] = useState({
@@ -536,24 +537,28 @@ const EurocodeComponent = ({ theme, onThemeChange }) => {
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} transition-colors duration-200`}>
       {/* Header */}
-      <header className={`${cardBg} border-b ${borderColor} px-6 py-4  top-0 z-50`}>
+      <header className={`${cardBg} border-b ${borderColor} px-3 py-2 sm:px-6 sm:py-3`}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
-              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <Code2 size={32} className="text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold">Eurocode Structural Design</h1>
-              <p className="text-sm opacity-70">EN 1990 • EN 1991 • EN 1992 • EN 1998 Compliant</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <Code2 size={24} className="shrink-0 text-blue-600" aria-hidden="true" />
+            <div className="min-w-0">
+              <h1 className="text-base font-bold sm:text-xl">Eurocode Structural Design</h1>
+              <p className="truncate text-[11px] opacity-70 sm:text-sm">
+                EN 1990 • EN 1991 • EN 1992 • EN 1998 compliant
+              </p>
             </div>
           </div>
         </div>
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'w-72' : 'w-0'} ${cardBg} border-r ${borderColor} transition-all duration-300 overflow-hidden`}>
+        {/* Sidebar: persistent from lg upwards. Below lg the same module list is
+            exposed through a native select inside the content column, so the
+            navigation never overlays or squeezes the design inputs. */}
+        <aside
+          aria-label="Eurocode design modules"
+          className={`${cardBg} hidden w-72 shrink-0 border-r ${borderColor} lg:block`}
+        >
           <nav className="p-4 space-y-2">
             {modules.map(module => (
               <button
@@ -572,8 +577,30 @@ const EurocodeComponent = ({ theme, onThemeChange }) => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto space-y-6">
+        <main className="min-w-0 flex-1 p-3 sm:p-6">
+          <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
+
+            {/* Mobile/tablet module picker — identical list to the desktop nav. */}
+            <div className="lg:hidden">
+              <label
+                htmlFor="eurocode-module"
+                className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400"
+              >
+                Design module
+              </label>
+              <select
+                id="eurocode-module"
+                value={activeModule}
+                onChange={(e) => setActiveModule(e.target.value)}
+                className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              >
+                {modules.map((module) => (
+                  <option key={module.id} value={module.id}>
+                    {module.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Actions Module (EN 1990) */}
             {activeModule === 'actions' && (
@@ -1129,63 +1156,73 @@ const EurocodeComponent = ({ theme, onThemeChange }) => {
 // MAIN APP SWITCHER COMPONENT
 // ============================================================================
 
+/**
+ * FramedStructureComponent — entry point for `/structural/manual/eurocode_structural_app`.
+ *
+ * The BS Codes branch renders the existing `RCStructuralDesign` workflow, which
+ * contains BOTH the regular framed-building modules and the tall-building
+ * modules (structural systems, computer modelling, robustness ties). The
+ * Eurocodes branch renders `EurocodeComponent`.
+ *
+ * UI cleanup: the page chrome and the code selector now come from the shared UI
+ * kit. `activeCode` values ('bs' / 'eurocode') are unchanged, and neither branch
+ * gains or loses a calculation path.
+ */
 const FramedStructureComponent = ({ isDark = false }) => {
   const [activeCode, setActiveCode] = useState('bs');
 
-  const bgColor = isDark ? 'bg-gray-900' : 'bg-white';
-  const textColor = isDark ? 'text-gray-100' : 'text-gray-900';
-  const cardBg = isDark ? 'bg-gray-800' : 'bg-gray-50';
-  const borderColor = isDark ? 'border-gray-700' : 'border-gray-200';
-
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor}`}>
-      {/* Code Selector */}
-      <div className="w-full px-6 py-4">
-        <div className={`${cardBg} rounded-xl p-4 border ${borderColor} flex items-center justify-between`}>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <ToggleRight size={18} className="text-blue-600" />
-              <span className="text-xs font-bold uppercase tracking-wider opacity-60">Code standard</span>
-            </div>
-
-            <div className={`flex p-1 ${isDark ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
-              <button
-                onClick={() => setActiveCode('bs')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-md transition-all text-sm font-bold ${activeCode === 'bs'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-500 hover:text-blue-600'
-                  }`}
-              >
-                <BookOpen size={16} />
-                BS Codes
-              </button>
-              <button
-                onClick={() => setActiveCode('eurocode')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-md transition-all text-sm font-bold ${activeCode === 'eurocode'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-500 hover:text-blue-600'
-                  }`}
-              >
-                <Code2 size={16} />
-                Eurocodes
-              </button>
-            </div>
-          </div>
-
-          <div className="text-[10px] font-medium opacity-40 uppercase tracking-widest hidden md:block">
-            {activeCode === 'bs' ? 'BS 8110 | BS 6399 | BS 8002' : 'EN 1990 | EN 1991 | EN 1992 | EN 1998'}
-          </div>
-        </div>
+    <div className={isDark ? 'dark' : ''}>
+      <div className="mx-auto w-full max-w-[1800px] px-3 pb-2 pt-4 sm:px-5">
+        <PageHeader
+          title="Framed & Tall Buildings"
+          subtitle={
+            activeCode === 'bs'
+              ? 'Regular framed buildings and tall-building systems under BS 8110 / BS 6399 / BS 8002.'
+              : 'EN 1990 / EN 1991 / EN 1992 / EN 1998 design workflow.'
+          }
+          icon={<Building2 size={22} aria-hidden="true" />}
+          meta={
+            <>
+              <MetaChip tone="info">
+                {activeCode === 'bs' ? 'BS 8110 · BS 6399' : 'EN 1990 · EN 1992 · EN 1998'}
+              </MetaChip>
+              <MetaChip>
+                {activeCode === 'bs'
+                  ? 'Gravity frames + tall lateral systems'
+                  : 'Actions · Flexure · Shear · Wind · Seismic'}
+              </MetaChip>
+            </>
+          }
+          actions={
+            <DesignCodeToggle
+              value={activeCode}
+              onChange={setActiveCode}
+              isDark={isDark}
+              ariaLabel="Design code standard"
+              options={[
+                {
+                  id: 'bs',
+                  label: 'BS Codes',
+                  icon: <BookOpen size={14} aria-hidden="true" />,
+                },
+                {
+                  id: 'eurocode',
+                  label: 'Eurocodes',
+                  icon: <Code2 size={14} aria-hidden="true" />,
+                },
+              ]}
+            />
+          }
+        />
       </div>
 
-      {/* Active Component Display */}
-      <div className="w-full px-6 pb-6">
-        {activeCode === 'eurocode' ? (
-          <EurocodeComponent isDark={isDark} />
-        ) : (
-          <RCStructuralDesign isDark={isDark} />
-        )}
-      </div>
+      {/* Active component display */}
+      {activeCode === 'eurocode' ? (
+        <EurocodeComponent isDark={isDark} />
+      ) : (
+        <RCStructuralDesign isDark={isDark} />
+      )}
     </div>
   );
 };

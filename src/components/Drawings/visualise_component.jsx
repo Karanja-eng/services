@@ -763,7 +763,7 @@ const StructuralVisualizationComponent = React.memo((props) => {
 
   // ========== RENDER ==========
   return (
-    <div className={`w-full h-screen flex ${bgClass} ${textPrimary} relative `}>
+    <div className={`flex h-full min-h-0 w-full ${bgClass} ${textPrimary} relative `}>
       {/* ==================== LEFT SIDEBAR ==================== */}
       {/* Sidebar toggle button — only visible when sidebar is closed */}
       {!sidebarOpen && (

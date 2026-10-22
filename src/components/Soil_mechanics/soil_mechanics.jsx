@@ -3,9 +3,15 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Calculator, Layers, Beaker, Mountain, Home, TrendingDown, Info, Download, FileText, Database, Cuboid, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text, Box } from '@react-three/drei';
+import { NumberField, ErrorNotice } from '../shared/ui';
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:8000/soil';
+// API Configuration.
+// PRE-EXISTING CONFIGURATION, NOT CHANGED BY THE UI CLEANUP:
+// this module has always targeted port 8000 while the main FastAPI app runs on
+// 8001. The default is preserved so behaviour is identical, but it can now be
+// overridden without editing source (set REACT_APP_SOIL_API_URL at build time).
+const API_BASE_URL =
+    process.env.REACT_APP_SOIL_API_URL || 'http://localhost:8000/soil';
 
 // Main Application
 export default function SoilMechanicsModule() {
@@ -34,35 +40,35 @@ export default function SoilMechanicsModule() {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-full bg-gray-50">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Calculator className="w-8 h-8 text-gray-700" />
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Soil Mechanics Module</h1>
-                                <p className="text-sm text-gray-600">Professional Geotechnical Engineering Platform v2.0</p>
+            <header className="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
+                <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                            <Calculator className="h-6 w-6 shrink-0 text-gray-700 sm:h-8 sm:w-8" aria-hidden="true" />
+                            <div className="min-w-0">
+                                <h1 className="truncate text-base font-bold text-gray-900 sm:text-2xl">Soil Mechanics Module</h1>
+                                <p className="hidden text-xs text-gray-600 sm:block sm:text-sm">Professional Geotechnical Engineering Platform v2.0</p>
                             </div>
                         </div>
 
-                        {/* API Status Indicator */}
-                        <div className="flex items-center gap-2">
+                        {/* API Status Indicator — text label always accompanies the icon. */}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                             {apiStatus === 'connected' ? (
                                 <>
-                                    <CheckCircle className="w-5 h-5 text-green-600" />
-                                    <span className="text-sm text-green-600 font-medium">API Connected</span>
+                                    <CheckCircle className="h-4 w-4 text-green-600 sm:h-5 sm:w-5" aria-hidden="true" />
+                                    <span className="text-xs font-medium text-green-700 sm:text-sm">API Connected</span>
                                 </>
                             ) : apiStatus === 'disconnected' ? (
                                 <>
-                                    <AlertCircle className="w-5 h-5 text-red-600" />
-                                    <span className="text-sm text-red-600 font-medium">API Offline</span>
+                                    <AlertCircle className="h-4 w-4 text-red-600 sm:h-5 sm:w-5" aria-hidden="true" />
+                                    <span className="text-xs font-medium text-red-700 sm:text-sm">API Offline</span>
                                 </>
                             ) : (
                                 <>
-                                    <Loader className="w-5 h-5 text-gray-400 animate-spin" />
-                                    <span className="text-sm text-gray-600">Checking...</span>
+                                    <Loader className="h-4 w-4 animate-spin text-gray-400 sm:h-5 sm:w-5" aria-hidden="true" />
+                                    <span className="text-xs text-gray-600 sm:text-sm">Checking…</span>
                                 </>
                             )}
                         </div>
@@ -71,8 +77,8 @@ export default function SoilMechanicsModule() {
             </header>
 
             {/* Navigation */}
-            <nav className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-6">
+            <nav className="border-b border-gray-200 bg-white">
+                <div className="mx-auto max-w-7xl px-2 sm:px-6">
                     <div className="flex gap-1 overflow-x-auto py-2">
                         {modules.map((mod) => {
                             const Icon = mod.icon;
@@ -170,7 +176,7 @@ function PhaseRelationsModule() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Phase Relationships</h2>
 
                 <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                         <InputField label="Mass of Wet Soil (g)" value={inputs.massWet} onChange={(v) => setInputs({ ...inputs, massWet: v })} />
                         <InputField label="Mass of Dry Soil (g)" value={inputs.massDry} onChange={(v) => setInputs({ ...inputs, massDry: v })} />
                         <InputField label="Total Mass (kg)" value={inputs.massTotal} onChange={(v) => setInputs({ ...inputs, massTotal: v })} />
@@ -342,7 +348,7 @@ function CompactionModule() {
 
                 {results && (
                     <div className="mb-6 bg-gray-50 rounded-lg p-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                             <ResultRow label="Optimum Moisture Content" value={`${results.optimum_moisture_content}%`} />
                             <ResultRow label="Maximum Dry Density" value={`${results.maximum_dry_density} kN/m³`} />
                             <ResultRow label="Curve Fit Quality (R²)" value={results.r_squared} />
@@ -480,7 +486,7 @@ function BearingCapacityModule() {
         <div className="bg-white rounded-lg border border-gray-200 p-6 max-w-2xl">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Bearing Capacity (Terzaghi)</h2>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                 <InputField label="Cohesion c (kPa)" value={params.c} onChange={(v) => setParams({ ...params, c: v })} />
                 <InputField label="Friction Angle φ (°)" value={params.phi} onChange={(v) => setParams({ ...params, phi: v })} />
                 <InputField label="Unit Weight γ (kN/m³)" value={params.gamma} onChange={(v) => setParams({ ...params, gamma: v })} />
@@ -494,7 +500,7 @@ function BearingCapacityModule() {
 
             {capacity && (
                 <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                         <ResultRow label="Ultimate qᵤ" value={`${capacity.ultimate_bearing_capacity} kPa`} />
                         <ResultRow label="Allowable qₐ (FS=3)" value={`${capacity.allowable_bearing_capacity} kPa`} />
                     </div>
@@ -539,7 +545,7 @@ function ConsolidationModule() {
         <div className="bg-white rounded-lg border border-gray-200 p-6 max-w-2xl">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Consolidation Settlement (ASTM D2435)</h2>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                 <InputField label="Initial Thickness H₀ (m)" value={params.H0} onChange={(v) => setParams({ ...params, H0: v })} />
                 <InputField label="Initial Void Ratio e₀" value={params.e0} onChange={(v) => setParams({ ...params, e0: v })} />
                 <InputField label="Compression Index Cc" value={params.Cc} onChange={(v) => setParams({ ...params, Cc: v })} />
@@ -607,7 +613,7 @@ function SlopeStabilityModule() {
                     <button onClick={() => setMethod('compare')} className={`px-4 py-2 rounded ${method === 'compare' ? 'bg-gray-900 text-white' : 'bg-gray-100'}`}>Compare All</button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <InputField label="Slope Height H (m)" value={params.H} onChange={(v) => setParams({ ...params, H: v })} />
                     <InputField label="Slope Angle β (°)" value={params.beta} onChange={(v) => setParams({ ...params, beta: v })} />
                     <InputField label="Unit Weight γ (kN/m³)" value={params.gamma} onChange={(v) => setParams({ ...params, gamma: v })} />
@@ -793,7 +799,7 @@ function DatabaseModule() {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Project Database</h2>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <InputField label="Project Number" value={newProject.number} onChange={(v) => setNewProject({ ...newProject, number: v })} />
                     <InputField label="Project Name" value={newProject.name} onChange={(v) => setNewProject({ ...newProject, name: v })} />
                     <InputField label="Client" value={newProject.client} onChange={(v) => setNewProject({ ...newProject, client: v })} />
@@ -954,18 +960,23 @@ function ExportModule() {
 }
 
 // ==================== UTILITY COMPONENTS ====================
-function InputField({ label, value, onChange, step = 1 }) {
+/**
+ * Local field adapter over the shared engineering field.
+ *
+ * The original contract is preserved exactly: the caller's `onChange` receives
+ * the parsed number (`parseFloat(value) || 0`), never the raw string. Only the
+ * presentation now comes from the shared kit, so every geotechnical input picks
+ * up the same label/unit/44px/validation treatment.
+ */
+function InputField({ label, value, onChange, step = 1, unit }) {
     return (
-        <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-            <input
-                type="number"
-                value={value}
-                onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-                step={step}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-        </div>
+        <NumberField
+            label={label}
+            unit={unit}
+            step={step}
+            value={value}
+            onChange={(raw) => onChange(parseFloat(raw) || 0)}
+        />
     );
 }
 
@@ -979,15 +990,7 @@ function ResultRow({ label, value }) {
 }
 
 function ErrorAlert({ message }) {
-    return (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-                <p className="text-sm font-semibold text-red-900">Error</p>
-                <p className="text-sm text-red-700">{message}</p>
-            </div>
-        </div>
-    );
+    return <ErrorNotice title="Calculation error" message={message} />;
 }
 
 function PhaseDiagram() {

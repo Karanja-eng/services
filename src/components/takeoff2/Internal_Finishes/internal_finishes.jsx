@@ -5,6 +5,17 @@ import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
+import {
+  PageHeader,
+  Section,
+  MetaChip,
+  NumberField,
+  SelectField,
+  ErrorNotice,
+  ActionBar,
+  action,
+  layout,
+} from '../../shared/ui';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 
@@ -40,6 +51,7 @@ const InternalFinishesTakeoff = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [calcError, setCalcError] = useState(null);
   const [calcSubTab, setCalcSubTab] = useState("automation");
   const [planImageUrl, setPlanImageUrl] = useState(null);
   const [activeSegment, setActiveSegment] = useState("all");
@@ -161,6 +173,7 @@ const InternalFinishesTakeoff = () => {
 
   const calculateQuantities = async () => {
     setLoading(true);
+    setCalcError(null);
     try {
       const payload = {
         rooms: rooms.map(r => ({
@@ -206,31 +219,42 @@ const InternalFinishesTakeoff = () => {
       }
     } catch (err) {
       console.error("Calculation error:", err);
-      alert("Calculation failed. Backend might be offline.");
+      // Replaces the previous alert(); the failure is reported in-page and no
+      // quantities are invented.
+      setCalcError(
+        err?.response?.data?.detail ||
+          err?.message ||
+          "Calculation failed. The backend may be offline."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-none">
-        <div className="flex items-center gap-3 mb-4">
-          <Paintbrush className="w-8 h-8 text-blue-800" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Internal Finishes Takeoff</h1>
-            <p className="text-sm text-gray-500">Floors, Walls & Ceilings</p>
-          </div>
-        </div>
-
-        <UniversalTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+    <div className="min-h-full bg-gray-50">
+      <div className="mx-auto w-full max-w-7xl px-3 pt-4 sm:px-5">
+        <PageHeader
+          title="Internal finishes takeoff"
+          subtitle="Floors, walls and ceilings — plaster, screed, tiling, paint and skirting."
+          icon={<Paintbrush size={22} aria-hidden="true" />}
+          meta={
+            <>
+              <MetaChip tone="info">{rooms.length} room(s)</MetaChip>
+              <MetaChip>{takeoffData.length} item(s) generated</MetaChip>
+            </>
+          }
         />
+        <div className="-mx-1 mb-4 overflow-x-auto">
+          <UniversalTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+          />
+        </div>
       </div>
 
-      <main className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+      <main className="mx-auto w-full max-w-7xl px-3 pb-8 sm:px-5">
         {activeTab === "calculator" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Input Panel */}
@@ -286,47 +310,104 @@ const InternalFinishesTakeoff = () => {
                     </div>
                   )}
 
-                  <div className="mt-6 border-t pt-6">
-                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Specifications</h3>
-                    <div className="space-y-4">
-                      <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Plaster Thickness (mm)</label><input type="number" value={materials.plasterThickness} onChange={(e) => setMaterials({ ...materials, plasterThickness: e.target.value })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" /></div>
-                      <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Paint Coats</label><input type="number" value={materials.paintCoats} onChange={(e) => setMaterials({ ...materials, paintCoats: e.target.value })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" /></div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Ceiling</label>
-                          <select value={materials.ceilingFinish} onChange={(e) => setMaterials({ ...materials, ceilingFinish: e.target.value })} className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm bg-white">
-                            <option value="gypsum">Gypsum</option>
-                            <option value="plaster">Plaster</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Wall Tiling</label>
-                          <select value={materials.wallTiling} onChange={(e) => setMaterials({ ...materials, wallTiling: e.target.value })} className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm bg-white">
-                            <option value="none">None</option>
-                            <option value="partial">Partial</option>
-                            <option value="full">Full</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={calculateQuantities}
-                      disabled={loading}
-                      className="w-full mt-8 bg-blue-600 text-white py-4 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
+                  <div className="mt-6 border-t border-gray-200 pt-5 dark:border-slate-800">
+                    <Section
+                      title="Finish specifications"
+                      description="Thicknesses are in millimetres; they feed the quantity calculation directly."
+                      tone="muted"
                     >
-                      <Calculator className="w-4 h-4" />
-                      {loading ? "Calculating..." : "Run Analysis"}
-                    </button>
+                      <div className={layout.formGrid}>
+                        <NumberField
+                          label="Plaster thickness"
+                          unit="mm"
+                          step="1"
+                          min={0}
+                          value={materials.plasterThickness}
+                          onChange={(v) => setMaterials({ ...materials, plasterThickness: v })}
+                        />
+                        <NumberField
+                          label="Screed thickness"
+                          unit="mm"
+                          step="1"
+                          min={0}
+                          value={materials.screedThickness}
+                          onChange={(v) => setMaterials({ ...materials, screedThickness: v })}
+                        />
+                        <NumberField
+                          label="Tile size"
+                          unit="mm"
+                          step="1"
+                          min={0}
+                          value={materials.tileSize}
+                          onChange={(v) => setMaterials({ ...materials, tileSize: v })}
+                        />
+                        <NumberField
+                          label="Skirting height"
+                          unit="mm"
+                          step="1"
+                          min={0}
+                          value={materials.skirtingHeight}
+                          onChange={(v) => setMaterials({ ...materials, skirtingHeight: v })}
+                        />
+                        <NumberField
+                          label="Paint coats"
+                          unit="no."
+                          step="1"
+                          min={0}
+                          inputMode="numeric"
+                          value={materials.paintCoats}
+                          onChange={(v) => setMaterials({ ...materials, paintCoats: v })}
+                        />
+                        <SelectField
+                          label="Ceiling finish"
+                          value={materials.ceilingFinish}
+                          onChange={(v) => setMaterials({ ...materials, ceilingFinish: v })}
+                          options={[
+                            { value: 'gypsum', label: 'Gypsum' },
+                            { value: 'plaster', label: 'Plaster' },
+                          ]}
+                        />
+                        <SelectField
+                          label="Wall tiling"
+                          value={materials.wallTiling}
+                          onChange={(v) => setMaterials({ ...materials, wallTiling: v })}
+                          options={[
+                            { value: 'none', label: 'None' },
+                            { value: 'partial', label: 'Partial' },
+                            { value: 'full', label: 'Full' },
+                          ]}
+                        />
+                      </div>
+                    </Section>
+
+                    <ActionBar sticky={false} hint="Rooms are listed on the right; each room is measured individually.">
+                      <button
+                        type="button"
+                        onClick={calculateQuantities}
+                        disabled={loading}
+                        className={`${action.base} ${action.primary}`}
+                      >
+                        <Calculator className="w-4 h-4" aria-hidden="true" />
+                        {loading ? "Calculating…" : "Run analysis"}
+                      </button>
+                    </ActionBar>
+
+                    {calcError && (
+                      <ErrorNotice
+                        title="Finishes takeoff failed"
+                        message={calcError}
+                        onRetry={calculateQuantities}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="lg:col-span-2 space-y-6 flex flex-col h-[calc(100vh-200px)]">
+            <div className="flex flex-col gap-4 lg:col-span-2">
               {/* Visualizer Panel */}
-              <div className="bg-slate-900 rounded-2xl shadow-xl overflow-hidden flex-1 relative border-4 border-white">
+              <div className="relative min-h-[320px] flex-1 overflow-hidden rounded-2xl border-4 border-white bg-slate-900 shadow-xl sm:min-h-[420px]">
                 {planImageUrl ? (
                   <div className="absolute inset-0 bg-white">
                     {planImageUrl === "cad_placeholder" ? (
@@ -421,7 +502,7 @@ const InternalFinishesTakeoff = () => {
                         <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-blue-600 text-gray-400 group-hover:text-white flex items-center justify-center text-xs font-black transition-all">
                           {idx + 1}
                         </div>
-                        <div className="flex-1 grid grid-cols-4 gap-4 items-center">
+                        <div className="flex-1 grid grid-cols-1 gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
                           <input
                             type="text"
                             value={room.name}

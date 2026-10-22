@@ -217,15 +217,15 @@ const ColumnApp = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-full bg-gray-100">
       {/* Header */}
       <header className="bg-gray-800 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Column Design System</h1>
-              <p className="text-gray-300 mt-1">
-                Professional BS EN 1992-1-1 Compliant Tool
+        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold leading-tight sm:text-2xl lg:text-3xl">Column Design System</h1>
+              <p className="mt-0.5 text-xs text-gray-300 sm:mt-1 sm:text-sm">
+                Professional BS EN 1992-1-1 compliant tool
               </p>
             </div>
 
@@ -234,9 +234,9 @@ const ColumnApp = () => {
       </header>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-1">
+      <div className="border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-2 sm:px-4">
+          <div className="flex gap-1 overflow-x-auto">
             <TabButton
               active={!chartVisible}
               onClick={() => setChartVisible(false)}
@@ -257,7 +257,7 @@ const ColumnApp = () => {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="mx-auto max-w-7xl px-2 py-4 sm:px-4 sm:py-8">
         <div>
           {/* Input View */}
           {!chartVisible && (

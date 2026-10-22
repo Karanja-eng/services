@@ -13,12 +13,20 @@ import FoundationMainApp from "../Foundations/foundation_main_app";
 import WallDesignCalculator from "../Walls/main_wall_app";
 import MainSlabApp from "../Slabs/main_slab_app";
 
+// Shared UI kit — framed-building geometry/materials are composed from these so
+// the regular-frame and tall-building workflows cannot drift apart visually.
+import {
+  BuildingScopeSelector,
+  StoreyGridFields,
+} from '../../shared/engineering/FrameInputs';
+import { NumberField, SelectField } from '../../shared/ui/Fields';
+import { control, text } from '../../shared/ui/tokens';
+
 // Theme Context
 const ThemeContext = React.createContext();
 
 const RCStructuralDesign = ({ isDark = false }) => {
   const [activeModule, setActiveModule] = useState('loads');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedSections, setExpandedSections] = useState({
     loads: true,
     ties: false,
@@ -90,8 +98,16 @@ const RCStructuralDesign = ({ isDark = false }) => {
   const [showReferenceTables, setShowReferenceTables] = useState(false);
   const [results, setResults] = useState(null);
   const [builderFullScreen, setBuilderFullScreen] = useState(false);
+  // Regular framed vs tall building is a *scope indicator*, not a second
+  // workflow: it only moves the user to the existing module for that scope.
+  const [scope, setScope] = useState('regular');
   const isFullScreen = activeModule === 'builder' || builderFullScreen;
   const canvasRef = useRef(null);
+
+  const handleScopeChange = (nextScope) => {
+    setScope(nextScope);
+    setActiveModule(nextScope === 'tall' ? 'systems' : 'frame');
+  };
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -442,51 +458,93 @@ const RCStructuralDesign = ({ isDark = false }) => {
 
   const modules = [
     { id: 'builder', icon: Building2, label: 'Structure Builder', section: 'modeling' },
+    { id: 'reference', icon: FileText, label: 'BS Code Tables', section: 'modeling' },
+    {
+      id: 'modeling',
+      icon: Box,
+      label: 'Computer Modelling',
+      section: 'modeling',
+      scopeTag: 'Tall',
+    },
     { id: 'loads', icon: Calculator, label: 'Loads & Combinations', section: 'analysis' },
-    { id: 'frame', icon: Frame, label: 'Frame Analysis', section: 'analysis' },
+    {
+      id: 'frame',
+      icon: Frame,
+      label: 'Frame Analysis',
+      section: 'analysis',
+      scopeTag: 'Regular',
+    },
     { id: 'visualization', icon: TrendingUp, label: '3D Building View', section: 'analysis' },
+    {
+      id: 'systems',
+      icon: Building2,
+      label: 'Structural Systems',
+      section: 'tall',
+      scopeTag: 'Tall',
+    },
+    { id: 'ties', icon: Layers, label: 'Robustness Ties', section: 'tall', scopeTag: 'Tall' },
     { id: 'design_dashboard', icon: Box, label: 'Member Design Dashboard', section: 'design' },
     { id: 'beam_suite', icon: Ruler, label: 'Beam Design Suite', section: 'design' },
     { id: 'column_main', icon: Columns, label: 'Column Design App', section: 'design' },
     { id: 'slab_app', icon: Layers, label: 'Slab Design Suite', section: 'design' },
     { id: 'wall_calc', icon: Wind, label: 'Wall Design App', section: 'design' },
     { id: 'foundation_app', icon: Box, label: 'Foundation Design', section: 'design' },
-    { id: 'reference', icon: FileText, label: 'BS Code Tables', section: 'modeling' },
-    { id: 'modeling', icon: Box, label: 'System Properties', section: 'modeling' },
   ];
 
   const sections = [
-    { id: 'modeling', label: '1. Build & Setup', icon: Building2 },
-    { id: 'analysis', label: '2. Loads & Analysis', icon: Calculator },
-    { id: 'design', label: '3. Member Design', icon: Box },
+    { id: 'modeling', label: '1. Build & set up', icon: Building2 },
+    { id: 'analysis', label: '2. Loads & analysis', icon: Calculator },
+    { id: 'tall', label: '3. Tall-building systems', icon: Building2 },
+    { id: 'design', label: '4. Member design', icon: Box },
   ];
 
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor} transition-colors duration-200`}>
-      <div className="flex">
-        {/* Sidebar */}
+    <div className={`min-h-full ${bgColor} ${textColor} transition-colors duration-200`}>
+      <div className="flex min-h-full">
+        {/* Sidebar — persistent from lg upwards, replaced by a module selector on
+            phones/tablets so the navigation never consumes the drawing area. */}
         {!isFullScreen && (
-          <aside className={`${sidebarOpen ? 'w-72' : 'w-0'} ${cardBg} border-r ${borderColor} transition-all duration-300 overflow-hidden`}>
-            <div className="p-4 space-y-6">
+          <aside className={`hidden lg:block w-64 shrink-0 ${cardBg} border-r ${borderColor}`}>
+            <div className="sticky top-0 max-h-[calc(100dvh-7rem)] space-y-5 overflow-y-auto p-3">
               {sections.map(section => (
                 <div key={section.id}>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-3 px-2">
+                  <h3 className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
                     {section.label}
                   </h3>
                   <nav className="space-y-1">
-                    {modules.filter(m => m.section === section.id).map(module => (
-                      <button
-                        key={module.id}
-                        onClick={() => setActiveModule(module.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${activeModule === module.id
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : `${inputBg} hover:bg-blue-50 hover:text-blue-600`
+                    {modules.filter(m => m.section === section.id).map(module => {
+                      const isActive = activeModule === module.id;
+                      return (
+                        <button
+                          key={module.id}
+                          type="button"
+                          onClick={() => setActiveModule(module.id)}
+                          aria-current={isActive ? 'page' : undefined}
+                          aria-pressed={isActive}
+                          className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                            isActive
+                              ? 'bg-blue-600 text-white shadow-md'
+                              : `${inputBg} hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-300`
                           }`}
-                      >
-                        <module.icon size={18} />
-                        <span className="text-xs font-bold uppercase tracking-tight">{module.label}</span>
-                      </button>
-                    ))}
+                        >
+                          <module.icon size={16} className="shrink-0" aria-hidden="true" />
+                          <span className="min-w-0 flex-1 truncate text-left text-[11px] font-bold uppercase tracking-tight">
+                            {module.label}
+                          </span>
+                          {module.scopeTag && (
+                            <span
+                              className={`shrink-0 rounded px-1 py-0.5 text-[8px] font-bold uppercase ${
+                                isActive
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              {module.scopeTag}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </nav>
                 </div>
               ))}
@@ -495,9 +553,55 @@ const RCStructuralDesign = ({ isDark = false }) => {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 ${activeModule === 'builder' ? (builderFullScreen ? 'h-[calc(100vh-96px)] overflow-hidden p-0' : 'h-screen overflow-hidden') : 'p-6'}`}>
+        <main
+          className={`min-w-0 flex-1 ${
+            activeModule === 'builder'
+              ? builderFullScreen
+                ? 'h-[calc(100vh-96px)] overflow-hidden p-0'
+                : 'h-[calc(100dvh-7rem)] overflow-hidden'
+              : 'p-3 sm:p-4 lg:p-5'
+          }`}
+        >
 
-          <div className={activeModule === 'builder' ? "h-full w-full" : "w-full max-w-none space-y-6"}>
+          <div className={activeModule === 'builder' ? "h-full w-full" : "w-full max-w-none space-y-4 sm:space-y-5"}>
+            {/* Module selector for phones and tablets (same modules as the aside). */}
+            {!isFullScreen && (
+              <div className="space-y-2 lg:hidden">
+                <label
+                  htmlFor="framed-module"
+                  className={`block text-[11px] font-bold uppercase tracking-wider ${text.helper}`}
+                >
+                  Module
+                </label>
+                <select
+                  id="framed-module"
+                  value={activeModule}
+                  onChange={(e) => setActiveModule(e.target.value)}
+                  className={control.base}
+                >
+                  {sections.map((section) => (
+                    <optgroup key={section.id} label={section.label}>
+                      {modules
+                        .filter((m) => m.section === section.id)
+                        .map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.label}
+                            {m.scopeTag ? ` (${m.scopeTag})` : ''}
+                          </option>
+                        ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Regular framed vs tall building scope. Both scopes remain fully
+                reachable; the selector only states which analysis governs. */}
+            {!isFullScreen && (
+              <div className="space-y-2">
+                <BuildingScopeSelector value={scope} onChange={handleScopeChange} />
+              </div>
+            )}
             {/* Load Combinations Module */}
             {activeModule === 'loads' && (
               <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
@@ -605,69 +709,25 @@ const RCStructuralDesign = ({ isDark = false }) => {
                   <Frame size={24} className="text-blue-600" />
                   Frame Analysis
                 </h2>
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Method</label>
-                    <select
-                      value={frameData.method}
-                      onChange={(e) => setFrameData({ ...frameData, method: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                    >
-                      <option value="portal">Portal Method</option>
-                      <option value="cantilever">Cantilever Method</option>
-                      <option value="simple">Simple Method</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Number of Floors</label>
-                    <input
-                      type="number"
-                      value={frameData.floors}
-                      onChange={(e) => setFrameData({ ...frameData, floors: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Floors"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Number of Bays</label>
-                    <input
-                      type="number"
-                      value={frameData.bays}
-                      onChange={(e) => setFrameData({ ...frameData, bays: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Bays"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Story Height (m)</label>
-                    <input
-                      type="number"
-                      value={frameData.storyHeight}
-                      onChange={(e) => setFrameData({ ...frameData, storyHeight: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Height"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Bay Width (m)</label>
-                    <input
-                      type="number"
-                      value={frameData.bayWidth}
-                      onChange={(e) => setFrameData({ ...frameData, bayWidth: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Width"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Lateral Load (kN)</label>
-                    <input
-                      type="number"
-                      value={frameData.lateralLoad}
-                      onChange={(e) => setFrameData({ ...frameData, lateralLoad: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Load"
-                    />
-                  </div>
+                <div className="mb-6 space-y-4">
+                  <SelectField
+                    label="Analysis method"
+                    value={frameData.method}
+                    onChange={(value) => setFrameData({ ...frameData, method: value })}
+                    options={[
+                      { value: 'portal', label: 'Portal Method' },
+                      { value: 'cantilever', label: 'Cantilever Method' },
+                      { value: 'simple', label: 'Simple Method' },
+                    ]}
+                  />
+                  {/* Shared storey/bay geometry — the same composition used by the
+                      tall-building scope, so both stay visually identical. */}
+                  <StoreyGridFields
+                    value={frameData}
+                    onChange={(patch) => setFrameData({ ...frameData, ...patch })}
+                    showLateralLoad
+                    note="Geometry fields are shared with the tall-building modules. The analysis below remains the BS 8110 first-order frame method."
+                  />
                 </div>
                 <button
                   onClick={handleCalculate}
@@ -685,63 +745,60 @@ const RCStructuralDesign = ({ isDark = false }) => {
                   <Building2 size={24} className="text-blue-600" />
                   Structural Systems
                 </h2>
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-2">System Type</label>
-                    <select
-                      value={systemData.type}
-                      onChange={(e) => setSystemData({ ...systemData, type: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                    >
-                      <option value="rigid_frame">Rigid Frame</option>
-                      <option value="braced_frame">Braced Frame</option>
-                      <option value="shear_wall">Shear Wall</option>
-                      <option value="coupled_wall">Coupled Wall</option>
-                      <option value="framed_tube">Framed Tube</option>
-                      <option value="tube_in_tube">Tube-in-Tube</option>
-                      <option value="outrigger">Outrigger System</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Building Height (m)</label>
-                    <input
-                      type="number"
+                <div className="mb-6 space-y-4">
+                  <SelectField
+                    label="Lateral-force resisting system"
+                    hint="Tall-building systems are analysed by the dedicated structural-system endpoint; they are not reduced to a portal frame."
+                    value={systemData.type}
+                    onChange={(value) => setSystemData({ ...systemData, type: value })}
+                    options={[
+                      { value: 'rigid_frame', label: 'Rigid Frame' },
+                      { value: 'braced_frame', label: 'Braced Frame' },
+                      { value: 'shear_wall', label: 'Shear Wall' },
+                      { value: 'coupled_wall', label: 'Coupled Wall' },
+                      { value: 'framed_tube', label: 'Framed Tube' },
+                      { value: 'tube_in_tube', label: 'Tube-in-Tube' },
+                      { value: 'outrigger', label: 'Outrigger System' },
+                    ]}
+                  />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                    <NumberField
+                      label="Building height"
+                      unit="m"
+                      min={0}
+                      step="0.1"
                       value={systemData.height}
-                      onChange={(e) => setSystemData({ ...systemData, height: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Height"
+                      onChange={(value) => setSystemData({ ...systemData, height: value })}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Building Width (m)</label>
-                    <input
-                      type="number"
+                    <NumberField
+                      label="Building width"
+                      unit="m"
+                      min={0}
+                      step="0.1"
                       value={systemData.width}
-                      onChange={(e) => setSystemData({ ...systemData, width: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Width"
+                      onChange={(value) => setSystemData({ ...systemData, width: value })}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Building Depth (m)</label>
-                    <input
-                      type="number"
+                    <NumberField
+                      label="Building depth"
+                      unit="m"
+                      min={0}
+                      step="0.1"
                       value={systemData.depth}
-                      onChange={(e) => setSystemData({ ...systemData, depth: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Depth"
+                      onChange={(value) => setSystemData({ ...systemData, depth: value })}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Core Size (m)</label>
-                    <input
-                      type="number"
+                    <NumberField
+                      label="Core size"
+                      unit="m"
+                      min={0}
+                      step="0.1"
                       value={systemData.coreSize}
-                      onChange={(e) => setSystemData({ ...systemData, coreSize: e.target.value })}
-                      className={`w-full px-4 py-2 rounded-lg ${inputBg} border ${borderColor}`}
-                      placeholder="Core Size"
+                      onChange={(value) => setSystemData({ ...systemData, coreSize: value })}
                     />
                   </div>
+                  <p className={`text-[11px] leading-snug ${text.helper}`}>
+                    Sway sensitivity (P-Δ), drift limits and tie continuity are evaluated by the
+                    tall-building endpoints below.
+                  </p>
                 </div>
                 <button
                   onClick={handleCalculate}

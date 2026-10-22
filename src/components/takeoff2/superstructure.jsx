@@ -20,6 +20,7 @@ import axios from "axios";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
 import StructuralVisualizationComponent from '../Drawings/visualise_component';
+import { PageHeader, MetaChip } from '../shared/ui';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 
@@ -466,30 +467,32 @@ const RCCSuperstructureApp = () => {
   };
 
   return (
-    <div className="flex bg-gray-50 h-screen flex-col">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 flex-none">
-        <div className="flex items-center gap-3 mb-4">
-          <Building className="w-8 h-8 text-blue-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              RCC Superstructure Takeoff
-            </h1>
-            <p className="text-sm text-gray-600">
-              Columns, Beams & Slabs
-            </p>
-          </div>
-        </div>
-
-        <UniversalTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+    <div className="min-h-full bg-gray-50">
+      <div className="mx-auto w-full max-w-7xl px-3 pt-4 sm:px-5">
+        <PageHeader
+          title="RCC superstructure takeoff"
+          subtitle="Columns, beams and floor slabs — concrete, formwork and reinforcement."
+          icon={<Building size={22} aria-hidden="true" />}
+          meta={
+            <>
+              <MetaChip tone="info">
+                {columns.length} column(s) · {beams.length} beam(s) · {slabs.length} slab(s)
+              </MetaChip>
+              <MetaChip>{takeoffData.length} item(s) generated</MetaChip>
+            </>
+          }
         />
+        <div className="-mx-1 mb-4 overflow-x-auto">
+          <UniversalTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+          />
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+      <div className="mx-auto w-full max-w-7xl px-3 pb-8 sm:px-5">
         {activeTab === "calculator" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Input Panel */}

@@ -15,10 +15,29 @@
 - **`src/components/shared/primitives/index.js`**  
   Named re-export barrel for the `primitives` directory.
 
+- **`src/components/interop/compat/*`**  
+  Safe compatibility shims (`cadSimpleViewer.js`, `webIfc.js`, `thatOpenComponents.js`, `thatOpenComponentsFront.js`) preventing Webpack compile failures in lightweight/mobile/Termux checkouts where heavy optional desktop CAD/BIM engines are omitted.
+
 - **`docs/UI_REFACTOR_PROGRESS.md`** — session progress log.
 - **`docs/UI_REFACTOR_DECISIONS.md`** — architecture decision record.
 - **`docs/UI_REFACTOR_RISKS.md`** — risk register.
 - **`docs/UI_REFACTOR_CHANGELOG.md`** — this file.
+
+### Fixed
+- **`src/ui-state/PanelRegistry.js`**:
+  Added missing `toggle(id)`, `open(id)`, and `close(id)` method aliases for `togglePanel(id)`, resolving runtime `TypeError: panelRegistry.toggle is not a function` when clicking sidebar panel items in `ComponentsPanel.jsx`.
+- **Termux / Mobile Build Errors**:
+  Resolved `Can't resolve '@mlightcad/cad-simple-viewer'`, `'web-ifc'`, `'@thatopen/components'`, and `'@thatopen/components-front'` in `CadDxfViewer.jsx`, `IfcBimViewer.jsx`, and `ThatOpenBimViewer.jsx` via safe compatibility layer.
+- **`scripts/copy-cad-bim-assets.js`**:
+  Changed fatal `process.exit(1)` when optional third-party assets are missing to non-fatal warning so `npm install` does not abort in constrained environments.
+
+### Responsive & Mobile Viewer Enhancements
+- **`src/components/interop/InteropWorkbench.jsx`**:
+  Added responsive toggle buttons in header and collapse buttons on sidebars for both the Generator panel (left) and the Elements / Reconcile panel (right). On mobile screens (`< 900px`), sidebars default to collapsed to allow full-screen 3D/CAD display.
+- **`src/components/interop/IfcBimViewer.jsx`**:
+  Added properties sidebar toggle button (`PanelRight`) and close button (`X`) so the 3D viewport can occupy 100% of the mobile screen.
+- **`src/components/interop/ThatOpenBimViewer.jsx`**:
+  Added details sidebar toggle button (`PanelRight`) and close button (`X`) with mobile-friendly overlay width.
 
 ### Changed
 - **`src/components/ReinforcedConcrete/Beams/StructuralEngineeeringSuite.jsx`**  
@@ -42,3 +61,76 @@
 - SMM7/CESMM4 measurement logic
 - Any other UI components, routes, or engineering modules
 - User-modified `package.json` and `package-lock.json`
+
+---
+
+## [Session 3] — Shared UI kit + responsive shell
+
+### Added
+- `src/components/shared/ui/` — `tokens.js`, `Fields.jsx`, `PageLayout.jsx`,
+  `Status.jsx`, `Feedback.jsx`, `TableRegion.jsx`, `ViewerModal.jsx`, `index.js`.
+- `src/components/shared/engineering/FrameInputs.jsx` — `StoreyGridFields`,
+  `MaterialGradeFields`, `BuildingScopeSelector`, `FrameGeometrySection`.
+- `src/navigation/toolRegistry.js` — route→tool metadata (title, group, parent,
+  design standard) for the header, drawer, document title and mobile back control.
+- `scripts/verify/jsx-parse.mjs` — Babel syntax gate for `*.jsx` / `*.tsx`.
+
+### Changed
+- **Shell** (`engineering_appp.jsx`): header/footer are now in flow and `<main>`
+  owns scrolling; the old `pt-32 sm:pt-24` compensation is gone. Phones get a
+  single-row header with the active tool name and a back control; the inline
+  assistant input is desktop/tablet only and phones use the chat sheet. Chat
+  overlay rebuilt with a pinned header/input, `100dvh`, scrollable transcript and
+  safe-area padding. Skip-to-content link added.
+- **Sidebar**: active route highlighting via `aria-current`, current-tool card,
+  body-scroll lock while open.
+- **RC beam**: reference refactor onto the shared kit (fields, sections, header,
+  result banner, status badges, `ViewerModal` for the 2D and 3D viewers). The
+  placeholder "Export PDF" button was replaced with an honest instruction.
+- **Slabs / foundations / retaining**: duplicate inner navigation bars replaced by
+  `PageHeader` + `DesignCodeToggle`; dead "settings" selects removed from slabs.
+- **Columns**: responsive header, scrollable tab bar, padding scale.
+- **Framed & tall**: shared header/code toggle; 288 px sidebar replaced on phones
+  and tablets by a native module picker; the previously unreachable tall-building
+  modules (`systems`, `ties`, `modelling`) are now in the module navigation under
+  "Tall-building systems"; a `BuildingScopeSelector` states the Regular vs Tall
+  boundary and jumps to the matching module.
+- **Roof takeoff**: shared fields/sections, labelled sliders, placeholder
+  Save/Import buttons removed.
+- **Septic takeoff**: shared fields/sections, responsive tab strip, no nested
+  scroll trap, payload fields without inputs exposed in a disclosure, honest
+  error/loading states.
+- **Surveying**: responsive header, 44 px scrollable tab bar, padding scale.
+- **Soil mechanics**: responsive header, API base env-overridable
+  (`REACT_APP_SOIL_API_URL`, default unchanged at `:8000`).
+- **Timber**: removed the inline `1fr 450px` grid that overflowed phones; header
+  and tab bar made responsive.
+- **Masonry**: responsive header and compact unit chip.
+
+### Fixed
+- **Pre-existing build blocker:** `src/components/interop/InteropWorkbench.jsx`
+  contained two unmatched `</div>` tags (generator panel and canonical-elements
+  panel) and could not compile at all on this branch. The stray closing tags were
+  removed; the file now parses. No engine, endpoint, layout intent or data flow
+  was changed.
+- **Pre-existing build blocker:** `src/components/interop/compat/thatOpenComponents.js`
+  did not export `FragmentsManager`, which `ThatOpenBimViewer.jsx` resolves via
+  the component container, producing a hard bundler import error. A stub export
+  was added so the graph compiles. This does not enable the That Open renderer —
+  the compat shim still supplies stubs and the viewer's fallback state is
+  unchanged.
+- `src/components/Drawings/cad_drawing.jsx` and
+  `src/components/Drawings/visualise_component.jsx` used `h-screen`, which
+  overflowed the new shell; both now use `h-full min-h-0` so the canvas fills the
+  workspace scroll region.
+
+### Not Changed
+- Every engineering formula, endpoint, request/response schema, default value and
+  unit (including the beam `fcu` string option and the septic
+  `parseFloat(value) || value` parsing).
+- Downstream QS documents (`EnglishMethodTakeoffSheet`, `UniversalSheet`,
+  `UniversalBOQ`).
+- CAD/BIM engines, the interop workbench's viewers, IFC/DXF generation and all
+  backend code.
+- Existing routes: no route was added, removed or redirected.
+

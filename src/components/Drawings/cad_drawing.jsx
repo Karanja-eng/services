@@ -1534,7 +1534,7 @@ export default function CadDrawer({
   }, []);
 
   return (
-    <div className={`flex flex-col h-screen ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"}`}>
+    <div className={`flex h-full min-h-0 flex-col ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"}`}>
       {/* ============ NEW HEADER STRUCTURE ============ */}
       <div className="flex flex-col z-40">
         {/* 1. Main Header Strip (Tabs & Global Controls) */}

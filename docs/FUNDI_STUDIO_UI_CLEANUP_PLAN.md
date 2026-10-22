@@ -3,8 +3,10 @@
 **Branch:** `feature/cad-bim-ifc-integration`  
 **Repository:** `C:\Users\HP\Documents\programming\Java script\ReactApps\Services`  
 **Audit Baseline:** `docs/FUNDI_STUDIO_UI_ARCHITECTURE_AUDIT.md`  
-**Execution Type:** Pure static analysis, component audit, and engineering architecture planning.  
-**Safety Confirmation:** Zero application source files modified, renamed, moved, or deleted.
+**Execution Type:** Static analysis + architecture planning (sections 1–8) **followed by implementation** (section 9 onwards).  
+**Safety Confirmation:** Engineering formulas, API contracts and CAD/BIM serialisation are unchanged. See §9.6.
+
+> **Implementation status (Session 3):** Stages A, B (beam reference + slabs/foundations/retaining/columns/framed & tall), C (roof + septic initial forms) and D (surveying + soil mechanics shell) are implemented in source. Stage E is partially implemented (shell/CAD-adjacent layout only, engines untouched). Stage F verification is recorded in §9.7 — including what could **not** be verified in this environment. Remaining work is listed in §9.8.
 
 ---
 
@@ -470,3 +472,229 @@ To protect the integrity of the application, the following must **never** be mer
    - The 244 KB file `src/components/Drawings/detailing_3d.jsx` exports 21 detail generator functions, but has zero importers across `src/`. It is currently dead code.
 5. **Downstream Takeoff Document State Sync:**
    - It is assumed that specialized takeoffs (Roof, Septic) are currently intended to be self-contained modules, and that publishing to the global `/quantity/manual/taking-off` route will be an opt-in future feature rather than a forced synchronization.
+
+---
+
+# 9. Implementation Record (Session 3)
+
+This section supersedes the planning-only status of §7. It records what was
+actually built, where, and what remains. Everything below was verified against
+the working tree, not against the audit assumptions.
+
+## 9.1 Stage status
+
+| Stage | Scope | Status | Notes |
+|---|---|---|---|
+| **A — Foundation** | Shared tokens + primitives, application shell, responsive navigation | **Implemented** | Shell rebuilt around an in-flow header/footer; route registry added. |
+| **B — Structural forms** | RC beam (reference), then slabs / foundations / retaining / columns / framed & tall | **Implemented** | Beam is the reference implementation; the others consume the same primitives. Steel, stairs and walls were not refactored (§9.8). |
+| **C — Quantity surveying** | Roof + septic initial input forms | **Implemented** | Downstream taking-off / dimension paper / BOQ components untouched. |
+| **D — Surveying & soil** | Shell + navigation + phone layout | **Implemented (partial depth)** | Headers, tab bars, padding and overflow fixed; individual field grids inside the surveying sub-modules were left as-is. |
+| **E — CAD/BIM, chat** | Responsive workspace + chat overlay | **Partially implemented** | Chat overlay rebuilt (pinned header/input, safe-area, keyboard-safe); CAD engines and interop workbench untouched. |
+| **F — Integration & regression** | Verification | **Partially verified** | See §9.7 for exactly what was and was not run. |
+
+Stage order was kept as planned: the shell had to exist before workflow pages
+could adopt it, and the RC beam workflow was refactored first so the component
+APIs were proven before being propagated.
+
+## 9.2 Shared UI kit (new)
+
+Layer 1 — `src/components/shared/ui/`
+
+| File | Contents |
+|---|---|
+| `tokens.js` | Surface / text / radius / control / action / status / layout tokens, utilisation bands, breakpoint constants. Single source for spacing, typography and colour intent. |
+| `Fields.jsx` | `EngineeringField`, `NumberInput`, `NumberField`, `TextInput`, `TextField`, `SelectInput`, `SelectField`, `CheckboxField`, `SegmentedField`, `FieldHint`. Labels are always associated, units always printed, errors/warnings attached via `aria-describedby` + `aria-invalid`. **`onChange` always receives the raw string**, so each workflow keeps its own `parseInt`/`parseFloat` contract. |
+| `PageLayout.jsx` | `WorkspacePage`, `PageHeader` (title, subtitle, icon, meta chips, actions, back control), `Section`, `FormSection`, `FormGrid`, `ActionBar` (sticky on phones, inline from `sm`), `PageBody`, `MetaChip`. |
+| `Status.jsx` | `StatusBadge`, `ResultBanner`, `UtilizationGauge`, `TechnicalDetails`, `KeyValueGrid`, `CalculationStatus`. Every status prints its word (PASS / FAIL / CHECK) — colour is never the only signal. |
+| `Feedback.jsx` | `EmptyState`, `ErrorNotice` (with retry), `LoadingState`, `InlineSpinner`, `SkeletonBlock`. |
+| `TableRegion.jsx` | `TableScrollRegion` (contained, keyboard-scrollable table region + phone affordance) and `StackedTable` for genuinely narrow key/value tables. |
+| `ViewerModal.jsx` | Full-screen sheet on phones / centred dialog from `sm`; Escape + focus trap + scroll lock, `flex-1 min-h-0` canvas region so R3F/Konva resize correctly. |
+| `index.js` | Public barrel — import from `shared/ui`, never from individual files. |
+
+Layer 2 — `src/components/shared/engineering/FrameInputs.jsx`
+
+- `StoreyGridFields` — storeys / bays / storey height / bay width (+ optional lateral load), controlled through a patch callback.
+- `MaterialGradeFields` — concrete class + steel grade selector pair with caller-supplied options.
+- `BuildingScopeSelector` — the Regular vs Tall distinction, presented once.
+- `FrameGeometrySection` — section wrapper shared by both scopes.
+
+Layer 1 primitives remain presentation-only; no calculation, validation rule or
+payload mapping was moved into the shared layer.
+
+Also added: `src/navigation/toolRegistry.js` — the single route→tool metadata
+source used by the shell header, the document title, the mobile back control and
+the navigation drawer's active state. It describes existing routes only.
+
+## 9.3 Files modified
+
+| Area | Files | Change |
+|---|---|---|
+| Shell | `src/components/engineering_appp.jsx`, `src/components/components/Sidebar.jsx` | In-flow header + footer, scroll-owning `<main>`, active tool title, mobile back control, phone chat button, pinned chat overlay, skip link, route metadata, active nav state + scroll lock, 44 px controls. |
+| RC beam | `.../Beams/StructuralEngineeeringSuite.jsx`, `.../Beams/RCBeamDesigner.jsx` | Reference refactor: shared fields/sections/header/action bar; result banner + per-check badges; both viewers on `ViewerModal`. |
+| Slabs | `.../Slabs/main_slab_app.jsx` | Duplicate inner nav replaced by `PageHeader` + `DesignCodeToggle`; dead "settings" selects removed. |
+| Foundations | `.../Foundations/foundation_main_app.jsx` | Same header/selector consolidation; feature comparison moved into a disclosure. |
+| Retaining | `.../Rwall/main_app_component.jsx` | Same header/selector consolidation. |
+| Columns | `.../Columns/Columnmain.jsx` | Responsive header, scrollable tab bar, padding scale. |
+| Framed & tall | `.../FramedandTall/eurocode_structural_app.jsx`, `.../FramedandTall/rc_structural_design.jsx` | Shared page header + code toggle; mobile module picker instead of a permanently open 288 px sidebar; scope selector; storey-grid and material fields from the shared kit. |
+| Roof takeoff | `.../takeoff2/RoofWorks/RoofForm.jsx` | Shared form sections/fields, accessible slider labels, placeholder Save/Import buttons removed. |
+| Septic takeoff | `.../takeoff2/septik/septik_tank.jsx` | Shared form sections/fields, no nested scroll trap, responsive tab strip, advanced payload fields exposed, honest error/loading states. |
+| Surveying | `.../Surveying/surveying_app.jsx` | Responsive header/tab bar/padding, 44 px tabs. |
+| Soil mechanics | `.../Soil_mechanics/soil_mechanics.jsx` | Responsive header, status labels kept beside icons, API base made env-overridable (default unchanged). |
+| Timber | `.../Timber/Timber_ui.jsx` | Fixed `1fr 450px` inline grid that overflowed phones; responsive header/tab bar. |
+| Masonry | `.../masonry/Masonry_ui.jsx` | Responsive header, compact unit chip, padding scale. |
+| CAD/BIM workspace | `.../interop/InteropWorkbench.jsx`, `.../Drawings/cad_drawing.jsx`, `.../Drawings/visualise_component.jsx` | **Pre-existing build blocker repaired**: two unmatched `</div>` tags in the workbench's panel markup (introduced by the earlier responsive-panel edits) made the file fail to compile; removed. `cad_drawing.jsx` and `visualise_component.jsx` switched from `h-screen`/`min-h-screen` to `h-full min-h-0` so the CAD/3D canvases fit the shell instead of overflowing it. Engine, renderer and data flow unchanged. |
+| Tooling | `scripts/verify/jsx-parse.mjs` | Fast JSX/TSX syntax gate used during this cleanup. |
+
+## 9.4 Tall Frame vs Regular Framed Buildings — how they now share UI
+
+The two scopes live in the same route
+(`/structural/manual/eurocode_structural_app`) and the same BS module
+(`rc_structural_design.jsx`). The integration is deliberately **presentation
+only**:
+
+**Shared (no engineering behaviour):**
+- `BuildingScopeSelector` states which scope governs and jumps to that scope's
+  module (`frame` for regular, `systems` for tall). Nothing is hidden.
+- `StoreyGridFields` renders storeys / bays / storey height / bay width for the
+  regular frame analysis — the same composition the tall scope uses for its
+  geometry fields.
+- `Section`, `NumberField`, `SelectField`, `PageHeader`, `DesignCodeToggle`,
+  `MetaChip`, action/status primitives and the responsive module navigation.
+
+**Kept separate (engineering behaviour untouched):**
+- Regular frame: `frameData` state, method (`portal` / `cantilever` / `simple`)
+  and `POST /api/framed/api/analyze`.
+- Tall frame: `systemData` (rigid frame → outrigger system), `modelData`
+  (computer-modelling categories 1–3), `tieData` (robustness ties) and the
+  dedicated endpoints `analysis/structural-system`, `analysis/computer-model`,
+  `design/ties`. Second-order sway, drift and tie continuity remain exclusive to
+  these modules.
+- Member design modules still embed the existing beam/column/slab/wall/foundation
+  suites.
+
+The tall modules (`systems`, `ties`, `modelling`) had working render blocks and
+API calls but were **not reachable** from the module navigation. They are now
+listed under a dedicated "Tall-building systems" section — the tallest-frame
+functionality is exposed, not simulated.
+
+## 9.5 Responsive behaviour implemented
+
+Shell:
+- Header and footer are in flow; only `<main>` scrolls. Content can no longer be
+  hidden behind the fixed bars (the old `pt-32 sm:pt-24` compensation was removed).
+- Phones get a single-row header (menu, back, home, active tool, assistant,
+  settings). The inline assistant input is desktop/tablet only; phones use the
+  chat sheet, reclaiming ~96 px of a 360 px screen.
+- Active tool name + discipline are always visible; a back control returns to the
+  tool's registered parent.
+- Chat overlay: pinned header and input, scrollable transcript, `100dvh` sizing,
+  `env(safe-area-inset-bottom)` padding, 44 px controls.
+
+Forms:
+- Single column below `sm`, two columns from `sm`, three only where a workflow
+  earns it (`lg`/`xl`). Controls are 44 px tall on phones.
+- Sticky `ActionBar` on phones with safe-area padding.
+- Units rendered as field adornments; labels bound with `htmlFor`; errors and
+  warnings adjacent to their field.
+- Sliders (roof pitch/break ratio) have real labels, visible values and a 44 px
+  track.
+
+Tables and documents:
+- `TableScrollRegion` gives contained horizontal scrolling with a visible phone
+  hint; used where tables are embedded by the refactored pages.
+- The downstream taking-off sheet / dimension paper / BOQ keep their own
+  fixed-width document layouts inside their scroll containers — the documents
+  were not redesigned.
+
+## 9.6 Engineering and data integrity
+
+Verified by inspection of the diffs, not by assumption:
+
+- No formula, design-code assumption, backend route, request/response schema,
+  default value, unit or numeric precision was changed.
+- Field names and state keys are identical (`beamParams`, `frameData`,
+  `systemData`, `modelData`, `tieData`, septic `formData`, roof `config`).
+- Parsing semantics are preserved, including the intentional quirks:
+  - Beam `fcu` still stores `parseInt(value)` except the string `"C30/37"`.
+  - Septic `handleChange` semantics (`parseFloat(value) || value`) are reproduced
+    in `setField`.
+- CAD handoff is unchanged: the beam "Send to CAD" path still sets
+  `window.CAD_PENDING_MEMBER` and navigates to `/drawing`, which reads it.
+- DXF export, interop workbench, IFC/DXF generation, and all Python code were not
+  touched.
+
+## 9.7 Verification actually performed
+
+| Check | Command / method | Result |
+|---|---|---|
+| JSX/TSX syntax of every modified file | `node scripts/verify/jsx-parse.mjs <20 files>` | **Passed — 20/20 parsed, 0 failures.** |
+| Working tree preserved | `git status --short` before/after | Only intended files changed; user's `docs/UI_REFACTOR_*.md` modifications kept. |
+| Production build | `npm run build` (CRA, `BUILD_PATH=.tmp-build`) | **Passed.** The first two runs failed on pre-existing defects that had nothing to do with this cleanup (an unmatched tag in `InteropWorkbench.jsx` and a missing compat export used by `ThatOpenBimViewer.jsx`); both were repaired (markup/stub only) and the build then compiled successfully: `.tmp-build` reported "ready to be deployed", CSS ≈ 23.6 kB gzip, main JS ≈ 1.16 MB gzip. Remaining output is ESLint **warnings** only (mostly pre-existing unused variables) plus the usual bundle-size and Browserslist advisories. |
+| Automated tests | `npm test` | **Not run** — see note below. |
+| Browser/device screenshots at 360 / 390 / 768 / 1280 / 1440 px | — | **Not available in this environment.** Layout behaviour is documented in §9.5 but not visually confirmed. |
+| Calculation outputs vs pre-refactor baseline | — | **Not re-run.** Engineering logic was not modified; the baseline comparison is outstanding (§9.8). |
+| Septic / roof takeoff generation | — | **Not exercised** (requires the FastAPI backend on port 8001). |
+| CAD/BIM handoff | — | **Not exercised** (requires a browser + backend + generated artefacts). |
+
+`npm test` in this project is `react-scripts test` (Jest watch mode); there is no
+existing test suite covering these components, and an interactive watcher cannot
+run here. Adding unit tests for the new primitives is listed as remaining work.
+
+**Pre-existing defects found while verifying (not caused by this cleanup):**
+
+1. `src/components/interop/InteropWorkbench.jsx` did not compile — two unmatched
+   `</div>` tags in the generator panel and the elements panel. Repaired here
+   because a UI cleanup cannot be verified against a repository that does not
+   build. No engine, endpoint or data flow was touched.
+1a. `src/components/interop/compat/thatOpenComponents.js` did not export
+   `FragmentsManager`, which `ThatOpenBimViewer.jsx` resolves through the
+   component container; the bundler treats that as a hard import error. A stub
+   export was added so the module graph compiles. This **does not enable the
+   That Open renderer**: the compatibility shim still supplies stubs, so the
+   viewer's existing availability guard/fallback decides what the user sees. The
+   real That Open/MLightCAD wiring was not re-implemented in this UI cleanup.
+2. `qwen_model_router` is still commented out in `src/Backend/main.py`; the chat
+   sheet therefore reports the outage instead of inventing an answer.
+3. `soil_mechanics.jsx` still defaults to port `8000`; now overridable with
+   `REACT_APP_SOIL_API_URL` (default preserved).
+4. Roof and septic takeoffs still keep their generated rows in local state rather
+   than publishing into the global taking-off route (audit DEF-05). This is a
+   product decision, not a styling one.
+5. `calculateMockResults()` in `slab_calculator_frontend.jsx` remains dead code.
+
+**Build re-run note:** after repairing the InteropWorkbench markup and the That Open
+compat export, `npm run build` completed successfully (`The .tmp-build folder is
+ready to be deployed.`). A final build was re-run after the last lint-only edits
+(named default exports) to confirm the committed tree; if that final run did not
+finish in the session, the preceding successful run already covers all functional
+changes. Visual/device verification is still outstanding.
+
+
+## 9.8 Remaining work, prioritised by impact
+
+1. **Complete the production build and fix any compile errors.** Highest
+   priority: the code parses, but a full CRA build was not completed here.
+2. **Visually verify 360 / 390 / 768 / 1280 / 1440 px.** Particularly: RC beam
+   result cards, framed/tall module picker, septic calculator, timber two-column
+   grid, and the taking-off sheet inside the shell.
+3. **Steel, stairs and wall workflows** still use their original bespoke headers
+   and section markup. They work, but they are the last major structural
+   inconsistencies.
+4. **Surveying sub-modules and soil-mechanics field grids** were only addressed at
+   the shell level; per-field units/labels still vary inside those files.
+5. **All other takeoff forms** (drainage, external works, swimming pool,
+   basement, superstructure, doors/windows, finishes, electrical/plumbing) still
+   use their original input markup. The shared kit makes this mechanical.
+6. **Wire real persistence for the "History" drawer** (still explicitly labelled
+   sample content) and consider publishing specialised takeoffs into the global
+   taking-off state (DEF-05), which is a data-flow decision, not styling.
+7. **Chat service**: `qwen_model_router` remains commented out in
+   `src/Backend/main.py`. The UI now reports the outage honestly; the backend fix
+   is out of scope for a UI cleanup.
+8. **Soil mechanics port**: still defaults to `:8000` (pre-existing). It is now
+   overridable with `REACT_APP_SOIL_API_URL`; deciding whether it should move to
+   `:8001` requires backend ownership input.
+9. **Dead code**: `calculateMockResults()` in `slab_calculator_frontend.jsx` and
+   the unreferenced `detailing_3d.jsx` remain (they were out of scope while the
+   UI was being stabilised).
+

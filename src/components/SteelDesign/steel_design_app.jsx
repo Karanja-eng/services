@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Calculator, Save, FileText, AlertCircle, CheckCircle, Menu, X, Loader2, Zap, Shield, GitBranch, Building2 } from 'lucide-react';
 import MomentDistributionCalculator from '../ReinforcedConcrete/Beams/distribution';
 import SteelStructureBuilderWrapper from './SteelStructureBuilderWrapper';
+import { PageHeader, MetaChip, action, text } from '../shared/ui';
 
 const API_BASE_URL = "http://localhost:8001/steel_backend";
 
@@ -1011,32 +1012,39 @@ const SteelDesignApp = ({ isDark = false }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-green-600 text-white shadow-2xl">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-all"
-              >
-                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-              <h1 className="text-3xl font-bold">Steel Design Suite</h1>
-            </div>
-            <div className="text-sm bg-white/20 px-4 py-2 rounded-lg backdrop-blur">
-              BS 5950:2000
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-full bg-gray-50 dark:bg-slate-950">
+      <div className="mx-auto w-full max-w-[1600px] px-3 pt-4 sm:px-5">
+        <PageHeader
+          title="Steel design suite"
+          subtitle="BS 5950 member design, frame analysis and the structural steel builder."
+          icon={<Building2 size={22} aria-hidden="true" />}
+          meta={
+            <>
+              <MetaChip tone="info">BS 5950:2000</MetaChip>
+              <MetaChip>{activeModule}</MetaChip>
+            </>
+          }
+          actions={
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className={action.icon}
+              aria-label={sidebarOpen ? "Hide module navigation" : "Show module navigation"}
+              aria-expanded={sidebarOpen}
+            >
+              {sidebarOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+            </button>
+          }
+        />
+      </div>
 
-      <div className="flex">
-        {/* Sidebar - Hidden when Structure Builder is in full-screen */}
+      <div className="mx-auto flex w-full max-w-[1600px] gap-0 px-0 sm:px-5">
+        {/* Sidebar — in-flow from lg upwards only; phones use the module select
+            inside the content column. */}
         {sidebarOpen && !isBuilderFullScreen && (
-          <aside className="w-64 bg-gray-800 text-white shadow-xl min-h-screen border-r-2 border-gray-700">
-            <nav className="p-4 space-y-2">
+          <aside className="hidden w-64 shrink-0 border-r-2 border-gray-700 bg-gray-800 text-white shadow-xl lg:block">
+            <div className="sticky top-0 max-h-[calc(100dvh-6rem)] overflow-y-auto">
+              <nav className="p-4 space-y-2">
               <button
                 onClick={() => { setActiveModule('beam'); setResults(null); }}
                 className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-all ${activeModule === 'beam'
@@ -1141,15 +1149,6 @@ const SteelDesignApp = ({ isDark = false }) => {
                 </div>
               )}
 
-              <div className="pt-4 mt-4 border-t-2 border-gray-200">
-                <button
-                  className="w-full text-left px-4 py-3 rounded-lg font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-all flex items-center gap-2"
-                >
-                  <Save size={18} />
-                  Save Project
-                </button>
-              </div>
-
               <div className="pt-4 mt-4">
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
                   <h3 className="font-bold text-sm text-blue-800 mb-2">Quick Reference</h3>
@@ -1161,13 +1160,41 @@ const SteelDesignApp = ({ isDark = false }) => {
                   </div>
                 </div>
               </div>
-            </nav>
+              </nav>
+            </div>
           </aside>
         )}
 
         {/* Main Content - Full width when Structure Builder is active */}
-        <main className={isBuilderFullScreen ? "w-full p-0" : "flex-1 p-6"}>
-          <div className={isBuilderFullScreen ? "w-full h-full" : "max-w-7xl mx-auto"}>
+        <main className={isBuilderFullScreen ? "min-w-0 w-full p-0" : "min-w-0 flex-1 p-3 sm:p-5"}>
+          <div className={isBuilderFullScreen ? "w-full h-full" : "mx-auto max-w-7xl"}>
+            {/* Module selector for phones/tablets. */}
+            {!isBuilderFullScreen && (
+              <div className="mb-4 lg:hidden">
+                <label
+                  htmlFor="steel-module"
+                  className={`mb-1 block text-[11px] font-bold uppercase tracking-wider ${text.helper}`}
+                >
+                  Module
+                </label>
+                <select
+                  id="steel-module"
+                  value={activeModule}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setActiveModule(next);
+                    setResults(null);
+                    if (next === 'structure-builder') setIsBuilderFullScreen(true);
+                  }}
+                  className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  <option value="beam">Beam design</option>
+                  <option value="column">Column design</option>
+                  <option value="frame">Frame analysis</option>
+                  <option value="structure-builder">Structure builder</option>
+                </select>
+              </div>
+            )}
             {activeModule === 'beam' && renderBeamModule()}
             {activeModule === 'column' && renderColumnModule()}
             {activeModule === 'frame' && renderFrameModule()}

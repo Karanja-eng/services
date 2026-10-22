@@ -7,11 +7,8 @@ import {
   Layout,
   Layers,
   Box,
-  Monitor,
-  Settings,
   Ruler,
   Shield,
-  Award
 } from "lucide-react";
 import RCBeamDesigner from "./RCBeamDesigner";
 import MomentDistributionCalculator from "./distribution";
@@ -19,6 +16,19 @@ import EnhancedThreeMomentCalculator from "./Three";
 import BSCoefficientsCalculator from "./BSCoefficientsCalculator";
 import EurocodeBeamDesign from "./Eurocode_beam";
 import DesignCodeToggle from "../../shared/primitives/DesignCodeToggle";
+import {
+  WorkspacePage,
+  PageHeader,
+  Section,
+  MetaChip,
+  NumberField,
+  SelectField,
+  SegmentedField,
+  action,
+  text,
+  surface,
+  layout,
+} from "../../shared/ui";
 
 /**
  * StructuralEngineeringSuite
@@ -29,10 +39,16 @@ import DesignCodeToggle from "../../shared/primitives/DesignCodeToggle";
  * 3. Analysis Method (if Continuous)
  * 4. Analysis & Design Results
  *
- * UI NOTE: The design-code selector (BS 8110 / Eurocode 2) is now rendered
- * via the shared <DesignCodeToggle> component. The `activeCode` state values
- * ("BS8110" and "Eurocode") are unchanged — they are forwarded verbatim to
- * calculation dispatch and backend payloads.
+ * UI NOTE (UI cleanup):
+ * The design-code selector, fields, section cards and action layout now come
+ * from the shared UI kit (`src/components/shared/ui`). The engineering contract
+ * is untouched:
+ *   - `activeCode` values ("BS8110" / "Eurocode") are forwarded verbatim.
+ *   - `beamParams` keeps the exact same keys, default values and types.
+ *   - Number fields keep the original `parseInt` parsing, including the
+ *     select for `fcu` that can legitimately hold the string "C30/37".
+ *   - Calculation components receive the same `initialParams` /
+ *     `onAnalysisComplete` props.
  */
 const StructuralEngineeringSuite = ({ isDark = false }) => {
   const [activeCode, setActiveCode] = useState("BS8110"); // new state for design code
@@ -63,23 +79,20 @@ const StructuralEngineeringSuite = ({ isDark = false }) => {
       id: "single",
       name: "Single Span",
       description: "Simply supported beam with a single span",
-      icon: <Box className="h-8 w-8" />,
-      color: "blue"
+      icon: <Box className="h-7 w-7" />,
     },
     {
       id: "cantilever",
       name: "Cantilevered",
       description: "Beam fixed at one end and free at the other",
-      icon: <Layers className="h-8 w-8" />,
-      color: "orange"
+      icon: <Layers className="h-7 w-7" />,
     },
     {
       id: "continuous",
       name: "Continuous",
       description: "Beam spanning over multiple supports",
-      icon: <GitBranch className="h-8 w-8" />,
-      color: "green"
-    }
+      icon: <GitBranch className="h-7 w-7" />,
+    },
   ];
 
   const continuousMethods = [
@@ -87,26 +100,23 @@ const StructuralEngineeringSuite = ({ isDark = false }) => {
       id: "three-moment",
       name: "Three-Moment Theorem",
       description: "Classical method for continuous beam analysis",
-      icon: <Calculator className="h-8 w-8" />,
+      icon: <Calculator className="h-7 w-7" />,
       component: EnhancedThreeMomentCalculator,
-      color: "blue"
     },
     {
       id: "moment-distribution",
       name: "Moment Distribution",
       description: "Hardy Cross iterative method for frames and beams",
-      icon: <GitBranch className="h-8 w-8" />,
+      icon: <GitBranch className="h-7 w-7" />,
       component: MomentDistributionCalculator,
-      color: "green"
     },
     {
       id: "bs-coefficients",
       name: "BS 8110 Coefficients",
       description: "Simplified design using Table 3.5 coefficients",
-      icon: <Layout className="h-8 w-8" />,
+      icon: <Layout className="h-7 w-7" />,
       component: BSCoefficientsCalculator,
-      color: "purple"
-    }
+    },
   ];
 
   const handleTypeSelect = (type) => {
@@ -124,325 +134,360 @@ const StructuralEngineeringSuite = ({ isDark = false }) => {
     setStep("calculator");
   };
 
-  const reset = () => {
-    setStep("params");
-    setBeamType(null);
-    setAnalysisMethod(null);
-    setAnalysisResults(null);
-  };
-
   // Helper to map UI beam type to Backend Support Condition
   const getSupportCondition = (type) => {
     switch (type) {
-      case "single": return "Simply Supported";
-      case "cantilever": return "Cantilever";
-      case "continuous": return "Continuous";
-      default: return "Continuous";
+      case "single":
+        return "Simply Supported";
+      case "cantilever":
+        return "Cantilever";
+      case "continuous":
+        return "Continuous";
+      default:
+        return "Continuous";
     }
   };
 
   const currentDesignParams = {
     ...beamParams,
-    support_condition: getSupportCondition(beamType)
+    support_condition: getSupportCondition(beamType),
   };
 
-  // Step 1: Design Parameters Input
+  /* ------------------------------------------------------- step 1: parameters */
   const renderDesignParameters = () => (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-extrabold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          RC Beam Designer
-        </h1>
-        <div className="flex justify-center mb-6">
-          {/* Shared DesignCodeToggle — state values "BS8110" / "Eurocode" are
-              forwarded unchanged to calculation dispatch. Do not alter ids. */}
+    <WorkspacePage width="default">
+      <PageHeader
+        title="RC Beam Designer"
+        subtitle={
+          activeCode === "Eurocode"
+            ? "Eurocode 2 (EN 1992-1-1) compliant design"
+            : "BS 8110-1:1997 compliant design suite"
+        }
+        icon={<Ruler size={22} aria-hidden="true" />}
+        meta={
+          <>
+            <MetaChip tone="info">Multi-span analysis</MetaChip>
+            <MetaChip>Flexure · Shear · Deflection</MetaChip>
+          </>
+        }
+        actions={
           <DesignCodeToggle
             value={activeCode}
             onChange={setActiveCode}
             isDark={isDark}
+            ariaLabel="Design standard"
             options={[
               { id: "BS8110", label: "BS 8110" },
               { id: "Eurocode", label: "Eurocode 2" },
             ]}
           />
-        </div>
-
-        {activeCode === "Eurocode" ? (
-          <p className="text-xl text-gray-600 dark:text-slate-400">
-            Eurocode 2 (EN 1992-1-1) Compliant Design
-          </p>
-        ) : (
-          <p className="text-xl text-gray-600 dark:text-slate-400">
-            BS 8110-1:1997 Compliant Design Suite
-          </p>
-        )}
-      </div>
+        }
+      />
 
       {activeCode === "Eurocode" ? (
         <EurocodeBeamDesign />
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 border border-gray-100 dark:border-slate-700 space-y-8">
-
+        <div className="space-y-4 sm:space-y-6">
           {/* Section 1: Beam Section Type */}
-          <div>
-            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-              <Layout className="h-5 w-5 text-blue-500" /> Section Configuration
-            </h3>
-            <div className="flex flex-wrap gap-4">
-              {["Rectangular", "T-Beam", "L-Beam"].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setBeamParams({ ...beamParams, beam_type: type })}
-                  className={`flex-1 min-w-[150px] p-4 rounded-xl border-2 transition-all font-bold ${beamParams.beam_type === type
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                    : "border-gray-200 dark:border-slate-600 hover:border-blue-300 text-gray-600 dark:text-slate-400"
-                    }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
+          <Section
+            title="Section configuration"
+            description="Choose the cross-section shape before entering geometry."
+            icon={<Layout size={18} aria-hidden="true" />}
+          >
+            <SegmentedField
+              label="Section type"
+              value={beamParams.beam_type}
+              onChange={(value) => setBeamParams({ ...beamParams, beam_type: value })}
+              options={[
+                { value: "Rectangular", label: "Rectangular" },
+                { value: "T-Beam", label: "T-Beam" },
+                { value: "L-Beam", label: "L-Beam" },
+              ]}
+            />
+          </Section>
 
-          {/* Section 2: Geometry & Materials Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
             {/* Materials */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
-                <Layers className="h-5 w-5 text-purple-500" /> Materials
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Concrete (fcu)</label>
-                  <select
-                    className="w-full p-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl"
-                    value={beamParams.fcu}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setBeamParams({ ...beamParams, fcu: val === "C30/37" ? "C30/37" : parseInt(val) });
-                    }}
-                  >
-                    {/* Modified map to include special string options */
-                      [20, 25, 30, 35, 40, 45, 50].map(f => (
-                        <option key={f} value={f}>C{f} ({f} N/mm²)</option>
-                      ))}
-                    <option value="C30/37">C30/37 (Eurocode)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Steel (fy)</label>
-                  <select
-                    className="w-full p-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl"
-                    value={beamParams.fy}
-                    onChange={(e) => setBeamParams({ ...beamParams, fy: parseInt(e.target.value) })}
-                  >
-                    <option value={250}>Grade 250</option>
-                    <option value={460}>Grade 460</option>
-                  </select>
-                </div>
+            <Section
+              title="Materials"
+              description="Characteristic strengths used by the design checks."
+              icon={<Layers size={18} aria-hidden="true" />}
+            >
+              <div className={layout.formGrid}>
+                <SelectField
+                  label="Concrete (fcu)"
+                  unit="N/mm²"
+                  value={beamParams.fcu}
+                  onChange={(value) =>
+                    setBeamParams({
+                      ...beamParams,
+                      // The original parser is preserved: numeric cube strengths are
+                      // stored as integers, the Eurocode option stays a string.
+                      fcu: value === "C30/37" ? "C30/37" : parseInt(value, 10),
+                    })
+                  }
+                  options={[
+                    ...[20, 25, 30, 35, 40, 45, 50].map((f) => ({
+                      value: f,
+                      label: `C${f} (${f} N/mm²)`,
+                    })),
+                    { value: "C30/37", label: "C30/37 (Eurocode)" },
+                  ]}
+                />
+                <SelectField
+                  label="Steel (fy)"
+                  unit="N/mm²"
+                  value={beamParams.fy}
+                  onChange={(value) =>
+                    setBeamParams({ ...beamParams, fy: parseInt(value, 10) })
+                  }
+                  options={[
+                    { value: 250, label: "Grade 250" },
+                    { value: 460, label: "Grade 460" },
+                  ]}
+                />
+                <SelectField
+                  label="Exposure condition"
+                  value={beamParams.exposure_condition}
+                  onChange={(value) =>
+                    setBeamParams({ ...beamParams, exposure_condition: value })
+                  }
+                  options={["Mild", "Moderate", "Severe", "Very Severe", "Extreme"]}
+                />
+                <SelectField
+                  label="Fire resistance"
+                  value={beamParams.fire_resistance_period}
+                  onChange={(value) =>
+                    setBeamParams({ ...beamParams, fire_resistance_period: value })
+                  }
+                  options={["30 mins", "1 hour", "1.5 hours", "2 hours", "3 hours", "4 hours"]}
+                />
               </div>
-
-              {/* BS 8110 Extras */}
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Exposure</label>
-                  <select
-                    className="w-full p-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl"
-                    value={beamParams.exposure_condition}
-                    onChange={(e) => setBeamParams({ ...beamParams, exposure_condition: e.target.value })}
-                  >
-                    {["Mild", "Moderate", "Severe", "Very Severe", "Extreme"].map(e => <option key={e}>{e}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Fire Resistance</label>
-                  <select
-                    className="w-full p-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm"
-                    value={beamParams.fire_resistance_period}
-                    onChange={(e) => setBeamParams({ ...beamParams, fire_resistance_period: e.target.value })}
-                  >
-                    {["30 mins", "1 hour", "1.5 hours", "2 hours", "3 hours", "4 hours"].map(f => <option key={f}>{f}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
+            </Section>
 
             {/* Dimensions */}
-            <div className="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-2xl border border-gray-100 dark:border-slate-600">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                <Ruler className="h-5 w-5 text-green-500" /> Dimensions (mm)
-              </h3>
-
+            <Section
+              title="Dimensions"
+              description="All section dimensions are in millimetres."
+              icon={<Ruler size={18} aria-hidden="true" />}
+              tone="muted"
+            >
               {beamParams.beam_type === "Rectangular" ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-500">Width (b)</label>
-                    <input type="number" className="w-full p-2 rounded-lg border dark:bg-slate-600 dark:border-slate-500"
-                      value={beamParams.width}
-                      onChange={(e) => setBeamParams({ ...beamParams, width: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-500">Depth (h)</label>
-                    <input type="number" className="w-full p-2 rounded-lg border dark:bg-slate-600 dark:border-slate-500"
-                      value={beamParams.depth}
-                      onChange={(e) => setBeamParams({ ...beamParams, depth: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-xs font-bold text-gray-500">Nominal Cover (c)</label>
-                    <input type="number" className="w-full p-2 rounded-lg border dark:bg-slate-600 dark:border-slate-500"
+                <div className={layout.formGrid}>
+                  <NumberField
+                    label="Width (b)"
+                    unit="mm"
+                    min={100}
+                    step="10"
+                    value={beamParams.width}
+                    onChange={(value) =>
+                      setBeamParams({ ...beamParams, width: parseInt(value, 10) })
+                    }
+                  />
+                  <NumberField
+                    label="Depth (h)"
+                    unit="mm"
+                    min={100}
+                    step="10"
+                    value={beamParams.depth}
+                    onChange={(value) =>
+                      setBeamParams({ ...beamParams, depth: parseInt(value, 10) })
+                    }
+                  />
+                  <div className="sm:col-span-2">
+                    <NumberField
+                      label="Nominal cover (c)"
+                      unit="mm"
+                      min={15}
+                      step="5"
+                      hint="Clear cover to the outermost reinforcement."
                       value={beamParams.cover}
-                      onChange={(e) => setBeamParams({ ...beamParams, cover: parseInt(e.target.value) })}
+                      onChange={(value) =>
+                        setBeamParams({ ...beamParams, cover: parseInt(value, 10) })
+                      }
                     />
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-500">Web Width (bw)</label>
-                    <input type="number" className="w-full p-2 rounded-lg border dark:bg-slate-600 dark:border-slate-500"
-                      value={beamParams.web_width}
-                      onChange={(e) => setBeamParams({ ...beamParams, web_width: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-500">Total Depth (h)</label>
-                    <input type="number" className="w-full p-2 rounded-lg border dark:bg-slate-600 dark:border-slate-500"
-                      value={beamParams.depth}
-                      onChange={(e) => setBeamParams({ ...beamParams, depth: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-500">Flange Width (bf)</label>
-                    <input type="number" className="w-full p-2 rounded-lg border dark:bg-slate-600 dark:border-slate-500"
-                      value={beamParams.flange_width}
-                      onChange={(e) => setBeamParams({ ...beamParams, flange_width: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-500">Flange Thick (hf)</label>
-                    <input type="number" className="w-full p-2 rounded-lg border dark:bg-slate-600 dark:border-slate-500"
-                      value={beamParams.flange_thickness}
-                      onChange={(e) => setBeamParams({ ...beamParams, flange_thickness: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-xs font-bold text-gray-500">Nominal Cover</label>
-                    <input type="number" className="w-full p-2 rounded-lg border dark:bg-slate-600 dark:border-slate-500"
+                <div className={layout.formGrid}>
+                  <NumberField
+                    label="Web width (bw)"
+                    unit="mm"
+                    min={100}
+                    step="10"
+                    value={beamParams.web_width}
+                    onChange={(value) =>
+                      setBeamParams({ ...beamParams, web_width: parseInt(value, 10) })
+                    }
+                  />
+                  <NumberField
+                    label="Total depth (h)"
+                    unit="mm"
+                    min={100}
+                    step="10"
+                    value={beamParams.depth}
+                    onChange={(value) =>
+                      setBeamParams({ ...beamParams, depth: parseInt(value, 10) })
+                    }
+                  />
+                  <NumberField
+                    label="Flange width (bf)"
+                    unit="mm"
+                    min={0}
+                    step="10"
+                    value={beamParams.flange_width}
+                    onChange={(value) =>
+                      setBeamParams({ ...beamParams, flange_width: parseInt(value, 10) })
+                    }
+                  />
+                  <NumberField
+                    label="Flange thickness (hf)"
+                    unit="mm"
+                    min={0}
+                    step="10"
+                    value={beamParams.flange_thickness}
+                    onChange={(value) =>
+                      setBeamParams({ ...beamParams, flange_thickness: parseInt(value, 10) })
+                    }
+                  />
+                  <div className="sm:col-span-2">
+                    <NumberField
+                      label="Nominal cover (c)"
+                      unit="mm"
+                      min={15}
+                      step="5"
                       value={beamParams.cover}
-                      onChange={(e) => setBeamParams({ ...beamParams, cover: parseInt(e.target.value) })}
+                      onChange={(value) =>
+                        setBeamParams({ ...beamParams, cover: parseInt(value, 10) })
+                      }
                     />
                   </div>
                 </div>
               )}
-            </div>
+              <p className={`mt-3 text-[11px] leading-relaxed ${text.helper}`}>
+                These parameters are forwarded unchanged to the analysis method and the
+                BS 8110 design endpoint.
+              </p>
+            </Section>
           </div>
 
-          {/* Proceed Button */}
           <button
+            type="button"
             onClick={() => setStep("type")}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-2xl transition hover:scale-[1.01] flex items-center justify-center gap-3 text-lg"
+            className={`${action.base} ${action.primary} w-full text-base`}
           >
-            Continue to Analysis Configuration <ArrowRight className="h-6 w-6" />
+            Continue to analysis configuration
+            <ArrowRight className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}
-    </div>
+    </WorkspacePage>
   );
 
+  /* ----------------------------------------------------- step 2: support type */
   const renderTypeSelection = () => (
-    <div className="max-w-4xl mx-auto p-6">
-      <button
-        onClick={() => setStep("params")}
-        className="flex items-center text-gray-600 hover:text-blue-600 mb-8 transition-colors group font-semibold"
-      >
-        <ChevronLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" /> Edit Parameters
-      </button>
+    <WorkspacePage width="default">
+      <PageHeader
+        title="Structural configuration"
+        subtitle="How is this beam supported?"
+        icon={<Shield size={22} aria-hidden="true" />}
+        onBack={() => setStep("params")}
+        backLabel="Edit parameters"
+      />
 
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-extrabold mb-4 text-gray-900 dark:text-white">
-          Structural Configuration
-        </h2>
-        <p className="text-lg text-gray-600 dark:text-slate-400">
-          How is this beam supported?
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
         {beamConfigurations.map((type) => (
           <button
             key={type.id}
+            type="button"
             onClick={() => handleTypeSelect(type.id)}
-            className="group relative bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl text-left overflow-hidden border border-transparent hover:border-blue-500/30"
+            className="group flex min-h-[44px] flex-col items-start rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-slate-900 sm:p-6"
           >
-            <div className={`p-4 rounded-2xl bg-${type.color}-100 dark:bg-${type.color}-900/10 text-${type.color}-600 mb-6 w-fit group-hover:scale-110 transition-transform`}>
+            <span className="mb-3 rounded-xl bg-blue-50 p-2.5 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
               {type.icon}
-            </div>
-            <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">
-              {type.name}
-            </h3>
-            <p className="text-gray-600 dark:text-slate-400 leading-relaxed mb-6">
+            </span>
+            <span className={`text-lg font-bold ${text.title}`}>{type.name}</span>
+            <span className={`mt-1 text-xs leading-relaxed ${text.subtitle}`}>
               {type.description}
-            </p>
+            </span>
           </button>
         ))}
       </div>
-    </div>
+    </WorkspacePage>
   );
 
+  /* ------------------------------------------------------ step 3: method pick */
   const renderMethodSelection = () => (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => setStep("type")} className="p-2 hover:bg-gray-100 rounded-full"><ChevronLeft /></button>
-        <span className="font-bold text-gray-400">Back</span>
-      </div>
+    <WorkspacePage width="default">
+      <PageHeader
+        title="Continuous beam analysis"
+        subtitle="Select the analysis method for the continuous spans."
+        icon={<GitBranch size={22} aria-hidden="true" />}
+        onBack={() => setStep("type")}
+        backLabel="Back to support type"
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-5">
         {continuousMethods.map((method) => (
           <button
             key={method.id}
+            type="button"
             onClick={() => handleMethodSelect(method.id)}
-            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 border-transparent hover:border-blue-500 group text-left"
+            className="group rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-slate-900 sm:p-5"
           >
-            <div className={`text-${method.color}-600 mb-4`}>{method.icon}</div>
-            <h4 className="text-xl font-bold mb-2">{method.name}</h4>
-            <p className="text-sm text-gray-500 mb-4">{method.description}</p>
+            <span className="mb-3 block text-blue-600 dark:text-blue-300">{method.icon}</span>
+            <span className={`block text-base font-bold ${text.title}`}>{method.name}</span>
+            <span className={`mt-1 block text-xs leading-relaxed ${text.subtitle}`}>
+              {method.description}
+            </span>
           </button>
         ))}
       </div>
-    </div>
+    </WorkspacePage>
   );
 
-  const SelectedCalculator = continuousMethods.find(m => m.id === analysisMethod)?.component || EnhancedThreeMomentCalculator;
+  const SelectedCalculator =
+    continuousMethods.find((m) => m.id === analysisMethod)?.component ||
+    EnhancedThreeMomentCalculator;
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-slate-900" : "bg-gray-50 text-gray-900"}`}>
-
+    <div className={`min-h-full ${isDark ? "bg-slate-900" : "bg-gray-50"}`}>
       {step === "calculator" && (
-        <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-3 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setStep("params")} className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
-              Edit Params
+        <div
+          className={`sticky top-0 z-30 flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 ${surface.stickyBar} sm:px-5`}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStep("params")}
+              className="inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-blue-50 px-2.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-200"
+            >
+              <ChevronLeft size={14} aria-hidden="true" />
+              Edit params
             </button>
-            <h2 className="font-bold text-gray-700">Analysis Mode</h2>
+            <h2 className={`truncate text-xs font-bold sm:text-sm ${text.title}`}>
+              Analysis mode
+            </h2>
           </div>
           {analysisResults && (
-            <button onClick={() => setStep("design")} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-green-700">
-              View Design Report
+            <button
+              type="button"
+              onClick={() => setStep("design")}
+              className={`${action.base} ${action.success} min-h-[36px] px-3 py-1.5 text-xs`}
+            >
+              View design report
             </button>
           )}
         </div>
       )}
 
-      <div className="py-8">
+      <div className="py-4 sm:py-6">
         {step === "params" && renderDesignParameters()}
         {step === "type" && renderTypeSelection()}
         {step === "method" && renderMethodSelection()}
 
         {step === "calculator" && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <SelectedCalculator
               key={analysisMethod}
               isDark={isDark}
@@ -454,14 +499,23 @@ const StructuralEngineeringSuite = ({ isDark = false }) => {
             />
 
             {analysisResults && (
-              <div className="max-w-4xl mx-auto px-4 mt-8">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl flex items-center justify-between border-l-4 border-green-500">
-                  <div>
-                    <h3 className="font-bold text-lg text-green-700">Analysis Successful</h3>
-                    <p className="text-gray-500">Moments and shears have been calculated.</p>
+              <div className="mx-auto max-w-4xl px-3 sm:px-4">
+                <div className="flex flex-col gap-3 rounded-2xl border-l-4 border-green-500 bg-white p-4 shadow-sm dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-green-700 dark:text-green-400">
+                      Analysis successful
+                    </h3>
+                    <p className={`text-xs ${text.subtitle}`}>
+                      Moments and shears have been calculated.
+                    </p>
                   </div>
-                  <button onClick={() => setStep("design")} className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg hover:shadow-green-500/30">
-                    Proceed to Styling &amp; Detailing <ArrowRight className="h-5 w-5" />
+                  <button
+                    type="button"
+                    onClick={() => setStep("design")}
+                    className={`${action.base} ${action.success}`}
+                  >
+                    Proceed to detailing
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>

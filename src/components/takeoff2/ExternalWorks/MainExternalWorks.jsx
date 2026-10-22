@@ -1,24 +1,39 @@
-import React, { useState, useEffect } from "react";
-import {
-  Menu,
-  Settings,
-  Save,
-  Upload,
-  Calculator,
-} from "lucide-react";
+import React, { useState } from "react";
+import { Save, Upload, Calculator, Ruler } from "lucide-react";
 import axios from "axios";
 import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 import ExternalWorksInputForm from "./ExternalWorksInputForm";
 import EnglishMethodTakeoffSheet from "./EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import {
+  WorkspacePage,
+  PageHeader,
+  Section,
+  MetaChip,
+  ErrorNotice,
+  EmptyState,
+  action,
+  text,
+} from "../../shared/ui";
 
-// Main Application Component
+/**
+ * ExternalWorksComponent — external works quantity takeoff.
+ *
+ * UI cleanup:
+ * - The bespoke header/toolbar is replaced by the shared page header, with the
+ *   working Save / Load project actions kept (they download and read a JSON
+ *   project file — real behaviour, not placeholders).
+ * - Calculation failures now surface in an in-page error notice instead of an
+ *   `alert()`; no quantities are fabricated.
+ * - The calculator is hosted in a shared `Section`, and the tabs scroll instead
+ *   of squeezing the header on phones.
+ *
+ * Preserved exactly: the `formData` model, the camelCase → snake_case payload
+ * mapping, the endpoint, and the takeoff item mapping.
+ */
 export default function ExternalWorksComponent({ isDark = false }) {
   const [activeTab, setActiveTab] = useState("calculator");
-
-  // Theme check (simplified)
-  const bgClass = isDark ? "bg-slate-900 text-white" : "bg-gray-50 text-gray-900";
-  const cardClass = isDark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200";
+  const [calcError, setCalcError] = useState(null);
 
   // Sample project state aligned with backend Pydantic models
   const [formData, setFormData] = useState({
@@ -104,6 +119,7 @@ export default function ExternalWorksComponent({ isDark = false }) {
   const [editorKey, setEditorKey] = useState(0);
 
   const handleCalculate = async () => {
+    setCalcError(null);
     try {
       // Transform camelCase keys to snake_case for backend validation
       const payload = {
@@ -208,7 +224,9 @@ export default function ExternalWorksComponent({ isDark = false }) {
     } catch (error) {
       console.error("Error calculating external works:", error);
       const detail = error.response?.data?.detail;
-      alert(`Calculation failed: ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`);
+      setCalcError(
+        typeof detail === 'string' ? detail : detail ? JSON.stringify(detail) : error.message
+      );
     }
   };
 
@@ -231,7 +249,7 @@ export default function ExternalWorksComponent({ isDark = false }) {
           const data = JSON.parse(e.target.result);
           if (data.formData) setFormData(data.formData);
         } catch (error) {
-          alert("Error loading project file");
+          setCalcError("That file could not be read as a saved external-works project.");
         }
       };
       reader.readAsText(file);
@@ -239,89 +257,121 @@ export default function ExternalWorksComponent({ isDark = false }) {
   };
 
   return (
-    <div className={`flex h-screen ${bgClass} font-sans transition-colors duration-300`}>
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className={`${cardClass} border-b px-5 py-3 flex justify-between items-center shadow-sm z-10`}>
-          <div className="flex items-center gap-4 flex-1">
-            <h1 className="text-xl font-bold">External Works</h1>
-          </div>
-          <UniversalTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            tabs={['calculator', '3d', 'takeoff', 'sheet', 'boq']}
-          />
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleCalculate}
-              className="px-3 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2 hover:bg-blue-700 text-sm font-medium"
-            >
-              <Calculator size={14} /> Calculate
+    <WorkspacePage width="wide">
+      <PageHeader
+        title="External works takeoff"
+        subtitle="Site clearance, roads, paving, kerbs, drainage, landscaping and fencing (CESMM4 classes)."
+        icon={<Ruler size={22} aria-hidden="true" />}
+        meta={
+          <>
+            <MetaChip tone="info">{formData.projectInfo.projectName}</MetaChip>
+            <MetaChip>{takeoffData.length} bill row(s)</MetaChip>
+          </>
+        }
+        actions={
+          <>
+            <button type="button" onClick={handleCalculate} className={`${action.base} ${action.primary}`}>
+              <Calculator size={16} aria-hidden="true" /> Calculate
             </button>
-            <button
-              onClick={saveProject}
-              className="px-3 py-2 bg-teal-600 text-white rounded-md flex items-center gap-2 hover:bg-teal-700 text-sm font-medium"
-            >
-              <Save size={14} /> Save
+            <button type="button" onClick={saveProject} className={`${action.base} ${action.secondary}`}>
+              <Save size={16} aria-hidden="true" /> Save
             </button>
-            <label className={`px-3 py-2 border rounded-md cursor-pointer flex items-center gap-2 text-sm font-medium ${isDark ? 'border-slate-600 hover:bg-slate-700' : 'border-gray-300 hover:bg-gray-100'}`}>
-              <Upload size={14} /> Load
-              <input type="file" accept=".json" onChange={loadProject} className="hidden" />
+            <label
+              className={`${action.base} ${action.secondary} cursor-pointer`}
+              title="Load a previously saved external-works project"
+            >
+              <Upload size={16} aria-hidden="true" /> Load
+              <input type="file" accept=".json" onChange={loadProject} className="sr-only" />
             </label>
-          </div>
-        </header>
+          </>
+        }
+      />
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto p-6 relative">
-          {activeTab === "calculator" && (
-            <ExternalWorksInputForm
-              theme={{
-                bg: isDark ? "#0f172a" : "#f8fafc",
-                card: isDark ? "#1e293b" : "#ffffff",
-                text: isDark ? "#f1f5f9" : "#0f172a",
-                border: isDark ? "#334155" : "#e2e8f0",
-                accent: "#14b8a6"
-              }}
-              formData={formData}
-              setFormData={setFormData}
-              handleCalculate={handleCalculate}
-            />
-          )}
-
-          {activeTab === "3d" && (
-            <StructuralVisualizationComponent
-              componentType="externalWorks"
-              componentData={{
-                settings: formData.roadConfig,
-              }}
-              onSettingsChange={(newSettings) => setFormData({ ...formData, roadConfig: newSettings })}
-              theme={isDark ? "dark" : "light"}
-            />
-          )}
-
-          {activeTab === "takeoff" && (
-            <div className={`rounded-lg shadow p-0 h-full overflow-hidden ${cardClass}`}>
-              <EnglishMethodTakeoffSheet
-                key={editorKey}
-                initialItems={takeoffData}
-                onChange={setTakeoffData}
-              />
-            </div>
-          )}
-
-          {activeTab === "sheet" && (
-            <div className="h-full overflow-auto">
-              <UniversalSheet items={takeoffData} />
-            </div>
-          )}
-
-          {activeTab === "boq" && (
-            <div className="h-full overflow-auto">
-              <UniversalBOQ items={takeoffData} />
-            </div>
-          )}
-        </main>
+      <div className="mb-4 -mx-1 overflow-x-auto">
+        <UniversalTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          tabs={['calculator', '3d', 'takeoff', 'sheet', 'boq']}
+        />
       </div>
-    </div>
+
+      {calcError && (
+        <ErrorNotice
+          className="mb-4"
+          title="External works calculation failed"
+          message={calcError}
+          onRetry={handleCalculate}
+        />
+      )}
+
+      {activeTab === "calculator" && (
+        <Section
+          title="Measured quantities"
+          description="Enter the site quantities section by section, then calculate."
+        >
+          <ExternalWorksInputForm
+            theme={{
+              bg: isDark ? "#0f172a" : "#f8fafc",
+              card: isDark ? "#1e293b" : "#ffffff",
+              text: isDark ? "#f1f5f9" : "#0f172a",
+              border: isDark ? "#334155" : "#e2e8f0",
+              accent: "#14b8a6"
+            }}
+            formData={formData}
+            setFormData={setFormData}
+            handleCalculate={handleCalculate}
+          />
+        </Section>
+      )}
+
+      {activeTab === "3d" && (
+        <div className="relative h-[70vh] min-h-[360px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+          <StructuralVisualizationComponent
+            componentType="externalWorks"
+            componentData={{
+              settings: formData.roadConfig,
+            }}
+            onSettingsChange={(newSettings) => setFormData({ ...formData, roadConfig: newSettings })}
+            theme={isDark ? "dark" : "light"}
+          />
+        </div>
+      )}
+
+      {activeTab === "takeoff" && (
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <EnglishMethodTakeoffSheet
+            key={editorKey}
+            initialItems={takeoffData}
+            onChange={setTakeoffData}
+          />
+        </div>
+      )}
+
+      {activeTab === "sheet" && (
+        <div>
+          {takeoffData.length > 0 ? (
+            <UniversalSheet items={takeoffData} />
+          ) : (
+            <EmptyState
+              title="No measured items yet"
+              description="Calculate the external works takeoff to populate the dimension paper."
+            />
+          )}
+        </div>
+      )}
+
+      {activeTab === "boq" && (
+        <div>
+          {takeoffData.length > 0 ? (
+            <UniversalBOQ items={takeoffData} />
+          ) : (
+            <EmptyState
+              title="No bill items yet"
+              description="Calculate the external works takeoff to populate the bill of quantities."
+            />
+          )}
+        </div>
+      )}
+    </WorkspacePage>
   );
 }

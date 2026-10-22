@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import React, { useState } from "react";
 import { Settings } from "lucide-react";
 
 import DrainageTakeoffForm from "./DrainageTakeoffForm";
@@ -9,6 +7,14 @@ import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffShee
 import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 import descriptions from "../descriptions";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import {
+  WorkspacePage,
+  PageHeader,
+  Section,
+  MetaChip,
+  EmptyState,
+  text,
+} from "../../shared/ui";
 
 // Main App Component
 const DrainageComponenet = () => {
@@ -73,95 +79,97 @@ const DrainageComponenet = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar - Optional, or just use full width layout since this component was full width originally. 
-         The original matched the styling of others but was full width. 
-         Stairs.jsx was full width. RoofMain.jsx was sidebar.
-         UniversalTabs is flexible.
-         I will keep the layout structure similar to original but wrapped to match the new 'App' feel if needed.
-         Original had a top nav bar inside a container.
-         I will stick to the original container layout but replace the nav bar with UniversalTabs.
-      */}
+    <WorkspacePage width="wide">
+      <PageHeader
+        title="Drainage and manhole takeoff"
+        subtitle="Manholes, pipe runs, trench excavation and ancillary works."
+        icon={<Settings size={22} aria-hidden="true" />}
+        meta={
+          <>
+            <MetaChip tone="info">{projectData?.manholes?.length ?? 0} manhole(s)</MetaChip>
+            <MetaChip>{projectData?.pipes?.length ?? 0} pipe run(s)</MetaChip>
+            <MetaChip>{takeoffData.length} bill row(s)</MetaChip>
+          </>
+        }
+      />
 
-      <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-gray-50 to-gray-200">
-        <div className="max-w-7xl mx-auto w-full px-4 py-8 flex-1 flex flex-col">
-          {/* Header / Nav */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md mb-6 p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                  <Settings className="w-6 h-6" />
-                  Drainage & Manhole Calculator
-                </h1>
-              </div>
-            </div>
-
-            <UniversalTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              tabs={['calculator', '3d', 'takeoff', 'sheet', 'boq']}
-            />
-          </div>
-
-          {/* Content Area */}
-          <div className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden flex flex-col relative">
-            {activeTab === "calculator" && (
-              <div className="p-6 h-full overflow-y-auto">
-                <DrainageTakeoffForm
-                  onCalculationComplete={handleCalculationComplete}
-                />
-              </div>
-            )}
-
-            {activeTab === "3d" && (
-              <div className="h-full w-full relative">
-                {calculationResults ? (
-                  <StructuralVisualizationComponent
-                    componentType="drainage"
-                    componentData={{
-                      projectData: calculationResults,
-                      calculationResults: calculationResults
-                    }}
-                    theme="dark"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    Please perform a calculation to view the 3D model.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "takeoff" && (
-              <div className="p-0 h-full overflow-y-auto">
-                <EnglishMethodTakeoffSheet
-                  key={editorKey}
-                  initialItems={takeoffData.length > 0 ? takeoffData : undefined}
-                  onChange={setTakeoffData}
-                  projectInfo={{
-                    projectName: projectData?.project_name || "Drainage Project",
-                    clientName: "Client Name",
-                    projectDate: new Date().toLocaleDateString()
-                  }}
-                />
-              </div>
-            )}
-
-            {activeTab === "sheet" && (
-              <div className="p-0 h-full overflow-y-auto">
-                <UniversalSheet items={takeoffData} />
-              </div>
-            )}
-
-            {activeTab === "boq" && (
-              <div className="p-0 h-full overflow-y-auto">
-                <UniversalBOQ items={takeoffData} />
-              </div>
-            )}
-          </div>
-        </div>
+      <div className="mb-4 -mx-1 overflow-x-auto">
+        <UniversalTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          tabs={['calculator', '3d', 'takeoff', 'sheet', 'boq']}
+        />
       </div>
-    </div>
+
+      {activeTab === "calculator" && (
+        <Section
+          title="Drainage inputs"
+          description="Project settings, then manholes and pipes. Generate to build the bill."
+        >
+          <DrainageTakeoffForm onCalculationComplete={handleCalculationComplete} />
+        </Section>
+      )}
+
+      {activeTab === "3d" && (
+        <div className="relative h-[70vh] min-h-[360px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+          {calculationResults ? (
+            <StructuralVisualizationComponent
+              componentType="drainage"
+              componentData={{
+                projectData: calculationResults,
+                calculationResults: calculationResults
+              }}
+              theme="dark"
+            />
+          ) : (
+            <div className={`flex h-full items-center justify-center p-4 text-center text-sm ${text.subtitle}`}>
+              Complete a calculation to view the 3D model.
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "takeoff" && (
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <EnglishMethodTakeoffSheet
+            key={editorKey}
+            initialItems={takeoffData.length > 0 ? takeoffData : undefined}
+            onChange={setTakeoffData}
+            projectInfo={{
+              projectName: projectData?.project_name || "Drainage Project",
+              clientName: "Client Name",
+              projectDate: new Date().toLocaleDateString()
+            }}
+          />
+        </div>
+      )}
+
+      {activeTab === "sheet" && (
+        <div>
+          {takeoffData.length > 0 ? (
+            <UniversalSheet items={takeoffData} />
+          ) : (
+            <EmptyState
+              title="No measured items yet"
+              description="Complete a drainage calculation to populate the dimension paper."
+            />
+          )}
+        </div>
+      )}
+
+      {activeTab === "boq" && (
+        <div>
+          {takeoffData.length > 0 ? (
+            <UniversalBOQ items={takeoffData} />
+          ) : (
+            <EmptyState
+              title="No bill items yet"
+              description="Complete a drainage calculation to populate the bill of quantities."
+            />
+          )}
+        </div>
+      )}
+    </WorkspacePage>
   );
 };
 

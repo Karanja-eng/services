@@ -1,16 +1,49 @@
 import React, { useState } from 'react';
-import { Calculator, Box, Eye, FileText, Settings, Download, Edit3, Table } from 'lucide-react';
+import { Calculator, Box, Eye, FileText, Settings, Edit3, Table, Ruler, Layers } from 'lucide-react';
 import Staircase2DViewer from './2DViewer';
 import EnglishMethodTakeoffSheet from '../ExternalWorks/EnglishMethodTakeoffSheet';
-import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
+import { UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
+import {
+  WorkspacePage,
+  PageHeader,
+  Section,
+  MetaChip,
+  NumberField,
+  SelectField,
+  CheckboxField,
+  SegmentedField,
+  TechnicalDetails,
+  ErrorNotice,
+  ResultBanner,
+  KeyValueGrid,
+  ActionBar,
+  action,
+  layout,
+} from '../../shared/ui';
 
+/**
+ * EnhancedStaircaseApp — staircase estimator and takeoff.
+ *
+ * UI cleanup:
+ * - Page header, design tab, parameter sections, action bar and error state now
+ *   come from the shared UI kit; the design tab is single-column on phones.
+ * - The `alert()` failure path is replaced by an in-page error notice.
+ * - Material parameters that are part of the request payload but previously had
+ *   no input (rebar, balustrade, glass, timber, winder) are editable in a
+ *   disclosure with unchanged defaults.
+ *
+ * Preserved: every `inputs` key/default, `updateInput` / `updateArrayInput`
+ * semantics, the endpoint, the payload (including `.map(Number)` on the flight
+ * arrays) and the automatic switch to the bill sheet after a successful run.
+ */
 const EnhancedStaircaseApp = () => {
     const [activeTab, setActiveTab] = useState("config");
     const [staircaseType, setStaircaseType] = useState("straight");
     const [materialType, setMaterialType] = useState("concrete");
     const [finishType, setFinishType] = useState("terrazzo");
     const [balType, setBalType] = useState("metal");
+    const [error, setError] = useState(null);
 
     const [inputs, setInputs] = useState({
         clear_width: 1.2,
@@ -55,6 +88,7 @@ const EnhancedStaircaseApp = () => {
 
     const handleCalculate = async () => {
         setLoading(true);
+        setError(null);
         try {
             const payload = {
                 staircase_type: staircaseType,
@@ -93,9 +127,12 @@ const EnhancedStaircaseApp = () => {
             setBoqData(formattedItems);
             setSummary(data.summary || {});
             setActiveTab("sheet"); // Switch to sheet view on success
-        } catch (error) {
-            console.error('Calculation error:', error);
-            alert('Calculation failed. Check backend connection.');
+        } catch (err) {
+            console.error('Calculation error:', err);
+            setError(
+                err?.message ||
+                    'Calculation failed. Check the backend connection and try again.'
+            );
         } finally {
             setLoading(false);
         }
@@ -116,305 +153,381 @@ const EnhancedStaircaseApp = () => {
 
     const tabs = [
         { id: "config", label: "Design", icon: Settings },
-        { id: "2d", label: "2D Plans", icon: Box },
-        { id: "3d", label: "3D View", icon: Eye },
-        { id: "takeoff", label: "Takeoff Editor", icon: Edit3 },
-        { id: "sheet", label: "Bill Sheet", icon: Table },
+        { id: "2d", label: "2D plans", icon: Box },
+        { id: "3d", label: "3D view", icon: Eye },
+        { id: "takeoff", label: "Takeoff editor", icon: Edit3 },
+        { id: "sheet", label: "Bill sheet", icon: Table },
         { id: "boq", label: "Final BOQ", icon: FileText }
     ];
 
+    const staircaseTypes = [
+        'straight', 'l_shaped', 'u_shaped', 'spiral', 'winder',
+        'curved', 'bifurcated', 'cantilever', 'helical', 'open_newel'
+    ];
+
+    const showFlightConfig = ['straight', 'l_shaped', 'u_shaped'].includes(staircaseType);
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-6 transition-all hover:shadow-xl">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-slate-900 p-3 rounded-lg shadow-md">
-                                <Calculator className="w-8 h-8 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase">Staircase Estimator Pro</h1>
-                                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1">Advanced 3D Modeling & Takeoff System</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleCalculate}
-                            disabled={loading}
-                            className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-3 font-bold uppercase tracking-wider text-sm shadow-lg active:scale-95 transition-all"
-                        >
-                            <Calculator className="w-5 h-5" />
-                            {loading ? 'Processing...' : 'Calculate Quantities'}
-                        </button>
-                    </div>
-                </div>
+        <WorkspacePage width="wide">
+            <PageHeader
+                title="Staircase estimator"
+                subtitle="Geometry, materials, detailing and SMM7 takeoff for staircases."
+                icon={<Ruler size={22} aria-hidden="true" />}
+                meta={
+                    <>
+                        <MetaChip tone="info">{staircaseType.replace('_', ' ')}</MetaChip>
+                        <MetaChip>{materialType}</MetaChip>
+                        <MetaChip>{boqData.length} item(s)</MetaChip>
+                    </>
+                }
+                actions={
+                    <button
+                        type="button"
+                        onClick={handleCalculate}
+                        disabled={loading}
+                        className={`${action.base} ${action.primary}`}
+                    >
+                        <Calculator size={16} aria-hidden="true" />
+                        {loading ? 'Calculating…' : 'Calculate quantities'}
+                    </button>
+                }
+            />
 
-                {/* Tabs */}
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-                    <div className="flex flex-wrap border-b border-gray-100">
-                        {tabs.map(tab => {
-                            const Icon = tab.icon;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`flex-1 min-w-[120px] px-6 py-4 flex items-center justify-center gap-2 font-bold text-sm uppercase tracking-wide transition-all ${activeTab === tab.id
-                                        ? 'bg-slate-50 text-blue-600 border-b-2 border-blue-600'
-                                        : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    <Icon className="w-4 h-4" />
-                                    {tab.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Content Area */}
-                <div className="bg-white rounded-2xl shadow-xl min-h-[600px] border border-gray-100">
-                    {activeTab === "config" && (
-                        <div className="p-8">
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                {/* Left Panel: Type Selection */}
-                                <div className="lg:col-span-1 space-y-6">
-                                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Staircase Type</h3>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {['straight', 'l_shaped', 'u_shaped', 'spiral', 'winder', 'curved', 'bifurcated', 'cantilever', 'helical', 'open_newel'].map(type => (
-                                                <button
-                                                    key={type}
-                                                    onClick={() => setStaircaseType(type)}
-                                                    className={`p-3 rounded-xl border-2 text-xs font-bold uppercase tracking-wide transition-all ${staircaseType === type
-                                                        ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm'
-                                                        : 'border-white bg-white text-gray-500 hover:border-gray-200'
-                                                        }`}
-                                                >
-                                                    {type.replace('_', ' ')}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Materials</h3>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Structure Material</label>
-                                                <select
-                                                    value={materialType}
-                                                    onChange={(e) => setMaterialType(e.target.value)}
-                                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500"
-                                                >
-                                                    <option value="concrete">Reinforced Concrete</option>
-                                                    <option value="timber">Structural Timber</option>
-                                                    <option value="steel">Structural Steel</option>
-                                                    <option value="glass">Structural Glass</option>
-                                                    <option value="combination">Composite / Mixed</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Finish Type</label>
-                                                <select
-                                                    value={finishType}
-                                                    onChange={(e) => setFinishType(e.target.value)}
-                                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500"
-                                                >
-                                                    <option value="terrazzo">Terrazzo</option>
-                                                    <option value="ceramic_tiles">Ceramic Tiles</option>
-                                                    <option value="porcelain_tiles">Porcelain Tiles</option>
-                                                    <option value="granite">Granite</option>
-                                                    <option value="marble">Marble</option>
-                                                    <option value="timber">Timber Flooring</option>
-                                                    <option value="polished_concrete">Polished Concrete</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Balustrade System</label>
-                                                <select
-                                                    value={balType}
-                                                    onChange={(e) => setBalType(e.target.value)}
-                                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500"
-                                                >
-                                                    <option value="metal">Metal Railings</option>
-                                                    <option value="timber">Timber Posts</option>
-                                                    <option value="glass">Frameless Glass</option>
-                                                    <option value="cable">Cable System</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Right Panel: Parameters */}
-                                <div className="lg:col-span-2 space-y-6">
-                                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Geometric Parameters</h3>
-                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Clear Width (m)</label>
-                                                <input type="number" step="0.01" value={inputs.clear_width} onChange={(e) => updateInput('clear_width', parseFloat(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm font-bold text-slate-700" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Going/Tread (m)</label>
-                                                <input type="number" step="0.005" value={inputs.tread} onChange={(e) => updateInput('tread', parseFloat(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm font-bold text-slate-700" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Rise (m)</label>
-                                                <input type="number" step="0.005" value={inputs.rise} onChange={(e) => updateInput('rise', parseFloat(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm font-bold text-slate-700" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Waist Thickness (m)</label>
-                                                <input type="number" step="0.01" value={inputs.waist_thick} onChange={(e) => updateInput('waist_thick', parseFloat(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm font-bold text-slate-700" />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {(staircaseType === 'straight' || staircaseType === 'l_shaped' || staircaseType === 'u_shaped') && (
-                                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Flight Configuration</h3>
-                                            <div className="space-y-4">
-                                                <div className="flex items-center gap-4">
-                                                    <label className="text-sm font-bold text-gray-600">Number of Flights:</label>
-                                                    <div className="flex bg-white rounded-lg p-1 border">
-                                                        {[1, 2, 3, 4].map(n => (
-                                                            <button
-                                                                key={n}
-                                                                onClick={() => updateInput('num_flights', n)}
-                                                                className={`px-4 py-1 rounded-md text-sm font-bold transition-all ${inputs.num_flights === n ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-blue-600'}`}
-                                                            >
-                                                                {n}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                                    {Array.from({ length: inputs.num_flights }).map((_, idx) => (
-                                                        <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100">
-                                                            <div className="text-xs font-black text-blue-600 uppercase mb-2">Flight {idx + 1}</div>
-                                                            <div className="space-y-2">
-                                                                <div>
-                                                                    <label className="text-[10px] font-bold text-gray-400 block">Risers</label>
-                                                                    <input type="number" value={inputs.risers_per_flight[idx] || 8} onChange={(e) => updateArrayInput('risers_per_flight', idx, parseInt(e.target.value))} className="w-full px-2 py-1 border rounded text-sm" />
-                                                                </div>
-                                                                {idx < inputs.num_flights - 1 && (
-                                                                    <div>
-                                                                        <label className="text-[10px] font-bold text-gray-400 block mt-2">Landing Length (m)</label>
-                                                                        <input type="number" step="0.1" value={inputs.landing_lengths[idx] || 1.5} onChange={(e) => updateArrayInput('landing_lengths', idx, parseFloat(e.target.value))} className="w-full px-2 py-1 border rounded text-sm" />
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {staircaseType === 'spiral' && (
-                                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Spiral Settings</h3>
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div>
-                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Outer Radius (m)</label>
-                                                    <input type="number" step="0.1" value={inputs.spiral_radius} onChange={(e) => updateInput('spiral_radius', parseFloat(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm font-bold" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Center Column Dia (m)</label>
-                                                    <input type="number" step="0.05" value={inputs.spiral_center_column_dia} onChange={(e) => updateInput('spiral_center_column_dia', parseFloat(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm font-bold" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Total Rotation (°)</label>
-                                                    <input type="number" step="45" value={inputs.total_rotation} onChange={(e) => updateInput('total_rotation', parseFloat(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm font-bold" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Additional Features</h3>
-                                        <div className="flex gap-6">
-                                            <label className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-400 transition-colors">
-                                                <input type="checkbox" checked={inputs.include_lighting} onChange={(e) => updateInput('include_lighting', e.target.checked)} className="w-4 h-4 text-blue-600 rounded focus:ring-0" />
-                                                <span className="text-sm font-bold text-gray-700">LED Lighting System</span>
-                                            </label>
-                                            <label className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-400 transition-colors">
-                                                <input type="checkbox" checked={inputs.waterproofing_required} onChange={(e) => updateInput('waterproofing_required', e.target.checked)} className="w-4 h-4 text-blue-600 rounded focus:ring-0" />
-                                                <span className="text-sm font-bold text-gray-700">Waterproofing</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === "2d" && (
-                        <div className="p-4 h-[700px]">
-                            <Staircase2DViewer staircaseData={{ staircase_type: staircaseType, ...inputs }} />
-                        </div>
-                    )}
-
-                    {activeTab === "3d" && (
-                        <div className="h-[700px] bg-slate-900 rounded-2xl overflow-hidden relative border border-slate-800 shadow-2xl">
-                            <StructuralVisualizationComponent
-                                componentType="staircase"
-                                buildingData={{ staircase_type: staircaseType, ...inputs }}
-                            />
-                        </div>
-                    )}
-
-                    {activeTab === "takeoff" && (
-                        <div className="p-4">
-                            <EnglishMethodTakeoffSheet
-                                initialItems={boqData}
-                                onChange={setBoqData}
-                                projectInfo={{
-                                    projectName: "Staircase Project",
-                                    clientName: "Auto-Generated",
-                                    projectDate: new Date().toLocaleDateString()
-                                }}
-                            />
-                        </div>
-                    )}
-
-                    {activeTab === "sheet" && (
-                        <div className="p-4">
-                            <UniversalSheet items={boqData} />
-                        </div>
-                    )}
-
-                    {activeTab === "boq" && (
-                        <div className="p-4">
-                            <UniversalBOQ items={boqData} />
-
-                            {/* Summary Cards */}
-                            {summary && (
-                                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                        <div className="text-xs font-black text-blue-400 uppercase tracking-widest">Total Height</div>
-                                        <div className="text-2xl font-bold text-blue-700">{summary.total_height_m}m</div>
-                                    </div>
-                                    <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-                                        <div className="text-xs font-black text-green-400 uppercase tracking-widest">Concrete Vol</div>
-                                        <div className="text-2xl font-bold text-green-700">{boqData.find(i => i.description.includes('Reinforced concrete'))?.quantity || 0}m³</div>
-                                    </div>
-                                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                        <div className="text-xs font-black text-purple-400 uppercase tracking-widest">Total Steps</div>
-                                        <div className="text-2xl font-bold text-purple-700">{summary.total_risers}</div>
-                                    </div>
-                                    <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                                        <div className="text-xs font-black text-orange-400 uppercase tracking-widest">Rebar Weight</div>
-                                        <div className="text-2xl font-bold text-orange-700">{((boqData.find(i => i.description.includes('main bars'))?.quantity || 0) * 0.888).toFixed(1)}kg</div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
+            {/* Tool tabs */}
+            <div className="-mx-1 mb-4 overflow-x-auto">
+                <div className="flex w-max min-w-full gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
+                    {tabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setActiveTab(tab.id)}
+                                aria-current={isActive ? 'page' : undefined}
+                                className={`flex min-h-[44px] shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-4 sm:text-sm ${
+                                    isActive
+                                        ? 'bg-blue-600 text-white shadow'
+                                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+                                }`}
+                            >
+                                <Icon className="h-4 w-4" aria-hidden="true" />
+                                {tab.label}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
-        </div>
+
+            {activeTab === "config" && (
+                <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
+                        <div className="space-y-4 lg:col-span-2">
+                            <Section
+                                title="Staircase type"
+                                description="The type determines which geometry parameters are required."
+                                icon={<Layers size={18} aria-hidden="true" />}
+                            >
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+                                    {staircaseTypes.map((type) => {
+                                        const isActive = staircaseType === type;
+                                        return (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                aria-pressed={isActive}
+                                                onClick={() => setStaircaseType(type)}
+                                                className={`min-h-[44px] rounded-lg border px-2 py-2 text-[11px] font-bold uppercase tracking-wide transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                                                    isActive
+                                                        ? 'border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-200'
+                                                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+                                                }`}
+                                            >
+                                                {type.replace(/_/g, ' ')}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </Section>
+
+                            <Section
+                                title="Materials and finishes"
+                                description="Structure, finish and balustrade systems included in the bill."
+                                icon={<Layers size={18} aria-hidden="true" />}
+                                tone="muted"
+                            >
+                                <div className={layout.formGrid}>
+                                    <SelectField
+                                        label="Structure material"
+                                        value={materialType}
+                                        onChange={setMaterialType}
+                                        options={[
+                                            { value: 'concrete', label: 'Reinforced concrete' },
+                                            { value: 'timber', label: 'Structural timber' },
+                                            { value: 'steel', label: 'Structural steel' },
+                                            { value: 'glass', label: 'Structural glass' },
+                                            { value: 'combination', label: 'Composite / mixed' },
+                                        ]}
+                                    />
+                                    <SelectField
+                                        label="Finish type"
+                                        value={finishType}
+                                        onChange={setFinishType}
+                                        options={[
+                                            { value: 'terrazzo', label: 'Terrazzo' },
+                                            { value: 'ceramic_tiles', label: 'Ceramic tiles' },
+                                            { value: 'porcelain_tiles', label: 'Porcelain tiles' },
+                                            { value: 'granite', label: 'Granite' },
+                                            { value: 'marble', label: 'Marble' },
+                                            { value: 'timber', label: 'Timber flooring' },
+                                            { value: 'polished_concrete', label: 'Polished concrete' },
+                                        ]}
+                                    />
+                                    <SelectField
+                                        label="Balustrade system"
+                                        value={balType}
+                                        onChange={setBalType}
+                                        options={[
+                                            { value: 'metal', label: 'Metal railings' },
+                                            { value: 'timber', label: 'Timber posts' },
+                                            { value: 'glass', label: 'Frameless glass' },
+                                            { value: 'cable', label: 'Cable system' },
+                                        ]}
+                                    />
+                                </div>
+                            </Section>
+
+                            <Section
+                                title="Geometric parameters"
+                                description="All stair dimensions in metres."
+                                icon={<Ruler size={18} aria-hidden="true" />}
+                            >
+                                <div className={layout.formGridWide}>
+                                    <NumberField label="Clear width" unit="m" step="0.01" min={0} value={inputs.clear_width} onChange={(v) => updateInput('clear_width', parseFloat(v))} />
+                                    <NumberField label="Going / tread" unit="m" step="0.005" min={0} value={inputs.tread} onChange={(v) => updateInput('tread', parseFloat(v))} />
+                                    <NumberField label="Rise" unit="m" step="0.005" min={0} value={inputs.rise} onChange={(v) => updateInput('rise', parseFloat(v))} />
+                                    <NumberField label="Waist thickness" unit="m" step="0.01" min={0} value={inputs.waist_thick} onChange={(v) => updateInput('waist_thick', parseFloat(v))} />
+                                    <NumberField label="Wall thickness" unit="m" step="0.005" min={0} value={inputs.wall_thick} onChange={(v) => updateInput('wall_thick', parseFloat(v))} />
+                                </div>
+                            </Section>
+
+                            {showFlightConfig && (
+                                <Section
+                                    title="Flight configuration"
+                                    description="Riser counts and landing lengths per flight."
+                                    icon={<Layers size={18} aria-hidden="true" />}
+                                    tone="muted"
+                                >
+                                    <div className="mb-3">
+                                        <SegmentedField
+                                            label="Number of flights"
+                                            value={inputs.num_flights}
+                                            onChange={(v) => updateInput('num_flights', v)}
+                                            options={[1, 2, 3, 4].map((n) => ({ value: n, label: String(n) }))}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                        {Array.from({ length: inputs.num_flights }).map((_, idx) => (
+                                            <div key={idx} className="rounded-xl border border-gray-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                                                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-300">
+                                                    Flight {idx + 1}
+                                                </p>
+                                                <div className="space-y-2">
+                                                    <NumberField
+                                                        label="Risers"
+                                                        unit="no."
+                                                        step="1"
+                                                        min={1}
+                                                        inputMode="numeric"
+                                                        value={inputs.risers_per_flight[idx] || 8}
+                                                        onChange={(v) => updateArrayInput('risers_per_flight', idx, parseInt(v, 10))}
+                                                    />
+                                                    {idx < inputs.num_flights - 1 && (
+                                                        <NumberField
+                                                            label="Landing length"
+                                                            unit="m"
+                                                            step="0.1"
+                                                            min={0}
+                                                            value={inputs.landing_lengths[idx] || 1.5}
+                                                            onChange={(v) => updateArrayInput('landing_lengths', idx, parseFloat(v))}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Section>
+                            )}
+
+                            {staircaseType === 'spiral' && (
+                                <Section
+                                    title="Spiral settings"
+                                    description="Radius, centre column and total rotation."
+                                    icon={<Ruler size={18} aria-hidden="true" />}
+                                >
+                                    <div className={layout.formGridWide}>
+                                        <NumberField label="Outer radius" unit="m" step="0.1" min={0} value={inputs.spiral_radius} onChange={(v) => updateInput('spiral_radius', parseFloat(v))} />
+                                        <NumberField label="Centre column diameter" unit="m" step="0.05" min={0} value={inputs.spiral_center_column_dia} onChange={(v) => updateInput('spiral_center_column_dia', parseFloat(v))} />
+                                        <NumberField label="Total rotation" unit="°" step="45" min={0} value={inputs.total_rotation} onChange={(v) => updateInput('total_rotation', parseFloat(v))} />
+                                    </div>
+                                </Section>
+                            )}
+
+                            <TechnicalDetails summary="Detailing parameters (rebar, balustrade, glass, timber)">
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    <NumberField label="Main bar diameter" unit="mm" step="1" min={0} value={inputs.rebar_main_dia} onChange={(v) => updateInput('rebar_main_dia', parseFloat(v))} />
+                                    <NumberField label="Distribution bar diameter" unit="mm" step="1" min={0} value={inputs.rebar_dist_dia} onChange={(v) => updateInput('rebar_dist_dia', parseFloat(v))} />
+                                    <NumberField label="Bar spacing" unit="m" step="0.005" min={0} value={inputs.rebar_spacing} onChange={(v) => updateInput('rebar_spacing', parseFloat(v))} />
+                                    <NumberField label="Bar bend allowance" unit="m" step="0.01" min={0} value={inputs.rebar_bend} onChange={(v) => updateInput('rebar_bend', parseFloat(v))} />
+                                    <NumberField label="Balustrade height" unit="m" step="0.01" min={0} value={inputs.bal_height} onChange={(v) => updateInput('bal_height', parseFloat(v))} />
+                                    <NumberField label="Balustrade post spacing" unit="m" step="0.005" min={0} value={inputs.bal_spacing} onChange={(v) => updateInput('bal_spacing', parseFloat(v))} />
+                                    <NumberField label="Handrail diameter" unit="m" step="0.005" min={0} value={inputs.handrail_dia} onChange={(v) => updateInput('handrail_dia', parseFloat(v))} />
+                                    <NumberField label="Glass thickness" unit="m" step="0.001" min={0} value={inputs.glass_thickness} onChange={(v) => updateInput('glass_thickness', parseFloat(v))} />
+                                    <NumberField label="Timber tread thickness" unit="m" step="0.005" min={0} value={inputs.timber_tread_thick} onChange={(v) => updateInput('timber_tread_thick', parseFloat(v))} />
+                                    <NumberField label="Turn angle" unit="°" step="15" min={0} value={inputs.turn_angle} onChange={(v) => updateInput('turn_angle', parseFloat(v))} />
+                                    <NumberField label="Number of winders" unit="no." step="1" min={0} inputMode="numeric" value={inputs.num_winders} onChange={(v) => updateInput('num_winders', parseInt(v, 10))} />
+                                    <NumberField label="Winder inner radius" unit="m" step="0.05" min={0} value={inputs.winder_inner_radius} onChange={(v) => updateInput('winder_inner_radius', parseFloat(v))} />
+                                    <SelectField
+                                        label="Timber species"
+                                        value={inputs.timber_species}
+                                        onChange={(v) => updateInput('timber_species', v)}
+                                        options={[
+                                            { value: 'hardwood', label: 'Hardwood' },
+                                            { value: 'softwood', label: 'Softwood' },
+                                        ]}
+                                    />
+                                </div>
+                            </TechnicalDetails>
+
+                            <Section title="Additional features" icon={<Layers size={18} aria-hidden="true" />} tone="muted">
+                                <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+                                    <CheckboxField
+                                        label="LED lighting system"
+                                        checked={inputs.include_lighting}
+                                        onChange={(v) => updateInput('include_lighting', v)}
+                                    />
+                                    <CheckboxField
+                                        label="Waterproofing"
+                                        checked={inputs.waterproofing_required}
+                                        onChange={(v) => updateInput('waterproofing_required', v)}
+                                    />
+                                </div>
+                            </Section>
+
+                            <ActionBar hint="Successful runs open the bill sheet automatically.">
+                                <button
+                                    type="button"
+                                    onClick={handleCalculate}
+                                    disabled={loading}
+                                    className={`${action.base} ${action.primary}`}
+                                >
+                                    <Calculator size={16} aria-hidden="true" />
+                                    {loading ? 'Calculating…' : 'Calculate quantities'}
+                                </button>
+                            </ActionBar>
+
+                            {error && (
+                                <ErrorNotice
+                                    title="Staircase calculation failed"
+                                    message={error}
+                                    onRetry={handleCalculate}
+                                />
+                            )}
+                        </div>
+
+                        <aside className="space-y-4">
+                            <Section title="Current configuration" description="Summary of the selected design.">
+                                <KeyValueGrid
+                                    columns={2}
+                                    items={[
+                                        { label: 'Type', value: staircaseType.replace(/_/g, ' ') },
+                                        { label: 'Material', value: materialType },
+                                        { label: 'Finish', value: finishType },
+                                        { label: 'Balustrade', value: balType },
+                                        { label: 'Rise', value: inputs.rise, unit: 'm' },
+                                        { label: 'Tread', value: inputs.tread, unit: 'm' },
+                                    ]}
+                                />
+                            </Section>
+                        </aside>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "2d" && (
+                <div className="h-[70vh] min-h-[360px] overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                    <Staircase2DViewer staircaseData={{ staircase_type: staircaseType, ...inputs }} />
+                </div>
+            )}
+
+            {activeTab === "3d" && (
+                <div className="relative h-[70vh] min-h-[360px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl">
+                    <StructuralVisualizationComponent
+                        componentType="staircase"
+                        buildingData={{ staircase_type: staircaseType, ...inputs }}
+                    />
+                </div>
+            )}
+
+            {activeTab === "takeoff" && (
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                    <EnglishMethodTakeoffSheet
+                        initialItems={boqData}
+                        onChange={setBoqData}
+                        projectInfo={{
+                            projectName: "Staircase Project",
+                            clientName: "Auto-Generated",
+                            projectDate: new Date().toLocaleDateString()
+                        }}
+                    />
+                </div>
+            )}
+
+            {activeTab === "sheet" && (
+                <div>
+                    <UniversalSheet items={boqData} />
+                </div>
+            )}
+
+            {activeTab === "boq" && (
+                <div className="space-y-4">
+                    <UniversalBOQ items={boqData} />
+
+                    {summary && (
+                        <ResultBanner
+                            status="pass"
+                            title="Staircase quantities"
+                            description="Summary of the current bill."
+                        >
+                            <div className="mt-3">
+                                <KeyValueGrid
+                                    columns={4}
+                                    items={[
+                                        { label: 'Total height', value: summary.total_height_m, unit: 'm' },
+                                        {
+                                            label: 'Concrete volume',
+                                            value:
+                                                boqData.find((i) => i.description?.includes('Reinforced concrete'))
+                                                    ?.quantity || 0,
+                                            unit: 'm³',
+                                        },
+                                        { label: 'Total risers', value: summary.total_risers },
+                                        {
+                                            label: 'Rebar weight',
+                                            value: (
+                                                (boqData.find((i) => i.description?.includes('main bars'))?.quantity || 0) *
+                                                0.888
+                                            ).toFixed(1),
+                                            unit: 'kg',
+                                        },
+                                    ]}
+                                />
+                            </div>
+                        </ResultBanner>
+                    )}
+                </div>
+            )}
+        </WorkspacePage>
     );
 };
 

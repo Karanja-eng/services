@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Waves, Calculator, AlertCircle } from "lucide-react";
+import { Waves, Calculator, Ruler, Layers, Sparkles } from "lucide-react";
 import Pool2DDrawing from "./Pool2_D";
 import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 import {
@@ -7,53 +7,36 @@ import {
   UniversalSheet,
   UniversalBOQ
 } from '../universal_component';
-
-// Mock components for demonstration (replace with actual imports in your project)
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
+import {
+  WorkspacePage,
+  PageHeader,
+  Section,
+  MetaChip,
+  NumberField,
+  SelectField,
+  CheckboxField,
+  ErrorNotice,
+  ResultBanner,
+  KeyValueGrid,
+  ActionBar,
+  action,
+  layout,
+  text,
+} from "../../shared/ui";
 
-const InputField = ({ label, name, value, onChange, type = "number", step = "0.01" }) => (
-  <div>
-    <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      step={step}
-      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-    />
-  </div>
-);
-
-const SelectField = ({ label, name, value, onChange, options }) => (
-  <div>
-    <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
-    <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-    >
-      {options.map(opt => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
-      ))}
-    </select>
-  </div>
-);
-
-const CheckboxField = ({ label, name, checked, onChange }) => (
-  <div className="flex items-center gap-2">
-    <input
-      type="checkbox"
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-400"
-    />
-    <label className="text-xs font-medium text-gray-700">{label}</label>
-  </div>
-);
-
+/**
+ * SwimmingPoolTakeoffApp — swimming pool quantity takeoff.
+ *
+ * UI cleanup: calculator tab rebuilt from the shared UI kit (page header,
+ * sectioned fields, responsive single-column layout, sticky phone action bar,
+ * honest error/summary states). The downstream tabs (2D, 3D, takeoff, sheet,
+ * BOQ) keep their existing components and props.
+ *
+ * Preserved exactly: `formData` keys/defaults, the request payload and endpoint,
+ * and the parsing contract — numbers use `parseFloat(value) || 0`, selects keep
+ * their string value, checkboxes keep booleans.
+ */
 export default function SwimmingPoolTakeoffApp() {
   const [activeTab, setActiveTab] = useState("calculator");
   const [formData, setFormData] = useState({
@@ -94,13 +77,14 @@ export default function SwimmingPoolTakeoffApp() {
   const [error, setError] = useState(null);
   const [editorKey, setEditorKey] = useState(0);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : (type === "select-one" ? value : parseFloat(value) || 0),
-    }));
-  };
+  // Parsing contract of the previous `handleChange`, preserved:
+  // checkbox -> boolean, select -> string, number -> parseFloat(v) || 0.
+  const setNumber = (name) => (value) =>
+    setFormData((prev) => ({ ...prev, [name]: parseFloat(value) || 0 }));
+  const setSelect = (name) => (value) =>
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  const setCheck = (name) => (checked) =>
+    setFormData((prev) => ({ ...prev, [name]: checked }));
 
   const handleCalculate = async () => {
     setLoading(true);
@@ -176,180 +160,214 @@ export default function SwimmingPoolTakeoffApp() {
 
   const poolShapeOptions = [
     { value: "rectangular", label: "Rectangular" },
-    { value: "kidney", label: "Kidney Shaped" },
-    { value: "oval", label: "Oval/Circular" },
-    { value: "L-shaped", label: "L-Shaped" },
+    { value: "kidney", label: "Kidney shaped" },
+    { value: "oval", label: "Oval / circular" },
+    { value: "L-shaped", label: "L-shaped" },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 shadow-sm px-6 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Waves className="w-8 h-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Swimming Pool Quantity Takeoff</h1>
-              <p className="text-sm text-gray-600">Professional BOQ Calculator with CAD Visualization</p>
-            </div>
-          </div>
-        </div>
+    <WorkspacePage width="wide">
+      <PageHeader
+        title="Swimming pool quantity takeoff"
+        subtitle="Excavation, structure, waterproofing, finishes and MEP quantities."
+        icon={<Waves size={22} aria-hidden="true" />}
+        meta={
+          <>
+            <MetaChip tone="info">{formData.poolShape}</MetaChip>
+            <MetaChip>{takeoffData.length} BOQ item(s)</MetaChip>
+          </>
+        }
+        actions={
+          <button
+            type="button"
+            onClick={handleCalculate}
+            disabled={loading}
+            className={`${action.base} ${action.primary}`}
+          >
+            <Calculator size={16} aria-hidden="true" />
+            {loading ? "Calculating…" : "Calculate quantities"}
+          </button>
+        }
+      />
 
-        <div className="mt-4">
-          <UniversalTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            tabs={['calculator', '2d-drawing', '3d-view', 'takeoff', 'sheet', 'boq']}
-          />
-        </div>
-      </header>
+      <div className="mb-4 -mx-1 overflow-x-auto">
+        <UniversalTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          tabs={['calculator', '2d-drawing', '3d-view', 'takeoff', 'sheet', 'boq']}
+        />
+      </div>
 
-      <main className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
-        {activeTab === "calculator" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="space-y-6">
-              <h2 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
-                <Calculator className="w-5 h-5 text-gray-500" /> Parameters
-              </h2>
-
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <h3 className="col-span-2 text-sm font-bold text-gray-700 mt-2">Pool Type</h3>
-                  <div className="col-span-2">
-                    <SelectField label="Pool Shape" name="poolShape" value={formData.poolShape} onChange={handleChange} options={poolShapeOptions} />
-                  </div>
-
-                  <h3 className="col-span-2 text-sm font-bold text-gray-700 mt-2">Dimensions</h3>
-                  <InputField label="Length (m)" name="intL" value={formData.intL} onChange={handleChange} />
-                  <InputField label="Width (m)" name="intW" value={formData.intW} onChange={handleChange} />
-                  <InputField label="Shallow Depth (m)" name="shallowDepth" value={formData.shallowDepth} onChange={handleChange} />
-                  <InputField label="Deep Depth (m)" name="deepDepth" value={formData.deepDepth} onChange={handleChange} />
-
-                  <h3 className="col-span-2 text-sm font-bold text-gray-700 mt-2">Structure</h3>
-                  <InputField label="Wall Thickness (m)" name="wallThick" value={formData.wallThick} onChange={handleChange} />
-                  <InputField label="Bed Thickness (m)" name="bedThick" value={formData.bedThick} onChange={handleChange} />
-                  <InputField label="Tanking (m)" name="tankingThick" value={formData.tankingThick} onChange={handleChange} />
-                  <InputField label="Coping Width (m)" name="copingWidth" value={formData.copingWidth} onChange={handleChange} />
-
-                  <h3 className="col-span-2 text-sm font-bold text-gray-700 mt-2">Features</h3>
-                  <div className="col-span-2 space-y-2">
-                    <CheckboxField label="Include Reinforcement" name="reinfIncl" checked={formData.reinfIncl} onChange={handleChange} />
-                    <CheckboxField label="Include Formwork" name="formIncl" checked={formData.formIncl} onChange={handleChange} />
-                    <CheckboxField label="Include Finishes" name="includeFinishes" checked={formData.includeFinishes} onChange={handleChange} />
-                    <CheckboxField label="Include MEP" name="includeMep" checked={formData.includeMep} onChange={handleChange} />
-                    <CheckboxField label="Overflow System" name="overflowSystem" checked={formData.overflowSystem} onChange={handleChange} />
-                    <CheckboxField label="Diving Board" name="divingBoard" checked={formData.divingBoard} onChange={handleChange} />
-                    <CheckboxField label="Shallow End Steps" name="shallowEndSteps" checked={formData.shallowEndSteps} onChange={handleChange} />
-                    <CheckboxField label="Include Backfill" name="backfillIncl" checked={formData.backfillIncl} onChange={handleChange} />
-                  </div>
-                </div>
+      {activeTab === "calculator" && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
+          <div className="space-y-4 lg:col-span-2">
+            <Section
+              title="Pool type"
+              description="The shape changes the surface area and volume formulae used by the backend."
+              icon={<Waves size={18} aria-hidden="true" />}
+            >
+              <div className={layout.formGrid}>
+                <SelectField
+                  label="Pool shape"
+                  value={formData.poolShape}
+                  onChange={setSelect("poolShape")}
+                  options={poolShapeOptions}
+                />
               </div>
+            </Section>
 
+            <Section
+              title="Dimensions"
+              description="Internal plan size and water depths (metres)."
+              icon={<Ruler size={18} aria-hidden="true" />}
+            >
+              <div className={layout.formGrid}>
+                <NumberField label="Internal length" unit="m" step="0.01" min={0} value={formData.intL} onChange={setNumber("intL")} />
+                <NumberField label="Internal width" unit="m" step="0.01" min={0} value={formData.intW} onChange={setNumber("intW")} />
+                <NumberField label="Shallow end depth" unit="m" step="0.01" min={0} value={formData.shallowDepth} onChange={setNumber("shallowDepth")} />
+                <NumberField label="Deep end depth" unit="m" step="0.01" min={0} value={formData.deepDepth} onChange={setNumber("deepDepth")} />
+              </div>
+            </Section>
+
+            <Section
+              title="Structure"
+              description="Concrete, tanking and coping dimensions."
+              icon={<Layers size={18} aria-hidden="true" />}
+              tone="muted"
+            >
+              <div className={layout.formGrid}>
+                <NumberField label="Wall thickness" unit="m" step="0.005" min={0} value={formData.wallThick} onChange={setNumber("wallThick")} />
+                <NumberField label="Base slab thickness" unit="m" step="0.005" min={0} value={formData.bedThick} onChange={setNumber("bedThick")} />
+                <NumberField label="Tanking thickness" unit="m" step="0.005" min={0} value={formData.tankingThick} onChange={setNumber("tankingThick")} />
+                <NumberField label="Coping width" unit="m" step="0.01" min={0} value={formData.copingWidth} onChange={setNumber("copingWidth")} />
+              </div>
+            </Section>
+
+            <Section
+              title="Scope options"
+              description="Choose which element groups are included in the bill."
+              icon={<Sparkles size={18} aria-hidden="true" />}
+            >
+              <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+                <CheckboxField label="Include reinforcement" checked={formData.reinfIncl} onChange={setCheck("reinfIncl")} />
+                <CheckboxField label="Include formwork" checked={formData.formIncl} onChange={setCheck("formIncl")} />
+                <CheckboxField label="Include finishes" checked={formData.includeFinishes} onChange={setCheck("includeFinishes")} />
+                <CheckboxField label="Include MEP" checked={formData.includeMep} onChange={setCheck("includeMep")} />
+                <CheckboxField label="Overflow system" checked={formData.overflowSystem} onChange={setCheck("overflowSystem")} />
+                <CheckboxField label="Diving board" checked={formData.divingBoard} onChange={setCheck("divingBoard")} />
+                <CheckboxField label="Shallow end steps" checked={formData.shallowEndSteps} onChange={setCheck("shallowEndSteps")} />
+                <CheckboxField label="Include backfill" checked={formData.backfillIncl} onChange={setCheck("backfillIncl")} />
+              </div>
+            </Section>
+
+            <ActionBar hint="Generates BOQ rows you can edit in the taking-off tab.">
               <button
+                type="button"
                 onClick={handleCalculate}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition-colors disabled:opacity-50"
+                className={`${action.base} ${action.primary}`}
               >
-                {loading ? "Calculating..." : "Calculate Quantities"}
+                <Calculator size={16} aria-hidden="true" />
+                {loading ? "Calculating…" : "Calculate quantities"}
               </button>
+            </ActionBar>
 
-              {error && (
-                <div className="bg-red-50 text-red-700 p-3 rounded text-sm flex gap-2">
-                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <div>{error}</div>
-                </div>
-              )}
-            </div>
+            {error && (
+              <ErrorNotice
+                title="Swimming pool takeoff failed"
+                message={error}
+                onRetry={handleCalculate}
+              />
+            )}
+          </div>
 
-            <div className="bg-blue-50/50 p-6 rounded-lg border border-blue-100">
-              <h3 className="font-bold text-blue-900 mb-2">Swimming Pool Calculation</h3>
-              <p className="text-sm text-blue-800 mb-4">
-                Comprehensive BOQ generation for various pool types including:
-              </p>
-              <ul className="list-disc pl-5 text-sm text-blue-800 space-y-1 mb-4">
-                <li>Rectangular, Kidney, Oval, and L-shaped pools</li>
-                <li>Complete earthworks and excavation</li>
+          <aside className="space-y-4">
+            <Section title="What this calculates" description="Element groups included in the bill.">
+              <ul className={`list-inside list-disc space-y-1 text-xs leading-relaxed ${text.subtitle}`}>
+                <li>Rectangular, kidney, oval and L-shaped pools</li>
+                <li>Earthworks and excavation</li>
                 <li>Structural concrete and reinforcement</li>
                 <li>Waterproofing and finishes</li>
-                <li>MEP systems (filtration, lighting, etc.)</li>
+                <li>MEP systems (filtration, lighting)</li>
                 <li>Safety features and accessories</li>
               </ul>
+            </Section>
 
-              {Object.keys(summary).length > 0 && (
-                <div className="mt-4 bg-white p-4 rounded shadow-sm border border-green-100">
-                  <h4 className="text-green-700 font-bold mb-2">Summary</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="text-gray-600">Pool Type:</div>
-                    <div className="font-semibold">{summary.pool_type?.toUpperCase()}</div>
-                    <div className="text-gray-600">Water Volume:</div>
-                    <div className="font-semibold">{summary.water_volume_liters?.toLocaleString()} L</div>
-                    <div className="text-gray-600">Total Concrete:</div>
-                    <div className="font-semibold">{summary.total_concrete_m3} m³</div>
-                    <div className="text-gray-600">Total Excavation:</div>
-                    <div className="font-semibold">{summary.total_excavation_m3} m³</div>
-                    <div className="text-gray-600">Tiling Area:</div>
-                    <div className="font-semibold">{summary.tiling_area_m2} m²</div>
-                  </div>
-                  <p className="text-xs text-gray-600 mt-3">
-                    Generated {takeoffData.length} BOQ items. Check other tabs for details.
-                  </p>
+            {Object.keys(summary).length > 0 && (
+              <ResultBanner
+                status="pass"
+                title="Quantities generated"
+                description={`${takeoffData.length} BOQ items are available in the taking-off, sheet and BOQ tabs.`}
+              >
+                <div className="mt-3">
+                  <KeyValueGrid
+                    columns={2}
+                    items={[
+                      { label: "Pool type", value: summary.pool_type?.toUpperCase?.() ?? "—" },
+                      { label: "Water volume", value: summary.water_volume_liters?.toLocaleString?.() ?? "—", unit: "L" },
+                      { label: "Concrete", value: summary.total_concrete_m3, unit: "m³" },
+                      { label: "Excavation", value: summary.total_excavation_m3, unit: "m³" },
+                      { label: "Tiling area", value: summary.tiling_area_m2, unit: "m²" },
+                    ]}
+                  />
                 </div>
-              )}
-            </div>
-          </div>
-        )}
+              </ResultBanner>
+            )}
+          </aside>
+        </div>
+      )}
 
-        {activeTab === "2d-drawing" && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-[800px] overflow-hidden">
-            <Pool2DDrawing poolData={{
+      {activeTab === "2d-drawing" && (
+        <div className="h-[70vh] min-h-[360px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <Pool2DDrawing poolData={{
+            int_l: formData.intL,
+            int_w: formData.intW,
+            shallow_depth: formData.shallowDepth,
+            deep_depth: formData.deepDepth,
+            wall_thick: formData.wallThick,
+            tanking_thick: formData.tankingThick,
+            working_space: formData.workingSpace,
+            bed_thick: formData.bedThick,
+            pool_shape: formData.poolShape,
+          }} />
+        </div>
+      )}
+
+      {activeTab === "3d-view" && (
+        <div className="h-[70vh] min-h-[360px] overflow-hidden rounded-lg border border-gray-700 bg-gray-900 shadow-sm">
+          <StructuralVisualizationComponent
+            componentType="pool"
+            componentData={{
               int_l: formData.intL,
               int_w: formData.intW,
               shallow_depth: formData.shallowDepth,
               deep_depth: formData.deepDepth,
               wall_thick: formData.wallThick,
-              tanking_thick: formData.tankingThick,
-              working_space: formData.workingSpace,
               bed_thick: formData.bedThick,
               pool_shape: formData.poolShape,
-            }} />
-          </div>
-        )}
+            }}
+            theme="dark"
+          />
+        </div>
+      )}
 
-        {activeTab === "3d-view" && (
-          <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 h-[800px] overflow-hidden">
-            <StructuralVisualizationComponent
-              componentType="pool"
-              componentData={{
-                int_l: formData.intL,
-                int_w: formData.intW,
-                shallow_depth: formData.shallowDepth,
-                deep_depth: formData.deepDepth,
-                wall_thick: formData.wallThick,
-                bed_thick: formData.bedThick,
-                pool_shape: formData.poolShape,
-              }}
-              theme="dark"
-            />
-          </div>
-        )}
+      {activeTab === "takeoff" && (
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <EnglishMethodTakeoffSheet
+            key={editorKey}
+            initialItems={takeoffData}
+            onChange={setTakeoffData}
+            projectInfo={{
+              projectName: `Swimming Pool Project - ${formData.poolShape.toUpperCase()}`,
+              clientName: "Client Name",
+              projectDate: new Date().toLocaleDateString()
+            }}
+          />
+        </div>
+      )}
 
-        {activeTab === "takeoff" && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden">
-            <EnglishMethodTakeoffSheet
-              key={editorKey}
-              initialItems={takeoffData}
-              onChange={setTakeoffData}
-              projectInfo={{
-                projectName: `Swimming Pool Project - ${formData.poolShape.toUpperCase()}`,
-                clientName: "Client Name",
-                projectDate: new Date().toLocaleDateString()
-              }}
-            />
-          </div>
-        )}
-
-        {activeTab === "sheet" && <div className="h-full"><UniversalSheet items={takeoffData} /></div>}
-        {activeTab === "boq" && <div className="h-full"><UniversalBOQ items={takeoffData} /></div>}
-      </main>
-    </div>
+      {activeTab === "sheet" && <div><UniversalSheet items={takeoffData} /></div>}
+      {activeTab === "boq" && <div><UniversalBOQ items={takeoffData} /></div>}
+    </WorkspacePage>
   );
 }

@@ -1,5 +1,13 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Layers } from "lucide-react";
+import {
+  Section,
+  NumberField,
+  TextField,
+  CheckboxField,
+  layout,
+} from "../../shared/ui";
 
 const DrainageTakeoffForm = ({ onCalculationComplete }) => {
   const [projectData, setProjectData] = useState({
@@ -134,167 +142,90 @@ const DrainageTakeoffForm = ({ onCalculationComplete }) => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-white dark:bg-slate-800 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        Drainage Takeoff Calculator
-      </h1>
-
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6">
-        {["project", "manholes", "pipes", "ancillary"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 font-medium capitalize ${activeTab === tab
-              ? "border-b-2 border-blue-500 text-blue-600"
-              : "text-gray-500 hover:text-gray-700"
+    <div className="w-full">
+      {/* Tab strip — scrolls on phones instead of wrapping/overflowing. */}
+      <div className="-mx-1 mb-4 overflow-x-auto">
+        <div className="flex w-max min-w-full gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800">
+          {["project", "manholes", "pipes", "ancillary"].map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              aria-current={activeTab === tab ? 'page' : undefined}
+              className={`min-h-[44px] shrink-0 rounded-lg px-4 py-2 text-xs font-bold capitalize transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-sm ${
+                activeTab === tab
+                  ? "bg-blue-600 text-white shadow"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
               }`}
-          >
-            {tab}
-          </button>
-        ))}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Project Details Tab */}
       {activeTab === "project" && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            Project Details
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project Name
-              </label>
-              <input
-                type="text"
-                value={projectData.project_name}
-                onChange={(e) =>
-                  setProjectData((prev) => ({
-                    ...prev,
-                    project_name: e.target.value,
-                  }))
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <Section
+          title="Project details"
+          description="Site-wide information used for the excavation and clearance items."
+          icon={<Layers size={18} aria-hidden="true" />}
+        >
+          <div className={layout.formGridWide}>
+            <div className="sm:col-span-2">
+              <TextField
+                label="Project name"
                 placeholder="Enter project name"
+                value={projectData.project_name}
+                onChange={(v) => setProjectData((prev) => ({ ...prev, project_name: v }))}
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Vegetable Soil Depth (m)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={projectData.veg_depth}
-                onChange={(e) =>
-                  setProjectData((prev) => ({
-                    ...prev,
-                    veg_depth: parseFloat(e.target.value),
-                  }))
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Site Clearance Area (m²)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={projectData.site_clearance_area}
-                onChange={(e) =>
-                  setProjectData((prev) => ({
-                    ...prev,
-                    site_clearance_area: parseFloat(e.target.value),
-                  }))
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={projectData.has_rock}
-                  onChange={(e) =>
-                    setProjectData((prev) => ({
-                      ...prev,
-                      has_rock: e.target.checked,
-                    }))
-                  }
-                  className="mr-2 h-4 w-4 text-blue-600"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  Extra over for rock
-                </span>
-              </label>
-            </div>
-
+            <NumberField
+              label="Vegetable soil depth"
+              unit="m"
+              step="0.01"
+              min={0}
+              value={projectData.veg_depth}
+              onChange={(v) => setProjectData((prev) => ({ ...prev, veg_depth: parseFloat(v) }))}
+            />
+            <NumberField
+              label="Site clearance area"
+              unit="m²"
+              step="0.01"
+              min={0}
+              value={projectData.site_clearance_area}
+              onChange={(v) => setProjectData((prev) => ({ ...prev, site_clearance_area: parseFloat(v) }))}
+            />
             {projectData.has_rock && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rock starts at depth from GL (m)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={projectData.rock_start_depth}
-                  onChange={(e) =>
-                    setProjectData((prev) => ({
-                      ...prev,
-                      rock_start_depth: parseFloat(e.target.value),
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <NumberField
+                label="Rock starts at depth from GL"
+                unit="m"
+                step="0.1"
+                min={0}
+                value={projectData.rock_start_depth}
+                onChange={(v) => setProjectData((prev) => ({ ...prev, rock_start_depth: parseFloat(v) }))}
+              />
             )}
-
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={projectData.has_planking}
-                  onChange={(e) =>
-                    setProjectData((prev) => ({
-                      ...prev,
-                      has_planking: e.target.checked,
-                    }))
-                  }
-                  className="mr-2 h-4 w-4 text-blue-600"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  Planking/Strutting/Dewatering
-                </span>
-              </label>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={projectData.ground_is_level}
-                  onChange={(e) =>
-                    setProjectData((prev) => ({
-                      ...prev,
-                      ground_is_level: e.target.checked,
-                    }))
-                  }
-                  className="mr-2 h-4 w-4 text-blue-600"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  Ground is level
-                </span>
-              </label>
-            </div>
           </div>
-        </div>
+
+          <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-3">
+            <CheckboxField
+              label="Extra over for rock"
+              checked={projectData.has_rock}
+              onChange={(checked) => setProjectData((prev) => ({ ...prev, has_rock: checked }))}
+            />
+            <CheckboxField
+              label="Planking / strutting / dewatering"
+              checked={projectData.has_planking}
+              onChange={(checked) => setProjectData((prev) => ({ ...prev, has_planking: checked }))}
+            />
+            <CheckboxField
+              label="Ground is level"
+              checked={projectData.ground_is_level}
+              onChange={(checked) => setProjectData((prev) => ({ ...prev, ground_is_level: checked }))}
+            />
+          </div>
+        </Section>
       )}
 
       {/* Manholes Tab */}

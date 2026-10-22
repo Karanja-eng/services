@@ -1,4 +1,4 @@
-import { Calculator, Download, Plus, Trash2, FileText, DoorOpen, Upload, Loader2, Eye, Box, X, Layers } from 'lucide-react';
+import { Calculator, Download, Plus, Trash2, FileText, DoorOpen, Upload, Loader2, Eye, Box, X, Layers, Ruler } from 'lucide-react';
 import React, { Suspense, useState, useEffect } from "react";
 import descriptionsData from "../descriptions";
 
@@ -7,6 +7,23 @@ import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
+import {
+    PageHeader,
+    Section,
+    MetaChip,
+    NumberField,
+    TextField,
+    SegmentedField,
+    CheckboxField,
+    TechnicalDetails,
+    ErrorNotice,
+    EmptyState,
+    TableScrollRegion,
+    ActionBar,
+    action,
+    layout,
+    text,
+} from '../../shared/ui';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 
@@ -54,6 +71,7 @@ const DoorWindowTakeoff = () => {
 
     const [takeoffData, setTakeoffData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [calcError, setCalcError] = useState(null);
     const [editorKey, setEditorKey] = useState(0);
     const [calcSubTab, setCalcSubTab] = useState("automation");
 
@@ -127,6 +145,11 @@ const DoorWindowTakeoff = () => {
         }));
     };
 
+    // Value-based setter used by the shared fields. Same storage contract as
+    // `handleInputChange`: the raw value is kept as-is and parsed at payload time.
+    const setField = (name) => (value) =>
+        setFormData(prev => ({ ...prev, [name]: value }));
+
     const handleDescriptionChange = (id, text) => {
         setDescriptions(prev => prev.map(desc =>
             desc.id === id ? { ...desc, text } : desc
@@ -141,6 +164,7 @@ const DoorWindowTakeoff = () => {
 
     const calculateQuantities = async () => {
         setLoading(true);
+        setCalcError(null);
         try {
             const payload = {
                 opening_W: parseFloat(formData.opening_W) || 0,
@@ -203,30 +227,41 @@ const DoorWindowTakeoff = () => {
             }
         } catch (error) {
             console.error('Calculation error:', error);
-            alert("Calculation failed. Backend might be offline.");
+            // Replaces the previous alert(); failures are reported inline.
+            setCalcError(
+                error?.response?.data?.detail ||
+                    error?.message ||
+                    "Calculation failed. The backend may be offline."
+            );
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-none">
-                <div className="flex items-center gap-3 mb-4">
-                    {itemType === 'door' ? <DoorOpen className="w-8 h-8 text-blue-800" /> : <BuildingIcon className="w-8 h-8 text-blue-800" />}
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Door & Window Quantity Takeoff</h1>
-                        <p className="text-sm text-gray-500">Professional surveying calculator</p>
-                    </div>
-                </div>
-                <UniversalTabs
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+        <div className="min-h-full bg-gray-50">
+            <div className="mx-auto w-full max-w-7xl px-3 pt-4 sm:px-5">
+                <PageHeader
+                    title="Door and window takeoff"
+                    subtitle="Openings, frames, lintels, ironmongery and glazing quantities."
+                    icon={<DoorOpen size={22} aria-hidden="true" />}
+                    meta={
+                        <>
+                            <MetaChip tone="info">{itemType === 'door' ? 'Internal door' : 'Window'}</MetaChip>
+                            <MetaChip>{takeoffData.length} item(s) generated</MetaChip>
+                        </>
+                    }
                 />
+                <div className="-mx-1 mb-4 overflow-x-auto">
+                    <UniversalTabs
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+                    />
+                </div>
             </div>
 
-            <main className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+            <main className="mx-auto w-full max-w-7xl px-3 pb-8 sm:px-5">
                 {activeTab === 'calculator' && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Configuration */}
@@ -297,114 +332,156 @@ const DoorWindowTakeoff = () => {
                                 )}
                             </div>
 
-                            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                                <h2 className="font-bold text-gray-800 mb-3 border-b pb-1">Select Type</h2>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setItemType('door')} className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${itemType === 'door' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Internal Door</button>
-                                    <button onClick={() => setItemType('window')} className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${itemType === 'window' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Window</button>
-                                </div>
-                            </div>
+                            <Section
+                                title="Opening type"
+                                description="Doors and windows use different quantity rules."
+                                icon={<DoorOpen size={18} aria-hidden="true" />}
+                            >
+                                <SegmentedField
+                                    label="Type"
+                                    value={itemType}
+                                    onChange={(value) => setItemType(value)}
+                                    options={[
+                                        { value: 'door', label: 'Internal door' },
+                                        { value: 'window', label: 'Window' },
+                                    ]}
+                                />
+                            </Section>
 
-                            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                                <h2 className="font-bold text-gray-800 mb-3 border-b pb-1">Measurements</h2>
-                                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div><label className="text-xs font-medium text-gray-600">Opening W (m)</label><input type="number" step="0.01" name="opening_W" value={formData.opening_W} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                        <div><label className="text-xs font-medium text-gray-600">Opening H (m)</label><input type="number" step="0.01" name="opening_H" value={formData.opening_H} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div><label className="text-xs font-medium text-gray-600">Wall Thk (m)</label><input type="number" step="0.01" name="wall_thick" value={formData.wall_thick} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                        <div><label className="text-xs font-medium text-gray-600">Frame W (mm)</label><input type="number" name="frame_W" value={formData.frame_W} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                    </div>
-
-                                    {/* Dynamic Inputs based on Type */}
-                                    {itemType === 'door' ? (
-                                        <div className="space-y-2 pt-2 border-t">
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div><label className="text-xs font-medium text-gray-600">Num Doors</label><input type="number" name="num_doors" value={formData.num_doors} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                                <div><label className="text-xs font-medium text-gray-600">Leaf Thk (mm)</label><input type="number" name="leaf_thick" value={formData.leaf_thick} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                            </div>
-                                            <div><label className="text-xs font-medium text-gray-600">Leaf Material</label><input type="text" name="leaf_material" value={formData.leaf_material} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-
-                                            <h3 className="text-xs font-bold text-gray-500 mt-2">Ironmongery (Per Door)</h3>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <div><label className="text-xs text-gray-500">Locks</label><input type="number" name="num_locks" value={formData.num_locks} onChange={handleInputChange} className="w-full px-1 py-1 border rounded text-xs" /></div>
-                                                <div><label className="text-xs text-gray-500">Hinges</label><input type="number" name="num_hinges" value={formData.num_hinges} onChange={handleInputChange} className="w-full px-1 py-1 border rounded text-xs" /></div>
-                                                <div><label className="text-xs text-gray-500">Bolts</label><input type="number" name="num_bolts" value={formData.num_bolts} onChange={handleInputChange} className="w-full px-1 py-1 border rounded text-xs" /></div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2 pt-2 border-t">
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div><label className="text-xs font-medium text-gray-600">Num Windows</label><input type="number" name="num_windows" value={formData.num_windows} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                                <div><label className="text-xs font-medium text-gray-600">Num Panes</label><input type="number" name="num_panes" value={formData.num_panes} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                            </div>
-                                            <div><label className="text-xs font-medium text-gray-600">Glazing (mm)</label><input type="number" name="glazing_thick" value={formData.glazing_thick} onChange={handleInputChange} className="w-full px-2 py-1 border rounded text-sm" /></div>
-                                            <div className="flex gap-4">
-                                                <label className="flex items-center text-xs"><input type="checkbox" name="has_grills" checked={formData.has_grills} onChange={handleInputChange} className="mr-1" /> Grills</label>
-                                                <label className="flex items-center text-xs"><input type="checkbox" name="has_mesh" checked={formData.has_mesh} onChange={handleInputChange} className="mr-1" /> Mesh</label>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Lintel Settings */}
-                                    <div className="pt-2 border-t">
-                                        <h3 className="text-xs font-bold text-gray-500 mb-1">Lintel</h3>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div><label className="text-xs text-gray-500">Bearing (m)</label><input type="number" step="0.01" name="lintel_bearing" value={formData.lintel_bearing} onChange={handleInputChange} className="w-full px-1 py-1 border rounded text-xs" /></div>
-                                            <div><label className="text-xs text-gray-500">Height (m)</label><input type="number" step="0.01" name="lintel_H" value={formData.lintel_H} onChange={handleInputChange} className="w-full px-1 py-1 border rounded text-xs" /></div>
-                                        </div>
-                                    </div>
+                            <Section
+                                title="Measurements"
+                                description="Opening, frame and lining dimensions."
+                                icon={<Ruler size={18} aria-hidden="true" />}
+                            >
+                                <div className={layout.formGrid}>
+                                    <NumberField label="Opening width" unit="m" step="0.01" min={0} value={formData.opening_W} onChange={setField('opening_W')} />
+                                    <NumberField label="Opening height" unit="m" step="0.01" min={0} value={formData.opening_H} onChange={setField('opening_H')} />
+                                    <NumberField label="Wall thickness" unit="m" step="0.01" min={0} value={formData.wall_thick} onChange={setField('wall_thick')} />
+                                    <NumberField label="Frame width" unit="mm" step="1" min={0} value={formData.frame_W} onChange={setField('frame_W')} />
                                 </div>
 
-                                <button
-                                    onClick={calculateQuantities}
-                                    disabled={loading || !formData.opening_W}
-                                    className="w-full mt-4 bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 disabled:opacity-50"
-                                >
-                                    {loading ? 'Calculating...' : 'Calculate Quantities'}
-                                </button>
-                            </div>
+                                {itemType === 'door' ? (
+                                    <>
+                                        <div className={`${layout.formGrid} mt-3 border-t border-gray-200 pt-3 dark:border-slate-800`}>
+                                            <NumberField label="Number of doors" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_doors} onChange={setField('num_doors')} />
+                                            <NumberField label="Leaf thickness" unit="mm" step="1" min={0} value={formData.leaf_thick} onChange={setField('leaf_thick')} />
+                                            <div className="sm:col-span-2">
+                                                <TextField label="Leaf material" value={formData.leaf_material} onChange={setField('leaf_material')} />
+                                            </div>
+                                            <NumberField label="Locks per door" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_locks} onChange={setField('num_locks')} />
+                                            <NumberField label="Hinges per door" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_hinges} onChange={setField('num_hinges')} />
+                                            <NumberField label="Bolts per door" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_bolts} onChange={setField('num_bolts')} />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className={`${layout.formGrid} mt-3 border-t border-gray-200 pt-3 dark:border-slate-800`}>
+                                            <NumberField label="Number of windows" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_windows} onChange={setField('num_windows')} />
+                                            <NumberField label="Number of panes" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_panes} onChange={setField('num_panes')} />
+                                            <NumberField label="Glazing thickness" unit="mm" step="1" min={0} value={formData.glazing_thick} onChange={setField('glazing_thick')} />
+                                        </div>
+                                        <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                                            <CheckboxField label="Include grills" checked={formData.has_grills} onChange={setField('has_grills')} />
+                                            <CheckboxField label="Include mesh" checked={formData.has_mesh} onChange={setField('has_mesh')} />
+                                        </div>
+                                    </>
+                                )}
+
+                                <div className="mt-3 grid grid-cols-1 gap-3 border-t border-gray-200 pt-3 dark:border-slate-800 sm:grid-cols-2">
+                                    <NumberField label="Lintel bearing" unit="m" step="0.01" min={0} value={formData.lintel_bearing} onChange={setField('lintel_bearing')} />
+                                    <NumberField label="Lintel height" unit="m" step="0.01" min={0} value={formData.lintel_H} onChange={setField('lintel_H')} />
+                                </div>
+
+                                <TechnicalDetails summary="Frame, architrave, lintel reinforcement and winder details" className="mt-3">
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <NumberField label="Frame thickness" unit="mm" step="1" min={0} value={formData.frame_thick} onChange={setField('frame_thick')} />
+                                        <NumberField label="Horn length" unit="mm" step="1" min={0} value={formData.horn_L} onChange={setField('horn_L')} />
+                                        <NumberField label="Architrave width" unit="mm" step="1" min={0} value={formData.architrave_W} onChange={setField('architrave_W')} />
+                                        <NumberField label="Architrave thickness" unit="mm" step="1" min={0} value={formData.architrave_thick} onChange={setField('architrave_thick')} />
+                                        <NumberField label="Quadrant size" unit="mm" step="1" min={0} value={formData.quadrant_size} onChange={setField('quadrant_size')} />
+                                        <NumberField label="Lintel bar diameter" unit="mm" step="1" min={0} value={formData.reinf_bar_diam} onChange={setField('reinf_bar_diam')} />
+                                        <NumberField label="Lintel bars" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_reinf_bars} onChange={setField('num_reinf_bars')} />
+                                        <NumberField label="Lintel cover" unit="mm" step="1" min={0} value={formData.cover} onChange={setField('cover')} />
+                                        <NumberField label="Reinforcement extra" unit="m" step="0.01" min={0} value={formData.reinf_extra} onChange={setField('reinf_extra')} />
+                                        <TextField label="Form type" value={formData.form_type} onChange={setField('form_type')} />
+                                        <NumberField label="Leaping size" unit="mm" step="1" min={0} value={formData.leaping_size} onChange={setField('leaping_size')} />
+                                        <NumberField label="Stoppers" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_stoppers} onChange={setField('num_stoppers')} />
+                                        <NumberField label="Clamps" unit="no." step="1" min={0} inputMode="numeric" value={formData.num_clamps} onChange={setField('num_clamps')} />
+                                        <NumberField label="Mullion length" unit="m" step="0.01" min={0} value={formData.mullion_L} onChange={setField('mullion_L')} />
+                                        <NumberField label="Mullion size" unit="mm" step="1" min={0} value={formData.mullion_size} onChange={setField('mullion_size')} />
+                                    </div>
+                                    <div className="mt-2">
+                                        <CheckboxField label="Include mullions" checked={formData.has_mullions} onChange={setField('has_mullions')} />
+                                    </div>
+                                </TechnicalDetails>
+
+                                <ActionBar sticky={false} hint="Opening width is required before calculating.">
+                                    <button
+                                        type="button"
+                                        onClick={calculateQuantities}
+                                        disabled={loading || !formData.opening_W}
+                                        className={`${action.base} ${action.primary}`}
+                                    >
+                                        <Calculator size={16} aria-hidden="true" />
+                                        {loading ? 'Calculating…' : 'Calculate quantities'}
+                                    </button>
+                                </ActionBar>
+
+                                {calcError && (
+                                    <ErrorNotice
+                                        className="mt-3"
+                                        title="Door/window takeoff failed"
+                                        message={calcError}
+                                        onRetry={calculateQuantities}
+                                    />
+                                )}
+                            </Section>
                         </div>
 
                         {/* Summary / Preview */}
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 h-full flex flex-col">
-                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <FileText className="w-5 h-5" /> Calculation Summary
-                                </h3>
-
-                                <div className="p-4 bg-gray-50 rounded text-sm text-gray-600 mb-4">
-                                    <p>Fill in measurements and click calculate. Switch to <strong>Takeoff Sheet</strong> to edit descriptions and values. Use <strong>Dimension Paper</strong> for detailed measurement breakdowns.</p>
-                                </div>
+                            <Section
+                                title="Calculation summary"
+                                description="Quantities from the current opening definition."
+                                icon={<FileText size={18} aria-hidden="true" />}
+                                className="h-full"
+                            >
+                                <p className={`mb-3 rounded-lg bg-gray-50 p-3 text-xs leading-relaxed dark:bg-slate-800/60 ${text.subtitle}`}>
+                                    Fill in the measurements and calculate. Switch to <strong>Takeoff sheet</strong> to edit
+                                    descriptions and values, and to the <strong>Dimension paper</strong> for measurement breakdowns.
+                                </p>
 
                                 {takeoffData.length > 0 ? (
-                                    <div className="flex-1 overflow-auto border rounded">
+                                    <TableScrollRegion label="Door and window takeoff summary" minWidth="32rem" hint={false}>
                                         <table className="w-full text-sm">
-                                            <thead className="bg-gray-100">
+                                            <thead className="bg-gray-100 dark:bg-slate-800">
                                                 <tr>
-                                                    <th className="py-2 px-4 text-left font-semibold">Description</th>
-                                                    <th className="py-2 px-4 text-center font-semibold">Unit</th>
-                                                    <th className="py-2 px-4 text-right font-semibold">Qty</th>
+                                                    <th className="px-2 py-2 text-left font-semibold sm:px-3">Description</th>
+                                                    <th className="px-2 py-2 text-center font-semibold">Unit</th>
+                                                    <th className="px-2 py-2 text-right font-semibold sm:px-3">Qty</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {takeoffData.map((item, idx) => (
-                                                    <tr key={idx} className="border-b hover:bg-white">
-                                                        <td className="py-2 px-4">{item.description}</td>
-                                                        <td className="py-2 px-4 text-center">{item.unit}</td>
-                                                        <td className="py-2 px-4 text-right font-mono">{item.quantity?.toFixed(2)}</td>
+                                                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
+                                                        <td className="px-2 py-2 text-xs sm:px-3 sm:text-sm">{item.description}</td>
+                                                        <td className="px-2 py-2 text-center text-xs">{item.unit}</td>
+                                                        <td className="px-2 py-2 text-right font-mono text-xs sm:px-3 sm:text-sm">
+                                                            {item.quantity?.toFixed(2)}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
-                                    </div>
+                                    </TableScrollRegion>
                                 ) : (
-                                    <div className="flex-1 flex items-center justify-center text-gray-400">
-                                        No items calculated yet.
-                                    </div>
+                                    <EmptyState
+                                        compact
+                                        title="No items calculated yet"
+                                        description="Enter the opening width and height, then calculate to generate the schedule."
+                                    />
                                 )}
-                            </div>
+                            </Section>
                         </div>
                     </div>
                 )}

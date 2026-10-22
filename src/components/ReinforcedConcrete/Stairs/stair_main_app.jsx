@@ -2,6 +2,8 @@ import React, { useState, createContext } from "react";
 import { Calculator, BookOpen, Layers } from "lucide-react";
 import Stair3DVisualization from "../../components/visualisation_helper";
 import Stair2D from "./Stair2D"; // Import the new 2D component
+import DesignCodeToggle from "../../shared/primitives/DesignCodeToggle";
+import { PageHeader, MetaChip } from "../../shared/ui";
 
 // Theme Context
 const ThemeContext = createContext();
@@ -13,57 +15,44 @@ function StairDesignerApp({ isDark = false }) {
 
   return (
     <ThemeContext.Provider value={theme}>
-      <div className={`min-h-screen ${isDark ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" : "bg-gradient-to-br from-gray-50 to-gray-100"}`}>
-        {/* Header */}
-        <div className={`${isDark ? "bg-slate-800/50" : "bg-white"} backdrop-blur-sm border-b ${isDark ? "border-slate-700" : "border-gray-200"} sticky top-0 z-10`}>
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center gap-3">
-              <Calculator className={`${isDark ? "text-teal-400" : "text-teal-600"}`} size={32} />
-              <div>
-                <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Stair Design
-                </h1>
-                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                  Professional stair design to Eurocode & BS 8110
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className={`min-h-full ${isDark ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" : "bg-gradient-to-br from-gray-50 to-gray-100"}`}>
+        <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-6">
+          <PageHeader
+            title="Stair design"
+            subtitle="Straight, doglegged and cantilever stair flights to Eurocode 2 and BS 8110."
+            icon={<Calculator size={22} aria-hidden="true" />}
+            meta={
+              <>
+                <MetaChip tone="info">
+                  {activeCode === "eurocode" ? "EN 1992-1-1" : "BS 8110-1:1997"}
+                </MetaChip>
+                <MetaChip>Waist · landings · rebar</MetaChip>
+              </>
+            }
+            actions={
+              <DesignCodeToggle
+                value={activeCode}
+                onChange={setActiveCode}
+                isDark={isDark}
+                ariaLabel="Design standard"
+                options={[
+                  {
+                    id: "eurocode",
+                    label: "Eurocode 2",
+                    icon: <BookOpen size={14} aria-hidden="true" />,
+                  },
+                  {
+                    id: "bs8110",
+                    label: "BS 8110",
+                    icon: <BookOpen size={14} aria-hidden="true" />,
+                  },
+                ]}
+              />
+            }
+          />
         </div>
 
-        {/* Code Selection */}
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex gap-4 mb-6">
-            <button
-              onClick={() => setActiveCode("eurocode")}
-              className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${activeCode === "eurocode"
-                  ? isDark
-                    ? "bg-teal-600 text-white shadow-lg shadow-teal-600/30"
-                    : "bg-teal-500 text-white shadow-lg shadow-teal-500/30"
-                  : isDark
-                    ? "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
-                    : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                }`}
-            >
-              <BookOpen className="inline mr-2" size={20} />
-              Eurocode EN 1992-1-1
-            </button>
-            <button
-              onClick={() => setActiveCode("bs8110")}
-              className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${activeCode === "bs8110"
-                  ? isDark
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : isDark
-                    ? "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
-                    : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                }`}
-            >
-              <BookOpen className="inline mr-2" size={20} />
-              BS 8110-1:1997
-            </button>
-          </div>
-
+        <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6">
           {/* Main Content */}
           {activeCode === "eurocode" ? (
             <EurocodeCalculator theme={theme} isDark={isDark} />

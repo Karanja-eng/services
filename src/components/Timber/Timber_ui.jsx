@@ -627,7 +627,7 @@ export default function TimberUI({ isDark }) {
 
     return (
         <div style={{
-            minHeight: "100vh", background: token.bg, color: token.text,
+            minHeight: "100%", background: token.bg, color: token.text,
             fontFamily: "system-ui, -apple-system, sans-serif",
 
         }}>
@@ -636,14 +636,15 @@ export default function TimberUI({ isDark }) {
                 background: "#1f2937",
                 color: "#ffffff",
                 boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-                padding: "24px 40px",
+                padding: "16px clamp(12px, 4vw, 40px)",
                 display: "flex", alignItems: "center", justifyContent: "space-between",
+                flexWrap: "wrap", gap: 12,
             }}>
-                <div>
-                    <h1 style={{ fontSize: "1.875rem", lineHeight: "2.25rem", fontWeight: 700, margin: 0, padding: 0 }}>
+                <div style={{ minWidth: 0 }}>
+                    <h1 style={{ fontSize: "clamp(1.125rem, 3.5vw, 1.875rem)", lineHeight: 1.2, fontWeight: 700, margin: 0, padding: 0 }}>
                         Timber Design System
                     </h1>
-                    <p style={{ color: "#d1d5db", marginTop: "4px", marginBottom: 0, padding: 0, fontSize: "1rem" }}>
+                    <p style={{ color: "#d1d5db", marginTop: "4px", marginBottom: 0, padding: 0, fontSize: "clamp(0.75rem, 2.5vw, 1rem)" }}>
                         Professional BS 5268: Part 2 Compliant Tool
                     </p>
                 </div>
@@ -653,10 +654,11 @@ export default function TimberUI({ isDark }) {
                         background: showVisualizer ? "rgba(255,255,255,0.2)" : "none",
                         color: "#ffffff",
                         border: `1px solid rgba(255,255,255,0.4)`,
-                        padding: "8px 16px",
+                        padding: "10px 16px",
                         borderRadius: 6,
                         fontSize: "0.875rem",
                         fontWeight: 600,
+                        minHeight: 44,
                         cursor: "pointer",
                         transition: "all 0.2s"
                     }}
@@ -665,12 +667,13 @@ export default function TimberUI({ isDark }) {
                 </button>
             </header>
 
-            {/* Tab bar */}
+            {/* Tab bar — scrolls sideways instead of overflowing the page. */}
             <div style={{
                 display: "flex", borderBottom: `1px solid ${token.border}`,
-                padding: "0 40px", gap: 4,
+                padding: "0 clamp(8px, 3vw, 40px)", gap: 4,
                 background: token.surface,
                 boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                overflowX: "auto",
             }}>
                 {TABS.map(t => (
                     <button
@@ -679,7 +682,8 @@ export default function TimberUI({ isDark }) {
                         style={{
                             background: tab === t.id ? (isDarkTheme(token) ? "#374151" : "#eff6ff") : "transparent",
                             border: "none", cursor: "pointer",
-                            padding: "16px 24px", fontSize: 16, fontWeight: 500,
+                            padding: "14px 16px", fontSize: "clamp(0.75rem, 2.5vw, 1rem)", fontWeight: 500,
+                            minHeight: 44, whiteSpace: "nowrap",
                             color: tab === t.id ? token.primary : token.muted,
                             borderBottom: tab === t.id ? `2px solid ${token.primary}` : "2px solid transparent",
                             transition: "all 0.15s",
@@ -692,15 +696,18 @@ export default function TimberUI({ isDark }) {
             </div>
 
             {/* Body */}
-            <div style={{ padding: "32px 0" }}>
+            <div style={{ padding: "clamp(16px, 3vw, 32px) 0" }}>
                 <div style={{
-                    display: "grid", 
-                    gridTemplateColumns: showVisualizer ? "1fr" : "1fr 450px", 
-                    gap: 32, 
-                    maxWidth: "1280px", 
-                    margin: "0 auto", 
-                    padding: "0 16px",
-                    minHeight: "calc(100vh - 200px)"
+                    display: "grid",
+                    // Collapses to a single column on phones; never forces a
+                    // fixed 450px column into a 320–430px viewport.
+                    gridTemplateColumns: showVisualizer
+                        ? "minmax(0, 1fr)"
+                        : "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+                    gap: "clamp(16px, 3vw, 32px)",
+                    maxWidth: "1280px",
+                    margin: "0 auto",
+                    padding: "0 clamp(8px, 3vw, 16px)",
                 }}>
 
                 {showVisualizer ? (

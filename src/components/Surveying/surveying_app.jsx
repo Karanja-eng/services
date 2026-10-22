@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calculator, Map, Grid3x3, Layers, TrendingUp, Wrench, Plus, Trash2, Download, Upload } from 'lucide-react';
+import { NumberField, SelectField, TableScrollRegion, ErrorNotice } from '../shared/ui';
 
 // Main App Component
 export default function SurveyingApp({ isDark = false }) {
@@ -16,32 +17,36 @@ export default function SurveyingApp({ isDark = false }) {
 
   return (
     <div className={isDark ? "dark" : ""}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <div className="min-h-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
         {/* Header */}
-        <header className="bg-gradient-to-r from-slate-700 to-slate-800 dark:from-slate-800 dark:to-slate-900 text-white shadow-lg">
-          <div className="container mx-auto px-4 py-6">
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Grid3x3 className="w-8 h-8 text-teal-400" />
+        <header className="bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg dark:from-slate-800 dark:to-slate-900">
+          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-6">
+            <h1 className="flex items-center gap-2 text-lg font-bold leading-tight sm:gap-3 sm:text-2xl lg:text-3xl">
+              <Grid3x3 className="h-6 w-6 shrink-0 text-teal-400 sm:h-8 sm:w-8" aria-hidden="true" />
               Civil Engineering Surveying Calculator
             </h1>
-            <p className="text-slate-300 dark:text-slate-400 mt-2">Professional Field Surveying Tools</p>
+            <p className="mt-1 hidden text-xs text-slate-300 dark:text-slate-400 sm:block sm:mt-2 sm:text-sm">
+              Professional field surveying tools
+            </p>
           </div>
         </header>
 
         {/* Navigation Tabs */}
-        <nav className="bg-white dark:bg-slate-800 shadow-md border-b-2 border-slate-200 dark:border-slate-700">
-          <div className="container mx-auto px-4">
-            <div className="flex gap-2 overflow-x-auto">
+        <nav className="border-b-2 border-slate-200 bg-white shadow-md dark:border-slate-700 dark:bg-slate-800">
+          <div className="mx-auto max-w-7xl px-1 sm:px-4">
+            <div className="flex gap-1 overflow-x-auto sm:gap-2">
               {tabs.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
+                  type="button"
                   onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-semibold transition-all border-b-4 ${activeTab === id
-                    ? 'border-teal-500 text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30'
-                    : 'border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200'
+                  aria-current={activeTab === id ? 'page' : undefined}
+                  className={`flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap border-b-4 px-3 py-2.5 text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 sm:gap-2 sm:px-6 sm:py-4 sm:text-base ${activeTab === id
+                    ? 'border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
+                    : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-200'
                     }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" />
                   {label}
                 </button>
               ))}
@@ -50,7 +55,7 @@ export default function SurveyingApp({ isDark = false }) {
         </nav>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-8">
+        <main className="mx-auto max-w-7xl px-2 py-4 sm:px-4 sm:py-8">
           {activeTab === 'levelling' && <LevellingModule isDark={isDark} />}
           {activeTab === 'traverse' && <TraverseModule isDark={isDark} />}
           {activeTab === 'tacheometric' && <TacheometricModule isDark={isDark} />}
@@ -186,29 +191,24 @@ function LevellingModule({ isDark = false }) {
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Levelling Calculations</h2>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Method</label>
-            <select
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              className="w-full px-4 py-2 border-2 border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg focus:border-teal-500 focus:outline-none"
-            >
-              <option value="rise-fall">Rise and Fall Method</option>
-              <option value="hoc">Height of Collimation Method</option>
-            </select>
-          </div>
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          <SelectField
+            label="Method"
+            value={method}
+            onChange={setMethod}
+            options={[
+              { value: 'rise-fall', label: 'Rise and Fall Method' },
+              { value: 'hoc', label: 'Height of Collimation Method' },
+            ]}
+          />
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Benchmark RL (m)</label>
-            <input
-              type="number"
-              step="0.001"
-              value={benchmarkRL}
-              onChange={(e) => setBenchmarkRL(parseFloat(e.target.value))}
-              className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:border-teal-500 focus:outline-none"
-            />
-          </div>
+          <NumberField
+            label="Benchmark RL"
+            unit="m"
+            step="0.001"
+            value={benchmarkRL}
+            onChange={(v) => setBenchmarkRL(parseFloat(v))}
+          />
         </div>
 
         <div className="flex gap-3">

@@ -1,9 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, FileText, Download, TrendingUp } from 'lucide-react';
-import axios from "axios";
-import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
+import { Calculator, Ruler, Layers, Droplets, Box, TrendingUp, Grid3x3 } from 'lucide-react';
+import axios from 'axios';
+import EnglishMethodTakeoffSheet from './ExternalWorks/EnglishMethodTakeoffSheet';
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
+import {
+  WorkspacePage,
+  PageHeader,
+  Section,
+  MetaChip,
+  NumberField,
+  CheckboxField,
+  ErrorNotice,
+  EmptyState,
+  LoadingState,
+  TableScrollRegion,
+  ActionBar,
+  action,
+  layout,
+  text,
+} from '../shared/ui';
 
+/**
+ * BasementTakeoffApp — basement excavation / structure takeoff.
+ *
+ * UI cleanup:
+ * - Calculator tab rebuilt from the shared UI kit (page header, sectioned fields,
+ *   responsive grid, action bar, error/empty/loading states).
+ * - Downstream tabs (`takeoff`, `sheet`, `boq`) are untouched — same components,
+ *   same props, same editable documents.
+ * - `inputs` keys, the local `InputField` parsing (`parseFloat(v) || 0`), the
+ *   request payload and the auto-calculate-on-mount behaviour are unchanged.
+ */
 const BasementTakeoffApp = () => {
     const [activeTab, setActiveTab] = useState("calculator");
     const [inputs, setInputs] = useState({
@@ -103,189 +130,234 @@ const BasementTakeoffApp = () => {
     // Auto-calculate defaults on mount
     useEffect(() => {
         handleCalculate();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Local number contract preserved: parseFloat(value) || 0
+    const num = (field) => (value) => handleInputChange(field, parseFloat(value) || 0);
+
     return (
-        <div className="flex h-screen bg-gray-50 flex-col">
-            {/* Header */}
-            <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-none">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <TrendingUp className="w-8 h-8 text-blue-700" />
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Basement Quantity Takeoff</h1>
-                            <p className="text-sm text-gray-500">Civil Engineering Calculator</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="mt-4">
-                    <UniversalTabs
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                        tabs={['calculator', 'takeoff', 'sheet', 'boq']}
-                    />
-                </div>
+        <WorkspacePage width="wide">
+            <PageHeader
+                title="Basement quantity takeoff"
+                subtitle="Excavation, earthworks, structure and waterproofing quantities for a basement."
+                icon={<TrendingUp size={22} aria-hidden="true" />}
+                meta={
+                    <>
+                        <MetaChip tone="info">SMM7 items</MetaChip>
+                        <MetaChip>{takeoffData.length} item(s) generated</MetaChip>
+                    </>
+                }
+                actions={
+                    <button
+                        type="button"
+                        onClick={handleCalculate}
+                        disabled={loading}
+                        className={`${action.base} ${action.primary}`}
+                    >
+                        <Calculator size={16} aria-hidden="true" />
+                        {loading ? 'Calculating…' : 'Calculate takeoff'}
+                    </button>
+                }
+            />
+
+            <div className="mb-4 -mx-1 overflow-x-auto">
+                <UniversalTabs
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    tabs={['calculator', 'takeoff', 'sheet', 'boq']}
+                />
             </div>
 
-            <div className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
-                {activeTab === "calculator" && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Input Panel */}
-                        <div className="lg:col-span-1">
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Calculator className="w-5 h-5" /> Input Parameters
-                                </h2>
-
-                                <div className="space-y-4 max-h-[calc(100vh-350px)] overflow-y-auto pr-2">
-                                    <div className="space-y-4">
-                                        <h3 className="font-medium text-blue-800 border-b pb-1">Dimensions</h3>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <InputField label="Ext L (m)" value={inputs.ext_L} onChange={(v) => handleInputChange('ext_L', v)} />
-                                            <InputField label="Ext W (m)" value={inputs.ext_W} onChange={(v) => handleInputChange('ext_W', v)} />
-                                            <InputField label="Int L (m)" value={inputs.int_L} onChange={(v) => handleInputChange('int_L', v)} />
-                                            <InputField label="Int W (m)" value={inputs.int_W} onChange={(v) => handleInputChange('int_W', v)} />
-                                            <InputField label="Depth (m)" value={inputs.depth_below_gl} onChange={(v) => handleInputChange('depth_below_gl', v)} />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <h3 className="font-medium text-blue-800 border-b pb-1">Excavation</h3>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <InputField label="Veg Soil (m)" value={inputs.veg_soil_depth} onChange={(v) => handleInputChange('veg_soil_depth', v)} />
-                                            <InputField label="Work Space (m)" value={inputs.working_space} onChange={(v) => handleInputChange('working_space', v)} />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <h3 className="font-medium text-blue-800 border-b pb-1">Structural Details</h3>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <InputField label="Blinding (m)" value={inputs.blinding_thick} onChange={(v) => handleInputChange('blinding_thick', v)} />
-                                            <InputField label="Bed Thk (m)" value={inputs.bed_thick} onChange={(v) => handleInputChange('bed_thick', v)} />
-                                            <InputField label="Fdn L (m)" value={inputs.found_L} onChange={(v) => handleInputChange('found_L', v)} />
-                                            <InputField label="Fdn Thk (m)" value={inputs.found_thick} onChange={(v) => handleInputChange('found_thick', v)} />
-                                            <InputField label="Wall Thk (m)" value={inputs.wall_thick} onChange={(v) => handleInputChange('wall_thick', v)} />
-                                            <InputField label="RC Wall (m)" value={inputs.rc_wall_thick} onChange={(v) => handleInputChange('rc_wall_thick', v)} />
-                                            <InputField label="Slab Thk (m)" value={inputs.slab_thick} onChange={(v) => handleInputChange('slab_thick', v)} />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <h3 className="font-medium text-blue-800 border-b pb-1">Options</h3>
-                                        <CheckboxField label="Include Reinforcement" checked={inputs.reinf_incl} onChange={(v) => handleInputChange('reinf_incl', v)} />
-                                        {inputs.reinf_incl && (
-                                            <InputField label="Reinf Density (kg/m³)" value={inputs.reinf_density} onChange={(v) => handleInputChange('reinf_density', v)} />
-                                        )}
-                                        <CheckboxField label="Include Formwork" checked={inputs.form_incl} onChange={(v) => handleInputChange('form_incl', v)} />
-                                        <CheckboxField label="Include Backfill" checked={inputs.backfill_incl} onChange={(v) => handleInputChange('backfill_incl', v)} />
-                                        <CheckboxField label="Include Disposal" checked={inputs.disposal_incl} onChange={(v) => handleInputChange('disposal_incl', v)} />
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={handleCalculate}
-                                    disabled={loading}
-                                    className="w-full mt-4 bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-bold transition-colors disabled:bg-blue-400 flex items-center justify-center gap-2 shadow-md"
-                                >
-                                    {loading ? "Calculating..." : "Calculate Takeoff"}
-                                </button>
-                                {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+            {activeTab === "calculator" && (
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 xl:gap-6">
+                    {/* Input column */}
+                    <div className="space-y-4 xl:col-span-2">
+                        <Section
+                            title="Basement geometry"
+                            description="External and internal plan dimensions, and depth below ground level."
+                            icon={<Ruler size={18} aria-hidden="true" />}
+                        >
+                            <div className={layout.formGridWide}>
+                                <NumberField label="External length" unit="m" step="0.01" min={0} value={inputs.ext_L} onChange={num('ext_L')} />
+                                <NumberField label="External width" unit="m" step="0.01" min={0} value={inputs.ext_W} onChange={num('ext_W')} />
+                                <NumberField label="Internal length" unit="m" step="0.01" min={0} value={inputs.int_L} onChange={num('int_L')} />
+                                <NumberField label="Internal width" unit="m" step="0.01" min={0} value={inputs.int_W} onChange={num('int_W')} />
+                                <NumberField label="Depth below ground level" unit="m" step="0.01" min={0} value={inputs.depth_below_gl} onChange={num('depth_below_gl')} />
                             </div>
-                        </div>
+                        </Section>
 
-                        {/* Results Panel */}
-                        <div className="lg:col-span-2">
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col h-full">
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">Calculation Summary</h3>
-                                <p className="text-gray-600 mb-6">
-                                    Review the calculated quantities and costs below. Switch to the <strong>Takeoff</strong> tab to edit descriptions or add manual items.
-                                </p>
+                        <Section
+                            title="Excavation and earthworks"
+                            description="Vegetation strip, working space and disposal allowances."
+                            icon={<Layers size={18} aria-hidden="true" />}
+                            tone="muted"
+                        >
+                            <div className={layout.formGridWide}>
+                                <NumberField label="Vegetable soil depth" unit="m" step="0.01" min={0} value={inputs.veg_soil_depth} onChange={num('veg_soil_depth')} />
+                                <NumberField label="Working space allowance" unit="m" step="0.01" min={0} value={inputs.working_space} onChange={num('working_space')} />
+                                <NumberField label="Staged excavation depth" unit="m" step="0.01" min={0} value={inputs.stage_depth} onChange={num('stage_depth')} />
+                            </div>
+                            <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                                <CheckboxField label="Staged excavation" checked={inputs.excav_staged} onChange={(v) => handleInputChange('excav_staged', v)} />
+                                <CheckboxField label="Include backfill" checked={inputs.backfill_incl} onChange={(v) => handleInputChange('backfill_incl', v)} />
+                                <CheckboxField label="Include disposal" checked={inputs.disposal_incl} onChange={(v) => handleInputChange('disposal_incl', v)} />
+                            </div>
+                        </Section>
 
-                                {takeoffData.length > 0 ? (
-                                    <div className="flex-1 overflow-auto border rounded-md">
+                        <Section
+                            title="Structural details"
+                            description="Blinding, base slab, footings and walls (metres)."
+                            icon={<Box size={18} aria-hidden="true" />}
+                        >
+                            <div className={layout.formGridWide}>
+                                <NumberField label="Blinding thickness" unit="m" step="0.005" min={0} value={inputs.blinding_thick} onChange={num('blinding_thick')} />
+                                <NumberField label="Bed thickness" unit="m" step="0.01" min={0} value={inputs.bed_thick} onChange={num('bed_thick')} />
+                                <NumberField label="Hardcore thickness" unit="m" step="0.01" min={0} value={inputs.hardcore_thick} onChange={num('hardcore_thick')} />
+                                <NumberField label="Footing length" unit="m" step="0.01" min={0} value={inputs.found_L} onChange={num('found_L')} />
+                                <NumberField label="Footing thickness" unit="m" step="0.01" min={0} value={inputs.found_thick} onChange={num('found_thick')} />
+                                <NumberField label="Wall thickness" unit="m" step="0.005" min={0} value={inputs.wall_thick} onChange={num('wall_thick')} />
+                                <NumberField label="RC wall thickness" unit="m" step="0.005" min={0} value={inputs.rc_wall_thick} onChange={num('rc_wall_thick')} />
+                                <NumberField label="Slab thickness" unit="m" step="0.01" min={0} value={inputs.slab_thick} onChange={num('slab_thick')} />
+                            </div>
+                        </Section>
+
+                        <Section
+                            title="Waterproofing"
+                            description="Tanking, drainage and waterbar provisions."
+                            icon={<Droplets size={18} aria-hidden="true" />}
+                            tone="muted"
+                        >
+                            <div className={layout.formGridWide}>
+                                <NumberField label="Horizontal tanking thickness" unit="m" step="0.005" min={0} value={inputs.horiz_tanking_thick} onChange={num('horiz_tanking_thick')} />
+                                <NumberField label="Vertical tanking thickness" unit="m" step="0.005" min={0} value={inputs.vert_tanking_thick} onChange={num('vert_tanking_thick')} />
+                                <NumberField label="Projection" unit="m" step="0.01" min={0} value={inputs.projection} onChange={num('projection')} />
+                            </div>
+                            <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                                <CheckboxField label="Include tanking" checked={inputs.has_tanking} onChange={(v) => handleInputChange('has_tanking', v)} />
+                                <CheckboxField label="Include waterbar" checked={inputs.has_waterbar} onChange={(v) => handleInputChange('has_waterbar', v)} />
+                                <CheckboxField label="Include drainage" checked={inputs.has_drain} onChange={(v) => handleInputChange('has_drain', v)} />
+                            </div>
+                        </Section>
+
+                        <Section
+                            title="Columns, reinforcement and formwork"
+                            description="Internal columns and scope options for the takeoff."
+                            icon={<Grid3x3 size={18} aria-hidden="true" />}
+                        >
+                            <div className={layout.formGridWide}>
+                                <NumberField label="Number of columns" unit="no." step="1" min={0} inputMode="numeric" value={inputs.num_columns} onChange={num('num_columns')} />
+                                <NumberField label="Column size" unit="m" step="0.01" min={0} value={inputs.column_size} onChange={num('column_size')} />
+                                <NumberField label="Column base size" unit="m" step="0.01" min={0} value={inputs.column_base_size} onChange={num('column_base_size')} />
+                                <NumberField label="Column base thickness" unit="m" step="0.01" min={0} value={inputs.column_base_thick} onChange={num('column_base_thick')} />
+                                {inputs.reinf_incl && (
+                                    <NumberField label="Reinforcement density" unit="kg/m³" step="1" min={0} value={inputs.reinf_density} onChange={num('reinf_density')} />
+                                )}
+                            </div>
+                            <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                                <CheckboxField label="Include reinforcement" checked={inputs.reinf_incl} onChange={(v) => handleInputChange('reinf_incl', v)} />
+                                <CheckboxField label="Include formwork" checked={inputs.form_incl} onChange={(v) => handleInputChange('form_incl', v)} />
+                            </div>
+                        </Section>
+
+                        <ActionBar hint="Generates SMM7 rows you can edit in the taking-off tab.">
+                            <button
+                                type="button"
+                                onClick={handleCalculate}
+                                disabled={loading}
+                                className={`${action.base} ${action.primary}`}
+                            >
+                                <Calculator size={16} aria-hidden="true" />
+                                {loading ? 'Calculating…' : 'Calculate takeoff'}
+                            </button>
+                        </ActionBar>
+
+                        {error && (
+                            <ErrorNotice title="Basement takeoff failed" message={error} onRetry={handleCalculate} />
+                        )}
+
+                        {loading && (
+                            <LoadingState
+                                label="Calculating basement quantities…"
+                                detail="Excavation, concrete, formwork and waterproofing are derived from the dimensions above."
+                            />
+                        )}
+                    </div>
+
+                    {/* Results column */}
+                    <aside className="min-w-0">
+                        <Section title="Calculation summary" description="Quantities produced by the current inputs.">
+                            {takeoffData.length > 0 ? (
+                                <>
+                                    <TableScrollRegion label="Basement takeoff summary" minWidth="26rem" hint={false}>
                                         <table className="w-full text-sm">
-                                            <thead className="bg-gray-100">
+                                            <thead className="bg-gray-100 dark:bg-slate-800">
                                                 <tr>
-                                                    <th className="py-2 px-4 text-left font-semibold">Description</th>
-                                                    <th className="py-2 px-4 text-center font-semibold">Unit</th>
-                                                    <th className="py-2 px-4 text-right font-semibold">Qty</th>
+                                                    <th className="px-2 py-2 text-left font-semibold sm:px-3">Description</th>
+                                                    <th className="px-2 py-2 text-center font-semibold">Unit</th>
+                                                    <th className="px-2 py-2 text-right font-semibold sm:px-3">Qty</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {takeoffData.map((item, idx) => (
-                                                    <tr key={idx} className="border-b hover:bg-gray-50">
-                                                        <td className="py-2 px-4">{item.description}</td>
-                                                        <td className="py-2 px-4 text-center">{item.unit}</td>
-                                                        <td className="py-2 px-4 text-right font-mono">{typeof item.quantity === 'number' ? item.quantity.toFixed(2) : item.quantity}</td>
+                                                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
+                                                        <td className="px-2 py-2 text-xs sm:px-3 sm:text-sm">{item.description}</td>
+                                                        <td className="px-2 py-2 text-center text-xs">{item.unit}</td>
+                                                        <td className="px-2 py-2 text-right font-mono text-xs sm:px-3 sm:text-sm">
+                                                            {typeof item.quantity === 'number' ? item.quantity.toFixed(2) : item.quantity}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-center flex-1 text-gray-400">
-                                        No items calculated yet.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                                    </TableScrollRegion>
+                                    <p className={`mt-3 text-[11px] leading-snug ${text.helper}`}>
+                                        Switch to the <strong>Takeoff</strong> tab to edit descriptions or add manual items,
+                                        then review the dimension paper and BOQ.
+                                    </p>
+                                </>
+                            ) : loading ? (
+                                <LoadingState label="Waiting for quantities…" />
+                            ) : (
+                                <EmptyState
+                                    compact
+                                    title="No items calculated yet"
+                                    description="Run the takeoff to populate the summary, dimension paper and BOQ."
+                                />
+                            )}
+                        </Section>
+                    </aside>
+                </div>
+            )}
 
-                {activeTab === "takeoff" && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden">
-                        <EnglishMethodTakeoffSheet
-                            key={editorKey}
-                            initialItems={takeoffData}
-                            onChange={setTakeoffData}
-                            projectInfo={{
-                                projectName: "Basement Project",
-                                clientName: "Client Name",
-                                projectDate: new Date().toLocaleDateString()
-                            }}
-                        />
-                    </div>
-                )}
+            {activeTab === "takeoff" && (
+                <div className="overflow-hidden rounded-lg bg-white shadow-sm dark:bg-slate-900">
+                    <EnglishMethodTakeoffSheet
+                        key={editorKey}
+                        initialItems={takeoffData}
+                        onChange={setTakeoffData}
+                        projectInfo={{
+                            projectName: "Basement Project",
+                            clientName: "Client Name",
+                            projectDate: new Date().toLocaleDateString()
+                        }}
+                    />
+                </div>
+            )}
 
-                {activeTab === "sheet" && (
-                    <div className="h-full">
-                        <UniversalSheet items={takeoffData} />
-                    </div>
-                )}
+            {activeTab === "sheet" && (
+                <div>
+                    <UniversalSheet items={takeoffData} />
+                </div>
+            )}
 
-                {activeTab === "boq" && (
-                    <div className="h-full">
-                        <UniversalBOQ items={takeoffData} />
-                    </div>
-                )}
-            </div>
-        </div>
+            {activeTab === "boq" && (
+                <div>
+                    <UniversalBOQ items={takeoffData} />
+                </div>
+            )}
+        </WorkspacePage>
     );
 };
-
-const InputField = ({ label, value, onChange }) => (
-    <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-        <input
-            type="number"
-            step="0.01"
-            value={value}
-            onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-        />
-    </div>
-);
-
-const CheckboxField = ({ label, checked, onChange }) => (
-    <div className="flex items-center">
-        <input
-            type="checkbox"
-            checked={checked}
-            onChange={(e) => onChange(e.target.checked)}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-        />
-        <label className="ml-2 text-sm font-medium text-gray-700">{label}</label>
-    </div>
-);
 
 export default BasementTakeoffApp;

@@ -17,6 +17,20 @@ import axios from "axios";
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
+import {
+  PageHeader,
+  Section,
+  MetaChip,
+  NumberField,
+  TextField,
+  CheckboxField as SharedCheckboxField,
+  SelectField as SharedSelectField,
+  ErrorNotice,
+  ActionBar,
+  ResultBanner,
+  action,
+  text,
+} from '../../shared/ui';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 
@@ -253,83 +267,68 @@ const SubstructureTakeoffApp = () => {
     type = "number",
     unit,
     step = "0.01",
-  }) => (
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <div className="relative">
-        <input
-          type={type}
-          name={name}
-          value={formData[name]}
-          onChange={handleInputChange}
-          step={step}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
-        />
-        {unit && (
-          <span className="absolute right-3 top-2 text-sm text-gray-500">
-            {unit}
-          </span>
-        )}
-      </div>
-    </div>
-  );
+  }) => {
+    // Delegates to the shared field kit so every input in this form gets the
+    // same label/unit/44px treatment. The stored value stays a raw string (or
+    // boolean for checkboxes), exactly as `handleInputChange` produced before;
+    // the payload parse below is untouched.
+    const sharedProps = {
+      label,
+      unit,
+      step,
+      value: formData[name],
+      onChange: (value) => handleInputChange({ target: { name, value, type } }),
+    };
+    return type === "text" ? <TextField {...sharedProps} /> : <NumberField {...sharedProps} />;
+  };
 
   const CheckboxField = ({ label, name }) => (
-    <div className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        name={name}
-        id={name}
-        checked={formData[name]}
-        onChange={handleInputChange}
-        className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-gray-400"
-      />
-      <label
-        htmlFor={name}
-        className="text-sm font-medium text-gray-700 cursor-pointer"
-      >
-        {label}
-      </label>
-    </div>
+    <SharedCheckboxField
+      id={name}
+      label={label}
+      checked={Boolean(formData[name])}
+      onChange={(checked) =>
+        handleInputChange({ target: { name, checked, type: "checkbox" } })
+      }
+    />
   );
 
 
   const SelectField = ({ label, name, options }) => (
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <select
-        name={name}
-        value={formData[name]}
-        onChange={handleInputChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
+    <SharedSelectField
+      label={label}
+      value={formData[name]}
+      onChange={(value) =>
+        handleInputChange({ target: { name, value, type: "select-one" } })
+      }
+      options={options}
+    />
   );
 
   return (
-    <div className="flex bg-gray-50 h-screen flex-col">
-      <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-none">
-        <div className="flex items-center gap-3 mb-4">
-          <Building2 className="w-8 h-8 text-blue-800" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Substructure Takeoff</h1>
-            <p className="text-sm text-gray-500">Foundations & Substructure Works</p>
-          </div>
-        </div>
-        <UniversalTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+    <div className="min-h-full bg-gray-50">
+      <div className="mx-auto w-full max-w-7xl px-3 pt-4 sm:px-5">
+        <PageHeader
+          title="Substructure takeoff"
+          subtitle="Foundations, trenches, hardcore, DPC and substructure works."
+          icon={<Building2 size={22} aria-hidden="true" />}
+          meta={
+            <>
+              <MetaChip tone="info">{takeoffData.length} item(s) generated</MetaChip>
+              {buildingData && <MetaChip>Plan detected</MetaChip>}
+            </>
+          }
         />
+        <div className="-mx-1 mb-4 overflow-x-auto">
+          <UniversalTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            tabs={['calculator', 'takeoff', 'sheet', 'boq', '3d-view']}
+          />
+        </div>
       </div>
 
-      <main className="flex-1 overflow-auto p-4 max-w-7xl mx-auto w-full">
+      <main className="mx-auto w-full max-w-7xl px-3 pb-8 sm:px-5">
         {activeTab === 'calculator' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Inputs */}
@@ -423,19 +422,35 @@ const SubstructureTakeoffApp = () => {
 
             {/* Actions */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 sticky top-0">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Calculate</h2>
-                <button
-                  onClick={calculateQuantities}
-                  disabled={loading}
-                  className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <Calculator className="w-5 h-5" />
-                  {loading ? "Calculating..." : "Calculate Quantities"}
-                </button>
-                {takeoffData.length > 0 && <div className="mt-4 text-green-700 text-sm bg-green-50 p-2 rounded border border-green-200">Done! Check Takeoff/Sheet/BOQ tabs.</div>}
-                {error && <div className="mt-4 text-red-700 text-sm bg-red-50 p-2 rounded border border-red-200">{error}</div>}
-              </div>
+              <Section title="Calculate" description="Runs the substructure takeoff from the parameters above.">
+                <ActionBar sticky={false}>
+                  <button
+                    type="button"
+                    onClick={calculateQuantities}
+                    disabled={loading}
+                    className={`${action.base} ${action.primary} w-full`}
+                  >
+                    <Calculator className="w-4 h-4" aria-hidden="true" />
+                    {loading ? "Calculating…" : "Calculate quantities"}
+                  </button>
+                </ActionBar>
+                {takeoffData.length > 0 && (
+                  <ResultBanner
+                    className="mt-3"
+                    status="pass"
+                    title="Quantities generated"
+                    description="Review the taking-off sheet, dimension paper and BOQ tabs."
+                  />
+                )}
+                {error && (
+                  <ErrorNotice
+                    className="mt-3"
+                    title="Substructure takeoff failed"
+                    message={error}
+                    onRetry={calculateQuantities}
+                  />
+                )}
+              </Section>
             </div>
           </div>
         )}

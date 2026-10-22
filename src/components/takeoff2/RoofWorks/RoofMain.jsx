@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
+import { CheckCircle2, ExternalLink } from "lucide-react";
 import {
   UniversalTabs,
   UniversalSheet,
@@ -8,9 +10,13 @@ import {
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import RoofForm from "./RoofForm";
 import StructuralVisualizationComponent from "../../Drawings/visualise_component";
+import { useTakeoffBridge } from "../../../state/TakeoffBridgeContext";
+import { TAKEOFF_SOURCE } from "../../../state/takeoffBridge";
 
 export default function RoofComponent({ isDark = false }) {
   const [activeTab, setActiveTab] = useState("config");
+  const { publish } = useTakeoffBridge();
+  const [published, setPublished] = useState(false);
   const [roofConfig, setRoofConfig] = useState({
     roofType: "gable",
     buildingLength: 12,
@@ -90,6 +96,11 @@ export default function RoofComponent({ isDark = false }) {
         });
 
         setTakeoffData(flattened);
+        // Explicit hand-off to the global taking-off workflow. Re-running the
+        // calculation replaces only the previously published roof batch, so
+        // repeated runs cannot duplicate rows or touch manual items.
+        publish(flattened, TAKEOFF_SOURCE.roof);
+        setPublished(true);
         setActiveTab("takeoff"); // Auto-switch to takeoff tab
       }
     } catch (error) {
@@ -100,19 +111,19 @@ export default function RoofComponent({ isDark = false }) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-slate-900 overflow-hidden font-sans">
+    <div className="flex min-h-full flex-col bg-gray-50 font-sans dark:bg-slate-900">
       {/* Top Header */}
-      <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between shadow-sm z-20">
-        <div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-            Roof CAD Pro
+      <div className="z-20 flex flex-col gap-2 border-b border-gray-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+        <div className="min-w-0">
+          <h1 className="truncate bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-lg font-bold text-transparent sm:text-2xl">
+            Roof takeoff
           </h1>
-          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 uppercase tracking-wider font-semibold">
-            Engineering Structural Design Suite
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400 sm:text-xs">
+            SMM7 takeoff · dimension paper · bill of quantities
           </p>
         </div>
 
-        <div className="flex-1 max-w-2xl px-12">
+        <div className="-mx-1 min-w-0 overflow-x-auto sm:max-w-2xl sm:flex-1 sm:px-4">
           <UniversalTabs
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -127,22 +138,31 @@ export default function RoofComponent({ isDark = false }) {
           />
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex shrink-0 gap-2">
           <button
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 transition-all"
-          >
-            Save Project
-          </button>
-          <button
+            type="button"
             onClick={handleCalculate}
             disabled={loading}
-            className={`px-6 py-2 text-sm font-bold text-white rounded-lg transition-all active:scale-95 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30'
-              }`}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-bold text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
           >
-            {loading ? "Calculating..." : "Run Analysis"}
+            {loading ? "Calculating…" : "Run analysis"}
           </button>
         </div>
       </div>
+
+      {published && (
+        <div className="mx-3 mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800 dark:border-green-900 dark:bg-green-900/20 dark:text-green-200 sm:mx-6">
+          <CheckCircle2 size={14} aria-hidden="true" />
+          <span>Published to the global taking-off, dimension paper and BOQ.</span>
+          <Link
+            to="/quantity/manual/taking-off"
+            className="inline-flex items-center gap-1 font-semibold underline hover:no-underline"
+          >
+            Open taking-off sheet
+            <ExternalLink size={12} aria-hidden="true" />
+          </Link>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden relative p-6">

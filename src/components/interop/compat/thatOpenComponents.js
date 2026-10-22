@@ -30,6 +30,17 @@ export class IfcLoader {
   }
 }
 
+// `ThatOpenBimViewer.jsx` resolves the fragments manager through the component
+// container. The export is required for the module graph to compile in
+// checkouts where the optional That Open engine is unavailable; the viewer's own
+// availability guard and error state decide what the user sees at runtime.
+export class FragmentsManager {
+  constructor() {
+    this.list = new Map();
+  }
+  async dispose() {}
+}
+
 export class Clipper {
   static create() {
     return {

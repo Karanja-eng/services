@@ -570,7 +570,6 @@ export default function InteropWorkbench({ isDark = false }) {
                 </span>
               </div>
             )}
-          </div>
 
           {spec && (
             <div className="px-3 py-2 border-b border-[#4c4d4f]">
@@ -815,7 +814,6 @@ export default function InteropWorkbench({ isDark = false }) {
                 </li>
               ))}
             </ul>
-          </div>
 
           <div className="px-3 py-2 border-b border-[#4c4d4f]">
             <div className="text-[10px] uppercase tracking-wide text-[#909399]">

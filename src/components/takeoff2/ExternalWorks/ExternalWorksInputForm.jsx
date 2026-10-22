@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Calculator, Download } from 'lucide-react';
+import { ActionBar, action } from '../../shared/ui';
 
 export default function ExternalWorksInputForm({ formData, setFormData, theme, handleCalculate }) {
   const [activeSection, setActiveSection] = useState('site');
@@ -647,146 +649,111 @@ export default function ExternalWorksInputForm({ formData, setFormData, theme, h
   };
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="w-full font-sans">
       <style>{`
         .form-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-          gap: 20px;
-          margin-bottom: 30px;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+          gap: 16px;
+          margin-bottom: 24px;
         }
         .form-group {
           display: flex;
           flex-direction: column;
+          min-width: 0;
         }
         .form-group label {
           font-weight: 600;
-          margin-bottom: 5px;
-          font-size: 14px;
-          color: #333;
+          margin-bottom: 6px;
+          font-size: 12px;
+          color: #374151;
         }
         .form-group input,
         .form-group select {
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
+          min-height: 44px;
+          padding: 10px 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 16px;
+          background: #fff;
+          color: #111827;
         }
         .form-group input:focus,
         .form-group select:focus {
           outline: none;
-          border-color: #4CAF50;
+          border-color: #2563eb;
+          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
         }
         .form-section h3 {
-          color: #2c3e50;
-          border-bottom: 2px solid #4CAF50;
-          padding-bottom: 10px;
-          margin-bottom: 20px;
-        }
-        .nav-tabs {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 30px;
-          flex-wrap: wrap;
-        }
-        .nav-tab {
-          padding: 10px 20px;
-          background: #f0f0f0;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
+          color: #1f2937;
+          border-bottom: 1px solid #e5e7eb;
+          padding-bottom: 8px;
+          margin-bottom: 16px;
           font-size: 14px;
-          transition: all 0.3s;
-        }
-        .nav-tab:hover {
-          background: #e0e0e0;
-        }
-        .nav-tab.active {
-          background: #4CAF50;
-          color: white;
+          font-weight: 700;
         }
         .summary-section {
           background: #f8f9fa;
-          padding: 20px;
-          border-radius: 8px;
-          margin-top: 15px;
+          padding: 16px;
+          border-radius: 12px;
+          margin-top: 8px;
+        }
+        .summary-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+          gap: 12px;
         }
         .summary-item {
           background: white;
-          padding: 15px;
-          border-radius: 4px;
-          border-left: 4px solid #4CAF50;
+          padding: 12px;
+          border-radius: 8px;
+          border-left: 4px solid #16a34a;
+          min-width: 0;
         }
         .summary-item label {
-          font-size: 12px;
-          color: #666;
+          font-size: 11px;
+          color: #6b7280;
           display: block;
-          margin-bottom: 5px;
+          margin-bottom: 4px;
         }
         .summary-item value {
-          font-size: 18px;
-          font-weight: 600;
-          color: #2c3e50;
-        }
-        .action-buttons {
-          display: flex;
-          gap: 15px;
-          margin-top: 30px;
-          flex-wrap: wrap;
-        }
-        .btn {
-          padding: 12px 30px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
           font-size: 16px;
-          font-weight: 600;
-          transition: all 0.3s;
-        }
-        .btn-primary {
-          background: #4CAF50;
-          color: white;
-        }
-        .btn-primary:hover {
-          background: #45a049;
-        }
-        .btn-secondary {
-          background: #2196F3;
-          color: white;
-        }
-        .btn-secondary:hover {
-          background: #0b7dda;
-        }
-        .btn-export {
-          background: #FF9800;
-          color: white;
-        }
-        .btn-export:hover {
-          background: #e68900;
+          font-weight: 700;
+          color: #111827;
+          font-variant-numeric: tabular-nums;
         }
       `}</style>
 
-      <h1 style={{ color: '#2c3e50', marginBottom: '10px' }}>External Works Quantity Takeoff</h1>
-      <p style={{ color: '#666', marginBottom: '30px' }}>
-        Professional quantity takeoff system for external works based on CESMM4 standards
+      <p className="mb-4 text-xs leading-relaxed text-gray-600 dark:text-slate-400">
+        Professional quantity takeoff for external works, based on CESMM4 classes. Choose a
+        section, enter the measured quantities, then calculate.
       </p>
 
-      <div className="nav-tabs">
-        {Object.entries(sections).map(([key, label]) => (
-          <button
-            key={key}
-            className={`nav-tab ${activeSection === key ? 'active' : ''}`}
-            onClick={() => setActiveSection(key)}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Section navigation — scrolls sideways on phones. */}
+      <div className="-mx-1 mb-4 overflow-x-auto">
+        <div className="flex w-max min-w-full gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800">
+          {Object.entries(sections).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveSection(key)}
+              aria-current={activeSection === key ? 'page' : undefined}
+              className={`min-h-[44px] shrink-0 rounded-lg px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                activeSection === key
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {renderSection()}
 
       <div className="summary-section">
-        <h3 style={{ color: '#2c3e50', marginBottom: '20px' }}>Calculated Quantities Summary</h3>
+        <h3 className="mb-4 text-sm font-bold text-gray-800">Calculated quantities summary</h3>
         <div className="summary-grid">
           <div className="summary-item">
             <label>Site Clearance Area</label>
@@ -835,25 +802,16 @@ export default function ExternalWorksInputForm({ formData, setFormData, theme, h
         </div>
       </div>
 
-      <div className="action-buttons">
-        <button className="btn btn-primary" onClick={handleCalculate}>
-          Calculate Quantities
+      <ActionBar sticky={false} hint="Export saves the measured inputs as JSON; calculate posts them to the external-works API.">
+        <button type="button" className={`${action.base} ${action.primary}`} onClick={handleCalculate}>
+          <Calculator size={16} aria-hidden="true" />
+          Calculate quantities
         </button>
-        <button className="btn btn-secondary" onClick={() => {
-          // This would connect to the 3D visualizer
-          alert('3D visualization would open with these parameters');
-        }}>
-          View 3D Model
+        <button type="button" className={`${action.base} ${action.secondary}`} onClick={handleExport}>
+          <Download size={16} aria-hidden="true" />
+          Export data (JSON)
         </button>
-        <button className="btn btn-export" onClick={handleExport}>
-          Export Data (JSON)
-        </button>
-        <button className="btn btn-export" onClick={() => {
-          alert('Generate takeoff sheet functionality - connects to backend');
-        }}>
-          Generate Takeoff Sheet
-        </button>
-      </div>
+      </ActionBar>
     </div>
   )
 } 
