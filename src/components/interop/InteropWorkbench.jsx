@@ -83,7 +83,9 @@ import {
   EngineeringModelProvider,
   useEngineeringModel,
 } from '../../state/engineeringModel/EngineeringModelContext';
-import { analysisStatus } from '../../state/engineeringModel/core';
+// Explicit import alias: the provider also exposes an `analysisStatus` value for the
+// default result set, so this function must not be shadowed by the local binding.
+import { analysisStatus as computeAnalysisStatus } from '../../state/engineeringModel/core';
 import { useIsPhone } from '../../hooks/useMediaQuery';
 import { action, control, surface, text } from '../shared/ui/tokens';
 
@@ -713,10 +715,18 @@ function Workbench({ isDark = false }) {
   const { activeResultSet, activeResultState, activeResultKind } = useMemo(() => {
     const threeD = model?.analyses?.['opensees-3d'] || null;
     if (threeD) {
-      return { activeResultSet: threeD, activeResultState: analysisStatus(model, 'opensees-3d').state, activeResultKind: 'opensees-3d' };
+      return {
+        activeResultSet: threeD,
+        activeResultState: computeAnalysisStatus(model, 'opensees-3d').state,
+        activeResultKind: 'opensees-3d',
+      };
     }
     const twoD = model?.analysis || null;
-    return { activeResultSet: twoD, activeResultState: analysisStatus(model).state, activeResultKind: 'opensees-2d' };
+    return {
+      activeResultSet: twoD,
+      activeResultState: computeAnalysisStatus(model).state,
+      activeResultKind: 'opensees-2d',
+    };
   }, [model]);
 
   const artefactsStale =
@@ -1455,7 +1465,7 @@ function Workbench({ isDark = false }) {
             <div className="mt-1 border-t border-gray-200 pt-1 dark:border-slate-800">
               <div className="font-semibold">Result sets</div>
               {Object.entries(model.analyses).map(([kind, entry]) => {
-                const status = analysisStatus(model, kind);
+                const status = computeAnalysisStatus(model, kind);
                 return (
                   <div key={kind} className="flex flex-wrap justify-between gap-x-2">
                     <span className="truncate font-mono">{kind}</span>
