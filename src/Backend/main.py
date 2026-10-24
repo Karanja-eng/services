@@ -20,7 +20,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    # No cookie or HTTP-auth credentials are used by any Fundi frontend, and the
+    # CORS specification forbids a wildcard origin together with credentials.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -511,4 +513,21 @@ app.include_router(cad_drawer)
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
+    # Host and port are environment-configurable so the same code serves:
+    #
+    #   * desktop development          FUNDI_HOST unset  -> 127.0.0.1 (loopback only)
+    #   * a phone/tablet on the LAN    FUNDI_HOST=0.0.0.0 -> reachable from the network
+    #   * a non-default port           FUNDI_PORT=8010
+    #
+    # The default stays loopback on purpose: binding every interface by default
+    # exposes an unauthenticated engineering API to the whole network.
+    _host = os.environ.get("FUNDI_HOST", "127.0.0.1")
+    _port = int(os.environ.get("FUNDI_PORT", "8001"))
+    _loopback = _host in {"127.0.0.1", "localhost", "::1"}
+    print(f"[fundi] CAD/IFC health: http://{_host}:{_port}/api/cad-ifc/health")
+    if not _loopback:
+        print(
+            f"[fundi] WARNING: binding {_host}:{_port} exposes this API to the network. "
+            "Use it only on a trusted LAN and stop the server when finished."
+        )
+    uvicorn.run("main:app", host=_host, port=_port, reload=True)

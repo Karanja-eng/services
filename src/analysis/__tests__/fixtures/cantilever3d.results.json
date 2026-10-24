@@ -1,0 +1,191 @@
+{
+    "schema":  "fundi.analysis.results/1",
+    "ok":  true,
+    "model_id":  "cantilever-3d",
+    "source":  "explicit 3D frame",
+    "dimensionality":  3,
+    "degreesOfFreedom":  6,
+    "engine":  {
+                   "name":  "OpenSees",
+                   "version":  "3.8.0"
+               },
+    "units":  {
+                  "length":  "m",
+                  "force":  "N",
+                  "moment":  "N*m",
+                  "stress":  "Pa",
+                  "area":  "m^2",
+                  "inertia":  "m^4",
+                  "angle":  "rad"
+              },
+    "sign_convention":  {
+                            "axes":  "global X, Y, Z right-handed; Z up in the canonical frame",
+                            "displacements":  "positive in the positive global axis direction; rotations right-handed about the axis",
+                            "reactions":  "positive in the positive global axis direction",
+                            "memberForces":  "local axes: x from i to j; N positive in tension; Vy/Vz are the local shear components; T is the torsional moment; My/Mz are the moments about the member\u0027s local y and z axes at the i and j ends"
+                        },
+    "nodes":  [
+                  {
+                      "tag":  1,
+                      "x":  0.0,
+                      "y":  0.0,
+                      "z":  0.0,
+                      "canonicalId":  "n1"
+                  },
+                  {
+                      "tag":  2,
+                      "x":  3.0,
+                      "y":  0.0,
+                      "z":  0.0,
+                      "canonicalId":  "n2"
+                  }
+              ],
+    "cases":  [
+                  {
+                      "case_id":  "TIP-1",
+                      "description":  "explicit 3D static case",
+                      "analysis":  {
+                                       "type":  "static",
+                                       "formulation":  "linear elastic, first-order (small displacement), 3D frame",
+                                       "integrator":  "LoadControl",
+                                       "algorithm":  "Linear",
+                                       "steps":  1,
+                                       "status":  0
+                                   },
+                      "displacements":  {
+                                            "n1":  {
+                                                       "node":  1,
+                                                       "ux":  0.0,
+                                                       "uy":  0.0,
+                                                       "uz":  0.0,
+                                                       "rx":  0.0,
+                                                       "ry":  0.0,
+                                                       "rz":  0.0
+                                                   },
+                                            "n2":  {
+                                                       "node":  2,
+                                                       "ux":  0.0,
+                                                       "uy":  0.0,
+                                                       "uz":  -0.0003214285714285714,
+                                                       "rx":  0.0,
+                                                       "ry":  0.00016071428571428568,
+                                                       "rz":  0.0
+                                                   }
+                                        },
+                      "reactions":  {
+                                        "node1":  {
+                                                      "node":  1,
+                                                      "Fx":  0.0,
+                                                      "Fy":  0.0,
+                                                      "Fz":  1000.0000000000005,
+                                                      "Mx":  0.0,
+                                                      "My":  -3000.0000000000005,
+                                                      "Mz":  0.0
+                                                  }
+                                    },
+                      "members":  {
+                                      "m1":  {
+                                                 "element":  1,
+                                                 "section_id":  null,
+                                                 "i":  1,
+                                                 "j":  2,
+                                                 "length":  3.0,
+                                                 "N_i":  0.0,
+                                                 "Vy_i":  0.0,
+                                                 "Vz_i":  1000.0000000000005,
+                                                 "T_i":  0.0,
+                                                 "My_i":  -3000.0000000000005,
+                                                 "Mz_i":  0.0,
+                                                 "N_j":  0.0,
+                                                 "Vy_j":  0.0,
+                                                 "Vz_j":  -1000.0000000000005,
+                                                 "T_j":  0.0,
+                                                 "My_j":  -9.0949470177292824E-13,
+                                                 "Mz_j":  0.0,
+                                                 "localAxes":  {
+                                                                   "x":  {
+                                                                             "x":  1.0,
+                                                                             "y":  0.0,
+                                                                             "z":  0.0
+                                                                         },
+                                                                   "y":  {
+                                                                             "x":  0.0,
+                                                                             "y":  1.0,
+                                                                             "z":  0.0
+                                                                         },
+                                                                   "z":  {
+                                                                             "x":  0.0,
+                                                                             "y":  0.0,
+                                                                             "z":  1.0
+                                                                         }
+                                                               },
+                                                 "localForces":  [
+                                                                     0.0,
+                                                                     0.0,
+                                                                     1000.0000000000005,
+                                                                     0.0,
+                                                                     -3000.0000000000005,
+                                                                     0.0,
+                                                                     0.0,
+                                                                     0.0,
+                                                                     -1000.0000000000005,
+                                                                     0.0,
+                                                                     -9.0949470177292824E-13,
+                                                                     0.0
+                                                                 ]
+                                             }
+                                  },
+                      "supports":  [
+                                       {
+                                           "node":  1,
+                                           "ux":  true,
+                                           "uy":  true,
+                                           "uz":  true,
+                                           "rx":  true,
+                                           "ry":  true,
+                                           "rz":  true
+                                       }
+                                   ],
+                      "loads":  [
+                                    {
+                                        "node":  2,
+                                        "Fx":  0.0,
+                                        "Fy":  0.0,
+                                        "Fz":  -1000.0,
+                                        "Mx":  0.0,
+                                        "My":  0.0,
+                                        "Mz":  0.0
+                                    }
+                                ],
+                      "equilibrium":  {
+                                          "appliedFx":  0.0,
+                                          "appliedFy":  0.0,
+                                          "appliedFz":  -1000.0,
+                                          "appliedMx":  0.0,
+                                          "appliedMy":  3000.0,
+                                          "appliedMz":  0.0,
+                                          "reactionFx":  0.0,
+                                          "reactionFy":  0.0,
+                                          "reactionFz":  1000.0000000000005,
+                                          "reactionMx":  0.0,
+                                          "reactionMy":  -3000.0000000000005,
+                                          "reactionMz":  0.0,
+                                          "residualFx":  0.0,
+                                          "residualFy":  0.0,
+                                          "residualFz":  4.5474735088646412E-13,
+                                          "residualMx":  0.0,
+                                          "residualMy":  -4.5474735088646412E-13,
+                                          "residualMz":  0.0,
+                                          "residualRelative":  1.5158245029548803E-16
+                                      }
+                  }
+              ],
+    "assumptions":  [
+                        "all section constants (A, Iy, Iz, J) and the shear modulus G were supplied explicitly",
+                        "no self-weight, no load factors and no distributed element loads: the case is exactly as supplied"
+                    ],
+    "limitations":  [
+                        "linear elastic, first-order static analysis only",
+                        "distributed element loads are not supported in 3D"
+                    ]
+}

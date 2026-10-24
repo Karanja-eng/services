@@ -1,0 +1,219 @@
+{
+  "schema": "fundi.canonical",
+  "schema_version": "1.0.0",
+  "model_id": "column",
+  "name": "RC column (EC2)",
+  "description": "RC in-situ column: elevation and section with vertical bars, laps, links and confinement zones per EC2 Fig 6.24-6.27.",
+  "generator": "column",
+  "generator_module": "engineering_system.members.column",
+  "source_params": {
+    "width_mm": 400.0,
+    "depth_mm": 400.0,
+    "height_mm": 3500.0,
+    "cover_nominal_mm": 35.0,
+    "fck_MPa": 35.0,
+    "fyk_MPa": 500.0,
+    "bar_dia_mm": 25,
+    "bar_count": 4,
+    "link_dia_mm": 10,
+    "link_pitch_standard_mm": 200.0,
+    "link_pitch_lap_mm": 120.0,
+    "lap_length_mm": 0.0,
+    "crank_slope": 0.1,
+    "intersecting_beam_fck_MPa": 30.0,
+    "is_tension_bar": false,
+    "aggregate_size_dg_mm": 20.0
+  },
+  "units": {
+    "length": "metre",
+    "area": "square_metre",
+    "volume": "cubic_metre",
+    "angle": "degree",
+    "frame": "Z-up right-handed",
+    "origin": "project origin at finished ground level of level L0"
+  },
+  "levels": [
+    {
+      "id": "column:L0",
+      "name": "Level 1",
+      "elevation_m": 0.0,
+      "description": "Single storey used by the member model detail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "column.column",
+      "element_type": "column",
+      "ifc_class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": "RC column",
+      "role": "column",
+      "level_id": "column:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 0.4,
+        "width_y": 0.4,
+        "height_z": 3.5
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.75
+      },
+      "rotation_z_deg": 0.0,
+      "material": "C35/43",
+      "material_properties": {
+        "fck_MPa": 35.0,
+        "fyk_MPa": 500.0,
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "width_mm": 400.0,
+        "depth_mm": 400.0,
+        "height_mm": 3500.0,
+        "cover_nominal_mm": 35.0,
+        "fck_MPa": 35.0,
+        "fyk_MPa": 500.0,
+        "bar_dia_mm": 25,
+        "bar_count": 4,
+        "link_dia_mm": 10,
+        "link_pitch_standard_mm": 200.0,
+        "link_pitch_lap_mm": 120.0,
+        "lap_length_mm": 0.0,
+        "crank_slope": 0.1,
+        "intersecting_beam_fck_MPa": 30.0,
+        "is_tension_bar": false,
+        "aggregate_size_dg_mm": 20.0,
+        "derived_As_min_mm2": 320.0,
+        "derived_As_provided_mm2": 1963.6,
+        "derived_As_max_mm2": 6400.0,
+        "derived_tension_spacing_compliant": true,
+        "derived_lapping_spacing_compliant": true,
+        "derived_grade_cap_compliant": true,
+        "derived_grade_ratio": 1.1667,
+        "derived_fire_spalling_mesh_required": false,
+        "derived_fire_spalling_message": "No supplementary surface reinforcement mesh required for fire spalling.",
+        "section_width_m": 0.4,
+        "section_depth_m": 0.4,
+        "height_m": 3.5,
+        "base_elevation_m": 0.0,
+        "lap_length_m": 0.806237383
+      },
+      "reinforcement": {
+        "bar_groups": [
+          {
+            "group_id": "BG_COL_MAIN",
+            "shape_code": "00",
+            "bar_mark": "01",
+            "bar_size_mm": 25,
+            "count": 4,
+            "pitch_mm": null,
+            "cut_length_mm": 4306.237,
+            "weight_kg": 16.592,
+            "layer": "INTERNAL",
+            "bend_dimensions_mm": {
+              "A": 4306.237
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_COL_LINKS_LAP",
+            "shape_code": "51",
+            "bar_mark": "02",
+            "bar_size_mm": 10,
+            "count": 7,
+            "pitch_mm": 120.0,
+            "cut_length_mm": 1470.0,
+            "weight_kg": 0.907,
+            "layer": "LINK",
+            "bend_dimensions_mm": {
+              "A": 330.0,
+              "B": 330.0,
+              "C": 100.0
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_COL_LINKS_MID",
+            "shape_code": "51",
+            "bar_mark": "02",
+            "bar_size_mm": 10,
+            "count": 14,
+            "pitch_mm": 200.0,
+            "cut_length_mm": 1470.0,
+            "weight_kg": 0.907,
+            "layer": "LINK",
+            "bend_dimensions_mm": {
+              "A": 330.0,
+              "B": 330.0,
+              "C": 100.0
+            },
+            "grade": "H"
+          }
+        ]
+      },
+      "provenance": {
+        "generator": "column",
+        "generator_label": "RC column (EC2)",
+        "params_module": "engineering_system.members.column",
+        "params_class": "ColumnParams",
+        "model_class": "ColumnEngineeringModel",
+        "drawing_number": "COL-01",
+        "drawing_title": "RC Column Detailing & Laps (EC2)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "width_mm": 400.0,
+          "depth_mm": 400.0,
+          "height_mm": 3500.0,
+          "cover_nominal_mm": 35.0,
+          "fck_MPa": 35.0,
+          "fyk_MPa": 500.0,
+          "bar_dia_mm": 25,
+          "bar_count": 4,
+          "link_dia_mm": 10,
+          "link_pitch_standard_mm": 200.0,
+          "link_pitch_lap_mm": 120.0,
+          "lap_length_mm": 0.0,
+          "crank_slope": 0.1,
+          "intersecting_beam_fck_MPa": 30.0,
+          "is_tension_bar": false,
+          "aggregate_size_dg_mm": 20.0
+        },
+        "source_model_fields": [
+          "depth",
+          "height",
+          "lap_length",
+          "width"
+        ],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": []
+      },
+      "validation": {
+        "state": "ok",
+        "warnings": []
+      },
+      "representations": {},
+      "volume_m3": 0.56,
+      "fingerprint": "4c7b6ab94b82f1397d192cdda06f897738c8b0f76a01a9d4933ceb984903dbda"
+    }
+  ],
+  "relationships": [],
+  "warnings": [],
+  "statistics": {
+    "element_count": 1,
+    "by_ifc_class": {
+      "IfcColumn": 1
+    },
+    "by_element_type": {
+      "column": 1
+    },
+    "total_volume_m3": 0.56,
+    "levels": 1,
+    "relationships": 0,
+    "elements_with_warnings": 0
+  },
+  "model_hash": "0ea2d5301f8dd6a35c5b95630e23c99705f27c1144151402bf3ee267db53bd73"
+}

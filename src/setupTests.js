@@ -18,3 +18,6 @@ jest.mock("lucide-react", () => {
     }
   );
 });
+
+// React 18+ requires this flag for `act()` outside of a test renderer.
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;

@@ -1,6 +1,6 @@
 {
   "model_id": "beam",
-  "drawing_id": "beam-r2",
+  "drawing_id": "beam-r3",
   "entity_link_count": 82,
   "by_status": {
     "ok": 82
@@ -9,7 +9,7 @@
     "beam.beam": [
       {
         "handle": "45",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "elevation",
@@ -18,7 +18,7 @@
       },
       {
         "handle": "46",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "elevation",
@@ -27,7 +27,7 @@
       },
       {
         "handle": "47",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "elevation",
@@ -36,7 +36,7 @@
       },
       {
         "handle": "48",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "LINE",
         "view": "elevation",
@@ -45,7 +45,7 @@
       },
       {
         "handle": "49",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "LINE",
         "view": "elevation",
@@ -54,7 +54,7 @@
       },
       {
         "handle": "4A",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "LINE",
         "view": "elevation",
@@ -63,7 +63,7 @@
       },
       {
         "handle": "4B",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "LINE",
         "view": "elevation",
@@ -72,7 +72,7 @@
       },
       {
         "handle": "4C",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -81,7 +81,7 @@
       },
       {
         "handle": "4D",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -90,7 +90,7 @@
       },
       {
         "handle": "4E",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -99,7 +99,7 @@
       },
       {
         "handle": "4F",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -108,7 +108,7 @@
       },
       {
         "handle": "50",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -117,7 +117,7 @@
       },
       {
         "handle": "51",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -126,7 +126,7 @@
       },
       {
         "handle": "52",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -135,7 +135,7 @@
       },
       {
         "handle": "53",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -144,7 +144,7 @@
       },
       {
         "handle": "54",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -153,7 +153,7 @@
       },
       {
         "handle": "55",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -162,7 +162,7 @@
       },
       {
         "handle": "56",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -171,7 +171,7 @@
       },
       {
         "handle": "57",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -180,7 +180,7 @@
       },
       {
         "handle": "58",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -189,7 +189,7 @@
       },
       {
         "handle": "59",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -198,7 +198,7 @@
       },
       {
         "handle": "5A",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -207,7 +207,7 @@
       },
       {
         "handle": "5B",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -216,7 +216,7 @@
       },
       {
         "handle": "5C",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -225,7 +225,7 @@
       },
       {
         "handle": "5D",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -234,7 +234,7 @@
       },
       {
         "handle": "5E",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -243,7 +243,7 @@
       },
       {
         "handle": "5F",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -252,7 +252,7 @@
       },
       {
         "handle": "60",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -261,7 +261,7 @@
       },
       {
         "handle": "61",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -270,7 +270,7 @@
       },
       {
         "handle": "62",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -279,7 +279,7 @@
       },
       {
         "handle": "63",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -288,7 +288,7 @@
       },
       {
         "handle": "64",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -297,7 +297,7 @@
       },
       {
         "handle": "65",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -306,7 +306,7 @@
       },
       {
         "handle": "66",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -315,7 +315,7 @@
       },
       {
         "handle": "67",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -324,7 +324,7 @@
       },
       {
         "handle": "68",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -333,7 +333,7 @@
       },
       {
         "handle": "69",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -342,7 +342,7 @@
       },
       {
         "handle": "6A",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -351,7 +351,7 @@
       },
       {
         "handle": "6B",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -360,7 +360,7 @@
       },
       {
         "handle": "6C",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -369,7 +369,7 @@
       },
       {
         "handle": "6D",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -378,7 +378,7 @@
       },
       {
         "handle": "6E",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -387,7 +387,7 @@
       },
       {
         "handle": "6F",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -396,7 +396,7 @@
       },
       {
         "handle": "70",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -405,7 +405,7 @@
       },
       {
         "handle": "71",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -414,7 +414,7 @@
       },
       {
         "handle": "72",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -423,7 +423,7 @@
       },
       {
         "handle": "73",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -432,7 +432,7 @@
       },
       {
         "handle": "74",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -441,7 +441,7 @@
       },
       {
         "handle": "75",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -450,7 +450,7 @@
       },
       {
         "handle": "76",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "TEXT",
         "view": "elevation",
@@ -459,7 +459,7 @@
       },
       {
         "handle": "77",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -468,7 +468,7 @@
       },
       {
         "handle": "78",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -477,7 +477,7 @@
       },
       {
         "handle": "79",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -486,7 +486,7 @@
       },
       {
         "handle": "7A",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -495,7 +495,7 @@
       },
       {
         "handle": "7B",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -504,7 +504,7 @@
       },
       {
         "handle": "7C",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "TEXT",
         "view": "elevation",
@@ -513,7 +513,7 @@
       },
       {
         "handle": "7D",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "ANNOTATIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -522,7 +522,7 @@
       },
       {
         "handle": "7E",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "CIRCLE",
         "view": "elevation",
@@ -531,7 +531,7 @@
       },
       {
         "handle": "7F",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "ANNOTATIONS",
         "entity_type": "LINE",
         "view": "elevation",
@@ -540,7 +540,7 @@
       },
       {
         "handle": "80",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "elevation",
@@ -549,7 +549,7 @@
       },
       {
         "handle": "81",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "elevation",
@@ -558,7 +558,7 @@
       },
       {
         "handle": "82",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "CONCRETE",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -567,7 +567,7 @@
       },
       {
         "handle": "83",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_LINKS",
         "entity_type": "LWPOLYLINE",
         "view": "section",
@@ -576,7 +576,7 @@
       },
       {
         "handle": "84",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -585,7 +585,7 @@
       },
       {
         "handle": "85",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -594,7 +594,7 @@
       },
       {
         "handle": "86",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -603,7 +603,7 @@
       },
       {
         "handle": "87",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -612,7 +612,7 @@
       },
       {
         "handle": "88",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -621,7 +621,7 @@
       },
       {
         "handle": "89",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "REBAR_MAIN",
         "entity_type": "CIRCLE",
         "view": "section",
@@ -630,7 +630,7 @@
       },
       {
         "handle": "8A",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -639,7 +639,7 @@
       },
       {
         "handle": "8B",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -648,7 +648,7 @@
       },
       {
         "handle": "8C",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -657,7 +657,7 @@
       },
       {
         "handle": "8D",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -666,7 +666,7 @@
       },
       {
         "handle": "8E",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -675,7 +675,7 @@
       },
       {
         "handle": "8F",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -684,7 +684,7 @@
       },
       {
         "handle": "90",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -693,7 +693,7 @@
       },
       {
         "handle": "91",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -702,7 +702,7 @@
       },
       {
         "handle": "92",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -711,7 +711,7 @@
       },
       {
         "handle": "93",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -720,7 +720,7 @@
       },
       {
         "handle": "94",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "LINE",
         "view": "section",
@@ -729,7 +729,7 @@
       },
       {
         "handle": "95",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "DIMENSIONS",
         "entity_type": "TEXT",
         "view": "section",
@@ -738,7 +738,7 @@
       },
       {
         "handle": "96",
-        "drawing_id": "beam-r2",
+        "drawing_id": "beam-r3",
         "layer": "ANNOTATIONS",
         "entity_type": "TEXT",
         "view": "section",

@@ -4,6 +4,22 @@ Status: **IFC generation and validation are verified** (executed, evidence quote
 The That Open viewer is **implemented and compiles**; its interactive behaviour is
 **UNVERIFIED** in this environment because no browser automation is available.
 
+> **Correction (2026-10-23) — read this before trusting §3 below.**
+>
+> The viewer described in §3 was later replaced by hardcoded compatibility stubs
+> (`src/components/interop/compat/thatOpen*.js`, `webIfc.js`, `cadSimpleViewer.js`)
+> during a build unblock. Those stubs reported the engines as "not installed" on
+> every platform and, in addition, the viewer never loaded the IFC at all — so none
+> of the interactive behaviour claimed here could have worked in that state.
+>
+> The stubs have now been replaced with real adapters, the IFC loading path is
+> implemented, and the build-time memory limit that surfaced when the real engines
+> were bundled is handled by `scripts/build.js`. Full root-cause analysis, the new
+> canonical model, the responsive workspace and the current verification status are
+> recorded in **`chats/2026-10-23-unified-bim-workbench.md`**. Where this document
+> and that journal disagree, the journal is authoritative (it was produced with the
+> installed packages and the running backend in front of it).
+
 ---
 
 ## 1. IFC generation path

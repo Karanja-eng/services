@@ -1016,6 +1016,12 @@ async def generate_building_glb(model: BuildingModel) -> str:
 router = APIRouter()
 
 uploaded_files = {}
+try:
+    from .cad_routes import router as cad_structural_router
+    router.include_router(cad_structural_router)
+except Exception as _err:
+    pass
+
 opencv_proc = OpenCVProcessor()
 yolo_det = InternalYOLODetector(yolo_model) if yolo_model else None
 cad_proc = CADFileProcessor()

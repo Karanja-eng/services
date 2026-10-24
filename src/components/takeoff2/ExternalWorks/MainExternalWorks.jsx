@@ -13,7 +13,6 @@ import {
   ErrorNotice,
   EmptyState,
   action,
-  text,
 } from "../../shared/ui";
 
 /**

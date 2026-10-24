@@ -7,10 +7,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { IfcAPI, isAvailable } from './compat/webIfc';
+import { IfcAPI, isAvailable, IFC_WASM_PATH, IFC_WASM_PATH_ABSOLUTE, webIfcStatus } from './compat/webIfc';
 import { PanelRight, X } from 'lucide-react';
 
-const WASM_PATH = `${process.env.PUBLIC_URL || ''}/web-ifc/`;
+const WASM_PATH = IFC_WASM_PATH || `${process.env.PUBLIC_URL || ''}/web-ifc/`;
+const ENGINE = webIfcStatus();
 
 const CLASS_COLORS = {
   IFCWALL: 0x9aa5b1,
@@ -203,13 +204,16 @@ export default function IfcBimViewer({ ifcUrl, selectedGuid, onSelect, onStatus 
         if (cancelled) return;
 
         if (!isAvailable) {
-          publish('3D WebGL viewport is ready. (web-ifc parser is omitted on mobile/Termux)');
+          publish(
+            `web-ifc is unavailable (${ENGINE.reason || 'IfcAPI missing'}). The three.js ` +
+              'viewport is running but cannot parse IFC without the WASM parser.'
+          );
           return;
         }
 
         publish('Parsing IFC (web-ifc)…');
         const api = new IfcAPI();
-        api.SetWasmPath(WASM_PATH, true);
+        api.SetWasmPath(WASM_PATH, IFC_WASM_PATH_ABSOLUTE);
         await api.Init();
         const modelID = api.OpenModel(buffer, { COORDINATE_TO_ORIGIN: true });
         const flatMeshes = api.LoadAllGeometry(modelID);

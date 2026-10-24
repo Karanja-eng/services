@@ -14,6 +14,7 @@ import Foundation3DVisualization from "../../components/foundation_3d_helper";
 import CadDrawer from "../../Drawings/cad_drawing";
 import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 import axios from "axios";
+import { control } from "../../shared/ui/tokens";
 
 const BSCodesFoundation = ({ isDark = false }) => {
   const [foundationType, setFoundationType] = useState("pad");
@@ -235,7 +236,7 @@ const BSCodesFoundation = ({ isDark = false }) => {
                 <select
                   value={columnShape}
                   onChange={(e) => setColumnShape(e.target.value)}
-                  className="w-full p-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`${control.base} ${control.select}`}
                 >
                   <option value="square">Square</option>
                   <option value="rectangular">Rectangular</option>
@@ -249,7 +250,7 @@ const BSCodesFoundation = ({ isDark = false }) => {
                 <select
                   value={columnPosition}
                   onChange={(e) => setColumnPosition(e.target.value)}
-                  className="w-full p-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`${control.base} ${control.select}`}
                 >
                   <option value="centre">Centre</option>
                   <option value="edge">Edge (Eccentric)</option>
@@ -889,7 +890,7 @@ const InputField = ({
         value={value}
         onChange={onChange}
         step="0.01"
-        className="w-full p-2 pr-12 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className={`${control.base} pr-12`}
       />
       {unit && (
         <span className="absolute right-3 top-2 text-sm text-gray-500 dark:text-slate-400">

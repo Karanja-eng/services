@@ -1,0 +1,306 @@
+{
+  "schema": "fundi.canonical",
+  "schema_version": "1.0.0",
+  "model_id": "beam",
+  "name": "Suspended beam (MB1)",
+  "description": "RC suspended beam: elevation and section with main bars, top support bars, hanger bars, links, curtailment and bar schedule.",
+  "generator": "beam",
+  "generator_module": "engineering_system.members.beam",
+  "source_params": {
+    "span_clear_mm": 6000.0,
+    "width_mm": 300.0,
+    "depth_mm": 600.0,
+    "column_width_mm": 350.0,
+    "support_left_width_mm": 350.0,
+    "support_right_width_mm": 350.0,
+    "cover_nominal_mm": 30.0,
+    "fck_MPa": 30.0,
+    "fyk_MPa": 500.0,
+    "bot_bar_count": 4,
+    "bot_bar_dia_mm": 25,
+    "is_end_bay": true,
+    "top_support_count": 4,
+    "top_support_dia_mm": 20,
+    "hanger_count": 2,
+    "hanger_dia_mm": 16,
+    "compression_steel_required_mm2": 0.0,
+    "link_dia_mm": 10,
+    "link_pitch_support_mm": 125.0,
+    "link_pitch_span_mm": 225.0,
+    "link_dense_zone_len_mm": 1200.0,
+    "is_flanged": false,
+    "flange_depth_mm": 0.0,
+    "side_bar_count": 0,
+    "side_bar_dia_mm": 12,
+    "curtailment_al_mm": 0.0,
+    "fire_rating_hours": 2.0
+  },
+  "units": {
+    "length": "metre",
+    "area": "square_metre",
+    "volume": "cubic_metre",
+    "angle": "degree",
+    "frame": "Z-up right-handed",
+    "origin": "project origin at finished ground level of level L0"
+  },
+  "levels": [
+    {
+      "id": "beam:L0",
+      "name": "Level 1",
+      "elevation_m": 0.0,
+      "description": "Single storey used by the member model detail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "beam.beam",
+      "element_type": "beam",
+      "ifc_class": "IfcBeam",
+      "predefined_type": "BEAM",
+      "name": "Suspended beam",
+      "role": "beam",
+      "level_id": "beam:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "x",
+      "dimensions": {
+        "length_x": 6.7,
+        "width_y": 0.3,
+        "height_z": 0.6
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.3
+      },
+      "rotation_z_deg": 0.0,
+      "material": "C30/37",
+      "material_properties": {
+        "fck_MPa": 30.0,
+        "fyk_MPa": 500.0,
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "span_clear_mm": 6000.0,
+        "width_mm": 300.0,
+        "depth_mm": 600.0,
+        "column_width_mm": 350.0,
+        "support_left_width_mm": 350.0,
+        "support_right_width_mm": 350.0,
+        "cover_nominal_mm": 30.0,
+        "fck_MPa": 30.0,
+        "fyk_MPa": 500.0,
+        "bot_bar_count": 4,
+        "bot_bar_dia_mm": 25,
+        "is_end_bay": true,
+        "top_support_count": 4,
+        "top_support_dia_mm": 20,
+        "hanger_count": 2,
+        "hanger_dia_mm": 16,
+        "compression_steel_required_mm2": 0.0,
+        "link_dia_mm": 10,
+        "link_pitch_support_mm": 125.0,
+        "link_pitch_span_mm": 225.0,
+        "link_dense_zone_len_mm": 1200.0,
+        "is_flanged": false,
+        "flange_depth_mm": 0.0,
+        "side_bar_count": 0,
+        "side_bar_dia_mm": 12,
+        "curtailment_al_mm": 0.0,
+        "fire_rating_hours": 2.0,
+        "derived_As_min_mm2": 247.3873,
+        "derived_As_provided_mm2": 1963.6,
+        "derived_d_eff_mm": 547.5,
+        "derived_corbel_action_triggered": false,
+        "derived_fire_spalling_mesh_required": false,
+        "derived_fire_spalling_message": "No supplementary surface reinforcement mesh required for fire spalling.",
+        "derived_curtailment_al_shift_mm": 0.0,
+        "derived_hanger_area_min_required_mm2": 251.36,
+        "derived_hanger_area_provided_mm2": 402.2,
+        "derived_flange_transverse_rebar_min_mm2": 0.0,
+        "derived_is_end_bay": true,
+        "span_clear_m": 6.0,
+        "support_left_m": 0.35,
+        "support_right_m": 0.35,
+        "overall_length_m": 6.7,
+        "section_width_m": 0.3,
+        "section_depth_m": 0.6,
+        "soffit_elevation_m": 0.0
+      },
+      "reinforcement": {
+        "bar_groups": [
+          {
+            "group_id": "BG_BEAM_BOT",
+            "shape_code": "11",
+            "bar_mark": "01",
+            "bar_size_mm": 25,
+            "count": 4,
+            "pitch_mm": null,
+            "cut_length_mm": 6740.0,
+            "weight_kg": 25.969,
+            "layer": "B1",
+            "bend_dimensions_mm": {
+              "A": 6490.0,
+              "B": 250.0
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_TOP_SUP_LEFT",
+            "shape_code": "11",
+            "bar_mark": "02",
+            "bar_size_mm": 20,
+            "count": 4,
+            "pitch_mm": null,
+            "cut_length_mm": 2690.0,
+            "weight_kg": 5.302,
+            "layer": "T1",
+            "bend_dimensions_mm": {
+              "A": 2150.0,
+              "B": 540.0
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_HANGER",
+            "shape_code": "00",
+            "bar_mark": "03",
+            "bar_size_mm": 16,
+            "count": 2,
+            "pitch_mm": null,
+            "cut_length_mm": 3600.0,
+            "weight_kg": 5.681,
+            "layer": "T1",
+            "bend_dimensions_mm": {
+              "A": 3600.0
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_LINKS_LEFT",
+            "shape_code": "51",
+            "bar_mark": "04",
+            "bar_size_mm": 10,
+            "count": 10,
+            "pitch_mm": 125.0,
+            "cut_length_mm": 1710.0,
+            "weight_kg": 1.055,
+            "layer": "LINK",
+            "bend_dimensions_mm": {
+              "A": 540.0,
+              "B": 240.0,
+              "C": 100.0
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_LINKS_MID",
+            "shape_code": "51",
+            "bar_mark": "04",
+            "bar_size_mm": 10,
+            "count": 16,
+            "pitch_mm": 225.0,
+            "cut_length_mm": 1710.0,
+            "weight_kg": 1.055,
+            "layer": "LINK",
+            "bend_dimensions_mm": {
+              "A": 540.0,
+              "B": 240.0,
+              "C": 100.0
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_LINKS_RIGHT",
+            "shape_code": "51",
+            "bar_mark": "04",
+            "bar_size_mm": 10,
+            "count": 10,
+            "pitch_mm": 125.0,
+            "cut_length_mm": 1710.0,
+            "weight_kg": 1.055,
+            "layer": "LINK",
+            "bend_dimensions_mm": {
+              "A": 540.0,
+              "B": 240.0,
+              "C": 100.0
+            },
+            "grade": "H"
+          }
+        ]
+      },
+      "provenance": {
+        "generator": "beam",
+        "generator_label": "Suspended beam (MB1)",
+        "params_module": "engineering_system.members.beam",
+        "params_class": "BeamParams",
+        "model_class": "BeamEngineeringModel",
+        "drawing_number": "BEAM-01",
+        "drawing_title": "Suspended Beam Elevation & Section (MB1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "span_clear_mm": 6000.0,
+          "width_mm": 300.0,
+          "depth_mm": 600.0,
+          "column_width_mm": 350.0,
+          "support_left_width_mm": 350.0,
+          "support_right_width_mm": 350.0,
+          "cover_nominal_mm": 30.0,
+          "fck_MPa": 30.0,
+          "fyk_MPa": 500.0,
+          "bot_bar_count": 4,
+          "bot_bar_dia_mm": 25,
+          "is_end_bay": true,
+          "top_support_count": 4,
+          "top_support_dia_mm": 20,
+          "hanger_count": 2,
+          "hanger_dia_mm": 16,
+          "compression_steel_required_mm2": 0.0,
+          "link_dia_mm": 10,
+          "link_pitch_support_mm": 125.0,
+          "link_pitch_span_mm": 225.0,
+          "link_dense_zone_len_mm": 1200.0,
+          "is_flanged": false,
+          "flange_depth_mm": 0.0,
+          "side_bar_count": 0,
+          "side_bar_dia_mm": 12,
+          "curtailment_al_mm": 0.0,
+          "fire_rating_hours": 2.0
+        },
+        "source_model_fields": [
+          "depth",
+          "span_clear",
+          "support_left",
+          "support_right",
+          "width"
+        ],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": []
+      },
+      "validation": {
+        "state": "ok",
+        "warnings": []
+      },
+      "representations": {},
+      "volume_m3": 1.206,
+      "fingerprint": "89ece9e4936c4f51dd03e482a80b9353262d1555c65f2aeceee16f4a28020246"
+    }
+  ],
+  "relationships": [],
+  "warnings": [],
+  "statistics": {
+    "element_count": 1,
+    "by_ifc_class": {
+      "IfcBeam": 1
+    },
+    "by_element_type": {
+      "beam": 1
+    },
+    "total_volume_m3": 1.206,
+    "levels": 1,
+    "relationships": 0,
+    "elements_with_warnings": 0
+  },
+  "model_hash": "c48075a595e386cb73826319b4244d0c65bbc389bff7e0f7903110916b0e1470"
+}

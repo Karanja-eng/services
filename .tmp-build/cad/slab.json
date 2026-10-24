@@ -1,0 +1,218 @@
+{
+  "schema": "fundi.canonical",
+  "schema_version": "1.0.0",
+  "model_id": "slab",
+  "name": "Solid slab (MS1)",
+  "description": "Solid RC slab section: bottom/top bars, distribution bars, support detail and bar schedule.",
+  "generator": "slab",
+  "generator_module": "engineering_system.members.slab",
+  "source_params": {
+    "span_clear_mm": 4000.0,
+    "support_left_width_mm": 215.0,
+    "support_right_width_mm": 215.0,
+    "thickness_mm": 200.0,
+    "cover_nominal_mm": 25.0,
+    "fck_MPa": 30.0,
+    "fyk_MPa": 500.0,
+    "bottom_bar_dia_mm": 16,
+    "bottom_bar_pitch_mm": 200.0,
+    "top_bar_dia_mm": 12,
+    "top_bar_pitch_mm": 200.0,
+    "distribution_bar_dia_mm": 10,
+    "distribution_bar_pitch_mm": 250.0,
+    "is_continuous_left": false,
+    "is_continuous_right": false,
+    "slab_width_mm": 1000.0,
+    "is_end_support": true
+  },
+  "units": {
+    "length": "metre",
+    "area": "square_metre",
+    "volume": "cubic_metre",
+    "angle": "degree",
+    "frame": "Z-up right-handed",
+    "origin": "project origin at finished ground level of level L0"
+  },
+  "levels": [
+    {
+      "id": "slab:L0",
+      "name": "Level 1",
+      "elevation_m": 0.0,
+      "description": "Single storey used by the member model detail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "slab.slab",
+      "element_type": "slab",
+      "ifc_class": "IfcSlab",
+      "predefined_type": "FLOOR",
+      "name": "Solid slab strip",
+      "role": "slab",
+      "level_id": "slab:L0",
+      "parent_id": null,
+      "shape": "box",
+      "axis": "z",
+      "dimensions": {
+        "length_x": 4.43,
+        "width_y": 1.0,
+        "height_z": 0.2
+      },
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.1
+      },
+      "rotation_z_deg": 0.0,
+      "material": "C30/37",
+      "material_properties": {
+        "fck_MPa": 30.0,
+        "fyk_MPa": 500.0,
+        "material_type": "concrete",
+        "density_kg_m3": 2500.0
+      },
+      "properties": {
+        "span_clear_mm": 4000.0,
+        "support_left_width_mm": 215.0,
+        "support_right_width_mm": 215.0,
+        "thickness_mm": 200.0,
+        "cover_nominal_mm": 25.0,
+        "fck_MPa": 30.0,
+        "fyk_MPa": 500.0,
+        "bottom_bar_dia_mm": 16,
+        "bottom_bar_pitch_mm": 200.0,
+        "top_bar_dia_mm": 12,
+        "top_bar_pitch_mm": 200.0,
+        "distribution_bar_dia_mm": 10,
+        "distribution_bar_pitch_mm": 250.0,
+        "is_continuous_left": false,
+        "is_continuous_right": false,
+        "slab_width_mm": 1000.0,
+        "is_end_support": true,
+        "derived_d_eff_mm": 167.0,
+        "derived_end_anchorage_mm": 171.5518,
+        "derived_partial_fixity_top_rebar_ratio": 0.15,
+        "span_clear_m": 4.0,
+        "strip_width_m": 1.0,
+        "thickness_m": 0.2,
+        "soffit_elevation_m": 0.0
+      },
+      "reinforcement": {
+        "bar_groups": [
+          {
+            "group_id": "BG_BOT_MAIN",
+            "shape_code": "00",
+            "bar_mark": "01",
+            "bar_size_mm": 16,
+            "count": 5,
+            "pitch_mm": 200.0,
+            "cut_length_mm": 4301.0,
+            "weight_kg": 6.787,
+            "layer": "B1",
+            "bend_dimensions_mm": {
+              "A": 4301.0
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_BOT_DIST",
+            "shape_code": "00",
+            "bar_mark": "02",
+            "bar_size_mm": 10,
+            "count": 16,
+            "pitch_mm": 250.0,
+            "cut_length_mm": 950.0,
+            "weight_kg": 0.586,
+            "layer": "B2",
+            "bend_dimensions_mm": {
+              "A": 950.0
+            },
+            "grade": "H"
+          },
+          {
+            "group_id": "BG_TOP_LEFT",
+            "shape_code": "11",
+            "bar_mark": "03",
+            "bar_size_mm": 12,
+            "count": 5,
+            "pitch_mm": 200.0,
+            "cut_length_mm": 1418.75,
+            "weight_kg": 1.127,
+            "layer": "T1",
+            "bend_dimensions_mm": {
+              "A": 1268.75,
+              "B": 150.0
+            },
+            "grade": "H"
+          }
+        ]
+      },
+      "provenance": {
+        "generator": "slab",
+        "generator_label": "Solid slab (MS1)",
+        "params_module": "engineering_system.members.slab",
+        "params_class": "SlabParams",
+        "model_class": "SlabEngineeringModel",
+        "drawing_number": "SLAB-01",
+        "drawing_title": "Solid Slab Detailing (Model Detail MS1)",
+        "drawing_scale": "1:20",
+        "source_parameters": {
+          "span_clear_mm": 4000.0,
+          "support_left_width_mm": 215.0,
+          "support_right_width_mm": 215.0,
+          "thickness_mm": 200.0,
+          "cover_nominal_mm": 25.0,
+          "fck_MPa": 30.0,
+          "fyk_MPa": 500.0,
+          "bottom_bar_dia_mm": 16,
+          "bottom_bar_pitch_mm": 200.0,
+          "top_bar_dia_mm": 12,
+          "top_bar_pitch_mm": 200.0,
+          "distribution_bar_dia_mm": 10,
+          "distribution_bar_pitch_mm": 250.0,
+          "is_continuous_left": false,
+          "is_continuous_right": false,
+          "slab_width_mm": 1000.0,
+          "is_end_support": true
+        },
+        "source_model_fields": [
+          "span_clear",
+          "support_left",
+          "support_right",
+          "thickness",
+          "width"
+        ],
+        "geometry_convention": "metres, Z-up; vertical members sit on the level elevation, horizontal members have their soffit at the level elevation",
+        "assumptions": [
+          "slab_width_mm is the design strip width (default 1000 mm), not the full slab width"
+        ]
+      },
+      "validation": {
+        "state": "warning",
+        "warnings": [
+          "the generator designs a one-metre design strip; the model is that strip, not the full slab field",
+          "slab_width_mm is the design strip width (default 1000 mm), not the full slab width"
+        ]
+      },
+      "representations": {},
+      "volume_m3": 0.886,
+      "fingerprint": "a2b746f131bddb2bbb467f89dcef5216d4e700ac3f91211011b8700d5f1612ec"
+    }
+  ],
+  "relationships": [],
+  "warnings": [],
+  "statistics": {
+    "element_count": 1,
+    "by_ifc_class": {
+      "IfcSlab": 1
+    },
+    "by_element_type": {
+      "slab": 1
+    },
+    "total_volume_m3": 0.886,
+    "levels": 1,
+    "relationships": 0,
+    "elements_with_warnings": 1
+  },
+  "model_hash": "bdfd60d4298cc0d9d512bd1380ea58d35c2251d9702fc5ea248bfcaa89d4deb3"
+}

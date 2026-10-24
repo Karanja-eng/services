@@ -698,3 +698,158 @@ changes. Visual/device verification is still outstanding.
    the unreferenced `detailing_3d.jsx` remain (they were out of scope while the
    UI was being stabilised).
 
+---
+
+# 10. Implementation Record — Finish Remaining Cleanup (Session 4)
+
+This section records the second implementation pass. It supersedes §9.8 for the
+items it covers; anything not listed here is still open.
+
+## 10.1 Quantity surveying — initial input forms
+
+| Form | File | Depth of migration |
+|---|---|---|
+| Basement | `takeoff2/Basement_Takeoff.jsx` | **Full.** Page header, five sections, shared fields, responsive grid, result table in a scroll region, sticky action bar, honest loading/empty/error states. Downstream tabs untouched. |
+| Swimming pool | `takeoff2/swimming/swimming_pool.jsx` | **Full.** Header, four sections, shared fields, summary in `KeyValueGrid`, viewer shells sized for phones. |
+| Underground tank | `takeoff2/underground_tank.jsx` | **Full**, plus payload-only fields (plaster, mastic, brick, cover-to-slab) restored to the UI with unchanged defaults; `alert()` replaced by `ErrorNotice`. |
+| Internal finishes | `takeoff2/Internal_Finishes/internal_finishes.jsx` | Header/tabs, finish specifications (including screed, tile size, skirting that were in the payload but had no input), responsive room list, error state. |
+| Staircase takeoff | `takeoff2/Stairs/Enhanced_Stairs.jsx` | **Rebuilt** on the shared kit: type grid, materials, geometry, flight configuration, spiral settings, detailing disclosure, results banner. |
+| Doors & windows | `takeoff2/Door_Window/Doors&Window.jsx` | Type selector, measurements, door/window specifics, summary table and error state migrated; detailing parameters moved into a disclosure. |
+| Electrical & plumbing | `takeoff2/Electrical_Plumbing/ElectricalPlumbingTakeoff.jsx` | Header, automation section, summary table, error state; **two placeholders removed** ("Export Report", "Manual setup — coming soon"). |
+| Drainage | `takeoff2/Manhole/MainTakeoff.jsx`, `DrainageTakeoffForm.jsx` | Shell fully migrated (header, tabs, 3D shell, document tabs with empty states). Project-details tab uses shared fields. Manhole/pipe/ancillary tabs keep their native fields inside the shared section card — see §10.6. |
+| External works | `takeoff2/ExternalWorks/MainExternalWorks.jsx`, `ExternalWorksInputForm.jsx` | Shell migrated (header, tabs, error state, working Save/Load kept). Form frame restyled to 44 px controls/dark-safe CSS; **two placeholder buttons removed**; the 50+ measured fields keep their data-driven CSS grid (already responsive via `auto-fill`). |
+| Substructure | `takeoff2/SubStrucure_works/substructure_works.jsx` | All ~40 fields upgraded through a local adapter over the shared fields; header, action panel, result banner and error state migrated. |
+| RCC superstructure | `takeoff2/superstructure.jsx` | Header, tabs and page shell migrated; element lists keep their native inputs. |
+| Superstructure | `takeoff2/Superstructure/Superstructure_takeoff.jsx` | Header, tabs, scrollable sub-navigation; fields unchanged. |
+
+Downstream documents were not touched in any of these files: the taking-off
+sheet, dimension paper and BOQ still receive the same `items` prop and the same
+item shape.
+
+## 10.2 Structural workflows
+
+| Workflow | File | Change |
+|---|---|---|
+| Steel design | `SteelDesign/steel_design_app.jsx` | Shared page header; sidebar is now in-flow only from `lg`, with a native module picker on phones; placeholder "Save Project" removed. |
+| Stairs | `ReinforcedConcrete/Stairs/stair_main_app.jsx` | Shared page header + `DesignCodeToggle`; state ids unchanged; content padding responsive. |
+| Walls | `ReinforcedConcrete/Walls/main_wall_app.jsx` | Shared page header; the existing `DesignCodeToggle` cards variant and information banner are preserved. |
+| Framed & tall | *(unchanged this session)* | Already integrated in the previous pass (shared geometry fields + scope selector). |
+
+## 10.3 Surveying and soil mechanics
+
+- **Soil mechanics (all modules):** the file's local `InputField` was reimplemented
+  as an adapter over the shared `NumberField`, so every geotechnical input in all
+  ten modules now shares label/unit/touch-target treatment with one edit. The
+  caller still receives `parseFloat(value) || 0`, exactly as before. Repeated
+  `grid-cols-2` form grids now collapse to one column on phones. `ErrorAlert` uses
+  the shared `ErrorNotice`.
+- **Surveying app:** the levelling method selector and benchmark RL use the shared
+  `SelectField` / `NumberField`; the surrounding tab bar and page padding were
+  migrated in the previous pass.
+- **Not migrated (documented):** the five other surveying modules inside
+  `surveying_app.jsx` and the standalone surveying screens (earthworks, geoid,
+  route, utilities, setting-out, contouring, monitoring) still use their native
+  field markup.
+
+## 10.4 Roof / septic → global taking-off bridge (implemented)
+
+Files: `src/state/takeoffBridge.js` (pure merge helpers),
+`src/state/TakeoffBridgeContext.jsx` (provider + hook), wired in
+`engineering_appp.jsx`, `RoofWorks/RoofMain.jsx` and `septik/septik_tank.jsx`.
+
+Policy:
+- The global state remains the single `takeoffData` owned by `AppLayout`; no
+  second global model was introduced.
+- `publish(items, source)` **replaces only that source's previous batch**. Manual
+  or other-tool rows are never modified, and re-running a calculation cannot
+  duplicate rows.
+- Generated rows keep their existing fields untouched and gain additive
+  `source`, `sourceRef` and `sourceLabel` keys for traceability.
+- Nothing is persisted, so a refresh cannot replay or duplicate a batch.
+- Both tools show a "Published to the global taking-off…" notice with a link to
+  the taking-off sheet.
+
+## 10.5 Recent-tools history (implemented)
+
+Files: `src/state/recentTools.js`, `AppLayout`, `Sidebar`.
+
+- Records the tool path, title, discipline group and timestamp in
+  `localStorage` (`fundi.recentTools.v1`) when the route changes.
+- De-duplicates by path (re-opening moves a tool to the top), caps at 8 entries,
+  validates every stored row (absolute paths only, sane timestamps), and repairs
+  corrupt storage silently.
+- Stores **no** engineering inputs, project data or results.
+- The sidebar now shows real "Recent tools" with relative times and a clear
+  control, replacing the static sample list.
+
+## 10.6 Tests added
+
+`src/setupTests.js` mocks `lucide-react` (ESM icons cannot be parsed by Jest
+without transforming `node_modules`); no test dependency was added.
+
+| Suite | Covers |
+|---|---|
+| `shared/ui/__tests__/Fields.test.jsx` | `EngineeringField` label/unit/error wiring, raw-string `onChange`, cleared field, `SelectField` options, `CheckboxField` boolean. |
+| `shared/ui/__tests__/StatusAndLayout.test.jsx` | Status words, result banner role, utilisation meter ARIA, empty/loading/error states, retry handler, labelled table scroll region, header/section/action bar. |
+| `shared/engineering/__tests__/FrameInputs.test.jsx` | `StoreyGridFields` patch emission, optional lateral load, note; `MaterialGradeFields` key separation. |
+| `state/__tests__/takeoffBridge.test.js` | Source tagging, batch replacement without duplicates, other-source preservation, schema preservation, immutability, malformed input. |
+| `state/__tests__/recentTools.test.js` | Visit recording, de-duplication, cap, invalid input, corrupt-storage recovery, metadata-only payload, clear. |
+
+Result: **5 suites / 47 tests pass**. Command used in this environment:
+
+```
+CI=true npx react-scripts test --watchAll=false --runInBand
+```
+
+`--runInBand` is required here because the sandbox blocks the child-process pipe
+that `jest-worker` uses (`spawn EPERM`); it does not change what is tested.
+
+## 10.7 Dead code review
+
+- **Removed** `calculateMockResults()` from
+  `slab_calculator_frontend.jsx` — defined once, never referenced (the used
+  fallback of the same name lives in `slab_calculator.jsx`).
+- **Removed** `src/components/Drawings/detailing_3d.jsx` (~244 KB) — zero
+  references from any `.js/.jsx/.ts/.tsx` file, including the only dynamic
+  `import()` sites in the repo (`interop/InteropWorkbench.jsx`, which target the
+  interop viewers).
+- **Removed placeholder controls** that had no handlers: steel "Save Project",
+  roof "Save Project", external works "View 3D Model"/"Generate Takeoff Sheet",
+  electrical "Export Report", slab settings selects, roof save/import.
+- **Retained** `calculateMockResults()` in `slab_calculator.jsx` because it is
+  called as a fallback there; retained all `Cad_Dwg/` spikes, `RCSettings.jsx`
+  and `civil_cad_app.jsx` pending a dedicated review (reachability not fully
+  established for dynamic/registry lookups).
+
+## 10.8 Remaining implementation work before the consolidated verification pass
+
+1. Drainage manhole/pipe/ancillary field blocks, external-works measured fields,
+   and both superstructure element lists still use native inputs (behaviour is
+   correct; visual consistency is partial).
+2. Five surveying sub-modules inside `surveying_app.jsx` and the standalone
+   surveying screens still use native field markup.
+3. Several workflows still report failures with `alert()` rather than the shared
+   `ErrorNotice`: drainage form validation, soil export, stair calculation errors,
+   wall DXF export and the framed-design fetch error. Both superstructure tools
+   were converted in this pass.
+4. `InteropWorkbench`/CAD panels were not revisited beyond the earlier build fix;
+   the That Open renderer remains stubbed by the compatibility layer.
+5. A production build and the full verification matrix (360/390/768/1280/1440 px)
+   must still be run after this pass.
+
+## 10.9 Verification for this pass
+
+- **Unit tests:** `CI=true npx react-scripts test --watchAll=false --runInBand`
+  → **5 suites / 47 tests passed**.
+- **Syntax gate:** `node scripts/verify/jsx-parse.mjs …` across every modified file
+  and every new test/state file → **0 failures**.
+- **Production build:** `npm run build` (`BUILD_PATH=.tmp-build`) → **compiled
+  successfully** ("The .tmp-build folder is ready to be deployed"), CSS ≈ 23.5 kB
+  gzip, main JS ≈ 1.16 MB gzip. Output is warnings only (unused variables and
+  anonymous default exports, overwhelmingly pre-existing) plus the standard
+  Browserslist/bundle-size advisories.
+- **Not run in this pass:** the interactive verification matrix (viewport widths,
+  real backend calculations, CAD handoff, takeoff generation against a live API).
+  That is the next phase and is intentionally out of scope here.
+
+

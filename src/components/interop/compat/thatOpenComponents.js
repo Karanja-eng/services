@@ -1,59 +1,65 @@
 // src/components/interop/compat/thatOpenComponents.js
 //
-// Safe compatibility layer for @thatopen/components.
-// Allows compilation and clean UI fallback when That Open is not installed.
+// That Open Components adapter for the BIM viewport.
+//
+// Root cause of the previous "That Open is optional and not installed" message:
+// this module was a hardcoded stub (`Components` was a class whose `init` was a
+// no-op, `isAvailable` was the constant `false`). The real package has been a
+// direct dependency (`@thatopen/components` 3.3.3, pinned) since the integration
+// commit, so the message was wrong on every platform — desktop included.
+//
+// This module now re-exports the real engine and publishes an availability
+// report derived from the engine's own exports.
 
-export class Components {
-  constructor() {
-    this.init = () => {};
-  }
-}
+import {
+  Components,
+  Worlds,
+  SimpleScene,
+  SimpleRenderer,
+  SimpleCamera,
+  IfcLoader,
+  FragmentsManager,
+  Clipper,
+} from '@thatopen/components';
 
-export class SimpleWorld {
-  constructor() {
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-  }
-}
+// Re-export the engine namespace so views can use `OBC.*` without importing the
+// package directly (and without a stub layer that can lie about availability).
+export * from '@thatopen/components';
 
-export class SimpleScene {}
-export class SimpleCamera {}
-export class SimpleRenderer {}
+export const ENGINE_NAME = 'That Open Components';
+export const ENGINE_VERSION = '3.3.3';
 
-export class IfcLoader {
-  constructor() {
-    this.settings = { wasm: {} };
-  }
-  async load() {
-    return null;
-  }
-}
+/** Every symbol the viewer needs, checked on the real namespace. */
+const REQUIRED = {
+  Components,
+  Worlds,
+  SimpleScene,
+  SimpleRenderer,
+  SimpleCamera,
+  IfcLoader,
+  FragmentsManager,
+  Clipper,
+};
 
-// `ThatOpenBimViewer.jsx` resolves the fragments manager through the component
-// container. The export is required for the module graph to compile in
-// checkouts where the optional That Open engine is unavailable; the viewer's own
-// availability guard and error state decide what the user sees at runtime.
-export class FragmentsManager {
-  constructor() {
-    this.list = new Map();
-  }
-  async dispose() {}
-}
+export const isAvailable = Object.values(REQUIRED).every(
+  (value) => typeof value === 'function'
+);
 
-export class Clipper {
-  static create() {
+/** @returns {{available: boolean, engine: string, version: string, missing: string[], reason: string|null}} */
+export function bimEngineStatus() {
+  const missing = Object.entries(REQUIRED)
+    .filter(([, value]) => typeof value !== 'function')
+    .map(([name]) => name);
+  if (missing.length) {
     return {
-      enabled: false,
-      deleteAll() {},
+      available: false,
+      engine: ENGINE_NAME,
+      version: ENGINE_VERSION,
+      missing,
+      reason:
+        `the installed @thatopen/components build is missing ${missing.join(', ')}; ` +
+        'run `npm run verify:thatopen-three` and check the pinned versions',
     };
   }
+  return { available: true, engine: ENGINE_NAME, version: ENGINE_VERSION, missing: [], reason: null };
 }
-
-export class Worlds {
-  create() {
-    return new SimpleWorld();
-  }
-}
-
-export const isAvailable = false;

@@ -121,3 +121,219 @@ textarea {
   transition: background-color 0.3s ease, color 0.3s ease,
     border-color 0.3s ease;
 }
+
+/* ==========================================================================
+   Fundi design tokens (single source of truth for plain CSS and third-party
+   chrome).
+
+   The values are the *measured* specifications of the Beam Designer Suite,
+   which is the application's visual reference:
+     - font family Inter (body rule above), body 14 px, label 12 px,
+       heading 20 px on desktop / 16 px on phones
+     - form control height 40 px from `sm` up, 44 px on phones (touch target)
+     - button height 40 px / 44 px, 8 px radius, 14 px semibold label
+     - card radius 16 px, 1 px border, small shadow
+     - primary blue-600 #2563eb, border gray-200 #e5e7eb, focus blue-600
+
+   `src/components/shared/ui/tokens.js` carries the same values as Tailwind
+   class strings for React components. The CSS variables below exist so that
+   modules that cannot use Tailwind (CAD/BIM viewer chrome, canvas overlays,
+   plain-DOM toolbars injected by a third-party engine) still match it.
+   When a value changes, change it here AND in tokens.js.
+   ========================================================================== */
+:root {
+  --fundi-font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fundi-font-size-body: 0.875rem; /* 14px */
+  --fundi-font-size-label: 0.75rem; /* 12px */
+  --fundi-font-size-helper: 0.6875rem; /* 11px */
+  --fundi-font-size-heading: 1.25rem; /* 20px */
+  --fundi-font-size-page-title: 1.125rem; /* 18px */
+
+  --fundi-control-height: 2.5rem; /* 40px */
+  --fundi-control-height-touch: 2.75rem; /* 44px */
+  --fundi-button-height: 2.5rem;
+  --fundi-button-height-touch: 2.75rem;
+  --fundi-control-radius: 0.5rem; /* rounded-lg */
+  --fundi-card-radius: 1rem; /* rounded-2xl */
+  --fundi-control-padding-x: 0.75rem;
+  --fundi-button-padding-x: 1rem;
+
+  --fundi-spacing-field: 0.375rem; /* label -> control */
+  --fundi-spacing-stack: 1.5rem;
+  --fundi-spacing-section: 1rem;
+
+  --fundi-color-primary: #2563eb;
+  --fundi-color-primary-hover: #1d4ed8;
+  --fundi-color-primary-soft: #eff6ff;
+  --fundi-color-border: #e5e7eb;
+  --fundi-color-border-strong: #d1d5db;
+  --fundi-color-surface: #ffffff;
+  --fundi-color-surface-muted: #f9fafb;
+  --fundi-color-text: #111827;
+  --fundi-color-text-muted: #6b7280;
+  --fundi-color-focus: #2563eb;
+  --fundi-color-danger: #dc2626;
+  --fundi-color-success: #16a34a;
+  --fundi-color-warning: #d97706;
+  --fundi-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.dark {
+  --fundi-color-primary-soft: rgba(37, 99, 235, 0.16);
+  --fundi-color-border: #1e293b;
+  --fundi-color-border-strong: #334155;
+  --fundi-color-surface: #0f172a;
+  --fundi-color-surface-muted: #111827;
+  --fundi-color-text: #e2e8f0;
+  --fundi-color-text-muted: #94a3b8;
+  --fundi-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Phones: controls stay touch-sized; type does not shrink below legibility. */
+@media (max-width: 639px) {
+  :root {
+    --fundi-control-height: var(--fundi-control-height-touch);
+    --fundi-button-height: var(--fundi-button-height-touch);
+    --fundi-font-size-heading: 1rem; /* 16px */
+    --fundi-font-size-page-title: 1rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Shared component classes for non-Tailwind surfaces.
+
+   These are intentionally thin: they exist so injected DOM (viewer toolbars,
+   diagnostics overlays) can adopt the same dimensions as React controls without
+   duplicating pixel values. `@layer components` keeps Tailwind utilities able to
+   override any of them.
+   -------------------------------------------------------------------------- */
+@layer components {
+  .fundi-surface {
+    background-color: var(--fundi-color-surface);
+    color: var(--fundi-color-text);
+  }
+
+  .fundi-label {
+    display: block;
+    font-size: var(--fundi-font-size-label);
+    font-weight: 600;
+    color: var(--fundi-color-text);
+    margin-bottom: var(--fundi-spacing-field);
+  }
+
+  .fundi-helper {
+    font-size: var(--fundi-font-size-helper);
+    color: var(--fundi-color-text-muted);
+  }
+
+  .fundi-input,
+  .fundi-select {
+    width: 100%;
+    min-height: var(--fundi-control-height);
+    padding: 0 var(--fundi-control-padding-x);
+    font-family: var(--fundi-font-family);
+    font-size: var(--fundi-font-size-body);
+    color: var(--fundi-color-text);
+    background-color: var(--fundi-color-surface);
+    border: 1px solid var(--fundi-color-border-strong);
+    border-radius: var(--fundi-control-radius);
+  }
+
+  .fundi-input:focus-visible,
+  .fundi-select:focus-visible {
+    outline: none;
+    border-color: var(--fundi-color-focus);
+    box-shadow: 0 0 0 2px var(--fundi-color-focus);
+  }
+
+  .fundi-input:disabled,
+  .fundi-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .fundi-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: var(--fundi-button-height);
+    padding: 0 var(--fundi-button-padding-x);
+    font-family: var(--fundi-font-family);
+    font-size: var(--fundi-font-size-body);
+    font-weight: 600;
+    border-radius: var(--fundi-control-radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+
+  .fundi-button--primary {
+    background-color: var(--fundi-color-primary);
+    color: #ffffff;
+  }
+
+  .fundi-button--primary:hover {
+    background-color: var(--fundi-color-primary-hover);
+  }
+
+  .fundi-button--secondary {
+    background-color: var(--fundi-color-surface-muted);
+    color: var(--fundi-color-text);
+    border-color: var(--fundi-color-border);
+  }
+
+  .fundi-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .fundi-card {
+    background-color: var(--fundi-color-surface);
+    border: 1px solid var(--fundi-color-border);
+    border-radius: var(--fundi-card-radius);
+    box-shadow: var(--fundi-shadow-card);
+  }
+
+  .fundi-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: var(--fundi-control-height);
+    padding: 0.375rem 0.5rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Mobile rendering notes (investigated, not guessed)
+
+   The application already ships `<meta name="viewport" width=device-width,
+   initial-scale=1>`, so Chrome's "Desktop site" mode was NOT fixing a viewport
+   bug — it was switching the browser to a 980 px layout viewport, which made the
+   desktop-only panels fit. The layout now adapts at 360–430 px instead (see the
+   workbench and builder toolbar), so desktop mode is no longer needed.
+
+   The rules below only prevent a stray wide child from turning into a horizontally
+   scrolling page. They do not scale anything down: typography and control heights
+   stay at their real sizes.
+   -------------------------------------------------------------------------- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  max-width: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Canvas hosts and technical tables manage their own overflow. */
+canvas {
+  max-width: 100%;
+}
+

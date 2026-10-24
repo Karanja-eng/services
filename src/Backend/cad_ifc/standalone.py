@@ -65,13 +65,19 @@ def create_app() -> FastAPI:
         description=DESCRIPTION.strip(),
         version="1.0.0",
     )
-    # The workbench runs on the Create React App dev server (a different origin),
-    # exactly like the full backend, so the same permissive policy applies. This is
-    # a local engineering tool; it is not exposed publicly by this launcher.
+    # The workbench runs on the Create React App dev server (a different origin,
+    # possibly on another device on the LAN), exactly like the full backend, so a
+    # permissive origin policy applies. This is a local engineering tool; it is not
+    # exposed publicly by this launcher.
+    #
+    # `allow_credentials=False` on purpose: this API uses no cookies or HTTP auth,
+    # and the CORS specification forbids the wildcard origin together with
+    # credentials. Leaving credentials enabled made the wildcard technically invalid
+    # for any request that did send credentials.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )

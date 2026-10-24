@@ -1,0 +1,598 @@
+{
+  "schema": "fundi.canonical.model/1",
+  "model_id": "septic-system",
+  "generator": "takeoff2/septik/SepticScene",
+  "name": "Septic tank, inspection chamber and connection",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "coordinate_system": {
+    "handedness": "right",
+    "up_axis": "Z",
+    "origin": "centre of the septic tank base slab at underside level",
+    "true_north_deg": 0.0,
+    "r3f_transform": "IFC_X = R3F_X, IFC_Y = -R3F_Z, IFC_Z = R3F_Y"
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "name": "Ground level",
+      "elevation_m": 0.0
+    }
+  ],
+  "parameters": {
+    "baffle_heights": [
+      1.5,
+      1.3
+    ],
+    "baffle_thick": 0.2,
+    "bed_thick_manhole": 0.15,
+    "bed_thick_tank": 0.15,
+    "connect_septic_to_manhole": true,
+    "cover_l": 0.6,
+    "cover_w": 0.45,
+    "inlet_pipe_l": 1.0,
+    "manhole_depth_int": 0.7,
+    "manhole_int_l": 0.7,
+    "manhole_int_w": 0.6,
+    "manhole_offset_x": 4.5,
+    "num_baffles": 2,
+    "outlet_pipe_l": 1.0,
+    "pipe_diameter": 0.15,
+    "slab_thick": 0.2,
+    "soakpit_depth": 3.0,
+    "soakpit_diameter": 2.0,
+    "soakpit_wall_thick": 0.23,
+    "tank_depth_int": 2.0,
+    "tank_int_l": 3.0,
+    "tank_int_w": 2.5,
+    "wall_thick": 0.2
+  },
+  "derived": {
+    "tank_external_length_m": 3.4,
+    "tank_external_width_m": 2.9,
+    "tank_external_height_m": 2.35
+  },
+  "elements": [
+    {
+      "id": "septic-system.tank.base_slab",
+      "ifc_guid": "2M0W38LNnQuRLXPOgNDCSF",
+      "ifc_class": "IfcSlab",
+      "predefined_type": "BASESLAB",
+      "name": "Septic tank base slab",
+      "role": "tank.base_slab",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.075
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 3.4,
+        "width_y": 2.9,
+        "height_z": 0.15
+      },
+      "properties": {
+        "Thickness": 0.15,
+        "Grade": "C20/25"
+      },
+      "volume_m3": 1.479,
+      "fingerprint": "a4bbcbff7023c3890df536ad1e4a6193c4e76e16b7a5f10bcb9330e482d9caac"
+    },
+    {
+      "id": "septic-system.tank.wall.north",
+      "ifc_guid": "1rx8AJRY9RPugaxqxW1Dkz",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Septic tank wall (north)",
+      "role": "tank.wall.north",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 0.0,
+        "y": 1.3499999999999999,
+        "z": 1.15
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 3.4,
+        "width_y": 0.2,
+        "height_z": 2.0
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 1.36,
+      "fingerprint": "ede4b41a5478c0d48b2f750a3d3132e0e9f825e6d059697a972676f9454e503b"
+    },
+    {
+      "id": "septic-system.tank.wall.south",
+      "ifc_guid": "1_2CUjWzHSORF3WW4LyLFB",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Septic tank wall (south)",
+      "role": "tank.wall.south",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 0.0,
+        "y": -1.3499999999999999,
+        "z": 1.15
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 3.4,
+        "width_y": 0.2,
+        "height_z": 2.0
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 1.36,
+      "fingerprint": "daf68edfd4a9d8c6bf4587a40f7283a49d179301f3cb8711a6ffdb1acd3818b6"
+    },
+    {
+      "id": "septic-system.tank.wall.east",
+      "ifc_guid": "1Ozo6w3MTV5PjakIA_72Gj",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Septic tank wall (east)",
+      "role": "tank.wall.east",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 1.5999999999999999,
+        "y": 0.0,
+        "z": 1.15
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 0.2,
+        "width_y": 2.9,
+        "height_z": 2.0
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 1.16,
+      "fingerprint": "5f6280a2cfc62f25abc5278b2ee7cce4917dac6f36188ed9be497b4b7d94bb26"
+    },
+    {
+      "id": "septic-system.tank.wall.west",
+      "ifc_guid": "0DEfJaFY9OW9LTdeHtPdwy",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Septic tank wall (west)",
+      "role": "tank.wall.west",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": -1.5999999999999999,
+        "y": 0.0,
+        "z": 1.15
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 0.2,
+        "width_y": 2.9,
+        "height_z": 2.0
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 1.16,
+      "fingerprint": "61e26c1ee199e885a19f4de127f7a42f61f3f1bc7ce3dc13c876315bc6024383"
+    },
+    {
+      "id": "septic-system.tank.baffle~1",
+      "ifc_guid": "296rDjbuPG4Rsm7_Yu16EG",
+      "ifc_class": "IfcWall",
+      "predefined_type": "PARTITIONING",
+      "name": "Septic tank baffle 1",
+      "role": "tank.baffle",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": -0.5,
+        "y": 0.0,
+        "z": 0.9
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 0.2,
+        "width_y": 2.5,
+        "height_z": 1.5
+      },
+      "properties": {
+        "Height": 1.5,
+        "Thickness": 0.2
+      },
+      "volume_m3": 0.75,
+      "fingerprint": "a09f00210c06b2334632fac03afd19af3b79abca6f0919a199911091773a9190"
+    },
+    {
+      "id": "septic-system.tank.baffle~2",
+      "ifc_guid": "24IZ6eHuHS$ueeTvXkOVp6",
+      "ifc_class": "IfcWall",
+      "predefined_type": "PARTITIONING",
+      "name": "Septic tank baffle 2",
+      "role": "tank.baffle",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 0.5,
+        "y": 0.0,
+        "z": 0.8
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 0.2,
+        "width_y": 2.5,
+        "height_z": 1.3
+      },
+      "properties": {
+        "Height": 1.3,
+        "Thickness": 0.2
+      },
+      "volume_m3": 0.65,
+      "fingerprint": "1746c869731d6c70b822d7ce91de4c5f92e6e34118da25712533e1a443372e9c"
+    },
+    {
+      "id": "septic-system.tank.top_slab",
+      "ifc_guid": "2PBzB2_ATGSBqp0W2FV6gN",
+      "ifc_class": "IfcSlab",
+      "predefined_type": "ROOF",
+      "name": "Septic tank cover slab",
+      "role": "tank.top_slab",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 2.25
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 3.4,
+        "width_y": 2.9,
+        "height_z": 0.2
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30",
+        "AccessOpeningLength": 0.6,
+        "AccessOpeningWidth": 0.45,
+        "VoidModelling": "not_modelled"
+      },
+      "volume_m3": 1.972,
+      "fingerprint": "6419990cb12c46157efe332a7a0e555fd00d904fe6e45ff2c120ca4c66c604f3"
+    },
+    {
+      "id": "septic-system.tank.inlet_pipe",
+      "ifc_guid": "2T_0_ORETPL9GYL1komrOM",
+      "ifc_class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": "Septic tank inlet pipe",
+      "role": "tank.inlet_pipe",
+      "level_id": "L0",
+      "material": "uPVC",
+      "shape": "cylinder",
+      "axis": "x",
+      "placement": {
+        "x": -2.2,
+        "y": 0.0,
+        "z": 1.5499999999999998
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "radius": 0.075,
+        "height": 1.0
+      },
+      "properties": {
+        "Diameter": 0.15,
+        "FlowDirection": "inlet"
+      },
+      "volume_m3": 0.017671,
+      "fingerprint": "0c75180d2005dda8bcc49e35a9585a6fad1a6755dd5972d1e5ac5e73d5b1d96f"
+    },
+    {
+      "id": "septic-system.tank.outlet_pipe",
+      "ifc_guid": "2lVcFvYfbUZu_W1KrUrnXJ",
+      "ifc_class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": "Septic tank outlet pipe",
+      "role": "tank.outlet_pipe",
+      "level_id": "L0",
+      "material": "uPVC",
+      "shape": "cylinder",
+      "axis": "x",
+      "placement": {
+        "x": 2.2,
+        "y": 0.0,
+        "z": 1.3499999999999999
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "radius": 0.075,
+        "height": 1.0
+      },
+      "properties": {
+        "Diameter": 0.15,
+        "FlowDirection": "outlet"
+      },
+      "volume_m3": 0.017671,
+      "fingerprint": "1281a4ee6fc86a0efc29c4e6bd06205c270c548b536f0669bcc2364b584678c8"
+    },
+    {
+      "id": "septic-system.manhole.base_slab",
+      "ifc_guid": "2HFnOwa$rPFxQ$n2VWLqO5",
+      "ifc_class": "IfcSlab",
+      "predefined_type": "BASESLAB",
+      "name": "Inspection chamber base slab",
+      "role": "manhole.base_slab",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 4.5,
+        "y": 0.0,
+        "z": 0.075
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 1.1,
+        "width_y": 1.0,
+        "height_z": 0.15
+      },
+      "properties": {
+        "Thickness": 0.15,
+        "Grade": "C20/25"
+      },
+      "volume_m3": 0.165,
+      "fingerprint": "e28a25902874b575df9f9477dd4d8a63ee69af026a0dd1fbdd2f32dd1dad3643"
+    },
+    {
+      "id": "septic-system.manhole.wall.north",
+      "ifc_guid": "1ixAGJTNzLRh$uOZNcswL3",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Inspection chamber wall (north)",
+      "role": "manhole.wall.north",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 4.5,
+        "y": 0.4,
+        "z": 0.5
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 1.1,
+        "width_y": 0.2,
+        "height_z": 0.7
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 0.154,
+      "fingerprint": "a0a569a7cfc626652b772667e22ce8266d9de7a8700cfcfc94b24a23c1f36767"
+    },
+    {
+      "id": "septic-system.manhole.wall.south",
+      "ifc_guid": "0kpA_E7vjHxvYvbYYHdLMz",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Inspection chamber wall (south)",
+      "role": "manhole.wall.south",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 4.5,
+        "y": -0.4,
+        "z": 0.5
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 1.1,
+        "width_y": 0.2,
+        "height_z": 0.7
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 0.154,
+      "fingerprint": "ab8696016b577c1a0c71bf861b6d8437ef1d5092007b08291ba82ce4d254aa6b"
+    },
+    {
+      "id": "septic-system.manhole.wall.east",
+      "ifc_guid": "2V9m96eR5UzRDJ4DleUaCF",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Inspection chamber wall (east)",
+      "role": "manhole.wall.east",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 4.95,
+        "y": 0.0,
+        "z": 0.5
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 0.2,
+        "width_y": 1.0,
+        "height_z": 0.7
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 0.14,
+      "fingerprint": "1c593577bbbb69ffc1866c8ee68a2e0229f4db4971f12c7c183708a0ebe4e3ab"
+    },
+    {
+      "id": "septic-system.manhole.wall.west",
+      "ifc_guid": "3sqHa$IEzVP8UnXwVEC$bh",
+      "ifc_class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": "Inspection chamber wall (west)",
+      "role": "manhole.wall.west",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 4.05,
+        "y": 0.0,
+        "z": 0.5
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 0.2,
+        "width_y": 1.0,
+        "height_z": 0.7
+      },
+      "properties": {
+        "Thickness": 0.2,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 0.14,
+      "fingerprint": "f519a198d1674e6636a8e9172068b6aaa8e08590bd2b17dff572039e05567b38"
+    },
+    {
+      "id": "septic-system.manhole.cover_slab",
+      "ifc_guid": "1izFGDKHnVJ9CdXxIB4cdR",
+      "ifc_class": "IfcSlab",
+      "predefined_type": "ROOF",
+      "name": "Inspection chamber cover slab",
+      "role": "manhole.cover_slab",
+      "level_id": "L0",
+      "material": "Concrete C25/30",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 4.5,
+        "y": 0.0,
+        "z": 0.9249999999999999
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 1.1,
+        "width_y": 1.0,
+        "height_z": 0.15
+      },
+      "properties": {
+        "Thickness": 0.15,
+        "Grade": "C25/30"
+      },
+      "volume_m3": 0.165,
+      "fingerprint": "4594cd08d15ed67a9dcf4b90b9b836a5fd3f8637ee32a850cd6c88d2f5c60bc6"
+    },
+    {
+      "id": "septic-system.manhole.cover",
+      "ifc_guid": "2DBKQ3O0PRmRabFjcIQCaK",
+      "ifc_class": "IfcSlab",
+      "predefined_type": "NOTDEFINED",
+      "name": "Inspection chamber cover",
+      "role": "manhole.cover",
+      "level_id": "L0",
+      "material": "Cast iron",
+      "shape": "box",
+      "axis": "z",
+      "placement": {
+        "x": 4.5,
+        "y": 0.0,
+        "z": 1.025
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "length_x": 0.6,
+        "width_y": 0.45,
+        "height_z": 0.05
+      },
+      "properties": {
+        "Thickness": 0.05,
+        "Grade": "heavy duty"
+      },
+      "volume_m3": 0.0135,
+      "fingerprint": "281a2f7bca6fbfc9390ffbc8b1d4276852b30d89069c1d2d817834fdc5b077a3"
+    },
+    {
+      "id": "septic-system.connection.tank_to_manhole",
+      "ifc_guid": "3EU3F3JHjLDuIlRrkmNPu_",
+      "ifc_class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": "Septic tank to inspection chamber pipe",
+      "role": "connection.tank_to_manhole",
+      "level_id": "L0",
+      "material": "uPVC",
+      "shape": "cylinder",
+      "axis": "x",
+      "placement": {
+        "x": 3.0999999999999996,
+        "y": 0.0,
+        "z": 1.3499999999999999
+      },
+      "rotation_z_deg": 0.0,
+      "dimensions": {
+        "radius": 0.075,
+        "height": 2.8
+      },
+      "properties": {
+        "Diameter": 0.15,
+        "Length": 2.8
+      },
+      "volume_m3": 0.04948,
+      "fingerprint": "ce3b5d2ac3d9f4914d78df9c969ea776492ee60ee4b38aac2dff89f25364247c"
+    }
+  ],
+  "statistics": {
+    "element_count": 18,
+    "by_ifc_class": {
+      "IfcPipeSegment": 3,
+      "IfcSlab": 5,
+      "IfcWall": 10
+    },
+    "by_material": {
+      "Cast iron": 1,
+      "Concrete C25/30": 14,
+      "uPVC": 3
+    },
+    "total_volume_m3": 10.907322
+  }
+}

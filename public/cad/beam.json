@@ -9,7 +9,7 @@
   "source_params": {
     "span_clear_mm": 6000.0,
     "width_mm": 300.0,
-    "depth_mm": 650.0,
+    "depth_mm": 600.0,
     "column_width_mm": 350.0,
     "support_left_width_mm": 350.0,
     "support_right_width_mm": 350.0,
@@ -66,12 +66,12 @@
       "dimensions": {
         "length_x": 6.7,
         "width_y": 0.3,
-        "height_z": 0.65
+        "height_z": 0.6
       },
       "placement": {
         "x": 0.0,
         "y": 0.0,
-        "z": 0.325
+        "z": 0.3
       },
       "rotation_z_deg": 0.0,
       "material": "C30/37",
@@ -84,7 +84,7 @@
       "properties": {
         "span_clear_mm": 6000.0,
         "width_mm": 300.0,
-        "depth_mm": 650.0,
+        "depth_mm": 600.0,
         "column_width_mm": 350.0,
         "support_left_width_mm": 350.0,
         "support_right_width_mm": 350.0,
@@ -109,9 +109,9 @@
         "side_bar_dia_mm": 12,
         "curtailment_al_mm": 0.0,
         "fire_rating_hours": 2.0,
-        "derived_As_min_mm2": 269.9798,
+        "derived_As_min_mm2": 247.3873,
         "derived_As_provided_mm2": 1963.6,
-        "derived_d_eff_mm": 597.5,
+        "derived_d_eff_mm": 547.5,
         "derived_corbel_action_triggered": false,
         "derived_fire_spalling_mesh_required": false,
         "derived_fire_spalling_message": "No supplementary surface reinforcement mesh required for fire spalling.",
@@ -125,7 +125,7 @@
         "support_right_m": 0.35,
         "overall_length_m": 6.7,
         "section_width_m": 0.3,
-        "section_depth_m": 0.65,
+        "section_depth_m": 0.6,
         "soffit_elevation_m": 0.0
       },
       "reinforcement": {
@@ -153,12 +153,12 @@
             "bar_size_mm": 20,
             "count": 4,
             "pitch_mm": null,
-            "cut_length_mm": 2740.0,
+            "cut_length_mm": 2690.0,
             "weight_kg": 5.302,
             "layer": "T1",
             "bend_dimensions_mm": {
               "A": 2150.0,
-              "B": 590.0
+              "B": 540.0
             },
             "grade": "H"
           },
@@ -184,11 +184,11 @@
             "bar_size_mm": 10,
             "count": 10,
             "pitch_mm": 125.0,
-            "cut_length_mm": 1810.0,
-            "weight_kg": 1.117,
+            "cut_length_mm": 1710.0,
+            "weight_kg": 1.055,
             "layer": "LINK",
             "bend_dimensions_mm": {
-              "A": 590.0,
+              "A": 540.0,
               "B": 240.0,
               "C": 100.0
             },
@@ -201,11 +201,11 @@
             "bar_size_mm": 10,
             "count": 16,
             "pitch_mm": 225.0,
-            "cut_length_mm": 1810.0,
-            "weight_kg": 1.117,
+            "cut_length_mm": 1710.0,
+            "weight_kg": 1.055,
             "layer": "LINK",
             "bend_dimensions_mm": {
-              "A": 590.0,
+              "A": 540.0,
               "B": 240.0,
               "C": 100.0
             },
@@ -218,11 +218,11 @@
             "bar_size_mm": 10,
             "count": 10,
             "pitch_mm": 125.0,
-            "cut_length_mm": 1810.0,
-            "weight_kg": 1.117,
+            "cut_length_mm": 1710.0,
+            "weight_kg": 1.055,
             "layer": "LINK",
             "bend_dimensions_mm": {
-              "A": 590.0,
+              "A": 540.0,
               "B": 240.0,
               "C": 100.0
             },
@@ -242,7 +242,7 @@
         "source_parameters": {
           "span_clear_mm": 6000.0,
           "width_mm": 300.0,
-          "depth_mm": 650.0,
+          "depth_mm": 600.0,
           "column_width_mm": 350.0,
           "support_left_width_mm": 350.0,
           "support_right_width_mm": 350.0,
@@ -283,8 +283,8 @@
         "warnings": []
       },
       "representations": {},
-      "volume_m3": 1.3065,
-      "fingerprint": "6dbda93d77ffcb60bac7e1fdb095344d870a936c5149c887fe3c986a05b58e52"
+      "volume_m3": 1.206,
+      "fingerprint": "89ece9e4936c4f51dd03e482a80b9353262d1555c65f2aeceee16f4a28020246"
     }
   ],
   "relationships": [],
@@ -297,10 +297,10 @@
     "by_element_type": {
       "beam": 1
     },
-    "total_volume_m3": 1.3065,
+    "total_volume_m3": 1.206,
     "levels": 1,
     "relationships": 0,
     "elements_with_warnings": 0
   },
-  "model_hash": "9e67bc04c6d215484fa024c7d8825032c9d6f7d33d5fc8a75dc2af154c2c1978"
+  "model_hash": "c48075a595e386cb73826319b4244d0c65bbc389bff7e0f7903110916b0e1470"
 }

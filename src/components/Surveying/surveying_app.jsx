@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calculator, Map, Grid3x3, Layers, TrendingUp, Wrench, Plus, Trash2, Download, Upload } from 'lucide-react';
-import { NumberField, SelectField, TableScrollRegion, ErrorNotice } from '../shared/ui';
+import { NumberField, SelectField } from '../shared/ui';
 
 // Main App Component
 export default function SurveyingApp({ isDark = false }) {

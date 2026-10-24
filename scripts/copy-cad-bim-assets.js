@@ -29,6 +29,10 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const targetDir = path.join(root, 'public', 'thatopen');
+// MLightCAD fetches its MTEXT layout/shaping worker by URL, so it lives next to
+// the other runtime assets. The filename is the engine's own constant
+// (`MTEXT_RENDERER_WORKER_FILE`); `cadSimpleViewer.js` points at this folder.
+const cadWorkerDir = path.join(root, 'public', 'cad-workers');
 
 const ASSETS = [
   {
@@ -50,6 +54,7 @@ const ASSETS = [
 
 function main() {
   fs.mkdirSync(targetDir, { recursive: true });
+  fs.mkdirSync(cadWorkerDir, { recursive: true });
 
   const missing = [];
   for (const asset of ASSETS) {
@@ -63,10 +68,34 @@ function main() {
     console.log(`[cad-bim-assets] ${asset.to} <- ${path.relative(root, asset.from)} (${size} bytes)`);
   }
 
+  // MLightCAD's MTEXT worker. A missing worker is not fatal (entities still
+  // render; multiline text layout falls back), so it is reported like the others.
+  const cadWorkerSource = path.join(
+    root,
+    'node_modules',
+    '@mlightcad',
+    'cad-simple-viewer',
+    'dist',
+    'mtext-renderer-worker.js'
+  );
+  if (fs.existsSync(cadWorkerSource)) {
+    const destination = path.join(cadWorkerDir, 'mtext-renderer-worker.js');
+    fs.copyFileSync(cadWorkerSource, destination);
+    console.log(
+      `[cad-bim-assets] cad-workers/mtext-renderer-worker.js <- ` +
+        `${path.relative(root, cadWorkerSource)} (${fs.statSync(destination).size} bytes)`
+    );
+  } else {
+    missing.push(`${cadWorkerSource}  (MLightCAD MTEXT layout worker)`);
+  }
+
   const manifest = {
     generatedBy: 'scripts/copy-cad-bim-assets.js',
     note: 'Copied from node_modules so the browser can fetch them by URL.',
     assets: ASSETS.filter((asset) => fs.existsSync(asset.from)).map((asset) => asset.to),
+    cadWorkers: fs.existsSync(path.join(cadWorkerDir, 'mtext-renderer-worker.js'))
+      ? ['mtext-renderer-worker.js']
+      : [],
   };
   fs.writeFileSync(
     path.join(targetDir, 'manifest.json'),

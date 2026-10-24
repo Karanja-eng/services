@@ -134,3 +134,57 @@
   backend code.
 - Existing routes: no route was added, removed or redirected.
 
+---
+
+## [Session 4] — Finish remaining cleanup
+
+### Added
+- `src/state/takeoffBridge.js` — pure merge helpers for the specialised → global
+  taking-off hand-off (`publishSourceBatch`, `clearSourceBatch`,
+  `countSourceBatch`, `batchFingerprint`).
+- `src/state/TakeoffBridgeContext.jsx` — provider/hook mounted by `AppLayout`.
+- `src/state/recentTools.js` — validated, capped `localStorage` recent-tools
+  history.
+- `src/setupTests.js` — lucide ESM mock + React act environment flag.
+- Tests: `shared/ui/__tests__/Fields.test.jsx`,
+  `shared/ui/__tests__/StatusAndLayout.test.jsx`,
+  `shared/engineering/__tests__/FrameInputs.test.jsx`,
+  `state/__tests__/takeoffBridge.test.js`, `state/__tests__/recentTools.test.js`
+  (5 suites / 47 tests).
+
+### Changed (quantity surveying)
+- Basement, swimming pool, underground tank, internal finishes, staircase
+  takeoff, doors & windows and electrical & plumbing input forms migrated to the
+  shared kit (sections, fields, action bars, states).
+- Drainage, external works, substructure and both superstructure tools: page
+  shell, tabs and action/error areas migrated; substructure's ~40 fields upgraded
+  through a local adapter over the shared fields.
+- Roof takeoff: header/tabs rebuilt, placeholder "Save Project" removed.
+- External works/electrical: placeholder buttons with no handlers removed.
+
+### Changed (structural)
+- Steel design: shared page header, sidebar in-flow only from `lg` with a mobile
+  module picker, placeholder "Save Project" removed.
+- Stairs: shared page header + `DesignCodeToggle` (state ids unchanged).
+- Walls: shared page header; existing cards-style toggle preserved.
+
+### Changed (surveying & soil)
+- Soil mechanics: local `InputField` now adapts the shared `NumberField`
+  (caller still receives `parseFloat(value) || 0`); form grids collapse to one
+  column on phones; `ErrorAlert` uses `ErrorNotice`.
+- Surveying: levelling method/benchmark fields use shared components.
+
+### Changed (shell & state)
+- `AppLayout` records recent tool visits and provides the takeoff bridge around
+  the route table.
+- Sidebar renders real "Recent tools" (with clear control) instead of the static
+  sample history.
+- Roof and septic tools publish generated rows to the global taking-off workflow
+  and show a confirmation with a link to the sheet.
+
+### Removed
+- Unused `calculateMockResults()` in `slab_calculator_frontend.jsx`.
+- `src/components/Drawings/detailing_3d.jsx` (no references anywhere, including
+  dynamic imports).
+
+

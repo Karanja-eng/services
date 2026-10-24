@@ -345,6 +345,36 @@ def run_analysis(payload: Optional[Dict[str, Any]] = Body(default=None)) -> Dict
     from . import analysis
 
     payload = payload or {}
+
+    # --- three-dimensional frame path -------------------------------------
+    # Dispatched before the canonical-model lookup because a 3D frame is defined by
+    # an explicit analytical model (nodes/members/supports/loads), not by a 2D
+    # canonical document: the canonical model carries no section orientation, so
+    # deriving local axes or a torsional constant would be an invisible assumption.
+    if str(payload.get("dimensions") or "2") == "3":
+        from . import analysis3d
+
+        try:
+            analytical_3d = analysis3d.from_payload(payload)
+            results_3d = analysis3d.analyse(analytical_3d)
+        except analysis3d.AnalysisError as exc:
+            message = str(exc)
+            status = 503 if "interpreter" in message else 422
+            raise HTTPException(status_code=status, detail=message) from exc
+        return {
+            "ok": True,
+            "model_id": results_3d["model_id"],
+            "case_id": results_3d["cases"][0]["case_id"],
+            "dimensions": 3,
+            "results": results_3d,
+            "analytical_model": {
+                "nodes": len(analytical_3d.nodes),
+                "members": len(analytical_3d.members),
+                "supports": len(analytical_3d.supports),
+                "assumptions": results_3d.get("assumptions", []),
+            },
+        }
+
     model_id = payload.get("model_id") or payload.get("generator")
     if not model_id:
         raise HTTPException(status_code=422, detail="'model_id' or 'generator' is required")

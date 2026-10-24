@@ -20,7 +20,7 @@ import axios from "axios";
 import EnglishMethodTakeoffSheet from "./ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from './universal_component';
 import StructuralVisualizationComponent from '../Drawings/visualise_component';
-import { PageHeader, MetaChip } from '../shared/ui';
+import { PageHeader, MetaChip, ErrorNotice } from '../shared/ui';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 
@@ -50,6 +50,7 @@ const RCCSuperstructureApp = () => {
 
   const [takeoffData, setTakeoffData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [calcError, setCalcError] = useState(null);
   const [editorKey, setEditorKey] = useState(0);
 
   // Automation State
@@ -165,7 +166,7 @@ const RCCSuperstructureApp = () => {
       await processFloorplan(data.file_id);
     } catch (err) {
       console.error(err);
-      alert("Upload failed: " + err.message);
+      setCalcError(`Upload failed: ${err.message}`);
     }
     setProcessing(false);
   };
@@ -361,17 +362,18 @@ const RCCSuperstructureApp = () => {
         if (items.length > 0) {
           setActiveTab("takeoff");
         } else {
-          alert("Calculation completed but yielded 0 quantities. Please check your inputs.");
+          setCalcError(
+            "Calculation completed but yielded 0 quantities. Check the element lists and settings."
+          );
         }
       }
 
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.detail) {
-        // Detailed backend error
-        alert("Calculation Error: " + JSON.stringify(err.response.data.detail));
+        setCalcError(`Calculation error: ${JSON.stringify(err.response.data.detail)}`);
       } else {
-        alert("Calculation failed. Backend might be offline or unreachable.");
+        setCalcError("Calculation failed. The backend may be offline or unreachable.");
       }
     } finally {
       setLoading(false);
@@ -812,17 +814,26 @@ const RCCSuperstructureApp = () => {
               <button
                 onClick={calculateTakeoff}
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:bg-blue-400 flex items-center justify-center gap-2 shadow-sm"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:bg-blue-400"
               >
                 {loading ? (
-                  <span>Calculating...</span>
+                  <span>Calculating…</span>
                 ) : (
                   <>
-                    <Calculator className="w-5 h-5" />
-                    Calculate Takeoff
+                    <Calculator className="w-5 h-5" aria-hidden="true" />
+                    Calculate takeoff
                   </>
                 )}
               </button>
+
+              {calcError && (
+                <ErrorNotice
+                  className="mt-3"
+                  title="Superstructure takeoff failed"
+                  message={calcError}
+                  onRetry={calculateTakeoff}
+                />
+              )}
             </div>
 
             {/* Info Panel */}

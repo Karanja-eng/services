@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import Column3DVisualization from "../../components/column_3d_helper";
 import ColumnDrawer from "./ColumnDrawer";
+import { control } from "../../shared/ui/tokens";
 
 const ColumnApp = () => {
   const navigate = useNavigate();
@@ -278,7 +279,7 @@ const ColumnApp = () => {
                   <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`${control.base} ${control.select}`}
                   >
                     <option value="axial">Axial</option>
                     <option value="uniaxial">Uniaxial</option>
@@ -298,7 +299,7 @@ const ColumnApp = () => {
                     <select
                       value={braced ? "braced" : "unbraced"}
                       onChange={(e) => setBraced(e.target.value === "braced")}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`${control.base} ${control.select}`}
                     >
                       <option value="braced">Braced</option>
                       <option value="unbraced">Unbraced</option>
@@ -315,7 +316,7 @@ const ColumnApp = () => {
                     <select
                       value={endTop}
                       onChange={(e) => setEndTop(+e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`${control.base} ${control.select}`}
                     >
                       <option value={1}>Condition 1 (Fixed)</option>
                       <option value={2}>Condition 2 (Partial)</option>
@@ -327,7 +328,7 @@ const ColumnApp = () => {
                     <select
                       value={endBottom}
                       onChange={(e) => setEndBottom(+e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`${control.base} ${control.select}`}
                     >
                       <option value={1}>Condition 1 (Fixed)</option>
                       <option value={2}>Condition 2 (Partial)</option>
@@ -345,7 +346,7 @@ const ColumnApp = () => {
                     <select
                       value={fireRes}
                       onChange={(e) => setFireRes(+e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`${control.base} ${control.select}`}
                     >
                       <option value={0.5}>0.5 Hours</option>
                       <option value={1}>1 Hour</option>
@@ -472,7 +473,7 @@ const ColumnApp = () => {
                   <select
                     value={barDiameter}
                     onChange={(e) => setBarDiameter(+e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`${control.base} ${control.select}`}
                   >
                     {barDiameterOptions.map((d) => (
                       <option key={d} value={d}>
@@ -734,7 +735,7 @@ const InputField = ({
         value={value}
         onChange={onChange}
         step={step}
-        className="w-full p-2 pr-12 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className={`${control.base} pr-12`}
       />
       {unit && (
         <span className="absolute right-3 top-2 text-sm text-gray-500">

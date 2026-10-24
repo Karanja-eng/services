@@ -103,3 +103,62 @@
 - Downstream QS documents (`EnglishMethodTakeoffSheet`, `UniversalSheet`, `UniversalBOQ`) were not modified.
 - CAD/BIM engines, IFC/DXF generation and all Python code untouched.
 
+---
+
+## Session 4 — Finish remaining cleanup (implemented, verification pending)
+
+### Quantity surveying
+- Rebuilt/migrated: basement, swimming pool, underground tank, internal finishes,
+  staircase takeoff, doors & windows, electrical & plumbing.
+- Shell + partial field migration: drainage (shell + project tab), external works
+  (shell + form frame + action bar), substructure (all fields via adapter),
+  RCC superstructure and superstructure (shell/tabs).
+- Removed placeholder controls with no handlers in external works, roof and
+  electrical; kept the working Save/Load JSON actions.
+- Downstream taking-off sheet, dimension paper and BOQ untouched.
+
+### Structural
+- Steel design: shared header, responsive module navigation, placeholder button
+  removed.
+- Stairs: shared header + `DesignCodeToggle`.
+- Walls: shared header; existing code toggle preserved.
+
+### Surveying and soil
+- Soil mechanics: one adapter upgraded every field to the shared kit; repeated
+  2-column grids collapse on phones; `ErrorAlert` → shared `ErrorNotice`.
+- Surveying: levelling method/benchmark fields migrated.
+
+### Takeoff bridge (new)
+- `src/state/takeoffBridge.js` + `TakeoffBridgeContext.jsx`.
+- Roof and septic publish generated rows into the global taking-off state.
+  Re-publishing replaces only that source's batch; other rows are untouched;
+  rows are tagged with `source`/`sourceRef`/`sourceLabel`.
+
+### Recent tools history (new)
+- `src/state/recentTools.js`; recorded by `AppLayout`, rendered by `Sidebar`.
+- Stores only path/title/group/timestamp in `localStorage`, de-duplicates,
+  caps at 8, validates/repairs storage.
+
+### Tests (new)
+- `src/setupTests.js` (lucide mock + act environment flag).
+- 5 suites / 47 tests covering fields, status/empty/error/layout, frame input
+  composition, takeoff bridge merge policy and recent-tools persistence.
+- Run with `CI=true npx react-scripts test --watchAll=false --runInBand`
+  (in-band is required because this sandbox blocks jest-worker child processes).
+- **Result: 5 suites passed, 47 tests passed.**
+
+### Dead code
+- Removed unused `calculateMockResults()` from `slab_calculator_frontend.jsx`.
+- Removed `src/components/Drawings/detailing_3d.jsx` (zero references, including
+  all dynamic `import()` sites).
+- `calculateMockResults()` in `slab_calculator.jsx` retained — it is called.
+
+### Verification
+- `CI=true npx react-scripts test --watchAll=false --runInBand` — **5 suites / 47
+  tests passed**.
+- `node scripts/verify/jsx-parse.mjs …` — every modified/new file parses.
+- `npm run build` (`BUILD_PATH=.tmp-build`) — **compiled successfully**, warnings
+  only; CSS ≈ 23.5 kB gzip, JS ≈ 1.16 MB gzip.
+- Not run: interactive viewport matrix, live backend calculations, CAD handoff.
+
+

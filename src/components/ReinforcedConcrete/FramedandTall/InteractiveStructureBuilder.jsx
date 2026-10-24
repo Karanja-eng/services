@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
     Plus, Trash2, Grid3x3, Move, Copy, Layers as LayersIcon, Eye, EyeOff, Settings, Save, FolderOpen, Play,
     MousePointer, Square, Minus, RotateCw, Maximize2, Minimize2, Box, Download, Upload, Zap, TrendingUp, Grid, Home, Columns, Hammer,
@@ -24,6 +24,16 @@ import WireframeAnalysisView from './wireframe';
 import { AnalysisResultsViewer, DesignResultsViewer } from './StructuralResultViewers';
 import AdvancedSteelDesignResults from '../../SteelDesign/AdvancedSteelDesignResults';
 import axios from 'axios';
+import { API_BASE } from '../../../config/runtime';
+import { useOptionalEngineeringModel } from '../../../state/engineeringModel/EngineeringModelContext';
+import {
+    BUILDER_RESULT_KIND,
+    BUILDER_RESULT_SCHEMA,
+    buildBuilderFingerprint,
+    builderToCanonicalModel,
+} from './builderModelAdapter';
+
+const DxfStructureImportModal = React.lazy(() => import('./DxfStructureImportModal'));
 
 // ============================================================================
 // MAIN APPLICATION
@@ -36,6 +46,13 @@ const InteractiveStructureBuilder = ({
     customDesignHandler,
     customTemplateHandler,
     materialType = 'concrete',
+    /**
+     * When true (the builder is embedded in the unified workbench), a completed
+     * analysis also publishes the structure and its results into the shared
+     * canonical model, stamped with the model revision. Standalone use
+     * (`/structural/manual/eurocode_structural_app`) leaves this off.
+     */
+    publishToWorkspace = false,
     sectionDisplayType: propSectionDisplayType // Receive as prop but maybe override by default
 }) => {
     // Determine the effective section display type based on material and prop
@@ -69,6 +86,21 @@ const InteractiveStructureBuilder = ({
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [viewAnalysisResults, setViewAnalysisResults] = useState(false);
     const [viewDesignResults, setViewDesignResults] = useState(false);
+    const [showDxfImportModal, setShowDxfImportModal] = useState(false);
+
+    /**
+     * Fingerprint stamps for the analysis/design results, so results can be shown
+     * as STALE when the structure changes after they were computed. Before this,
+     * results lived in plain state with no revision, and an edited structure kept
+     * displaying old forces as if they were current.
+     */
+    const [analysisStamp, setAnalysisStamp] = useState(null);
+    const [designStamp, setDesignStamp] = useState(null);
+    const [publishNotice, setPublishNotice] = useState(null);
+
+    // Optional bridge to the shared canonical model (present only when the builder
+    // is embedded in the unified workbench).
+    const modelBridge = useOptionalEngineeringModel();
 
     // Grid State
     const [grid, setGrid] = useState(new StructuralGrid(5));
@@ -207,6 +239,63 @@ const InteractiveStructureBuilder = ({
         };
     }, [elements, activeLayer, analysisMethod]);
 
+    /**
+     * Fingerprint of every input the analysis depends on (geometry, sections,
+     * materials, loads, analysis method). Recomputed only when the structure
+     * changes — selecting an element or switching view does not invalidate results.
+     */
+    const structureFingerprint = useMemo(
+        () => buildBuilderFingerprint({ elements, method: analysisMethod, slabLoad: 5.0 }),
+        [elements, analysisMethod]
+    );
+    const analysisStale = Boolean(
+        analysisResults && analysisStamp && analysisStamp.fingerprint !== structureFingerprint
+    );
+    const designStale = Boolean(
+        designResults && designStamp && designStamp.fingerprint !== structureFingerprint
+    );
+
+    /**
+     * Publish the current structure (and the result document) into the shared
+     * canonical model. Only called when `publishToWorkspace` is set, i.e. when the
+     * builder is embedded in the workbench.
+     */
+    const publishToCanonicalModel = useCallback(
+        (results) => {
+            if (!publishToWorkspace || !modelBridge) return;
+            const { model: canonical, warnings } = builderToCanonicalModel({
+                elements,
+                layers: Object.keys(layers),
+                modelId: 'tall-frame',
+                name: 'Framed & Tall building',
+            });
+            if (!canonical.members.length && !canonical.generatorElements.length) {
+                setPublishNotice(
+                    'Nothing was published to the unified model: the structure has no ' +
+                        'publishable elements yet.'
+                );
+                return;
+            }
+            modelBridge.loadModel(canonical, { discardUnsaved: true });
+            if (results) {
+                modelBridge.recordAnalysisDocument(results, {
+                    kind: BUILDER_RESULT_KIND,
+                    schema: BUILDER_RESULT_SCHEMA,
+                    caseId: 'framed-analysis',
+                    engine: 'Fundi framed analysis',
+                });
+            }
+            setPublishNotice(
+                `Published ${canonical.members.length} member(s) and ` +
+                    `${canonical.generatorElements.length} element(s) to the unified model ` +
+                    `(revision ${canonical.revision.index})` +
+                    (warnings.length ? ` — ${warnings.length} modelling note(s)` : '') +
+                    (results ? ', with the analysis results stamped to that revision.' : '.')
+            );
+        },
+        [publishToWorkspace, modelBridge, elements, layers]
+    );
+
     const runAnalysis = useCallback(async () => {
         setIsAnalyzing(true);
         try {
@@ -220,7 +309,7 @@ const InteractiveStructureBuilder = ({
                 response = { data: results };
             } else {
                 // RC analysis
-                response = await axios.post('http://127.0.0.1:8001/api/framed_full/analyze-full', payload);
+                response = await axios.post(`${API_BASE}/api/framed_full/analyze-full`, payload);
             }
 
             setAnalysisResults(response.data);
@@ -254,6 +343,14 @@ const InteractiveStructureBuilder = ({
 
             setShowDiagrams({ moment: true, shear: true });
             setShowForces(true);
+            // Stamp the results with the structure they were computed from, so a
+            // later edit marks them stale instead of silently keeping them current.
+            setAnalysisStamp({
+                fingerprint: structureFingerprint,
+                at: new Date().toISOString(),
+                elementCount: resultsArray.length,
+            });
+            publishToCanonicalModel(response.data);
             // alert("Analysis completed successfully!");
         } catch (error) {
             console.error("Analysis failed:", error);
@@ -261,7 +358,16 @@ const InteractiveStructureBuilder = ({
         } finally {
             setIsAnalyzing(false);
         }
-    }, [preparePayload, customAnalysisHandler, setAnalysisResults, setElements, setShowDiagrams, setShowForces]);
+    }, [
+        preparePayload,
+        customAnalysisHandler,
+        setAnalysisResults,
+        setElements,
+        setShowDiagrams,
+        setShowForces,
+        structureFingerprint,
+        publishToCanonicalModel,
+    ]);
 
     const handleRunDesign = useCallback(async () => {
         setIsDesigning(true);
@@ -276,10 +382,14 @@ const InteractiveStructureBuilder = ({
                 response = { data: results };
             } else {
                 // RC design
-                response = await axios.post('http://127.0.0.1:8001/api/automated_design/run-design', payload);
+                response = await axios.post(`${API_BASE}/api/automated_design/run-design`, payload);
             }
 
             setDesignResults(response.data);
+            setDesignStamp({
+                fingerprint: structureFingerprint,
+                at: new Date().toISOString(),
+            });
             setView('2d');
         } catch (error) {
             console.error("Design failed:", error);
@@ -287,7 +397,14 @@ const InteractiveStructureBuilder = ({
         } finally {
             setIsDesigning(false);
         }
-    }, [preparePayload, customDesignHandler, elements, setDesignResults, setView]);
+    }, [
+        preparePayload,
+        customDesignHandler,
+        elements,
+        setDesignResults,
+        setView,
+        structureFingerprint,
+    ]);
 
     const handleExportCAD = async (item) => {
         try {
@@ -296,7 +413,7 @@ const InteractiveStructureBuilder = ({
             if (type === 'foundation') endpoint = '/api/export-foundation-dxf';
             if (type === 'wall') endpoint = '/api/export-wall-dxf';
 
-            const response = await axios.post(`http://127.0.0.1:8001${endpoint}`, item, { responseType: 'blob' });
+            const response = await axios.post(`${API_BASE}${endpoint}`, item, { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -611,22 +728,18 @@ const InteractiveStructureBuilder = ({
                 setView('cad');
                 break;
 
-            case 'cad_view':
-                setView('cad');
-                break;
-
             case 'add_bay':
                 handleGenerateBay();
                 break;
 
-            case 'steel_bim_panel':
-                setShowSteelBimPanel(true);
+            case 'import_cad':
+                setShowDxfImportModal(true);
                 break;
 
             default:
                 break;
         }
-    }, [elements, handleElementsAdd, runAnalysis, handleGenerateBay]);
+    }, [elements, handleElementsAdd, runAnalysis, handleGenerateBay, materialType]);
 
     const generateNodesFromElements = (elements) => {
         const nodes = [];
@@ -732,6 +845,83 @@ const InteractiveStructureBuilder = ({
     const handleViewAnalysisResults = () => setViewAnalysisResults(true);
     const handleViewDesignResults = () => setViewDesignResults(true);
 
+    const handleDxfImport = useCallback((importedElements, targetLayer) => {
+        if (!importedElements) return;
+        const layerName = targetLayer || activeLayer;
+        const level = parseInt(String(layerName).replace('Floor ', '')) || 1;
+        const zDefault = (level - 1) * 3.5;
+
+        let rawList = [];
+        if (Array.isArray(importedElements)) {
+            rawList = importedElements;
+        } else if (typeof importedElements === 'object') {
+            const { walls = [], columns = [], beams = [], slabs = [] } = importedElements;
+            rawList = [...walls, ...columns, ...beams, ...slabs];
+        }
+
+        if (rawList.length === 0) return;
+
+        const converted = rawList.map((item, idx) => {
+            if (item instanceof StructuralElement) return item;
+            const type = item.type || (item.start && item.end ? 'beam' : 'column');
+            const id = item.id || `${type[0].toUpperCase()}${idx + 1}`;
+            const z = item.elevation !== undefined ? item.elevation : zDefault;
+
+            let position;
+            if (type === 'column') {
+                const pos = item.position || item.start || [0, 0, z];
+                position = Array.isArray(pos)
+                    ? { x: pos[0], y: pos[1], z: pos[2] !== undefined ? pos[2] : z }
+                    : { x: Number(pos.x) || 0, y: Number(pos.y) || 0, z: Number(pos.z) !== undefined ? pos.z : z };
+            } else if (type === 'beam' || type === 'wall') {
+                const s = item.start || [0, 0, z];
+                const e = item.end || [5, 0, z];
+                const sObj = Array.isArray(s)
+                    ? { x: s[0], y: s[1], z: s[2] !== undefined ? s[2] : z }
+                    : { x: Number(s.x) || 0, y: Number(s.y) || 0, z: Number(s.z) !== undefined ? s.z : z };
+                const eObj = Array.isArray(e)
+                    ? { x: e[0], y: e[1], z: e[2] !== undefined ? e[2] : z }
+                    : { x: Number(e.x) || 0, y: Number(e.y) || 0, z: Number(e.z) !== undefined ? e.z : z };
+                position = { start: sObj, end: eObj };
+            } else if (type === 'slab') {
+                const s = item.start || (item.bbox ? [item.bbox.xmin, item.bbox.ymin, z] : [0, 0, z]);
+                position = Array.isArray(s)
+                    ? { x: s[0], y: s[1], z: s[2] !== undefined ? s[2] : z }
+                    : { x: Number(s.x) || 0, y: Number(s.y) || 0, z: Number(s.z) !== undefined ? s.z : z };
+            } else {
+                position = item.position || { x: 0, y: 0, z };
+            }
+
+            const props = {
+                width: Number(item.properties?.width ?? item.width) || 0.45,
+                depth: Number(item.properties?.depth ?? item.depth) || 0.45,
+                height: Number(item.properties?.height ?? item.height) || 3.5,
+                thickness: Number(item.properties?.thickness ?? item.thickness) || 0.20,
+                material: item.properties?.material || 'C30',
+                load: Number(item.properties?.load_combined ?? item.properties?.load) || 0,
+                layer: layerName,
+                polygon: item.polygon || null,
+            };
+
+            return new StructuralElement(type, id, position, props);
+        });
+
+        setLayers(prev => {
+            if (!prev[layerName]) {
+                return { ...prev, [layerName]: { visible: true, elements: [] } };
+            }
+            return prev;
+        });
+        setActiveLayer(layerName);
+        setElements(prev => {
+            const updated = [...prev, ...converted];
+            setTimeout(() => handleAutoAlignGrid(updated), 0);
+            return updated;
+        });
+        setShowDxfImportModal(false);
+        setView('2d');
+    }, [activeLayer, handleAutoAlignGrid]);
+
     return (
         <div style={{
             width: isFullScreen ? '100vw' : '100%',
@@ -767,6 +957,52 @@ const InteractiveStructureBuilder = ({
                 onAnalysisMethodChange={setAnalysisMethod}
                 materialType={materialType}
             />
+
+            {/* Result freshness / workspace publication status. Results are never
+                presented as current once the structure they came from has changed. */}
+            {(analysisStale || designStale || publishNotice) && (
+                <div
+                    role="status"
+                    className={`flex flex-wrap items-center gap-2 border-b px-3 py-1.5 text-xs ${
+                        analysisStale || designStale
+                            ? 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-100'
+                            : 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-100'
+                    }`}
+                >
+                    {(analysisStale || designStale) && (
+                        <span className="font-semibold">STALE RESULTS</span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                        {analysisStale || designStale
+                            ? `The structure changed after the ${
+                                  analysisStale ? 'analysis' : ''
+                              }${analysisStale && designStale ? ' and design' : ''} ran, so the displayed forces/checks no longer describe this model. Re-run to refresh.`
+                            : publishNotice}
+                    </span>
+                    {analysisStale && (
+                        <button
+                            type="button"
+                            onClick={runAnalysis}
+                            disabled={isAnalyzing}
+                            className="shrink-0 rounded bg-amber-600 px-2 py-1 font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                        >
+                            Re-run analysis
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {showDxfImportModal && (
+                <React.Suspense fallback={null}>
+                    <DxfStructureImportModal
+                        isOpen={showDxfImportModal}
+                        onClose={() => setShowDxfImportModal(false)}
+                        onImport={handleDxfImport}
+                        activeLayer={activeLayer}
+                        layers={layers}
+                    />
+                </React.Suspense>
+            )}
 
             {/* Main content */}
             <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>

@@ -14,6 +14,7 @@ import Foundation3DVisualization from "../../components/foundation_3d_helper";
 import CadDrawer from "../../Drawings/cad_drawing";
 import StructuralVisualizationComponent from "../../Drawings/visualise_component";
 import axios from "axios";
+import { control } from "../../shared/ui/tokens";
 
 const EurocodeFoundationApp = ({ theme = "light" }) => {
   const [foundationType, setFoundationType] = useState("isolated");
@@ -304,7 +305,7 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                 name="designApproach"
                 value={inputs.designApproach}
                 onChange={handleInputChange}
-                className={`w-full p-2 ${inputBg} rounded focus:ring-2 focus:ring-blue-500 ${textPrimary}`}
+                className={`${control.base} ${control.select}`}
               >
                 <option value="DA1-C1">DA1 - Combination 1</option>
                 <option value="DA1-C2">DA1 - Combination 2</option>
@@ -322,7 +323,7 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                 name="soilType"
                 value={inputs.soilType}
                 onChange={handleInputChange}
-                className={`w-full p-2 ${inputBg} rounded focus:ring-2 focus:ring-blue-500 ${textPrimary}`}
+                className={`${control.base} ${control.select}`}
               >
                 <option value="cohesive">Cohesive</option>
                 <option value="granular">Granular</option>
@@ -339,7 +340,7 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                 name="exposureClass"
                 value={inputs.exposureClass}
                 onChange={handleInputChange}
-                className={`w-full p-2 ${inputBg} rounded focus:ring-2 focus:ring-blue-500 ${textPrimary}`}
+                className={`${control.base} ${control.select}`}
               >
                 <option value="XC1">XC1 (Dry)</option>
                 <option value="XC2">XC2 (Wet, rarely dry)</option>
@@ -366,7 +367,7 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                 <select
                   value={columnShape}
                   onChange={(e) => setColumnShape(e.target.value)}
-                  className={`w-full p-2 ${inputBg} rounded focus:ring-2 focus:ring-blue-500 ${textPrimary}`}
+                  className={`${control.base} ${control.select}`}
                 >
                   <option value="rectangular">Rectangular</option>
                   <option value="circular">Circular</option>
@@ -381,7 +382,7 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                 <select
                   value={columnPosition}
                   onChange={(e) => setColumnPosition(e.target.value)}
-                  className={`w-full p-2 ${inputBg} rounded focus:ring-2 focus:ring-blue-500 ${textPrimary}`}
+                  className={`${control.base} ${control.select}`}
                 >
                   <option value="centric">Centric</option>
                   <option value="eccentric">Eccentric</option>
@@ -519,7 +520,7 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                 name="concreteClass"
                 value={inputs.concreteClass}
                 onChange={handleInputChange}
-                className={`w-full p-2 ${inputBg} rounded focus:ring-2 focus:ring-blue-500 ${textPrimary}`}
+                className={`${control.base} ${control.select}`}
               >
                 <option value="C25/30">C25/30</option>
                 <option value="C30/37">C30/37</option>
@@ -539,7 +540,7 @@ const EurocodeFoundationApp = ({ theme = "light" }) => {
                 name="steelClass"
                 value={inputs.steelClass}
                 onChange={handleInputChange}
-                className={`w-full p-2 ${inputBg} rounded focus:ring-2 focus:ring-blue-500 ${textPrimary}`}
+                className={`${control.base} ${control.select}`}
               >
                 <option value="B500A">B500A</option>
                 <option value="B500B">B500B</option>
@@ -1287,7 +1288,7 @@ const InputField = ({
           value={value}
           onChange={onChange}
           step="0.01"
-          className={`w-full p-2 pr-12 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${inputBg}`}
+          className={`${control.base} pr-12`}
         />
         {unit && (
           <span className={`absolute right-3 top-2 text-sm ${textUnit}`}>

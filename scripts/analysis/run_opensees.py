@@ -72,11 +72,12 @@ def build_and_run(job: dict) -> dict:
         fail(f"unexpected job schema {job.get('schema')!r}, expected {JOB_SCHEMA!r}")
 
     dimensions = job.get("dimensions", 2)
-    if dimensions != 2:
-        fail(
-            f"this runner supports 2D frames only (job asks for {dimensions}D). "
-            "A 3D model must not be presented as if it were analysed."
-        )
+    if dimensions not in (2, 3):
+        fail(f"unsupported dimensionality {dimensions!r}; supported: 2 and 3")
+
+    if dimensions == 3:
+        return build_and_run_3d(job)
+
     ndf = 3
 
     nodes = require(job, "nodes", list)
@@ -315,6 +316,283 @@ def build_and_run(job: dict) -> dict:
             "appliedMomentAboutOrigin": applied_moment_about_origin,
             "reactionMomentAboutOrigin": reaction_moment_about_origin,
             "residualMomentAboutOrigin": applied_moment_about_origin + reaction_moment_about_origin,
+        },
+    }
+
+
+def build_and_run_3d(job: dict) -> dict:
+    """Three-dimensional linear-elastic static frame.
+
+    Every section constant arrives in the job: E, A, Iy, Iz, J, G and the `vecxz`
+    reference direction that orients the member's local axes. Nothing is derived
+    here. Distributed element loads are not accepted in 3D (the caller must supply
+    equivalent nodal loads), so a silent approximation cannot occur.
+
+    Local force order for the 3D `elasticBeamColumn` is
+    ``[N, Vy, Vz, T, My, Mz]`` at the i end followed by the same six at the j end,
+    read through ``eleResponse('localForces')``. The mapping is asserted by the
+    cantilever benchmark in ``test_analysis3d.py``, not assumed.
+    """
+    ndf = 6
+    nodes = require(job, "nodes", list)
+    elements = require(job, "elements", list)
+    supports = job.get("supports", [])
+    loads = job.get("loads", [])
+    analysis = job.get("analysis") or {}
+    if not supports:
+        fail("job has no supports: an unrestrained static model is not solvable")
+    if job.get("elementLoads"):
+        fail(
+            "distributed element loads are not supported by the 3D runner; supply "
+            "equivalent nodal loads explicitly"
+        )
+
+    ops.wipe()
+    ops.model("basic", "-ndm", 3, "-ndf", ndf)
+
+    coordinates = {}
+    for node in nodes:
+        tag = int(node["tag"])
+        point = (float(node["x"]), float(node["y"]), float(node["z"]))
+        coordinates[tag] = point
+        ops.node(tag, *point)
+
+    applied = []
+    for support in supports:
+        tag = int(support["node"])
+        if tag not in coordinates:
+            fail(f"support references unknown node {tag}")
+        flags = [1 if support.get(key) else 0 for key in ("ux", "uy", "uz", "rx", "ry", "rz")]
+        ops.fix(tag, *flags)
+        applied.append(
+            {
+                "node": tag,
+                **{key: bool(flag) for key, flag in zip(("ux", "uy", "uz", "rx", "ry", "rz"), flags)},
+            }
+        )
+
+    element_map = {}
+    transform_tags = {}
+    next_transform = 1
+    for element in elements:
+        tag = int(element["tag"])
+        i_tag = int(element["i"])
+        j_tag = int(element["j"])
+        for node_tag in (i_tag, j_tag):
+            if node_tag not in coordinates:
+                fail(f"element {tag} references unknown node {node_tag}")
+        for key in ("E", "A", "Iy", "Iz", "J", "G"):
+            if key not in element:
+                fail(f"element {tag} is missing '{key}': 3D section data must be explicit")
+            value = element[key]
+            if not isinstance(value, (int, float)) or value <= 0:
+                fail(f"element {tag} '{key}' must be a positive number, got {value!r}")
+        vec = element.get("vecxz")
+        if not isinstance(vec, (list, tuple)) or len(vec) != 3:
+            fail(f"element {tag} needs a 3-component 'vecxz'")
+        vec_key = tuple(float(value) for value in vec)
+        if vec_key not in transform_tags:
+            transform_tags[vec_key] = next_transform
+            ops.geomTransf("Linear", next_transform, *vec_key)
+            next_transform += 1
+        ops.element(
+            "elasticBeamColumn", tag, i_tag, j_tag,
+            float(element["A"]), float(element["E"]), float(element["G"]),
+            float(element["J"]), float(element["Iy"]), float(element["Iz"]),
+            transform_tags[vec_key],
+        )
+
+        xi, yi, zi = coordinates[i_tag]
+        xj, yj, zj = coordinates[j_tag]
+        length = ((xj - xi) ** 2 + (yj - yi) ** 2 + (zj - zi) ** 2) ** 0.5
+        ex = ((xj - xi) / length, (yj - yi) / length, (zj - zi) / length)
+        # OpenSees: local z lies in the plane of vecxz; local y = z x x.
+        vx, vy, vz = vec_key
+        dot = vx * ex[0] + vy * ex[1] + vz * ex[2]
+        ez = (vx - dot * ex[0], vy - dot * ex[1], vz - dot * ex[2])
+        norm = (ez[0] ** 2 + ez[1] ** 2 + ez[2] ** 2) ** 0.5
+        if norm < 1e-12:
+            fail(
+                f"element {tag}: vecxz is parallel to the member axis, so the local frame "
+                "is undefined"
+            )
+        ez = (ez[0] / norm, ez[1] / norm, ez[2] / norm)
+        ey = (
+            ez[1] * ex[2] - ez[2] * ex[1],
+            ez[2] * ex[0] - ez[0] * ex[2],
+            ez[0] * ex[1] - ez[1] * ex[0],
+        )
+        element_map[tag] = {
+            "i": i_tag, "j": j_tag, "length": length,
+            "canonicalId": element.get("canonicalId"),
+            "sectionId": element.get("sectionId"),
+            "localAxes": {
+                "x": {"x": ex[0], "y": ex[1], "z": ex[2]},
+                "y": {"x": ey[0], "y": ey[1], "z": ey[2]},
+                "z": {"x": ez[0], "y": ez[1], "z": ez[2]},
+            },
+        }
+
+    loaded = []
+    if loads:
+        ops.timeSeries("Constant", 1)
+        ops.pattern("Plain", 1, 1)
+        for load in loads:
+            tag = int(load["node"])
+            if tag not in coordinates:
+                fail(f"load references unknown node {tag}")
+            values = [float(load.get(key, 0.0)) for key in ("Fx", "Fy", "Fz", "Mx", "My", "Mz")]
+            ops.load(tag, *values)
+            loaded.append(
+                {
+                    "node": tag,
+                    **{
+                        key: value
+                        for key, value in zip(("Fx", "Fy", "Fz", "Mx", "My", "Mz"), values)
+                    },
+                }
+            )
+
+    ops.system("BandGeneral")
+    ops.numberer("RCM")
+    ops.constraints("Plain")
+    integrator = analysis.get("integrator", "LoadControl")
+    if integrator != "LoadControl":
+        fail(f"unsupported integrator {integrator!r}; only LoadControl is implemented")
+    ops.integrator("LoadControl", float(analysis.get("increment", 1.0)))
+    algorithm = analysis.get("algorithm", "Linear")
+    if algorithm != "Linear":
+        fail(f"unsupported algorithm {algorithm!r}; only Linear (first-order elastic) is implemented")
+    ops.algorithm("Linear")
+    ops.analysis("Static")
+
+    steps = int(analysis.get("steps", 1))
+    status = ops.analyze(steps)
+    if status != 0:
+        fail(f"OpenSees returned a non-zero analysis status ({status})", status=status)
+    ops.reactions()
+
+    # --- results -----------------------------------------------------------
+    displacements = []
+    for tag in ops.getNodeTags():
+        displacements.append(
+            {
+                "node": tag,
+                "canonicalId": next(
+                    (node.get("canonicalId") for node in nodes if int(node["tag"]) == tag), None
+                ),
+                "ux": ops.nodeDisp(tag, 1), "uy": ops.nodeDisp(tag, 2), "uz": ops.nodeDisp(tag, 3),
+                "rx": ops.nodeDisp(tag, 4), "ry": ops.nodeDisp(tag, 5), "rz": ops.nodeDisp(tag, 6),
+            }
+        )
+
+    reactions = []
+    for support in applied:
+        tag = support["node"]
+        values = [ops.nodeReaction(tag, index) for index in range(1, 7)]
+        reactions.append(
+            {
+                "node": tag,
+                **{
+                    key: value
+                    for key, value in zip(("Fx", "Fy", "Fz", "Mx", "My", "Mz"), values)
+                },
+                "restrained": support,
+            }
+        )
+
+    member_forces = []
+    for tag, meta in element_map.items():
+        local = ops.eleResponse(tag, "localForces")
+        if not local:
+            fail(f"element {tag} returned no local forces")
+        forces = [float(value) for value in local]
+        if len(forces) != 12:
+            fail(f"element {tag} returned {len(forces)} local forces, expected 12")
+        member_forces.append(
+            {
+                "element": tag,
+                "canonicalId": meta["canonicalId"],
+                "sectionId": meta["sectionId"],
+                "i": meta["i"], "j": meta["j"], "length": meta["length"],
+                "localAxes": meta["localAxes"],
+                "N_i": forces[0], "Vy_i": forces[1], "Vz_i": forces[2],
+                "T_i": forces[3], "My_i": forces[4], "Mz_i": forces[5],
+                "N_j": forces[6], "Vy_j": forces[7], "Vz_j": forces[8],
+                "T_j": forces[9], "My_j": forces[10], "Mz_j": forces[11],
+                "localForces": forces,
+            }
+        )
+
+    # Equilibrium of the applied loads against the reactions, all six components.
+    sum_loads = {key: 0.0 for key in ("Fx", "Fy", "Fz", "Mx", "My", "Mz")}
+    for load in loaded:
+        for key in sum_loads:
+            sum_loads[key] += load[key]
+    sum_reactions = {key: 0.0 for key in ("Fx", "Fy", "Fz", "Mx", "My", "Mz")}
+    for reaction in reactions:
+        for key in sum_reactions:
+            sum_reactions[key] += reaction[key]
+    # Moment about the origin: M + r x F
+    applied_moment = {key: sum_loads[key] for key in ("Mx", "My", "Mz")}
+    reaction_moment = {key: sum_reactions[key] for key in ("Mx", "My", "Mz")}
+    for load in loaded:
+        x, y, z = coordinates[load["node"]]
+        applied_moment["Mx"] += y * load["Fz"] - z * load["Fy"]
+        applied_moment["My"] += z * load["Fx"] - x * load["Fz"]
+        applied_moment["Mz"] += x * load["Fy"] - y * load["Fx"]
+    for reaction in reactions:
+        x, y, z = coordinates[reaction["node"]]
+        reaction_moment["Mx"] += y * reaction["Fz"] - z * reaction["Fy"]
+        reaction_moment["My"] += z * reaction["Fx"] - x * reaction["Fz"]
+        reaction_moment["Mz"] += x * reaction["Fy"] - y * reaction["Fx"]
+
+    return {
+        "schema": RESULT_SCHEMA,
+        "ok": True,
+        "opensees_version": ops.version(),
+        "job_id": job.get("job_id"),
+        "dimensions": 3,
+        "degreesOfFreedom": ndf,
+        "units": {
+            "length": "m", "force": "N", "moment": "N*m", "stress": "Pa",
+            "area": "m^2", "inertia": "m^4", "angle": "rad",
+        },
+        "analysis": {
+            "type": "static",
+            "formulation": "linear elastic, first-order (small displacement), 3D frame",
+            "integrator": integrator,
+            "algorithm": algorithm,
+            "steps": steps,
+            "status": status,
+        },
+        "nodes": [
+            {
+                "tag": int(node["tag"]), "x": node["x"], "y": node["y"], "z": node["z"],
+                "canonicalId": node.get("canonicalId"),
+            }
+            for node in nodes
+        ],
+        "supports": applied,
+        "loads": loaded,
+        "elementLoads": [],
+        "displacements": displacements,
+        "reactions": reactions,
+        "memberForces": member_forces,
+        "equilibrium": {
+            "appliedFx": sum_loads["Fx"], "appliedFy": sum_loads["Fy"], "appliedFz": sum_loads["Fz"],
+            "appliedMx": applied_moment["Mx"], "appliedMy": applied_moment["My"],
+            "appliedMz": applied_moment["Mz"],
+            "reactionFx": sum_reactions["Fx"], "reactionFy": sum_reactions["Fy"],
+            "reactionFz": sum_reactions["Fz"],
+            "reactionMx": reaction_moment["Mx"], "reactionMy": reaction_moment["My"],
+            "reactionMz": reaction_moment["Mz"],
+            "residualFx": sum_loads["Fx"] + sum_reactions["Fx"],
+            "residualFy": sum_loads["Fy"] + sum_reactions["Fy"],
+            "residualFz": sum_loads["Fz"] + sum_reactions["Fz"],
+            "residualMx": applied_moment["Mx"] + reaction_moment["Mx"],
+            "residualMy": applied_moment["My"] + reaction_moment["My"],
+            "residualMz": applied_moment["Mz"] + reaction_moment["Mz"],
         },
     }
 

@@ -5,7 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import EnglishMethodTakeoffSheet from "../ExternalWorks/EnglishMethodTakeoffSheet";
 import { UniversalTabs, UniversalSheet, UniversalBOQ } from '../universal_component';
 import StructuralVisualizationComponent from '../../Drawings/visualise_component';
-import { PageHeader, MetaChip } from '../../shared/ui';
+import { PageHeader, MetaChip, ErrorNotice, text } from '../../shared/ui';
 
 const API_BASE = `http://${window.location.hostname}:8001`;
 console.log("🚀 API BASE URL:", API_BASE);
@@ -19,6 +19,7 @@ const SuperstructureTakeoffApp = () => {
   const [takeoffData, setTakeoffData] = useState([]);
   const [editorKey, setEditorKey] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [calcError, setCalcError] = useState(null);
 
   // Automation State
   const [buildingData, setBuildingData] = useState(null);
@@ -155,7 +156,7 @@ const SuperstructureTakeoffApp = () => {
       await processFloorplan(data.file_id);
     } catch (err) {
       console.error("❌ Upload failed:", err);
-      alert("Upload failed: " + err.message);
+      setCalcError(`Upload failed: ${err.message}`);
     } finally {
       setProcessing(false);
     }
@@ -345,14 +346,16 @@ const SuperstructureTakeoffApp = () => {
         setEditorKey(prev => prev + 1);
         setActiveTab("takeoff"); // Switch to takeoff to see results
       } else {
-        alert("Received unexpected response from server: " + JSON.stringify(data));
+        setCalcError(
+          `Received an unexpected response from the server: ${JSON.stringify(data)}`
+        );
       }
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.detail) {
-        alert("Calculation Error: " + JSON.stringify(err.response.data.detail));
+        setCalcError(`Calculation error: ${JSON.stringify(err.response.data.detail)}`);
       } else {
-        alert("Calculation failed. Backend might be offline. Error: " + err.message);
+        setCalcError(`Calculation failed. The backend may be offline: ${err.message}`);
       }
     } finally {
       setLoading(false);
@@ -606,15 +609,28 @@ const SuperstructureTakeoffApp = () => {
             </div>
 
             {/* Calculate Footer */}
-            <div className="p-4 border-t bg-gray-50">
+            <div className="border-t bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-800/60">
               <button
+                type="button"
                 onClick={calculateQuantities}
                 disabled={loading}
-                className="w-full bg-blue-800 text-white py-3 rounded-lg font-bold hover:bg-blue-900 shadow-md transition-colors"
+                className="w-full rounded-lg bg-blue-800 py-3 font-bold text-white shadow-md transition-colors hover:bg-blue-900 disabled:opacity-60"
               >
-                {loading ? "Calculating..." : "Calculate All Quantities"}
+                {loading ? "Calculating…" : "Calculate all quantities"}
               </button>
-              {takeoffData.length > 0 && <p className="text-center text-xs text-gray-500 mt-2">See Takeoff tab for results</p>}
+              {takeoffData.length > 0 && (
+                <p className={`mt-2 text-center text-xs ${text.subtitle}`}>
+                  See the taking-off tab for results.
+                </p>
+              )}
+              {calcError && (
+                <ErrorNotice
+                  className="mt-3"
+                  title="Superstructure takeoff failed"
+                  message={calcError}
+                  onRetry={calculateQuantities}
+                />
+              )}
             </div>
           </div>
         )

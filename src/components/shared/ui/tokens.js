@@ -58,6 +58,18 @@ export const control = {
     "placeholder-gray-400 dark:placeholder-slate-500 " +
     "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 " +
     "disabled:opacity-60 disabled:cursor-not-allowed",
+  /**
+   * Same dimensions and typography as `base`, for panels that are intentionally
+   * dark regardless of the application theme (e.g. the slab calculator's dark
+   * glass surface). Shares the height, radius and focus ring without repainting
+   * the module white.
+   */
+  onDark:
+    "w-full min-h-[44px] sm:min-h-[40px] px-3 py-2 text-sm sm:text-base " +
+    "bg-white/5 text-white border border-white/20 rounded-lg " +
+    "placeholder-gray-400 " +
+    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent " +
+    "disabled:opacity-60 disabled:cursor-not-allowed",
   invalid:
     "border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500",
   number: "font-mono tabular-nums",

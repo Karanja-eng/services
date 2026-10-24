@@ -1,0 +1,31 @@
+{
+  "model_id": "column",
+  "revision": 1,
+  "model_hash": "0ea2d5301f8dd6a35c5b95630e23c99705f27c1144151402bf3ee267db53bd73",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "links": [
+    {
+      "model_id": "column",
+      "internal_id": "column.column",
+      "ifc_guid": "1EORzPFkHIYeuRJqD9ssNY",
+      "ifc_class": "IfcColumn",
+      "dxf_handle": "45",
+      "drawing_id": "column-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "4c7b6ab94b82f1397d192cdda06f897738c8b0f76a01a9d4933ceb984903dbda",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T20:35:04+00:00"
+    }
+  ],
+  "by_status": {
+    "ok": 1
+  }
+}

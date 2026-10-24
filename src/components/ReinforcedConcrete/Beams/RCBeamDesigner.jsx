@@ -11,7 +11,7 @@ import {
   Ruler,
 } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stage, Environment } from "@react-three/drei";
+import { OrbitControls, Stage } from "@react-three/drei";
 import BeamColumnDrawer from "./BeamDrawer";
 import { MultiSpanBeam3D } from "./Beam_THree";
 import {
@@ -550,11 +550,12 @@ const RCBeamDesigner = ({
             <color attach="background" args={[isDark ? "#101010" : "#f0f0f0"]} />
             <ambientLight intensity={0.5} />
             <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
-            <Environment preset="city" />
+            {/* HDR Environment removed – replaced with local hemisphere light */}
+            <hemisphereLight args={['#ddeeff', '#222222', 0.6]} />
 
             <OrbitControls makeDefault />
 
-            <Stage intensity={0.5} environment="city">
+            <Stage intensity={0.5}>
               <MultiSpanBeam3D spans={get3DSpans()} />
             </Stage>
           </Canvas>

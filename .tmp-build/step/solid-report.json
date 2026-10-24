@@ -1,0 +1,459 @@
+{
+  "schema": "fundi.solid.report/1",
+  "ok": true,
+  "generatedBy": "scripts/solid/septic-step.mjs",
+  "model": {
+    "schema": "fundi.solid.septic/1",
+    "modelId": "septic-system",
+    "units": {
+      "length": "metre",
+      "volume": "cubic_metre",
+      "note": "no conversion: canonical metres pass straight into OCCT"
+    },
+    "components": [
+      {
+        "role": "tank",
+        "elementIds": [
+          "septic-system.tank.base_slab",
+          "septic-system.tank.wall.north",
+          "septic-system.tank.wall.south",
+          "septic-system.tank.wall.east",
+          "septic-system.tank.wall.west",
+          "septic-system.tank.top_slab",
+          "septic-system.tank.baffle~1",
+          "septic-system.tank.baffle~2"
+        ],
+        "volumeM3": 9.563931416529424,
+        "valid": true,
+        "solidCount": 1,
+        "bbox": {
+          "min": {
+            "x": -1.70000015,
+            "y": -1.45000015,
+            "z": -1.5e-7
+          },
+          "max": {
+            "x": 1.70000015,
+            "y": 1.45000015,
+            "z": 2.35000015
+          },
+          "size": {
+            "x": 3.4000003,
+            "y": 2.9000003,
+            "z": 2.3500003
+          }
+        }
+      },
+      {
+        "role": "manhole",
+        "elementIds": [
+          "septic-system.manhole.base_slab",
+          "septic-system.manhole.wall.north",
+          "septic-system.manhole.wall.south",
+          "septic-system.manhole.wall.east",
+          "septic-system.manhole.wall.west",
+          "septic-system.manhole.cover_slab",
+          "septic-system.manhole.cover"
+        ],
+        "volumeM3": 0.7430000000000002,
+        "valid": true,
+        "solidCount": 1,
+        "bbox": {
+          "min": {
+            "x": 3.9499998499999998,
+            "y": -0.50000015,
+            "z": -1.5e-7
+          },
+          "max": {
+            "x": 5.050000150000001,
+            "y": 0.50000015,
+            "z": 1.00000015
+          },
+          "size": {
+            "x": 1.100000300000001,
+            "y": 1.0000003,
+            "z": 1.0000003
+          }
+        },
+        "accessOpening": {
+          "removedM3": 0.07649999999999979,
+          "expectedM3": 0.08399999999999994,
+          "heightM": 0.19999999999999984
+        }
+      },
+      {
+        "role": "connection",
+        "elementIds": [
+          "septic-system.connection.tank_to_manhole"
+        ],
+        "volumeM3": 0.049480084294039224,
+        "valid": true,
+        "solidCount": 1,
+        "bbox": {
+          "min": {
+            "x": 1.6999998999999997,
+            "y": -0.0750001,
+            "z": 1.2749998999999999
+          },
+          "max": {
+            "x": 4.5000001,
+            "y": 0.0750001,
+            "z": 1.4250001
+          },
+          "size": {
+            "x": 2.8000002000000004,
+            "y": 0.1500002,
+            "z": 0.15000020000000025
+          }
+        }
+      }
+    ],
+    "operations": [
+      {
+        "label": "tank fuse part 2",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 1.4789999999999996,
+        "volumeAfterM3": 2.839,
+        "deltaM3": 1.3600000000000003,
+        "removedMaterial": true
+      },
+      {
+        "label": "tank fuse part 3",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 2.839,
+        "volumeAfterM3": 4.198999999999998,
+        "deltaM3": 1.359999999999998,
+        "removedMaterial": true
+      },
+      {
+        "label": "tank fuse part 4",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 4.198999999999998,
+        "volumeAfterM3": 5.198999999999996,
+        "deltaM3": 0.9999999999999982,
+        "removedMaterial": true
+      },
+      {
+        "label": "tank fuse part 5",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 5.198999999999996,
+        "volumeAfterM3": 6.198999999999994,
+        "deltaM3": 0.9999999999999973,
+        "removedMaterial": true
+      },
+      {
+        "label": "tank fuse part 6",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 6.198999999999994,
+        "volumeAfterM3": 8.170999999999998,
+        "deltaM3": 1.972000000000004,
+        "removedMaterial": true
+      },
+      {
+        "label": "tank internal void cut",
+        "kind": "cut",
+        "valid": true,
+        "redundant": true,
+        "volumeBeforeM3": 8.170999999999998,
+        "volumeAfterM3": 8.170999999999998,
+        "deltaM3": 0,
+        "removedMaterial": false
+      },
+      {
+        "label": "baffle septic-system.tank.baffle~1 fuse",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 8.170999999999998,
+        "volumeAfterM3": 8.920999999999996,
+        "deltaM3": 0.7499999999999982,
+        "removedMaterial": true
+      },
+      {
+        "label": "baffle septic-system.tank.baffle~2 fuse",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 8.920999999999996,
+        "volumeAfterM3": 9.571000000000003,
+        "deltaM3": 0.6500000000000075,
+        "removedMaterial": true
+      },
+      {
+        "label": "penetration septic-system.tank.inlet_pipe",
+        "kind": "cut",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 9.571000000000003,
+        "volumeAfterM3": 9.567465708264711,
+        "deltaM3": -0.003534291735292072,
+        "removedMaterial": true
+      },
+      {
+        "label": "penetration septic-system.tank.outlet_pipe+septic-system.connection.tank_to_manhole",
+        "kind": "cut",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 9.567465708264711,
+        "volumeAfterM3": 9.563931416529424,
+        "deltaM3": -0.003534291735286743,
+        "removedMaterial": true
+      },
+      {
+        "label": "manhole fuse part 2",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 0.16500000000000006,
+        "volumeAfterM3": 0.3190000000000001,
+        "deltaM3": 0.15400000000000005,
+        "removedMaterial": true
+      },
+      {
+        "label": "manhole fuse part 3",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 0.3190000000000001,
+        "volumeAfterM3": 0.4730000000000003,
+        "deltaM3": 0.1540000000000002,
+        "removedMaterial": true
+      },
+      {
+        "label": "manhole fuse part 4",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 0.4730000000000003,
+        "volumeAfterM3": 0.557,
+        "deltaM3": 0.08399999999999974,
+        "removedMaterial": true
+      },
+      {
+        "label": "manhole fuse part 5",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 0.557,
+        "volumeAfterM3": 0.641,
+        "deltaM3": 0.08399999999999996,
+        "removedMaterial": true
+      },
+      {
+        "label": "manhole fuse part 6",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 0.641,
+        "volumeAfterM3": 0.8059999999999999,
+        "deltaM3": 0.16499999999999992,
+        "removedMaterial": true
+      },
+      {
+        "label": "manhole fuse part 7",
+        "kind": "fuse",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 0.8059999999999999,
+        "volumeAfterM3": 0.8195,
+        "deltaM3": 0.013500000000000068,
+        "removedMaterial": true
+      },
+      {
+        "label": "manhole internal void cut",
+        "kind": "cut",
+        "valid": true,
+        "redundant": true,
+        "volumeBeforeM3": 0.8195,
+        "volumeAfterM3": 0.8195,
+        "deltaM3": 0,
+        "removedMaterial": false
+      },
+      {
+        "label": "manhole access opening cut",
+        "kind": "cut",
+        "valid": true,
+        "redundant": false,
+        "volumeBeforeM3": 0.8195,
+        "volumeAfterM3": 0.7430000000000002,
+        "deltaM3": -0.07649999999999979,
+        "removedMaterial": true
+      }
+    ],
+    "penetrations": [
+      {
+        "elementIds": [
+          "septic-system.tank.inlet_pipe"
+        ],
+        "wallElementId": "septic-system.tank.wall.west",
+        "shell": "tank",
+        "radius": 0.075,
+        "level": 1.5499999999999998,
+        "wallCentre": -1.5999999999999999,
+        "applied": true,
+        "removedM3": 0.003534291735292072,
+        "expectedM3": 0.0035342917352885177,
+        "ratio": 1.0000000000010056
+      },
+      {
+        "elementIds": [
+          "septic-system.tank.outlet_pipe",
+          "septic-system.connection.tank_to_manhole"
+        ],
+        "wallElementId": "septic-system.tank.wall.east",
+        "shell": "tank",
+        "radius": 0.075,
+        "level": 1.3499999999999999,
+        "wallCentre": 1.5999999999999999,
+        "applied": true,
+        "removedM3": 0.003534291735286743,
+        "expectedM3": 0.0035342917352885177,
+        "ratio": 0.9999999999994978
+      },
+      {
+        "elementIds": [
+          "septic-system.connection.tank_to_manhole"
+        ],
+        "wallElementId": "septic-system.manhole.wall.west",
+        "shell": "manhole",
+        "radius": 0.075,
+        "level": 1.3499999999999999,
+        "wallCentre": 4.05,
+        "applied": false,
+        "removedM3": 0,
+        "expectedM3": 0.0035342917352885177,
+        "ratio": null,
+        "reason": "the pipe at z=1.3499999999999999 m cannot reach septic-system.manhole.wall.west, whose z range is 0.15000000000000002..0.85 m. The connection element in the canonical model does not meet that wall."
+      }
+    ],
+    "warnings": [
+      {
+        "code": "PENETRATION_REACHES_NO_WALL",
+        "elementIds": [
+          "septic-system.connection.tank_to_manhole"
+        ],
+        "wallElementId": "septic-system.manhole.wall.west",
+        "message": "the pipe at z=1.3499999999999999 m cannot reach septic-system.manhole.wall.west, whose z range is 0.15000000000000002..0.85 m. The connection element in the canonical model does not meet that wall."
+      }
+    ],
+    "overloads": {
+      "gp_Pnt": "gp_Pnt_3",
+      "makeBox": "MakeBox_2(pnt,dx,dy,dz)",
+      "fuse": "BRepAlgoAPI_Fuse_3(a,b)",
+      "isValid": "Analyzer(shape,true).IsValid_1(shape)",
+      "cut": "BRepAlgoAPI_Cut_3(a,b)",
+      "gp_Dir": "gp_Dir_4",
+      "gp_Ax2": "gp_Ax2_3(pnt,dir)",
+      "gp_Ax1": "gp_Ax1_2(pnt,dir)",
+      "makeRotationY": "gp_Ax1(pnt,dir)+SetRotation_1",
+      "gp_Vec": "gp_Vec_4",
+      "makeTranslation": "gp_Vec(x,y,z)+SetTranslation_1",
+      "makeCylinder[x]": "MakeCylinder_1(r,h)+rotate+translate axis=x",
+      "bndBoxGet": "CornerMin/CornerMax"
+    }
+  },
+  "step": {
+    "note": "One STEP file per solid component. A single fused multi-solid assembly could not be transferred by this OCCT build (raw C++ exception), so no combined file is produced rather than emitting a file that is not what it claims. Each file is verified by reading its own STEP entities (solid topology, units, termination); the kernel reimport is attempted and its outcome recorded.",
+    "files": [
+      {
+        "role": "tank",
+        "elementIds": [
+          "septic-system.tank.base_slab",
+          "septic-system.tank.wall.north",
+          "septic-system.tank.wall.south",
+          "septic-system.tank.wall.east",
+          "septic-system.tank.wall.west",
+          "septic-system.tank.top_slab",
+          "septic-system.tank.baffle~1",
+          "septic-system.tank.baffle~2"
+        ],
+        "fileName": "fundi-septic-tank.step",
+        "bytes": 113478,
+        "transferStatus": {},
+        "writeStatus": 1,
+        "isStep": true,
+        "terminated": true,
+        "entities": 2518,
+        "solidBreps": 1,
+        "closedShells": 1,
+        "advancedFaces": 38,
+        "cylindricalSurfaces": 2,
+        "lengthUnitMetre": true,
+        "head": "ISO-10303-21; HEADER; FILE_DESCRIPTION(('Open CA",
+        "sourceVolumeM3": 9.563931416529424,
+        "sourceSolidCount": 1,
+        "reimport": null,
+        "reimportError": "28852256",
+        "path": "C:\\Users\\HP\\Documents\\programming\\Java script\\ReactApps\\Services\\.test-artifacts\\solid\\step\\fundi-septic-tank.step",
+        "onDiskBytes": 113478
+      },
+      {
+        "role": "manhole",
+        "elementIds": [
+          "septic-system.manhole.base_slab",
+          "septic-system.manhole.wall.north",
+          "septic-system.manhole.wall.south",
+          "septic-system.manhole.wall.east",
+          "septic-system.manhole.wall.west",
+          "septic-system.manhole.cover_slab",
+          "septic-system.manhole.cover"
+        ],
+        "fileName": "fundi-septic-manhole.step",
+        "bytes": 87093,
+        "transferStatus": {},
+        "writeStatus": 1,
+        "isStep": true,
+        "terminated": true,
+        "entities": 1928,
+        "solidBreps": 1,
+        "closedShells": 1,
+        "advancedFaces": 31,
+        "cylindricalSurfaces": 0,
+        "lengthUnitMetre": true,
+        "head": "ISO-10303-21; HEADER; FILE_DESCRIPTION(('Open CA",
+        "sourceVolumeM3": 0.7430000000000002,
+        "sourceSolidCount": 1,
+        "reimport": null,
+        "reimportError": "29338520",
+        "path": "C:\\Users\\HP\\Documents\\programming\\Java script\\ReactApps\\Services\\.test-artifacts\\solid\\step\\fundi-septic-manhole.step",
+        "onDiskBytes": 87093
+      },
+      {
+        "role": "connection",
+        "elementIds": [
+          "septic-system.connection.tank_to_manhole"
+        ],
+        "fileName": "fundi-septic-connection.step",
+        "bytes": 5883,
+        "transferStatus": {},
+        "writeStatus": 1,
+        "isStep": true,
+        "terminated": true,
+        "entities": 118,
+        "solidBreps": 1,
+        "closedShells": 1,
+        "advancedFaces": 3,
+        "cylindricalSurfaces": 1,
+        "lengthUnitMetre": true,
+        "head": "ISO-10303-21; HEADER; FILE_DESCRIPTION(('Open CA",
+        "sourceVolumeM3": 0.049480084294039224,
+        "sourceSolidCount": 1,
+        "reimport": null,
+        "reimportError": "29522008",
+        "path": "C:\\Users\\HP\\Documents\\programming\\Java script\\ReactApps\\Services\\.test-artifacts\\solid\\step\\fundi-septic-connection.step",
+        "onDiskBytes": 5883
+      }
+    ]
+  },
+  "writtenAt": "2026-10-21T00:14:57.638Z"
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Stage, Layer, Line, Rect, Text, Circle, Arrow, Group } from 'react-konva';
 import { Download, ZoomIn, ZoomOut, Grid3x3 } from 'lucide-react';
+import { action } from '../../shared/ui/tokens';
 
 export default function Pool2DDrawing({ poolData = {} }) {
     const stageRef = useRef(null);
@@ -410,7 +411,7 @@ export default function Pool2DDrawing({ poolData = {} }) {
                     </button>
                     <button
                         onClick={handleExport}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium flex items-center gap-2"
+                        className={`${action.base} ${action.primary} px-4 py-2 text-sm`}
                     >
                         <Download className="w-4 h-4" />
                         Export

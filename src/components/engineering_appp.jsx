@@ -103,8 +103,23 @@ import MasonryUI from "./masonry/Masonry_ui";
 
 import { getToolMeta, getGroupLabel } from "../navigation/toolRegistry";
 import { action } from "./shared/ui/tokens";
+import { API_BASE } from "../config/runtime";
 import { TakeoffBridgeProvider } from "../state/TakeoffBridgeContext";
 import { rememberToolVisit } from "../state/recentTools";
+
+/**
+ * Assistant endpoint.
+ *
+ * Resolved from the runtime configuration instead of a hardcoded loopback
+ * address, so a phone opening this page reaches the backend on the host machine
+ * rather than its own loopback interface (see src/config/runtime.js).
+ *
+ * The route itself is optional on the backend: `main.py` mounts the Qwen router
+ * only when the model dependencies are installed (`include_router` is commented
+ * out in the default configuration), so a 404 here means "this deployment has no
+ * assistant", not "the backend is down".
+ */
+const ASSISTANT_URL = `${API_BASE}/qwen_model/generate_stream`;
 
 /* -------------------------------------------------------------------------- */
 /*  Quantity-surveying document wrappers                                      */
@@ -523,7 +538,7 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
     }, 100);
 
     try {
-      const response = await fetch("http://127.0.0.1:8001/qwen_model/generate_stream", {
+      const response = await fetch(ASSISTANT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: userMessage.text }),
@@ -586,7 +601,13 @@ const AppLayout = ({ children, isDark, toggleTheme }) => {
           msg.id === aiMessageId
             ? {
                 ...msg,
-                text: "Fundi service unavailable.\n\nThe assistant could not reach the Fundi AI service at http://127.0.0.1:8001/qwen_model/generate_stream. No engineering analysis was generated.\n\nCheck that the backend is running, then send the request again. The engineering modules remain usable while the assistant is offline.",
+                text:
+                  "Fundi service unavailable.\n\n" +
+                  `The assistant could not reach ${ASSISTANT_URL}. No engineering analysis was generated.\n\n` +
+                  "This page resolves the backend from its own host, so check that the backend is " +
+                  "running and reachable from this device (see the CAD/BIM workbench diagnostics for " +
+                  "the exact start command). If the backend is up, this deployment may not mount the " +
+                  "assistant route. The engineering modules remain usable while the assistant is offline.",
               }
             : msg
         )

@@ -21,7 +21,7 @@
 
 import React, { Suspense, useRef, useState } from 'react';
 import { Canvas }          from '@react-three/fiber';
-import { OrbitControls, Grid, Environment } from '@react-three/drei';
+import { OrbitControls, Grid } from '@react-three/drei';
 
 import { useRoofStructure }       from '../hooks/useRoofStructure.js';
 import RoofTruss3D                from './3d/RoofTruss3D.jsx';
@@ -64,7 +64,8 @@ function SceneSetup() {
         fadeDistance={30}
         position={[0, 0.002, 0]}
       />
-      <Environment preset="city" />
+      {/* HDR Environment replaced with local hemisphere light for sky/ground approximation */}
+      <hemisphereLight args={['#c0d8ff', '#1a1a1a', 0.5]} />
     </>
   );
 }

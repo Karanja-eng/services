@@ -1,0 +1,45 @@
+{
+  "model_id": "retaining-wall",
+  "revision": 1,
+  "model_hash": "ce34f3b215a78bc442b5bc61ffdd83b48c0a954b261b4cfcc8fcd4f97bc150a4",
+  "units": {
+    "canonical": "metre",
+    "ifc": "metre",
+    "dxf": "millimetre",
+    "dxf_insunits": "4",
+    "elevation_datum": "0.000 m = finished ground level at the generator origin"
+  },
+  "links": [
+    {
+      "model_id": "retaining-wall",
+      "internal_id": "retaining-wall.base",
+      "ifc_guid": "3Z65Teh7nGhP7e0KCle2OQ",
+      "ifc_class": "IfcFooting",
+      "dxf_handle": "45",
+      "drawing_id": "retaining-wall-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "eb615ca0ae838252c9642d402e71c35962d6e4bcf7056c678275317b8a25f9a2",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T20:35:10+00:00"
+    },
+    {
+      "model_id": "retaining-wall",
+      "internal_id": "retaining-wall.stem",
+      "ifc_guid": "2HbvhloXfSrfx3opBKbK0Q",
+      "ifc_class": "IfcWall",
+      "dxf_handle": "45",
+      "drawing_id": "retaining-wall-r1",
+      "layer": "CONCRETE",
+      "fingerprint": "a226fa0aaa73ddd9d518ca5cf6c5c5346893e4d630cab310d56c82c06e20f290",
+      "unit_scale": 1000.0,
+      "status": "ok",
+      "note": null,
+      "updated_at": "2026-10-18T20:35:10+00:00"
+    }
+  ],
+  "by_status": {
+    "ok": 2
+  }
+}

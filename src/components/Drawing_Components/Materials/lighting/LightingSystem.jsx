@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Sky, Environment } from '@react-three/drei';
 import * as THREE from 'three';
@@ -54,6 +54,32 @@ export const LIGHTING_MODES = {
   night:        { ambientIntensity:0.05,dirIntensity:0.1, dirColor:'#3355aa', envPreset:'warehouse',turbidity:10,rayleigh:0.2, timeOfDay:22, skyVisible:false },
 };
 
+/** Sky-colour approximation used when the HDR preset fails to load. */
+const SKY_COLORS = {
+  city:      ['#cce0ff', '#2a2a2a'],
+  studio:    ['#ffffff', '#444444'],
+  sunset:    ['#ff9a3c', '#1a0a00'],
+  warehouse: ['#334466', '#111111'],
+};
+
+/**
+ * HemisphereFallback – rendered by Suspense while the HDR loads,
+ * and kept as the sole light source when HDR is unavailable.
+ */
+function HemisphereFallback({ preset }) {
+  const [sky, ground] = SKY_COLORS[preset] || SKY_COLORS.city;
+  return <hemisphereLight args={[sky, ground, 0.6]} />;
+}
+
+/**
+ * EnvironmentPreset – tries to load the drei Environment HDR preset.
+ * If the network request fails the Suspense boundary above catches it
+ * and falls back to HemisphereFallback gracefully.
+ */
+function EnvironmentPreset({ preset }) {
+  return <Environment preset={preset} background={false} />;
+}
+
 function InteriorLight({ position, lumen=800, kelvin=3000 }) {
   return (
     <pointLight
@@ -84,7 +110,14 @@ export function LightingRig() {
 
   return (
     <>
-      <Environment preset={envPreset} background={false} />
+      {/*
+        Suspense: renders HemisphereFallback while the HDR loads.
+        If the HDR request fails entirely the fallback remains visible
+        instead of throwing an unhandled error.
+      */}
+      <Suspense fallback={<HemisphereFallback preset={envPreset} />}>
+        <EnvironmentPreset preset={envPreset} />
+      </Suspense>
       <ambientLight intensity={preset.ambientIntensity ?? ambientIntensity} />
       {sun.y > -10 && (
         <directionalLight

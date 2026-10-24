@@ -5,5 +5,8 @@
     "thatopen-fragments-worker.mjs",
     "web-ifc.wasm",
     "web-ifc-mt.wasm"
+  ],
+  "cadWorkers": [
+    "mtext-renderer-worker.js"
   ]
 }

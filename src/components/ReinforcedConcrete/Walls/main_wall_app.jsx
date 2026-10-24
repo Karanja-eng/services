@@ -369,8 +369,6 @@ const MainWallDesignApp = ({ isDark = false }) => {
   // dispatch and backend endpoints. Do not alter these ids.
   const [activeStandard, setActiveStandard] = useState("bs");
 
-  const bgMain = isDark ? "bg-slate-900" : "bg-slate-50";
-  const bgCard = isDark ? "bg-slate-800" : "bg-white";
   const textPrimary = isDark ? "text-slate-100" : "text-slate-900";
   const textSecondary = isDark ? "text-slate-300" : "text-slate-600";
 

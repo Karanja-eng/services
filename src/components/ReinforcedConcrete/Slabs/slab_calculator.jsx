@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calculator, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { control } from "../../shared/ui/tokens";
 
 const SlabCalculator = () => {
   const [slabType, setSlabType] = useState('one-way');
@@ -250,7 +251,7 @@ const SlabCalculator = () => {
                   name="fck"
                   value={formData.fck}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={control.onDark}
                 />
               </div>
               <div>
@@ -260,7 +261,7 @@ const SlabCalculator = () => {
                   name="fy"
                   value={formData.fy}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={control.onDark}
                 />
               </div>
               <div>
@@ -270,7 +271,7 @@ const SlabCalculator = () => {
                   name="cover"
                   value={formData.cover}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={control.onDark}
                 />
               </div>
             </div>
@@ -284,7 +285,7 @@ const SlabCalculator = () => {
                   name="deadLoad"
                   value={formData.deadLoad}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={control.onDark}
                 />
               </div>
               <div>
@@ -294,7 +295,7 @@ const SlabCalculator = () => {
                   name="liveLoad"
                   value={formData.liveLoad}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={control.onDark}
                 />
               </div>
             </div>
@@ -309,7 +310,7 @@ const SlabCalculator = () => {
                     name="spanLength"
                     value={formData.spanLength}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={control.onDark}
                   />
                 </div>
                 <div>
@@ -319,7 +320,7 @@ const SlabCalculator = () => {
                     name="slabWidth"
                     value={formData.slabWidth}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={control.onDark}
                   />
                 </div>
               </div>
@@ -334,7 +335,7 @@ const SlabCalculator = () => {
                     name="lx"
                     value={formData.lx}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={control.onDark}
                   />
                 </div>
                 <div>
@@ -344,7 +345,7 @@ const SlabCalculator = () => {
                     name="ly"
                     value={formData.ly}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={control.onDark}
                   />
                 </div>
               </div>
@@ -359,7 +360,7 @@ const SlabCalculator = () => {
                     name="ribWidth"
                     value={formData.ribWidth}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={control.onDark}
                   />
                 </div>
                 <div>
@@ -369,7 +370,7 @@ const SlabCalculator = () => {
                     name="ribSpacing"
                     value={formData.ribSpacing}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={control.onDark}
                   />
                 </div>
                 <div>
@@ -379,7 +380,7 @@ const SlabCalculator = () => {
                     name="topping"
                     value={formData.topping}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={control.onDark}
                   />
                 </div>
                 <div>
@@ -389,7 +390,7 @@ const SlabCalculator = () => {
                     name="ribDepth"
                     value={formData.ribDepth}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={control.onDark}
                   />
                 </div>
               </div>

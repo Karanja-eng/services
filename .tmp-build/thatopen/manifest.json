@@ -1,0 +1,12 @@
+{
+  "generatedBy": "scripts/copy-cad-bim-assets.js",
+  "note": "Copied from node_modules so the browser can fetch them by URL.",
+  "assets": [
+    "thatopen-fragments-worker.mjs",
+    "web-ifc.wasm",
+    "web-ifc-mt.wasm"
+  ],
+  "cadWorkers": [
+    "mtext-renderer-worker.js"
+  ]
+}

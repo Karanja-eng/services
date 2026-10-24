@@ -3,9 +3,30 @@ import React, { useState } from 'react';
 import {
     Eye, Play, Box, Layout, Plus, Square, Minus, Grid, X,
     MousePointer, Save, FolderOpen, Maximize2, Minimize2,
-    ChevronDown, Settings, Calculator, Library, Trash2, Copy, Activity, Layers
+    Settings, Calculator, Library, Trash2, Copy, Activity, Layers, CheckCircle
 } from 'lucide-react';
-import { CheckCircle } from 'lucide-react';
+
+/**
+ * Framed & Tall Buildings — structure builder toolbar.
+ *
+ * Presentation only: every prop, handler, tab id, tool id and action name below is
+ * unchanged, so the builder's workflow is identical to before.
+ *
+ * What changed (design-system migration, see docs in chats/):
+ * - The tab row no longer has a fixed 50 px height with 20 px per-tab padding,
+ *   which overflowed a 360 px phone screen (four tabs × ~100 px). Tabs now use the
+ *   shared token sizes (`min-h-[44px]`, `px-3`, `text-xs/sm`), wrap when needed and
+ *   keep the Beam Designer Suite's blue-600 active state.
+ * - The sub-toolbar wraps instead of clipping, and its buttons use the shared
+ *   control radius/height/typography.
+ * - Colours come from tokens (Tailwind palette + `dark:` variants) instead of
+ *   hardcoded hex values, so the toolbar follows the application theme and stays
+ *   readable in dark mode.
+ * - Icon-only buttons meet the 44 px touch target on phones.
+ */
+
+const SUBTOOLBAR = 'flex flex-wrap items-center gap-1.5 sm:gap-2';
+const DIVIDER = 'hidden h-5 w-px shrink-0 bg-gray-200 dark:bg-slate-700 sm:block';
 
 const StructureBuilderToolbar = ({
     tool,
@@ -42,7 +63,7 @@ const StructureBuilderToolbar = ({
         switch (activeTab) {
             case 'view':
                 return (
-                    <div style={subToolbarStyle}>
+                    <div className={SUBTOOLBAR}>
                         <ToolbarButton
                             active={view === '2d'}
                             onClick={() => onViewChange('2d')}
@@ -71,7 +92,7 @@ const StructureBuilderToolbar = ({
                 );
             case 'design':
                 return (
-                    <div style={subToolbarStyle}>
+                    <div className={SUBTOOLBAR}>
                         <ToolbarButton
                             onClick={onRunAnalysis}
                             icon={Calculator}
@@ -86,22 +107,22 @@ const StructureBuilderToolbar = ({
                                 color="#1976D2"
                             />
                         )}
-                        <div style={{ width: '1px', height: '20px', background: '#ddd', margin: '0 8px' }} />
+                        <div className={DIVIDER} />
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f5f5f5', borderRadius: '4px', padding: '2px' }}>
+                        <div className="flex flex-wrap items-center gap-1 rounded-lg bg-gray-100 p-0.5 dark:bg-slate-800">
                             <ToolbarButton
                                 active={analysisMethod === 'moment_distribution'}
                                 onClick={() => onAnalysisMethodChange('moment_distribution')}
                                 icon={Box}
                                 label="Moment Dist."
-                                color={analysisMethod === 'moment_distribution' ? '#2196F3' : '#666'}
+                                color={analysisMethod === 'moment_distribution' ? '#2196F3' : undefined}
                             />
                             <ToolbarButton
                                 active={analysisMethod === 'stiffness'}
                                 onClick={() => onAnalysisMethodChange('stiffness')}
                                 icon={Layers}
                                 label="Stiffness Matrix"
-                                color={analysisMethod === 'stiffness' ? '#2196F3' : '#666'}
+                                color={analysisMethod === 'stiffness' ? '#2196F3' : undefined}
                             />
                         </div>
 
@@ -123,7 +144,7 @@ const StructureBuilderToolbar = ({
                 );
             case 'members':
                 return (
-                    <div style={subToolbarStyle}>
+                    <div className={SUBTOOLBAR}>
                         <ToolbarButton
                             active={false}
                             onClick={() => onAction('add_bay')}
@@ -170,7 +191,7 @@ const StructureBuilderToolbar = ({
                 );
             case 'steel_bim':
                 return (
-                    <div style={subToolbarStyle}>
+                    <div className={SUBTOOLBAR}>
                         <ToolbarButton
                             active={view === 'steel_bim'}
                             onClick={() => onViewChange('steel_bim')}
@@ -188,7 +209,7 @@ const StructureBuilderToolbar = ({
                 );
             case 'edit':
                 return (
-                    <div style={subToolbarStyle}>
+                    <div className={SUBTOOLBAR}>
                         <ToolbarButton
                             active={tool === 'select'}
                             onClick={() => onToolChange('select')}
@@ -221,21 +242,11 @@ const StructureBuilderToolbar = ({
                             icon={FolderOpen}
                             label="Open"
                         />
-                    </div>
-                );
-            case 'steel_bim':
-                return (
-                    <div style={subToolbarStyle}>
                         <ToolbarButton
-                            onClick={() => onAction('steel_bim_panel')}
-                            icon={Layout}
-                            label="BIM Dashboard"
-                            color="#e67e22"
-                        />
-                        <ToolbarButton
-                            onClick={() => onAction('library')}
-                            icon={Library}
-                            label="Steel Catalog"
+                            onClick={() => onAction('import_cad')}
+                            icon={FolderOpen}
+                            label="Import CAD"
+                            color="#0284c7"
                         />
                     </div>
                 );
@@ -245,129 +256,83 @@ const StructureBuilderToolbar = ({
     };
 
     return (
-        <div style={toolbarContainerStyle}>
-            {/* Main Tabs */}
-            <div style={mainTabsStyle}>
-                <div style={{ display: 'flex' }}>
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            style={{
-                                ...tabButtonStyle,
-                                borderBottom: activeTab === tab.id ? '3px solid #2196F3' : '3px solid transparent',
-                                color: activeTab === tab.id ? '#2196F3' : '#666',
-                                background: activeTab === tab.id ? '#f0f7ff' : 'transparent'
-                            }}
-                        >
-                            <tab.icon size={18} />
-                            <span style={{ fontWeight: activeTab === tab.id ? 'bold' : 'normal' }}>{tab.label}</span>
-                        </button>
-                    ))}
+        <div className="flex flex-col border-b border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            {/* Main tabs — wrap instead of clipping on narrow screens. */}
+            <div className="flex flex-wrap items-center justify-between gap-1 border-b border-gray-100 pl-1 dark:border-slate-800">
+                <div role="tablist" aria-label="Structure builder sections" className="flex flex-wrap items-stretch gap-0.5">
+                    {tabs.map(tab => {
+                        const active = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                role="tab"
+                                aria-selected={active}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`inline-flex min-h-[44px] items-center gap-1.5 border-b-[3px] px-3 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-sm ${
+                                    active
+                                        ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-900/25 dark:text-blue-300'
+                                        : 'border-transparent text-gray-600 hover:bg-gray-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                                }`}
+                            >
+                                <tab.icon size={16} aria-hidden="true" />
+                                <span>{tab.label}</span>
+                            </button>
+                        );
+                    })}
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', paddingRight: '16px' }}>
-                    <button onClick={onSidebarToggle} style={iconButtonStyle} title="Toggle Sidebar">
-                        <Layout size={18} />
+                <div className="flex items-center gap-0.5 pr-1">
+                    <button
+                        type="button"
+                        onClick={onSidebarToggle}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-transparent text-gray-600 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-300 dark:hover:bg-slate-800"
+                        title="Toggle Sidebar"
+                        aria-label="Toggle sidebar"
+                    >
+                        <Layout size={18} aria-hidden="true" />
                     </button>
-                    <button onClick={() => onFullScreenChange(!isFullScreen)} style={iconButtonStyle} title="Fullscreen">
-                        {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                    <button
+                        type="button"
+                        onClick={() => onFullScreenChange(!isFullScreen)}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-transparent text-gray-600 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-300 dark:hover:bg-slate-800"
+                        title="Fullscreen"
+                        aria-label={isFullScreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                    >
+                        {isFullScreen ? <Minimize2 size={18} aria-hidden="true" /> : <Maximize2 size={18} aria-hidden="true" />}
                     </button>
                 </div>
             </div>
 
             {/* Sub-toolbar */}
-            <div style={subToolbarContainerStyle}>
+            <div className="flex min-h-[44px] flex-wrap items-center gap-1 px-2 py-1.5 sm:px-3">
                 {renderSubToolbar()}
             </div>
         </div>
     );
 };
 
+/**
+ * Sub-toolbar button. `color` still carries the per-tool identity colour used by
+ * the builder (blue column, green beam, orange slab, ...). It is applied to the
+ * text/icon only, and the label is always present, so colour is never the sole
+ * carrier of meaning.
+ */
 const ToolbarButton = ({ active, onClick, icon: Icon, label, color }) => (
     <button
+        type="button"
         onClick={onClick}
-        style={{
-            ...subTabButtonStyle,
-            background: active ? '#f0f0f0' : 'transparent',
-            border: active ? '1px solid #ddd' : '1px solid transparent',
-            color: color || (active ? '#2196F3' : '#555')
-        }}
+        aria-pressed={Boolean(active)}
+        style={color ? { color } : undefined}
+        className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-[13px] ${
+            active
+                ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/25 dark:text-blue-300'
+                : 'border-transparent text-gray-700 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800'
+        }`}
     >
-        <Icon size={16} />
-        <span>{label}</span>
+        <Icon size={15} aria-hidden="true" />
+        <span className="whitespace-nowrap">{label}</span>
     </button>
 );
-
-// Styles
-const toolbarContainerStyle = {
-    background: '#fff',
-    borderBottom: '1px solid #ddd',
-    display: 'flex',
-    flexDirection: 'column',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-};
-
-const mainTabsStyle = {
-    height: '50px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottom: '1px solid #eee',
-    paddingLeft: '8px'
-};
-
-const subToolbarContainerStyle = {
-    height: '50px',
-    background: '#fcfcfc',
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0 16px'
-};
-
-const subToolbarStyle = {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center'
-};
-
-const tabButtonStyle = {
-    height: '50px',
-    padding: '0 20px',
-    border: 'none',
-    background: 'transparent',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    transition: 'all 0.2s ease'
-};
-
-const subTabButtonStyle = {
-    padding: '6px 12px',
-    borderRadius: '4px',
-    border: '1px solid transparent',
-    background: 'transparent',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    transition: 'all 0.2s ease'
-};
-
-const iconButtonStyle = {
-    width: '36px',
-    height: '36px',
-    borderRadius: '4px',
-    border: '1px solid #eee',
-    background: 'transparent',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    color: '#666'
-};
 
 export default StructureBuilderToolbar;

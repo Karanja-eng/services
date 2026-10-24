@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Stage, Layer, Rect, Circle, Line, Text, Group, Arc } from 'react-konva';
+import { action, status, surface, text } from '../../shared/ui/tokens';
 
 // Pad Foundation Viewer
 const PadFoundationViewer = ({ params }) => {
@@ -34,7 +35,7 @@ const PadFoundationViewer = ({ params }) => {
 
     return (
         <div style={{ padding: '20px', backgroundColor: '#f5f5f5' }}>
-            <h3 style={{ marginBottom: '10px', fontFamily: 'Arial' }}>Pad Foundation Detail - BS EN 1992-1-1:2004</h3>
+            <h3 className="mb-2.5 text-base font-semibold text-gray-900 dark:text-slate-100">Pad Foundation Detail - BS EN 1992-1-1:2004</h3>
 
             <Stage width={1200} height={800}>
                 <Layer>
@@ -414,7 +415,7 @@ const PileCapViewer = ({ params }) => {
 
     return (
         <div style={{ padding: '20px', backgroundColor: '#f5f5f5' }}>
-            <h3 style={{ marginBottom: '10px', fontFamily: 'Arial' }}>Pile Cap Detail - BS EN 1992-1-1:2004</h3>
+            <h3 className="mb-2.5 text-base font-semibold text-gray-900 dark:text-slate-100">Pile Cap Detail - BS EN 1992-1-1:2004</h3>
 
             <Stage width={1200} height={800}>
                 <Layer>
@@ -684,7 +685,7 @@ const StripFoundationViewer = ({ params }) => {
 
     return (
         <div style={{ padding: '20px', backgroundColor: '#f5f5f5' }}>
-            <h3 style={{ marginBottom: '10px', fontFamily: 'Arial' }}>Strip Foundation Detail - BS 8004:2015</h3>
+            <h3 className="mb-2.5 text-base font-semibold text-gray-900 dark:text-slate-100">Strip Foundation Detail - BS 8004:2015</h3>
 
             <Stage width={800} height={600}>
                 <Layer>
@@ -1133,78 +1134,51 @@ const FoundationDetailingDemo = () => {
     };
 
     return (
-        <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px' }}>
-            <h2>Foundation Detailing Viewer - BS/EC Standards</h2>
+        <div className={`min-h-full p-4 sm:p-5 ${surface.page}`}>
+            <h2 className={`text-lg font-bold sm:text-xl ${text.title}`}>
+                Foundation detailing viewer — BS/EC standards
+            </h2>
 
-            <div style={{ marginBottom: '20px' }}>
-                <button
-                    onClick={() => setSelectedType('pad')}
-                    style={{
-                        padding: '10px 20px',
-                        marginRight: '10px',
-                        backgroundColor: selectedType === 'pad' ? '#4CAF50' : '#ddd',
-                        color: selectedType === 'pad' ? 'white' : 'black',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Pad Foundation
-                </button>
-                <button
-                    onClick={() => setSelectedType('pilecap')}
-                    style={{
-                        padding: '10px 20px',
-                        marginRight: '10px',
-                        backgroundColor: selectedType === 'pilecap' ? '#4CAF50' : '#ddd',
-                        color: selectedType === 'pilecap' ? 'white' : 'black',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Pile Cap
-                </button>
-                <button
-                    onClick={() => setSelectedType('strip')}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: selectedType === 'strip' ? '#4CAF50' : '#ddd',
-                        color: selectedType === 'strip' ? 'white' : 'black',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Strip Foundation
-                </button>
+            <div className="mt-3 flex flex-wrap gap-2">
+                {[
+                    { id: 'pad', label: 'Pad foundation' },
+                    { id: 'pilecap', label: 'Pile cap' },
+                    { id: 'strip', label: 'Strip foundation' },
+                ].map((option) => (
+                    <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setSelectedType(option.id)}
+                        aria-pressed={selectedType === option.id}
+                        className={`${action.base} ${
+                            selectedType === option.id ? action.primary : action.secondary
+                        } px-3 py-2 text-sm`}
+                    >
+                        {option.label}
+                    </button>
+                ))}
             </div>
 
-            <FoundationViewer
-                foundationType={selectedType}
-                params={demoParams[selectedType]}
-            />
+            <div className="mt-3">
+                <FoundationViewer
+                    foundationType={selectedType}
+                    params={demoParams[selectedType]}
+                />
+            </div>
 
-            <div style={{
-                marginTop: '30px',
-                padding: '15px',
-                backgroundColor: '#fff3cd',
-                border: '1px solid #ffc107',
-                borderRadius: '4px'
-            }}>
-                <h4 style={{ marginTop: 0 }}>Usage Instructions:</h4>
-                <p style={{ fontSize: '14px', lineHeight: '1.6' }}>
-                    Import this component into your React application and pass the foundation parameters
-                    from your design calculations. The viewer will automatically render the foundation
-                    detail with plan and section views, reinforcement layout, and BS/EC compliant annotations.
+            {/* Developer note. Styled with the shared warning surface so it is not
+                mistaken for a design result. */}
+            <div className={`mt-4 rounded-lg border p-3 ${status.warn.surface} ${status.warn.border}`}>
+                <h4 className={`text-sm font-bold ${text.title}`}>Usage instructions</h4>
+                <p className={`mt-1 text-sm leading-relaxed ${text.subtitle}`}>
+                    Import this component into your React application and pass the foundation
+                    parameters from your design calculations. The viewer renders the foundation
+                    detail with plan and section views, reinforcement layout and BS/EC compliant
+                    annotations.
                 </p>
-                <pre style={{
-                    backgroundColor: '#f5f5f5',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    overflow: 'auto'
-                }}>
+                <pre
+                    className={`mt-2 overflow-auto rounded-lg p-2.5 text-xs ${surface.inset} ${text.mono} ${text.label}`}
+                >
                     {`import FoundationViewer from './FoundationViewer';
 
 // In your component:

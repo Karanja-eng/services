@@ -7,6 +7,7 @@ import {
   Euro,
 } from "lucide-react";
 import Slab3DVisualization from "../../components/slab_3d_helper";
+import { control } from "../../shared/ui/tokens";
 
 const EurocodeSlabCalculator = ({ theme = "light" }) => {
   const [slabType, setSlabType] = useState("one-way");
@@ -464,7 +465,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                   name="concreteClass"
                   value={formData.concreteClass}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={control.base}
                 >
                   {[
                     "C20/25",
@@ -491,7 +492,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                   name="steelClass"
                   value={formData.steelClass}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={control.base}
                 >
                   {["B500A", "B500B", "B500C"].map((s) => (
                     <option key={s} value={s}>
@@ -511,7 +512,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                   name="cover"
                   value={formData.cover}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={control.base}
                 />
               </div>
               <div>
@@ -524,7 +525,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                   name="exposureClass"
                   value={exposureClass}
                   onChange={(e) => setExposureClass(e.target.value)}
-                  className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={control.base}
                 >
                   {["XC1", "XC2", "XC3", "XC4", "XD1", "XD2", "XD3"].map(
                     (x) => (
@@ -550,7 +551,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                   name="permanentLoad"
                   value={formData.permanentLoad}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={control.base}
                 />
               </div>
               <div>
@@ -564,7 +565,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                   name="variableLoad"
                   value={formData.variableLoad}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={control.base}
                 />
               </div>
               <div>
@@ -577,7 +578,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                   name="loadCategory"
                   value={formData.loadCategory}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={control.base}
                 >
                   <option value="A">A - Residential</option>
                   <option value="B">B - Office</option>
@@ -601,7 +602,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     name="spanLength"
                     value={formData.spanLength}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={control.base}
                   />
                 </div>
                 <div>
@@ -615,7 +616,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     name="slabWidth"
                     value={formData.slabWidth}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={control.base}
                   />
                 </div>
               </div>
@@ -634,7 +635,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     name="lx"
                     value={formData.lx}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={control.base}
                   />
                 </div>
                 <div>
@@ -648,7 +649,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     name="ly"
                     value={formData.ly}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={control.base}
                   />
                 </div>
               </div>
@@ -667,7 +668,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     name="ribWidth"
                     value={formData.ribWidth}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={control.base}
                   />
                 </div>
                 <div>
@@ -681,7 +682,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     name="ribSpacing"
                     value={formData.ribSpacing}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={control.base}
                   />
                 </div>
                 <div>
@@ -695,7 +696,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     name="topping"
                     value={formData.topping}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={control.base}
                   />
                 </div>
                 <div>
@@ -709,7 +710,7 @@ const EurocodeSlabCalculator = ({ theme = "light" }) => {
                     name="ribDepth"
                     value={formData.ribDepth}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 ${inputBg} border ${inputBorder} rounded-lg ${textPrimary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={control.base}
                   />
                 </div>
               </div>

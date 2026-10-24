@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Calculator, Save, FileText, AlertCircle, CheckCircle, Menu, X, Loader2, Zap, Shield, GitBranch, Building2 } from 'lucide-react';
+import { Calculator, FileText, AlertCircle, CheckCircle, Menu, X, Loader2, Zap, Shield, GitBranch, Building2 } from 'lucide-react';
 import MomentDistributionCalculator from '../ReinforcedConcrete/Beams/distribution';
 import SteelStructureBuilderWrapper from './SteelStructureBuilderWrapper';
 import { PageHeader, MetaChip, action, text } from '../shared/ui';
